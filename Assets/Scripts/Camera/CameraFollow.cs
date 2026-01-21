@@ -3,9 +3,9 @@ using UnityEngine;
 public class CameraFollow : MonoBehaviour
 {
     [SerializeField] private Transform target;
-    [SerializeField] private Vector3 offset = new Vector3(0f, 15f, -10f);
+    [SerializeField] private Vector3 offset = new Vector3(0f, 20f, -6f);
     [SerializeField] private float smoothSpeed = 5f;
-    [SerializeField] private float lookDownAngle = 45f;
+    [SerializeField] private float lookDownAngle = 65f;
 
     private void Start()
     {
