@@ -705,6 +705,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2131817215}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1516348199
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1516348200}
+  - component: {fileID: 1516348201}
+  m_Layer: 0
+  m_Name: ProjectilePool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1516348200
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1516348199}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2131817215}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1516348201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1516348199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e281ef3ed3e67648b52ea49fe46ec57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameobjectPool
+  prefab: {fileID: 323352707975832528, guid: ab5a2bcba21aa4947967a00352039676, type: 3}
+  defaultSize: 25
+  maxSize: 250
 --- !u!1 &1626218880
 GameObject:
   m_ObjectHideFlags: 0
@@ -875,6 +922,7 @@ Transform:
   m_Children:
   - {fileID: 1107685930}
   - {fileID: 1465477815}
+  - {fileID: 1516348200}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &2131817216
@@ -923,6 +971,7 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 8
+  projectilePool: {fileID: 1516348201}
 --- !u!114 &2131817219
 MonoBehaviour:
   m_ObjectHideFlags: 0
