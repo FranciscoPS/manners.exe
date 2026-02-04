@@ -21,25 +21,11 @@ public class ExperienceUI : MonoBehaviour
     {
         Transform expBarFillTransform = transform.Find("ExpBarPanel/ExpBarBackground/ExpBarFill");
         if (expBarFillTransform != null)
-        {
             expBarFill = expBarFillTransform.GetComponent<Image>();
-            Debug.Log("ExpBarFill encontrado");
-        }
-        else
-        {
-            Debug.LogError("No se encontró ExpBarFill en la ruta: ExpBarPanel/ExpBarBackground/ExpBarFill");
-        }
 
         Transform levelTextTransform = transform.Find("ExpBarPanel/LevelText");
         if (levelTextTransform != null)
-        {
             levelText = levelTextTransform.GetComponent<TextMeshProUGUI>();
-            Debug.Log("LevelText encontrado");
-        }
-        else
-        {
-            Debug.LogError("No se encontró LevelText en la ruta: ExpBarPanel/LevelText");
-        }
 
         Transform expTextTransform = transform.Find("ExpBarPanel/ExpText");
         if (expTextTransform != null)
@@ -54,11 +40,6 @@ public class ExperienceUI : MonoBehaviour
     {
         playerExperience = FindFirstObjectByType<PlayerExperience>();
         
-        if (playerExperience == null)
-        {
-            Debug.LogError("No se encontró PlayerExperience en la escena");
-        }
-        
         if (levelUpPanel != null)
             levelUpPanel.SetActive(false);
 
@@ -66,11 +47,6 @@ public class ExperienceUI : MonoBehaviour
         {
             ExperienceManager.Instance.OnExperienceChanged += UpdateExperienceBar;
             ExperienceManager.Instance.OnLevelUp += OnLevelUp;
-            Debug.Log("ExperienceManager conectado");
-        }
-        else
-        {
-            Debug.LogError("No se encontró ExperienceManager en la escena");
         }
 
         if (playerExperience != null)
@@ -128,8 +104,6 @@ public class ExperienceUI : MonoBehaviour
             TextMeshProUGUI levelUpText = levelUpPanel.GetComponentInChildren<TextMeshProUGUI>();
             if (levelUpText != null)
             {
-                levelUpText.text = "NIVEL " + newLevel;
-            }
             Invoke(nameof(HideLevelUpPanel), levelUpDisplayTime);
         }
     }
