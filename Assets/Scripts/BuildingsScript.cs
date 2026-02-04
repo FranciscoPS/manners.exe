@@ -16,9 +16,9 @@ public class BuildingsScript : MonoBehaviour
 
     private bool isDestroying = false;
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("Player") && !isDestroying)
+        if (other.CompareTag("Player") && !isDestroying)
         {
             isDestroying = true;
             SpawnExperienceOrbs();

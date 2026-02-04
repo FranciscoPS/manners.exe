@@ -80,8 +80,6 @@ public class ExperienceUI : MonoBehaviour
     private void UpdateExperienceBar(int currentExp, int requiredExp)
     {
         targetFillAmount = requiredExp > 0 ? (float)currentExp / requiredExp : 0f;
-        
-        Debug.Log($"Exp: {currentExp}/{requiredExp} - Fill: {targetFillAmount}");
 
         if (levelText != null && playerExperience != null)
         {
@@ -104,6 +102,8 @@ public class ExperienceUI : MonoBehaviour
             TextMeshProUGUI levelUpText = levelUpPanel.GetComponentInChildren<TextMeshProUGUI>();
             if (levelUpText != null)
             {
+                levelUpText.text = "NIVEL " + newLevel;
+            }
             Invoke(nameof(HideLevelUpPanel), levelUpDisplayTime);
         }
     }
