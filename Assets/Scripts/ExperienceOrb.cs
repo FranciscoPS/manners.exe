@@ -88,7 +88,7 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             }
             else
             {
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
             return;
         }
@@ -135,7 +135,7 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         }
         else
         {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
         }
     }
 

@@ -80,12 +80,18 @@ public class PoolManager : MonoBehaviour
 
     private void OnGetFromPool(GameObject obj)
     {
-        obj.SetActive(true);
+        if (obj != null)
+        {
+            obj.SetActive(true);
+        }
     }
 
     private void OnReturnToPool(GameObject obj)
     {
-        obj.SetActive(false);
+        if (obj != null)
+        {
+            obj.SetActive(false);
+        }
     }
 
     private void OnDestroyPoolObject(GameObject obj)
@@ -102,6 +108,13 @@ public class PoolManager : MonoBehaviour
         }
 
         GameObject obj = pools[poolType].Get();
+        
+        if (obj == null)
+        {
+            Debug.LogError($"Pool '{poolType}' returned null object!");
+            return null;
+        }
+        
         obj.transform.position = position;
         obj.transform.rotation = rotation;
 
@@ -136,8 +149,7 @@ public class PoolManager : MonoBehaviour
 
         if (!activeObjects.ContainsKey(obj))
         {
-            Debug.LogWarning($"Trying to despawn object {obj.name} that wasn't spawned from pool!");
-            Destroy(obj);
+            obj.SetActive(false);
             return;
         }
 
@@ -185,9 +197,29 @@ public class PoolManager : MonoBehaviour
 
     public void ClearAllPools()
     {
+        activeObjects.Clear();
+        
         foreach (var pool in pools.Values)
         {
             pool.Clear();
+        }
+    }
+    
+    public void CleanupDestroyedObjects()
+    {
+        List<GameObject> toRemove = new List<GameObject>();
+        
+        foreach (var kvp in activeObjects)
+        {
+            if (kvp.Key == null)
+            {
+                toRemove.Add(kvp.Key);
+            }
+        }
+        
+        foreach (var obj in toRemove)
+        {
+            activeObjects.Remove(obj);
         }
     }
 }

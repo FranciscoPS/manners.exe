@@ -26,7 +26,7 @@ public class Projectile : MonoBehaviour, IPoolable
             }
             else
             {
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
         }
     }
@@ -53,7 +53,7 @@ public class Projectile : MonoBehaviour, IPoolable
             }
             else
             {
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
         }
     }
