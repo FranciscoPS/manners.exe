@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class AutoAttackSystem : MonoBehaviour
 {
-    [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float attackRange = 10f;
     [SerializeField] private float attackCooldown = 0.5f;
@@ -52,7 +51,16 @@ public class AutoAttackSystem : MonoBehaviour
 
     private void Shoot()
     {
-        GameObject projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+        if (PoolManager.Instance == null)
+        {
+            Debug.LogWarning("PoolManager not initialized!");
+            return;
+        }
+
+        GameObject projectile = PoolManager.Instance.Spawn(PoolManager.PoolType.Projectile, firePoint.position, Quaternion.identity);
+        
+        if (projectile == null) return;
+
         Projectile projScript = projectile.GetComponent<Projectile>();
         
         if (projScript != null)

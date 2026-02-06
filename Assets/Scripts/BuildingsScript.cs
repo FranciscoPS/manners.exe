@@ -9,11 +9,12 @@ public class BuildingsScript : MonoBehaviour
     [SerializeField] private GameObject visual; 
 
     [Header("Experience Orb Settings")]
-    [SerializeField] private GameObject experienceOrbPrefab;
     [SerializeField] private int minOrbs = 3;
     [SerializeField] private int maxOrbs = 7;
     [SerializeField] private float orbSpawnRadius = 2f;
     [SerializeField] private float orbSpawnHeight = 1f;
+    [SerializeField] private OrbConfiguration orbConfig;
+    [SerializeField] private int defaultExperienceValue = 15;
 
     private bool isDestroying = false;
 
@@ -43,7 +44,11 @@ public class BuildingsScript : MonoBehaviour
 
     private void SpawnExperienceOrbs()
     {
-        if (experienceOrbPrefab == null) return;
+        if (PoolManager.Instance == null)
+        {
+            Debug.LogWarning("PoolManager not initialized!");
+            return;
+        }
 
         int orbCount = Random.Range(minOrbs, maxOrbs + 1);
         
@@ -56,8 +61,22 @@ public class BuildingsScript : MonoBehaviour
             Vector2 randomCircle = Random.insideUnitCircle * orbSpawnRadius;
             Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 2f), randomCircle.y);
             
-            GameObject orb = Instantiate(experienceOrbPrefab, spawnPosition, Quaternion.identity);
-            orb.transform.SetParent(null);
+            PoolManager.Instance.Spawn<ExperienceOrb>(
+                PoolManager.PoolType.ExperienceOrb,
+                spawnPosition,
+                Quaternion.identity,
+                orb =>
+                {
+                    if (orbConfig != null)
+                    {
+                        orbConfig.ApplyToOrb(orb);
+                    }
+                    else
+                    {
+                        orb.SetExperienceValue(defaultExperienceValue);
+                    }
+                }
+            );
         }
     }
 }
