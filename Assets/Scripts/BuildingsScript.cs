@@ -6,6 +6,7 @@ public class BuildingsScript : MonoBehaviour
     [Header("Destruction Settings")]
     [SerializeField] private float sinkSpeed = 1.5f;
     [SerializeField] private float sinkDuration = 2f;
+    [SerializeField] private GameObject visual; 
 
     [Header("Experience Orb Settings")]
     [SerializeField] private GameObject experienceOrbPrefab;
@@ -32,12 +33,12 @@ public class BuildingsScript : MonoBehaviour
 
         while (elapsedTime < sinkDuration)
         {
-            transform.Translate(Vector3.down * sinkSpeed * Time.deltaTime);
+            visual.transform.Translate(Vector3.down * sinkSpeed * Time.deltaTime);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        Destroy(gameObject);
+        //Destroy(gameObject);
     }
 
     private void SpawnExperienceOrbs()
