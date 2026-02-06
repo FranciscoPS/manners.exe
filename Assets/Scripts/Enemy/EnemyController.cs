@@ -2,13 +2,19 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 3f;
-    [SerializeField] private float contactDamage = 10f;
+    private float moveSpeed = 3f;
+    private float contactDamage = 10f;
 
     private Transform player;
     private Rigidbody rb;
 
     public float ContactDamage => contactDamage;
+
+    public void SetStats(float newMoveSpeed, float newContactDamage)
+    {
+        moveSpeed = newMoveSpeed;
+        contactDamage = newContactDamage;
+    }
 
     private void Awake()
     {

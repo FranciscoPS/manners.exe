@@ -2,14 +2,11 @@ using UnityEngine;
 
 public class ExperienceOrb : MonoBehaviour, IPoolable
 {
-    [Header("Experience Settings")]
-    [SerializeField] private int experienceValue = 10;
-    
-    [Header("Movement Settings")]
-    [SerializeField] private float attractionRange = 5f;
-    [SerializeField] private float moveSpeed = 8f;
-    [SerializeField] private float acceleration = 15f;
-    [SerializeField] private float lifeTime = 30f;
+    private int experienceValue = 10;
+    private float attractionRange = 5f;
+    private float moveSpeed = 8f;
+    private float acceleration = 15f;
+    private float lifeTime = 30f;
     
     [Header("Warning Settings")]
     [SerializeField] private float warningTime = 3f;
@@ -23,6 +20,8 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
     private Renderer orbRenderer;
     private Light orbLight;
     private bool isBlinking = false;
+    private Color originalColor;
+    private Material materialInstance;
 
     public void SetExperienceValue(int value)
     {
@@ -31,12 +30,29 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
 
     public void SetOrbColor(Color color)
     {
+        originalColor = color;
+        
         if (orbRenderer == null)
             orbRenderer = GetComponent<Renderer>();
             
-        if (orbRenderer != null && orbRenderer.material != null)
+        if (orbRenderer != null)
         {
-            orbRenderer.material.color = color;
+            if (materialInstance == null && orbRenderer.material != null)
+            {
+                materialInstance = orbRenderer.material;
+            }
+            
+            if (materialInstance != null)
+            {
+                materialInstance.color = color;
+                
+                if (materialInstance.HasProperty("_BaseColor"))
+                    materialInstance.SetColor("_BaseColor", color);
+                if (materialInstance.HasProperty("_Color"))
+                    materialInstance.SetColor("_Color", color);
+                if (materialInstance.HasProperty("_EmissionColor"))
+                    materialInstance.SetColor("_EmissionColor", color * 0.5f);
+            }
         }
 
         if (orbLight == null)
@@ -56,6 +72,67 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
     public void SetMoveSpeed(float speed)
     {
         moveSpeed = speed;
+    }
+
+    public void SetVisuals(Mesh mesh, Material material, Color color, float scale)
+    {
+        MeshFilter meshFilter = GetComponent<MeshFilter>();
+        if (meshFilter != null && mesh != null)
+        {
+            meshFilter.mesh = mesh;
+        }
+
+        if (orbRenderer == null)
+            orbRenderer = GetComponent<Renderer>();
+
+        if (orbRenderer != null)
+        {
+            if (material != null)
+            {
+                materialInstance = new Material(material);
+                orbRenderer.material = materialInstance;
+            }
+            else if (materialInstance == null)
+            {
+                materialInstance = new Material(orbRenderer.sharedMaterial);
+                orbRenderer.material = materialInstance;
+            }
+            
+            originalColor = color;
+            materialInstance.color = color;
+            
+            if (materialInstance.HasProperty("_BaseColor"))
+                materialInstance.SetColor("_BaseColor", color);
+            if (materialInstance.HasProperty("_Color"))
+                materialInstance.SetColor("_Color", color);
+            if (materialInstance.HasProperty("_EmissionColor"))
+                materialInstance.SetColor("_EmissionColor", color * 0.5f);
+        }
+
+        transform.localScale = Vector3.one * scale;
+    }
+
+    public void SetLight(bool hasLight, float intensity, float range, Color color)
+    {
+        if (orbLight == null)
+            orbLight = GetComponent<Light>();
+
+        if (hasLight)
+        {
+            if (orbLight == null)
+            {
+                orbLight = gameObject.AddComponent<Light>();
+                orbLight.type = LightType.Point;
+            }
+            orbLight.intensity = intensity;
+            orbLight.range = range;
+            orbLight.color = color;
+            orbLight.enabled = true;
+        }
+        else if (orbLight != null)
+        {
+            orbLight.enabled = false;
+        }
     }
 
     private void Start()
@@ -205,6 +282,15 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         if (orbLight != null)
         {
             orbLight.enabled = true;
+        }
+        
+        if (materialInstance != null)
+        {
+            materialInstance.color = originalColor;
+            if (materialInstance.HasProperty("_BaseColor"))
+                materialInstance.SetColor("_BaseColor", originalColor);
+            if (materialInstance.HasProperty("_Color"))
+                materialInstance.SetColor("_Color", originalColor);
         }
     }
 

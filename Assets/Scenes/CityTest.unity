@@ -1453,6 +1453,9 @@ MonoBehaviour:
   enemiesPerWave: 5
   waveInterval: 20
   enemyIncreasePerWave: 2
+  enemyConfigurations:
+  - {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
+  - {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
 --- !u!1 &1634276927
 GameObject:
   m_ObjectHideFlags: 0
@@ -1861,6 +1864,7 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 8
+  projectileConfig: {fileID: 11400000, guid: 5ed96541bc2324e6197e567b78085270, type: 2}
 --- !u!114 &2131817219
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -13,7 +13,12 @@ MonoBehaviour:
   m_Name: SmallOrb
   m_EditorClassIdentifier: Assembly-CSharp::OrbConfiguration
   experienceValue: 10
+  mesh: {fileID: 0}
+  material: {fileID: 2100000, guid: 8ed42143a39203448b66f0533ccd8876, type: 2}
   orbColor: {r: 0, g: 1, b: 1, a: 1}
   orbScale: 0.5
   attractionRange: 5
   moveSpeed: 8
+  hasLight: 0
+  lightIntensity: 5
+  lightRange: 10

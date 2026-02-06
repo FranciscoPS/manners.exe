@@ -61,22 +61,11 @@ public class BuildingsScript : MonoBehaviour
             Vector2 randomCircle = Random.insideUnitCircle * orbSpawnRadius;
             Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 2f), randomCircle.y);
             
-            PoolManager.Instance.Spawn<ExperienceOrb>(
-                PoolManager.PoolType.ExperienceOrb,
-                spawnPosition,
-                Quaternion.identity,
-                orb =>
-                {
-                    if (orbConfig != null)
-                    {
-                        orbConfig.ApplyToOrb(orb);
-                    }
-                    else
-                    {
-                        orb.SetExperienceValue(defaultExperienceValue);
-                    }
-                }
-            );
+            ExperienceOrb orb = PoolManager.Instance.SpawnOrb(spawnPosition, orbConfig);
+            if (orb != null && orbConfig == null)
+            {
+                orb.SetExperienceValue(defaultExperienceValue);
+            }
         }
     }
 }

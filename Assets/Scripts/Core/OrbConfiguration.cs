@@ -7,6 +7,8 @@ public class OrbConfiguration : ScriptableObject
     public int experienceValue = 10;
     
     [Header("Visual Settings")]
+    public Mesh mesh;
+    public Material material;
     public Color orbColor = Color.cyan;
     public float orbScale = 1f;
     
@@ -14,12 +16,17 @@ public class OrbConfiguration : ScriptableObject
     public float attractionRange = 5f;
     public float moveSpeed = 8f;
     
+    [Header("Effects")]
+    public bool hasLight = true;
+    public float lightIntensity = 5f;
+    public float lightRange = 10f;
+    
     public void ApplyToOrb(ExperienceOrb orb)
     {
         orb.SetExperienceValue(experienceValue);
-        orb.SetOrbColor(orbColor);
+        orb.SetVisuals(mesh, material, orbColor, orbScale);
         orb.SetAttractionRange(attractionRange);
         orb.SetMoveSpeed(moveSpeed);
-        orb.transform.localScale = Vector3.one * orbScale;
+        orb.SetLight(hasLight, lightIntensity, lightRange, orbColor);
     }
 }

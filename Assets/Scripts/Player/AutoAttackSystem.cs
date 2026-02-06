@@ -6,6 +6,7 @@ public class AutoAttackSystem : MonoBehaviour
     [SerializeField] private float attackRange = 10f;
     [SerializeField] private float attackCooldown = 0.5f;
     [SerializeField] private LayerMask enemyLayer;
+    [SerializeField] private ProjectileConfiguration projectileConfig;
 
     private float cooldownTimer = 0f;
     private Transform currentTarget;
@@ -57,16 +58,12 @@ public class AutoAttackSystem : MonoBehaviour
             return;
         }
 
-        GameObject projectile = PoolManager.Instance.Spawn(PoolManager.PoolType.Projectile, firePoint.position, Quaternion.identity);
+        Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
         
-        if (projectile == null) return;
-
-        Projectile projScript = projectile.GetComponent<Projectile>();
-        
-        if (projScript != null)
+        if (projectile != null)
         {
             Vector3 direction = (currentTarget.position - firePoint.position).normalized;
-            projScript.SetDirection(direction);
+            projectile.SetDirection(direction);
         }
     }
 

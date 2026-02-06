@@ -8,6 +8,7 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private int enemiesPerWave = 5;
     [SerializeField] private float waveInterval = 20f;
     [SerializeField] private int enemyIncreasePerWave = 2;
+    [SerializeField] private EnemyConfiguration[] enemyConfigurations;
 
     private float spawnTimer;
     private float waveTimer;
@@ -58,8 +59,17 @@ public class EnemySpawner : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Vector3 spawnPosition = GetRandomSpawnPosition();
-            PoolManager.Instance.Spawn(PoolManager.PoolType.Enemy, spawnPosition, Quaternion.identity);
+            EnemyConfiguration config = GetRandomEnemyConfig();
+            PoolManager.Instance.SpawnEnemy(spawnPosition, config);
         }
+    }
+    
+    private EnemyConfiguration GetRandomEnemyConfig()
+    {
+        if (enemyConfigurations == null || enemyConfigurations.Length == 0)
+            return null;
+            
+        return enemyConfigurations[Random.Range(0, enemyConfigurations.Length)];
     }
 
     private Vector3 GetRandomSpawnPosition()

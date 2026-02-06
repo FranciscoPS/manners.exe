@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c885be7fc80148b29768c11ebb90e90, type: 3}
+  m_Name: BasicEnemy
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyConfiguration
+  maxHealth: 30
+  moveSpeed: 3
+  contactDamage: 10
+  orbConfig: {fileID: 11400000, guid: 9aa33dee36f8c410e94d6692d6a6f402, type: 2}
+  minOrbs: 1
+  maxOrbs: 3
+  orbSpawnRadius: 1
+  mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  material: {fileID: 2100000, guid: c81feac6c647f4766ac970fd7e40549b, type: 2}
+  color: {r: 1, g: 0, b: 0, a: 1}
+  scale: {x: 1, y: 1, z: 1}
+  deathEffect: {fileID: 0}
+  hasLight: 0
+  lightColor: {r: 1, g: 0, b: 0, a: 1}
+  lightIntensity: 3
