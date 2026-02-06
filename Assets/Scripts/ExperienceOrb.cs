@@ -12,6 +12,10 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
     [SerializeField] private float warningTime = 3f;
     [SerializeField] private float blinkSpeed = 5f;
     
+    [Header("Floating Settings")]
+    [SerializeField] private float floatSpeed = 1.5f;
+    [SerializeField] private float floatAmount = 0.4f;
+    
     private Transform player;
     private bool isMovingToPlayer = false;
     private float currentSpeed = 0f;
@@ -22,6 +26,10 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
     private bool isBlinking = false;
     private Color originalColor;
     private Material materialInstance;
+    
+    private Vector3 startPosition;
+    private float randomOffset;
+    private bool isFloating = true;
 
     public void SetExperienceValue(int value)
     {
@@ -199,6 +207,7 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         if (distanceToPlayer <= attractionRange)
         {
             isMovingToPlayer = true;
+            isFloating = false;
         }
 
         if (isMovingToPlayer)
@@ -208,6 +217,27 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             Vector3 direction = (player.position - transform.position).normalized;
             transform.position += direction * currentSpeed * Time.deltaTime;
         }
+        else if (isFloating)
+        {
+            HandleFloating();
+        }
+    }
+    
+    private void HandleFloating()
+    {
+        float time = Time.time * floatSpeed + randomOffset;
+        
+        Vector3 offset = new Vector3(
+            Mathf.Sin(time * 0.7f) * floatAmount,
+            Mathf.Sin(time * 0.9f + 1.5f) * floatAmount * 1.2f,
+            Mathf.Cos(time * 0.6f + 3.0f) * floatAmount
+        );
+        
+        offset.x += Mathf.Cos(time * 0.4f + 2.1f) * floatAmount * 0.5f;
+        offset.y += Mathf.Cos(time * 0.5f + 2.5f) * floatAmount * 0.6f;
+        offset.z += Mathf.Sin(time * 0.3f + 4.0f) * floatAmount * 0.5f;
+        
+        transform.position = startPosition + offset;
     }
     
     private void HandleBlinking()
@@ -268,6 +298,10 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         currentSpeed = 0f;
         lifetimeTimer = lifeTime;
         isBlinking = false;
+        isFloating = true;
+        
+        startPosition = transform.position;
+        randomOffset = Random.Range(0f, 100f);
 
         if (player == null)
         {

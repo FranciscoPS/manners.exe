@@ -126,11 +126,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8be6c53d13750640a98591eadd87157, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExperienceOrb
-  experienceValue: 10
-  attractionRange: 5
-  moveSpeed: 8
-  acceleration: 15
-  lifeTime: 10
+  warningTime: 3
+  blinkSpeed: 5
+  floatSpeed: 2
+  floatAmount: 0.5
 --- !u!54 &217447995894940641
 Rigidbody:
   m_ObjectHideFlags: 0
