@@ -22,7 +22,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
     private bool collected = false;
     private float lifetimeTimer;
     private Renderer orbRenderer;
-    private Light orbLight;
     private bool isBlinking = false;
     private Color originalColor;
     private Material materialInstance;
@@ -59,16 +58,8 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
                 if (materialInstance.HasProperty("_Color"))
                     materialInstance.SetColor("_Color", color);
                 if (materialInstance.HasProperty("_EmissionColor"))
-                    materialInstance.SetColor("_EmissionColor", color * 0.5f);
+                    materialInstance.SetColor("_EmissionColor", color);
             }
-        }
-
-        if (orbLight == null)
-            orbLight = GetComponent<Light>();
-            
-        if (orbLight != null)
-        {
-            orbLight.color = color;
         }
     }
 
@@ -114,32 +105,25 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             if (materialInstance.HasProperty("_Color"))
                 materialInstance.SetColor("_Color", color);
             if (materialInstance.HasProperty("_EmissionColor"))
-                materialInstance.SetColor("_EmissionColor", color * 0.5f);
+                materialInstance.SetColor("_EmissionColor", color);
         }
 
         transform.localScale = Vector3.one * scale;
     }
 
-    public void SetLight(bool hasLight, float intensity, float range, Color color)
+    public void SetEmission(float emissionIntensity, float fresnelPower)
     {
-        if (orbLight == null)
-            orbLight = GetComponent<Light>();
-
-        if (hasLight)
+        if (materialInstance == null && orbRenderer != null)
+            materialInstance = orbRenderer.material;
+            
+        if (materialInstance != null)
         {
-            if (orbLight == null)
-            {
-                orbLight = gameObject.AddComponent<Light>();
-                orbLight.type = LightType.Point;
-            }
-            orbLight.intensity = intensity;
-            orbLight.range = range;
-            orbLight.color = color;
-            orbLight.enabled = true;
-        }
-        else if (orbLight != null)
-        {
-            orbLight.enabled = false;
+            if (materialInstance.HasProperty("_EmissionIntensity"))
+                materialInstance.SetFloat("_EmissionIntensity", emissionIntensity);
+            if (materialInstance.HasProperty("_FresnelPower"))
+                materialInstance.SetFloat("_FresnelPower", fresnelPower);
+                
+            materialInstance.EnableKeyword("_EMISSION");
         }
     }
 
@@ -151,7 +135,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         }
         
         orbRenderer = GetComponent<Renderer>();
-        orbLight = GetComponent<Light>();
         
         SphereCollider collider = GetComponent<SphereCollider>();
         if (collider != null)
@@ -164,12 +147,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         {
             rb.isKinematic = true;
             rb.useGravity = false;
-        }
-
-        if (orbLight != null)
-        {
-            orbLight.range = 10f;
-            orbLight.intensity = 5f;
         }
     }
 
@@ -248,11 +225,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         {
             orbRenderer.enabled = blinkValue > 0.5f;
         }
-        
-        if (orbLight != null)
-        {
-            orbLight.enabled = blinkValue > 0.5f;
-        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -313,11 +285,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             orbRenderer.enabled = true;
         }
         
-        if (orbLight != null)
-        {
-            orbLight.enabled = true;
-        }
-        
         if (materialInstance != null)
         {
             materialInstance.color = originalColor;
@@ -338,11 +305,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         if (orbRenderer != null)
         {
             orbRenderer.enabled = true;
-        }
-        
-        if (orbLight != null)
-        {
-            orbLight.enabled = true;
         }
     }
 }

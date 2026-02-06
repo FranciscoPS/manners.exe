@@ -16,10 +16,9 @@ public class OrbConfiguration : ScriptableObject
     public float attractionRange = 5f;
     public float moveSpeed = 8f;
     
-    [Header("Effects")]
-    public bool hasLight = true;
-    public float lightIntensity = 5f;
-    public float lightRange = 10f;
+    [Header("Emission Settings")]
+    [Range(0f, 10f)] public float emissionIntensity = 3f;
+    [Range(0.1f, 5f)] public float fresnelPower = 2f;
     
     public void ApplyToOrb(ExperienceOrb orb)
     {
@@ -27,6 +26,6 @@ public class OrbConfiguration : ScriptableObject
         orb.SetVisuals(mesh, material, orbColor, orbScale);
         orb.SetAttractionRange(attractionRange);
         orb.SetMoveSpeed(moveSpeed);
-        orb.SetLight(hasLight, lightIntensity, lightRange, orbColor);
+        orb.SetEmission(emissionIntensity, fresnelPower);
     }
 }
