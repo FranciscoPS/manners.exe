@@ -11,11 +11,18 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
     [SerializeField] private float acceleration = 15f;
     [SerializeField] private float lifeTime = 30f;
     
+    [Header("Warning Settings")]
+    [SerializeField] private float warningTime = 3f;
+    [SerializeField] private float blinkSpeed = 5f;
+    
     private Transform player;
     private bool isMovingToPlayer = false;
     private float currentSpeed = 0f;
     private bool collected = false;
     private float lifetimeTimer;
+    private Renderer orbRenderer;
+    private Light orbLight;
+    private bool isBlinking = false;
 
     public void SetExperienceValue(int value)
     {
@@ -24,13 +31,17 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
 
     public void SetOrbColor(Color color)
     {
-        Renderer renderer = GetComponent<Renderer>();
-        if (renderer != null && renderer.material != null)
+        if (orbRenderer == null)
+            orbRenderer = GetComponent<Renderer>();
+            
+        if (orbRenderer != null && orbRenderer.material != null)
         {
-            renderer.material.color = color;
+            orbRenderer.material.color = color;
         }
 
-        Light orbLight = GetComponent<Light>();
+        if (orbLight == null)
+            orbLight = GetComponent<Light>();
+            
         if (orbLight != null)
         {
             orbLight.color = color;
@@ -54,6 +65,9 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
         }
         
+        orbRenderer = GetComponent<Renderer>();
+        orbLight = GetComponent<Light>();
+        
         SphereCollider collider = GetComponent<SphereCollider>();
         if (collider != null)
         {
@@ -67,7 +81,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             rb.useGravity = false;
         }
 
-        Light orbLight = GetComponent<Light>();
         if (orbLight != null)
         {
             orbLight.range = 10f;
@@ -80,6 +93,17 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         if (player == null || collected) return;
 
         lifetimeTimer -= Time.deltaTime;
+        
+        if (lifetimeTimer <= warningTime && !isBlinking)
+        {
+            isBlinking = true;
+        }
+        
+        if (isBlinking)
+        {
+            HandleBlinking();
+        }
+        
         if (lifetimeTimer <= 0f)
         {
             if (PoolManager.Instance != null)
@@ -106,6 +130,21 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             
             Vector3 direction = (player.position - transform.position).normalized;
             transform.position += direction * currentSpeed * Time.deltaTime;
+        }
+    }
+    
+    private void HandleBlinking()
+    {
+        float blinkValue = Mathf.PingPong(Time.time * blinkSpeed, 1f);
+        
+        if (orbRenderer != null)
+        {
+            orbRenderer.enabled = blinkValue > 0.5f;
+        }
+        
+        if (orbLight != null)
+        {
+            orbLight.enabled = blinkValue > 0.5f;
         }
     }
 
@@ -151,10 +190,21 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         isMovingToPlayer = false;
         currentSpeed = 0f;
         lifetimeTimer = lifeTime;
+        isBlinking = false;
 
         if (player == null)
         {
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        }
+        
+        if (orbRenderer != null)
+        {
+            orbRenderer.enabled = true;
+        }
+        
+        if (orbLight != null)
+        {
+            orbLight.enabled = true;
         }
     }
 
@@ -163,5 +213,16 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         collected = false;
         isMovingToPlayer = false;
         currentSpeed = 0f;
+        isBlinking = false;
+        
+        if (orbRenderer != null)
+        {
+            orbRenderer.enabled = true;
+        }
+        
+        if (orbLight != null)
+        {
+            orbLight.enabled = true;
+        }
     }
 }
