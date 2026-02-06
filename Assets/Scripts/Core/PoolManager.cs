@@ -143,6 +143,45 @@ public class PoolManager : MonoBehaviour
         return component;
     }
 
+    public Projectile SpawnProjectile(Vector3 position, Quaternion rotation, ProjectileConfiguration config = null)
+    {
+        GameObject obj = Spawn(PoolType.Projectile, position, rotation);
+        if (obj == null) return null;
+
+        Projectile projectile = obj.GetComponent<Projectile>();
+        if (projectile != null && config != null)
+        {
+            config.ApplyToProjectile(projectile);
+        }
+
+        return projectile;
+    }
+
+    public ExperienceOrb SpawnOrb(Vector3 position, OrbConfiguration config = null)
+    {
+        GameObject obj = Spawn(PoolType.ExperienceOrb, position, Quaternion.identity);
+        if (obj == null) return null;
+
+        ExperienceOrb orb = obj.GetComponent<ExperienceOrb>();
+        if (orb != null && config != null)
+        {
+            config.ApplyToOrb(orb);
+        }
+
+        return orb;
+    }
+
+    public GameObject SpawnEnemy(Vector3 position, EnemyConfiguration config = null)
+    {
+        GameObject obj = Spawn(PoolType.Enemy, position, Quaternion.identity);
+        if (obj != null && config != null)
+        {
+            config.ApplyToEnemy(obj);
+        }
+
+        return obj;
+    }
+
     public void Despawn(GameObject obj)
     {
         if (obj == null) return;

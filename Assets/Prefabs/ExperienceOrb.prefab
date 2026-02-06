@@ -69,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8ed42143a39203448b66f0533ccd8876, type: 2}
+  - {fileID: 2100000, guid: b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -126,11 +126,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8be6c53d13750640a98591eadd87157, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExperienceOrb
-  experienceValue: 10
-  attractionRange: 5
-  moveSpeed: 8
-  acceleration: 15
-  lifeTime: 10
+  warningTime: 3
+  blinkSpeed: 5
+  floatSpeed: 2
+  floatAmount: 0.5
 --- !u!54 &217447995894940641
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -2,18 +2,19 @@ using UnityEngine;
 
 public class ExperienceOrb : MonoBehaviour, IPoolable
 {
-    [Header("Experience Settings")]
-    [SerializeField] private int experienceValue = 10;
-    
-    [Header("Movement Settings")]
-    [SerializeField] private float attractionRange = 5f;
-    [SerializeField] private float moveSpeed = 8f;
-    [SerializeField] private float acceleration = 15f;
-    [SerializeField] private float lifeTime = 30f;
+    private int experienceValue = 10;
+    private float attractionRange = 5f;
+    private float moveSpeed = 8f;
+    private float acceleration = 15f;
+    private float lifeTime = 30f;
     
     [Header("Warning Settings")]
     [SerializeField] private float warningTime = 3f;
     [SerializeField] private float blinkSpeed = 5f;
+    
+    [Header("Floating Settings")]
+    [SerializeField] private float floatSpeed = 1.5f;
+    [SerializeField] private float floatAmount = 0.4f;
     
     private Transform player;
     private bool isMovingToPlayer = false;
@@ -21,8 +22,13 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
     private bool collected = false;
     private float lifetimeTimer;
     private Renderer orbRenderer;
-    private Light orbLight;
     private bool isBlinking = false;
+    private Color originalColor;
+    private Material materialInstance;
+    
+    private Vector3 startPosition;
+    private float randomOffset;
+    private bool isFloating = true;
 
     public void SetExperienceValue(int value)
     {
@@ -31,20 +37,29 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
 
     public void SetOrbColor(Color color)
     {
+        originalColor = color;
+        
         if (orbRenderer == null)
             orbRenderer = GetComponent<Renderer>();
             
-        if (orbRenderer != null && orbRenderer.material != null)
+        if (orbRenderer != null)
         {
-            orbRenderer.material.color = color;
-        }
-
-        if (orbLight == null)
-            orbLight = GetComponent<Light>();
+            if (materialInstance == null && orbRenderer.material != null)
+            {
+                materialInstance = orbRenderer.material;
+            }
             
-        if (orbLight != null)
-        {
-            orbLight.color = color;
+            if (materialInstance != null)
+            {
+                materialInstance.color = color;
+                
+                if (materialInstance.HasProperty("_BaseColor"))
+                    materialInstance.SetColor("_BaseColor", color);
+                if (materialInstance.HasProperty("_Color"))
+                    materialInstance.SetColor("_Color", color);
+                if (materialInstance.HasProperty("_EmissionColor"))
+                    materialInstance.SetColor("_EmissionColor", color);
+            }
         }
     }
 
@@ -58,6 +73,60 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         moveSpeed = speed;
     }
 
+    public void SetVisuals(Mesh mesh, Material material, Color color, float scale)
+    {
+        MeshFilter meshFilter = GetComponent<MeshFilter>();
+        if (meshFilter != null && mesh != null)
+        {
+            meshFilter.mesh = mesh;
+        }
+
+        if (orbRenderer == null)
+            orbRenderer = GetComponent<Renderer>();
+
+        if (orbRenderer != null)
+        {
+            if (material != null)
+            {
+                materialInstance = new Material(material);
+                orbRenderer.material = materialInstance;
+            }
+            else if (materialInstance == null)
+            {
+                materialInstance = new Material(orbRenderer.sharedMaterial);
+                orbRenderer.material = materialInstance;
+            }
+            
+            originalColor = color;
+            materialInstance.color = color;
+            
+            if (materialInstance.HasProperty("_BaseColor"))
+                materialInstance.SetColor("_BaseColor", color);
+            if (materialInstance.HasProperty("_Color"))
+                materialInstance.SetColor("_Color", color);
+            if (materialInstance.HasProperty("_EmissionColor"))
+                materialInstance.SetColor("_EmissionColor", color);
+        }
+
+        transform.localScale = Vector3.one * scale;
+    }
+
+    public void SetEmission(float emissionIntensity, float fresnelPower)
+    {
+        if (materialInstance == null && orbRenderer != null)
+            materialInstance = orbRenderer.material;
+            
+        if (materialInstance != null)
+        {
+            if (materialInstance.HasProperty("_EmissionIntensity"))
+                materialInstance.SetFloat("_EmissionIntensity", emissionIntensity);
+            if (materialInstance.HasProperty("_FresnelPower"))
+                materialInstance.SetFloat("_FresnelPower", fresnelPower);
+                
+            materialInstance.EnableKeyword("_EMISSION");
+        }
+    }
+
     private void Start()
     {
         if (player == null)
@@ -66,7 +135,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         }
         
         orbRenderer = GetComponent<Renderer>();
-        orbLight = GetComponent<Light>();
         
         SphereCollider collider = GetComponent<SphereCollider>();
         if (collider != null)
@@ -79,12 +147,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         {
             rb.isKinematic = true;
             rb.useGravity = false;
-        }
-
-        if (orbLight != null)
-        {
-            orbLight.range = 10f;
-            orbLight.intensity = 5f;
         }
     }
 
@@ -122,6 +184,7 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         if (distanceToPlayer <= attractionRange)
         {
             isMovingToPlayer = true;
+            isFloating = false;
         }
 
         if (isMovingToPlayer)
@@ -131,6 +194,27 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             Vector3 direction = (player.position - transform.position).normalized;
             transform.position += direction * currentSpeed * Time.deltaTime;
         }
+        else if (isFloating)
+        {
+            HandleFloating();
+        }
+    }
+    
+    private void HandleFloating()
+    {
+        float time = Time.time * floatSpeed + randomOffset;
+        
+        Vector3 offset = new Vector3(
+            Mathf.Sin(time * 0.7f) * floatAmount,
+            Mathf.Sin(time * 0.9f + 1.5f) * floatAmount * 1.2f,
+            Mathf.Cos(time * 0.6f + 3.0f) * floatAmount
+        );
+        
+        offset.x += Mathf.Cos(time * 0.4f + 2.1f) * floatAmount * 0.5f;
+        offset.y += Mathf.Cos(time * 0.5f + 2.5f) * floatAmount * 0.6f;
+        offset.z += Mathf.Sin(time * 0.3f + 4.0f) * floatAmount * 0.5f;
+        
+        transform.position = startPosition + offset;
     }
     
     private void HandleBlinking()
@@ -140,11 +224,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         if (orbRenderer != null)
         {
             orbRenderer.enabled = blinkValue > 0.5f;
-        }
-        
-        if (orbLight != null)
-        {
-            orbLight.enabled = blinkValue > 0.5f;
         }
     }
 
@@ -191,6 +270,10 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         currentSpeed = 0f;
         lifetimeTimer = lifeTime;
         isBlinking = false;
+        isFloating = true;
+        
+        startPosition = transform.position;
+        randomOffset = Random.Range(0f, 100f);
 
         if (player == null)
         {
@@ -202,9 +285,13 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             orbRenderer.enabled = true;
         }
         
-        if (orbLight != null)
+        if (materialInstance != null)
         {
-            orbLight.enabled = true;
+            materialInstance.color = originalColor;
+            if (materialInstance.HasProperty("_BaseColor"))
+                materialInstance.SetColor("_BaseColor", originalColor);
+            if (materialInstance.HasProperty("_Color"))
+                materialInstance.SetColor("_Color", originalColor);
         }
     }
 
@@ -218,11 +305,6 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         if (orbRenderer != null)
         {
             orbRenderer.enabled = true;
-        }
-        
-        if (orbLight != null)
-        {
-            orbLight.enabled = true;
         }
     }
 }
