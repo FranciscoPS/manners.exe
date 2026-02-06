@@ -5,14 +5,20 @@ public class EnemyHealth : MonoBehaviour
     [SerializeField] private float maxHealth = 30f;
     
     [Header("Experience Orb Settings")]
-    [SerializeField] private GameObject experienceOrbPrefab;
     [SerializeField] private int minOrbs = 1;
     [SerializeField] private int maxOrbs = 3;
     [SerializeField] private float orbSpawnRadius = 1f;
+    [SerializeField] private OrbConfiguration orbConfig;
+    [SerializeField] private int defaultExperienceValue = 10;
 
     private float currentHealth;
 
     private void Start()
+    {
+        currentHealth = maxHealth;
+    }
+
+    public void ResetHealth()
     {
         currentHealth = maxHealth;
     }
@@ -30,12 +36,24 @@ public class EnemyHealth : MonoBehaviour
     private void Die()
     {
         SpawnExperienceOrbs();
-        Destroy(gameObject);
+        
+        if (PoolManager.Instance != null)
+        {
+            PoolManager.Instance.Despawn(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void SpawnExperienceOrbs()
     {
-        if (experienceOrbPrefab == null) return;
+        if (PoolManager.Instance == null)
+        {
+            Debug.LogWarning("PoolManager not initialized!");
+            return;
+        }
 
         int orbCount = Random.Range(minOrbs, maxOrbs + 1);
         Vector3 spawnCenter = transform.position + Vector3.up * 0.5f;
@@ -45,8 +63,22 @@ public class EnemyHealth : MonoBehaviour
             Vector2 randomCircle = Random.insideUnitCircle * orbSpawnRadius;
             Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
             
-            GameObject orb = Instantiate(experienceOrbPrefab, spawnPosition, Quaternion.identity);
-            orb.transform.SetParent(null);
+            PoolManager.Instance.Spawn<ExperienceOrb>(
+                PoolManager.PoolType.ExperienceOrb, 
+                spawnPosition, 
+                Quaternion.identity,
+                orb =>
+                {
+                    if (orbConfig != null)
+                    {
+                        orbConfig.ApplyToOrb(orb);
+                    }
+                    else
+                    {
+                        orb.SetExperienceValue(defaultExperienceValue);
+                    }
+                }
+            );
         }
     }
 }

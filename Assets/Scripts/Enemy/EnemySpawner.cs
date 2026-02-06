@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private Transform player;
     [SerializeField] private float spawnRadius = 15f;
     [SerializeField] private float initialSpawnInterval = 3f;
@@ -50,10 +49,16 @@ public class EnemySpawner : MonoBehaviour
 
     private void SpawnEnemies(int count)
     {
+        if (PoolManager.Instance == null)
+        {
+            Debug.LogWarning("PoolManager not initialized!");
+            return;
+        }
+
         for (int i = 0; i < count; i++)
         {
             Vector3 spawnPosition = GetRandomSpawnPosition();
-            Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
+            PoolManager.Instance.Spawn(PoolManager.PoolType.Enemy, spawnPosition, Quaternion.identity);
         }
     }
 

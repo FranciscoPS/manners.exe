@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Projectile : MonoBehaviour
+public class Projectile : MonoBehaviour, IPoolable
 {
     [SerializeField] private float speed = 15f;
     [SerializeField] private float damage = 10f;
@@ -8,11 +8,27 @@ public class Projectile : MonoBehaviour
 
     private Vector3 direction;
     private Rigidbody rb;
+    private float lifetimeTimer;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        Destroy(gameObject, lifetime);
+    }
+
+    private void Update()
+    {
+        lifetimeTimer -= Time.deltaTime;
+        if (lifetimeTimer <= 0f)
+        {
+            if (PoolManager.Instance != null)
+            {
+                PoolManager.Instance.Despawn(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
     }
 
     public void SetDirection(Vector3 dir)
@@ -30,7 +46,27 @@ public class Projectile : MonoBehaviour
             {
                 enemyHealth.TakeDamage(damage);
             }
-            Destroy(gameObject);
+            
+            if (PoolManager.Instance != null)
+            {
+                PoolManager.Instance.Despawn(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
+    }
+
+    public void OnSpawn()
+    {
+        lifetimeTimer = lifetime;
+        rb.linearVelocity = Vector3.zero;
+    }
+
+    public void OnDespawn()
+    {
+        rb.linearVelocity = Vector3.zero;
+        direction = Vector3.zero;
     }
 }

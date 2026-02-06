@@ -138,11 +138,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
   sinkSpeed: 1.5
   sinkDuration: 2
-  experienceOrbPrefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
-  minOrbs: 3
-  maxOrbs: 7
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 2
   orbSpawnHeight: 1
+  orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
+  defaultExperienceValue: 15
 --- !u!65 &25295319
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -183,11 +184,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
   sinkSpeed: 1.5
   sinkDuration: 2
-  experienceOrbPrefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
-  minOrbs: 3
-  maxOrbs: 7
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 2
   orbSpawnHeight: 1
+  orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
+  defaultExperienceValue: 15
 --- !u!65 &123620604
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -441,11 +443,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
   sinkSpeed: 1.5
   sinkDuration: 1
-  experienceOrbPrefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
-  minOrbs: 3
-  maxOrbs: 7
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 2
   orbSpawnHeight: 1
+  orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
+  defaultExperienceValue: 15
 --- !u!65 &155824873
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1366,11 +1369,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
   sinkSpeed: 1.5
   sinkDuration: 2
-  experienceOrbPrefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
-  minOrbs: 3
-  maxOrbs: 7
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 2
   orbSpawnHeight: 1
+  orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
+  defaultExperienceValue: 15
 --- !u!65 &768325209
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1815,11 +1819,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
   sinkSpeed: 1.5
   sinkDuration: 2
-  experienceOrbPrefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
-  minOrbs: 3
-  maxOrbs: 7
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 2
   orbSpawnHeight: 1
+  orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
+  defaultExperienceValue: 15
 --- !u!65 &1476882163
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1885,7 +1890,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6036353d51d249fab28f1098aad97de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
-  enemyPrefab: {fileID: 502573316045654622, guid: e33597323199146da8f04bce6ec87c63, type: 3}
   player: {fileID: 2131817215}
   spawnRadius: 15
   initialSpawnInterval: 3
@@ -2094,11 +2098,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
   sinkSpeed: 1.5
   sinkDuration: 2
-  experienceOrbPrefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
-  minOrbs: 3
-  maxOrbs: 7
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 2
   orbSpawnHeight: 1
+  orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
+  defaultExperienceValue: 15
 --- !u!65 &1860265285
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2120,6 +2125,63 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6358075, y: 1.750637, z: 0.90397793}
   m_Center: {x: 0.000026628375, y: 0.8754636, z: 0.00015679002}
+--- !u!1 &1866126881
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1866126883}
+  - component: {fileID: 1866126882}
+  m_Layer: 0
+  m_Name: PoolManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1866126882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866126881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aba708ca004f94f319fe444aa2814c56, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PoolManager
+  poolConfigs:
+  - poolType: 0
+    prefab: {fileID: 323352707975832528, guid: ab5a2bcba21aa4947967a00352039676, type: 3}
+    defaultCapacity: 10
+    maxSize: 20
+  - poolType: 1
+    prefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
+    defaultCapacity: 10
+    maxSize: 20
+  - poolType: 2
+    prefab: {fileID: 502573316045654622, guid: e33597323199146da8f04bce6ec87c63, type: 3}
+    defaultCapacity: 10
+    maxSize: 20
+--- !u!4 &1866126883
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866126881}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2131817211
 GameObject:
   m_ObjectHideFlags: 0
@@ -2138,6 +2200,7 @@ GameObject:
   - component: {fileID: 2131817218}
   - component: {fileID: 2131817221}
   - component: {fileID: 2131817222}
+  - component: {fileID: 2131817223}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -2281,7 +2344,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf14756a510d045c9b20504868478e38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoAttackSystem
-  projectilePrefab: {fileID: 323352707975832528, guid: ab5a2bcba21aa4947967a00352039676, type: 3}
   firePoint: {fileID: 1465477815}
   attackRange: 10
   attackCooldown: 0.5
@@ -2375,6 +2437,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerExperience
   currentLevel: 1
   currentExperience: 0
+--- !u!114 &2131817223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2131817211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79b963095cbb44542a92e2a4ce4c70aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolable
 --- !u!1 &2136865211
 GameObject:
   m_ObjectHideFlags: 0
@@ -2467,3 +2541,4 @@ SceneRoots:
   - {fileID: 1634276928}
   - {fileID: 238261082}
   - {fileID: 400388812}
+  - {fileID: 1866126883}

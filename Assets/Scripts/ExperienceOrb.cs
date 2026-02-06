@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ExperienceOrb : MonoBehaviour
+public class ExperienceOrb : MonoBehaviour, IPoolable
 {
     [Header("Experience Settings")]
     [SerializeField] private int experienceValue = 10;
@@ -15,11 +15,44 @@ public class ExperienceOrb : MonoBehaviour
     private bool isMovingToPlayer = false;
     private float currentSpeed = 0f;
     private bool collected = false;
+    private float lifetimeTimer;
+
+    public void SetExperienceValue(int value)
+    {
+        experienceValue = value;
+    }
+
+    public void SetOrbColor(Color color)
+    {
+        Renderer renderer = GetComponent<Renderer>();
+        if (renderer != null && renderer.material != null)
+        {
+            renderer.material.color = color;
+        }
+
+        Light orbLight = GetComponent<Light>();
+        if (orbLight != null)
+        {
+            orbLight.color = color;
+        }
+    }
+
+    public void SetAttractionRange(float range)
+    {
+        attractionRange = range;
+    }
+
+    public void SetMoveSpeed(float speed)
+    {
+        moveSpeed = speed;
+    }
 
     private void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
-        Destroy(gameObject, lifeTime);
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        }
         
         SphereCollider collider = GetComponent<SphereCollider>();
         if (collider != null)
@@ -45,6 +78,20 @@ public class ExperienceOrb : MonoBehaviour
     private void Update()
     {
         if (player == null || collected) return;
+
+        lifetimeTimer -= Time.deltaTime;
+        if (lifetimeTimer <= 0f)
+        {
+            if (PoolManager.Instance != null)
+            {
+                PoolManager.Instance.Despawn(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+            return;
+        }
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
@@ -82,12 +129,39 @@ public class ExperienceOrb : MonoBehaviour
             playerExp.AddExperience(experienceValue);
         }
         
-        Destroy(gameObject);
+        if (PoolManager.Instance != null)
+        {
+            PoolManager.Instance.Despawn(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, attractionRange);
+    }
+
+    public void OnSpawn()
+    {
+        collected = false;
+        isMovingToPlayer = false;
+        currentSpeed = 0f;
+        lifetimeTimer = lifeTime;
+
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        }
+    }
+
+    public void OnDespawn()
+    {
+        collected = false;
+        isMovingToPlayer = false;
+        currentSpeed = 0f;
     }
 }
