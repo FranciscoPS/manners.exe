@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[System.Obsolete("Use EnemySpawnManager instead")]
 public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] private Transform player;
