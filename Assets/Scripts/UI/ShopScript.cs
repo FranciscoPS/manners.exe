@@ -5,6 +5,7 @@ public class ShopScript : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject interactionText;
+    [SerializeField] private GameObject shopPanel;
 
     private bool playerInRange = false;
     private bool shopOpen = false;
@@ -32,6 +33,8 @@ public class ShopScript : MonoBehaviour
     private void Start()
     {
         interactionText.SetActive(false);
+        shopPanel.SetActive(false);
+
     }
 
     private void Update()
@@ -62,9 +65,19 @@ public class ShopScript : MonoBehaviour
     private void OpenShop()
     {
         shopOpen = true;
-
         Time.timeScale = 0f;
 
+
         interactionText.SetActive(false);
+        shopPanel.SetActive(true);
+    }
+
+    public void CloseShop()
+    {
+        shopOpen = false;
+
+        Time.timeScale = 1f;
+
+        shopPanel.SetActive(false);
     }
 }
