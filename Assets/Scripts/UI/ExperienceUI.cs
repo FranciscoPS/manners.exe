@@ -6,14 +6,13 @@ public class ExperienceUI : MonoBehaviour
 {
     [Header("Animation Settings")]
     [SerializeField] private float fillSpeed = 5f;
-    [SerializeField] private float levelUpDisplayTime = 2f;
-    
+
     private Image expBarFill;
     private TextMeshProUGUI levelText;
     private TextMeshProUGUI expText;
-    private GameObject levelUpPanel;
     
     private PlayerExperience playerExperience;
+
     private float targetFillAmount = 0f;
     private float currentFillAmount = 0f;
 
@@ -30,23 +29,16 @@ public class ExperienceUI : MonoBehaviour
         Transform expTextTransform = transform.Find("ExpBarPanel/ExpText");
         if (expTextTransform != null)
             expText = expTextTransform.GetComponent<TextMeshProUGUI>();
-
-        Transform levelUpPanelTransform = transform.Find("LevelUpPanel");
-        if (levelUpPanelTransform != null)
-            levelUpPanel = levelUpPanelTransform.gameObject;
     }
 
     private void Start()
     {
         playerExperience = FindFirstObjectByType<PlayerExperience>();
-        
-        if (levelUpPanel != null)
-            levelUpPanel.SetActive(false);
 
         if (ExperienceManager.Instance != null)
         {
             ExperienceManager.Instance.OnExperienceChanged += UpdateExperienceBar;
-            ExperienceManager.Instance.OnLevelUp += OnLevelUp;
+            ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
         }
 
         if (playerExperience != null)
@@ -62,7 +54,7 @@ public class ExperienceUI : MonoBehaviour
         if (ExperienceManager.Instance != null)
         {
             ExperienceManager.Instance.OnExperienceChanged -= UpdateExperienceBar;
-            ExperienceManager.Instance.OnLevelUp -= OnLevelUp;
+            ExperienceManager.Instance.OnLevelUp -= HandleLevelUp;
         }
     }
 
@@ -70,7 +62,7 @@ public class ExperienceUI : MonoBehaviour
     {
         if (expBarFill != null)
         {
-            currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, fillSpeed * Time.deltaTime);
+            currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, fillSpeed * Time.unscaledDeltaTime);
             
             RectTransform rt = expBarFill.rectTransform;
             rt.anchorMax = new Vector2(currentFillAmount, 1f);
@@ -92,25 +84,15 @@ public class ExperienceUI : MonoBehaviour
         }
     }
 
-    private void OnLevelUp(int newLevel)
+    private void HandleLevelUp(int newLevel)
     {
         currentFillAmount = 0f;
-        
-        if (levelUpPanel != null)
-        {
-            levelUpPanel.SetActive(true);
-            TextMeshProUGUI levelUpText = levelUpPanel.GetComponentInChildren<TextMeshProUGUI>();
-            if (levelUpText != null)
-            {
-                levelUpText.text = "NIVEL " + newLevel;
-            }
-            Invoke(nameof(HideLevelUpPanel), levelUpDisplayTime);
-        }
-    }
+        targetFillAmount = 0f;
 
-    private void HideLevelUpPanel()
-    {
-        if (levelUpPanel != null)
-            levelUpPanel.SetActive(false);
+        if (levelText != null)
+        {
+            levelText.text = "NIVEL " + newLevel;
+        }
+
     }
 }
