@@ -732,6 +732,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpManager
   levelUpPanel: {fileID: 1303323440}
+  levelUpText: {fileID: 1581943160}
+  colorChangeSpeed: 1
 --- !u!1 &242678228
 GameObject:
   m_ObjectHideFlags: 0
@@ -4357,7 +4359,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1303323441
 RectTransform:
   m_ObjectHideFlags: 0

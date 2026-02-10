@@ -1,47 +1,56 @@
+using TMPro;
 using UnityEngine;
+using System.Collections;
 
 public class LevelUpManager : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject levelUpPanel;
+    [SerializeField] private TextMeshProUGUI levelUpText;
 
-    private bool levelUpActive = false;
+    [Header("Rainbow Settings")]
+    [SerializeField] private float colorChangeSpeed = 1f;
 
-    private void Awake()
+    private Coroutine rainbowCoroutine;
+
+    private void OnEnable()
     {
-        if (levelUpPanel != null)
-            levelUpPanel.SetActive(false);
-    }
-
-    private void Start()
-    {
-        if (ExperienceManager.Instance != null)
-            ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
+        StartRainbowText();
     }
 
     private void OnDisable()
     {
-        if (ExperienceManager.Instance != null)
-            ExperienceManager.Instance.OnLevelUp -= HandleLevelUp;
+        StopRainbowText();
     }
 
-    private void HandleLevelUp(int newLevel)
+    private void StartRainbowText()
     {
-        if (levelUpActive)
-            return;
+        if (rainbowCoroutine != null)
+            StopCoroutine(rainbowCoroutine);
 
-        levelUpActive = true;
-
-        Time.timeScale = 0f;
-
-        levelUpPanel.SetActive(true);
+        rainbowCoroutine = StartCoroutine(RainbowText());
     }
 
-    public void CloseLevelUp()
+    private void StopRainbowText()
     {
-        levelUpActive = false;
+        if (rainbowCoroutine != null)
+            StopCoroutine(rainbowCoroutine);
+    }
 
-        levelUpPanel.SetActive(false);
-        Time.timeScale = 1f;
+    private IEnumerator RainbowText()
+    {
+        float hue = 0f;
+
+        while (true)
+        {
+            hue += Time.unscaledDeltaTime * colorChangeSpeed;
+
+            if (hue > 1f)
+                hue = 0f;
+
+            levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
+
+            yield return null;
+        }
     }
 }
