@@ -8,49 +8,62 @@ public class LevelUpManager : MonoBehaviour
     [SerializeField] private GameObject levelUpPanel;
     [SerializeField] private TextMeshProUGUI levelUpText;
 
-    [Header("Rainbow Settings")]
-    [SerializeField] private float colorChangeSpeed = 1f;
+    [Header("Rainbow Text Settings")]
+    [SerializeField] private float colorSpeed = 1f;
 
-    private Coroutine rainbowCoroutine;
+    private bool levelUpActive = false;
 
-    private void OnEnable()
+    private void Awake()
     {
-        StartRainbowText();
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(false);
+    }
+
+    private void Start()
+    {
+        if (ExperienceManager.Instance != null)
+            ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
     }
 
     private void OnDisable()
     {
-        StopRainbowText();
+        if (ExperienceManager.Instance != null)
+            ExperienceManager.Instance.OnLevelUp -= HandleLevelUp;
     }
 
-    private void StartRainbowText()
+    private void Update()
     {
-        if (rainbowCoroutine != null)
-            StopCoroutine(rainbowCoroutine);
-
-        rainbowCoroutine = StartCoroutine(RainbowText());
-    }
-
-    private void StopRainbowText()
-    {
-        if (rainbowCoroutine != null)
-            StopCoroutine(rainbowCoroutine);
-    }
-
-    private IEnumerator RainbowText()
-    {
-        float hue = 0f;
-
-        while (true)
+        if (levelUpActive && levelUpText != null)
         {
-            hue += Time.unscaledDeltaTime * colorChangeSpeed;
-
-            if (hue > 1f)
-                hue = 0f;
-
+            float hue = Mathf.PingPong(Time.unscaledTime * colorSpeed, 1f);
             levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
-
-            yield return null;
         }
     }
+
+    private void HandleLevelUp(int newLevel)
+    {
+        if (levelUpActive)
+            return;
+
+        levelUpActive = true;
+
+        Time.timeScale = 0f;
+
+        if (levelUpText != null)
+            levelUpText.text = "LEVEL UP!";
+
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(true);
+    }
+
+    public void CloseLevelUp()
+    {
+        levelUpActive = false;
+
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(false);
+
+        Time.timeScale = 1f;
+    }
 }
+
