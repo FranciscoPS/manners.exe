@@ -11,7 +11,9 @@ public class PoolManager : MonoBehaviour
     {
         Projectile,
         ExperienceOrb,
-        Enemy
+        Enemy,
+        Coin,
+        Diamond
     }
 
     [System.Serializable]
@@ -180,6 +182,25 @@ public class PoolManager : MonoBehaviour
         }
 
         return obj;
+    }
+
+    public Collectible SpawnCollectible(Vector3 position, Collectible.CollectibleType type, int value)
+    {
+        PoolType poolType = type == Collectible.CollectibleType.Coin ? PoolType.Coin : PoolType.Diamond;
+        GameObject obj = Spawn(poolType, position, Quaternion.identity);
+        
+        if (obj != null)
+        {
+            Collectible collectible = obj.GetComponent<Collectible>();
+            if (collectible != null)
+            {
+                collectible.SetType(type);
+                collectible.SetValue(value);
+            }
+            return collectible;
+        }
+        
+        return null;
     }
 
     public void Despawn(GameObject obj)
