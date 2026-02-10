@@ -596,6 +596,7 @@ GameObject:
   - component: {fileID: 238261079}
   - component: {fileID: 238261083}
   - component: {fileID: 238261084}
+  - component: {fileID: 238261085}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -704,7 +705,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExperienceUI
   fillSpeed: 5
-  levelUpDisplayTime: 2
 --- !u!114 &238261084
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -719,6 +719,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopManager
   shopPanel: {fileID: 1675098945}
   shopScript: {fileID: 2124456324}
+--- !u!114 &238261085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 238261078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05bf178d499b70b4d87c5a6a2c46477f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpManager
+  levelUpPanel: {fileID: 1303323440}
 --- !u!1 &242678228
 GameObject:
   m_ObjectHideFlags: 0
@@ -2822,7 +2835,7 @@ MonoBehaviour:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.8584906, g: 0.68792367, b: 0.05490196, a: 1}
     m_PressedColor: {r: 0.5660378, g: 0.454289, b: 0.045389827, a: 1}
-    m_SelectedColor: {r: 0.3679245, g: 0.3576299, b: 0.3210662, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -2841,7 +2854,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 818770861}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 238261085}
+        m_TargetAssemblyTypeName: LevelUpManager, Assembly-CSharp
+        m_MethodName: CloseLevelUp
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &818770861
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4608,7 +4633,7 @@ MonoBehaviour:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.8584906, g: 0.68792367, b: 0.05490196, a: 1}
     m_PressedColor: {r: 0.5660378, g: 0.454289, b: 0.045389827, a: 1}
-    m_SelectedColor: {r: 0.3679245, g: 0.3576299, b: 0.3210662, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -4627,7 +4652,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1464375259}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 238261085}
+        m_TargetAssemblyTypeName: LevelUpManager, Assembly-CSharp
+        m_MethodName: CloseLevelUp
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1464375259
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5160,7 +5197,7 @@ MonoBehaviour:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.8584906, g: 0.68792367, b: 0.05490196, a: 1}
     m_PressedColor: {r: 0.5660378, g: 0.454289, b: 0.045389827, a: 1}
-    m_SelectedColor: {r: 0.3679245, g: 0.3576299, b: 0.3210662, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -5179,7 +5216,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1654718745}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 238261085}
+        m_TargetAssemblyTypeName: LevelUpManager, Assembly-CSharp
+        m_MethodName: CloseLevelUp
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1654718745
 MonoBehaviour:
   m_ObjectHideFlags: 0
