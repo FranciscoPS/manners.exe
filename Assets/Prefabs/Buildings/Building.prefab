@@ -28,8 +28,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.7, y: 1.7, z: 1.7}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7016334940476008232}
   m_Father: {fileID: 0}
@@ -49,11 +49,18 @@ MonoBehaviour:
   sinkSpeed: 1.5
   sinkDuration: 1
   visual: {fileID: 8272095557796569798}
-  experienceOrbPrefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
   minOrbs: 3
   maxOrbs: 7
   orbSpawnRadius: 2
   orbSpawnHeight: 1
+  orbConfig: {fileID: 0}
+  defaultExperienceValue: 15
+  coinDropChance: 0.7
+  minCoins: 2
+  maxCoins: 5
+  diamondDropChance: 0.15
+  minDiamonds: 1
+  maxDiamonds: 2
 --- !u!65 &8520553520846978520
 BoxCollider:
   m_ObjectHideFlags: 0
