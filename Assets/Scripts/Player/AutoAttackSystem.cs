@@ -88,12 +88,14 @@ public class AutoAttackSystem : MonoBehaviour
         // Obtener número de proyectiles del PlayerStatsManager
         int projectileCount = 1;
         bool isExplosive = false;
+        float explosionRadius = 0f;
         float knockbackForce = 0f;
         
         if (PlayerStatsManager.Instance != null)
         {
             projectileCount = PlayerStatsManager.Instance.GetProjectileCount();
             isExplosive = PlayerStatsManager.Instance.IsExplosiveShot();
+            explosionRadius = PlayerStatsManager.Instance.GetExplosionRadius();
             knockbackForce = PlayerStatsManager.Instance.GetKnockbackForce();
         }
         
@@ -114,7 +116,7 @@ public class AutoAttackSystem : MonoBehaviour
                 Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
                 
                 projectile.SetDirection(direction);
-                projectile.SetExplosive(isExplosive, 3f);
+                projectile.SetExplosive(isExplosive, explosionRadius);
                 projectile.SetKnockback(knockbackForce);
             }
         }

@@ -226,19 +226,9 @@ public class PlayerStatsManager : MonoBehaviour
     public int GetProjectileCount()
     {
         int multiShotLevel = GetUpgradeLevel(UpgradeType.MultiShot);
-        if (multiShotLevel <= 0) return 1;
         
-        if (UpgradeDatabase.Instance != null)
-        {
-            UpgradeData multiShotUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.MultiShot);
-            if (multiShotUpgrade != null)
-            {
-                // Cada nivel agrega 1 proyectil (nivel 1 = 2 proyectiles, nivel 2 = 3, etc.)
-                return (int)multiShotUpgrade.CalculateValueAtLevel(multiShotLevel) + 1;
-            }
-        }
-        
-        return 1;
+        // Progresión lineal simple: nivel 0 = 1 proyectil, nivel 1 = 2, nivel 2 = 3, etc.
+        return 1 + multiShotLevel;
     }
     
     /// <summary>
@@ -250,6 +240,25 @@ public class PlayerStatsManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Obtiene el radio de explosión basado en el nivel del upgrade
+    /// </summary>
+    public float GetExplosionRadius()
+    {
+        int explosiveLevel = GetUpgradeLevel(UpgradeType.ExplosiveShot);
+        if (explosiveLevel <= 0) return 0f;
+        
+        if (GameBalanceConfig.Instance != null)
+        {
+            // Nivel 1: radio base, cada nivel adicional suma explosionRadiusPerLevel
+            float baseRadius = GameBalanceConfig.Instance.BaseExplosionRadius;
+            float radiusPerLevel = GameBalanceConfig.Instance.ExplosionRadiusPerLevel;
+            return baseRadius + (radiusPerLevel * (explosiveLevel - 1));
+        }
+        
+        return 3f; // Fallback
+    }
+    
+    /// <summary>
     /// Obtiene la fuerza de knockback
     /// </summary>
     public float GetKnockbackForce()
@@ -257,13 +266,10 @@ public class PlayerStatsManager : MonoBehaviour
         int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
         if (knockbackLevel <= 0) return 0f;
         
-        if (UpgradeDatabase.Instance != null)
+        if (GameBalanceConfig.Instance != null)
         {
-            UpgradeData knockbackUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.Knockback);
-            if (knockbackUpgrade != null)
-            {
-                return knockbackUpgrade.CalculateValueAtLevel(knockbackLevel);
-            }
+            // Cada nivel multiplica la fuerza base
+            return GameBalanceConfig.Instance.BaseKnockbackForce * knockbackLevel;
         }
         
         return 0f;

@@ -169,11 +169,16 @@ public class Projectile : MonoBehaviour, IPoolable
         // Aplicar knockback si está configurado
         if (knockbackForce > 0f)
         {
-            Rigidbody enemyRb = enemy.GetComponent<Rigidbody>();
-            if (enemyRb != null)
+            EnemyController enemyController = enemy.GetComponent<EnemyController>();
+            if (enemyController != null)
             {
                 Vector3 knockbackDirection = (enemy.transform.position - impactPoint).normalized;
-                enemyRb.AddForce(knockbackDirection * knockbackForce, ForceMode.Impulse);
+                
+                float duration = GameBalanceConfig.Instance != null 
+                    ? GameBalanceConfig.Instance.KnockbackDuration 
+                    : 0.3f;
+                
+                enemyController.ApplyKnockback(knockbackDirection, knockbackForce, duration);
             }
         }
     }
