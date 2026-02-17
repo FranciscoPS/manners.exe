@@ -157,8 +157,10 @@ public class PlayerStatsManager : MonoBehaviour
             UpgradeData attackSpeedUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.AttackSpeed);
             if (attackSpeedUpgrade != null)
             {
-                float percentageReduction = attackSpeedUpgrade.CalculateValueAtLevel(attackSpeedLevel);
-                baseCooldown *= (1f - percentageReduction / 100f);
+                float percentage = attackSpeedUpgrade.CalculateValueAtLevel(attackSpeedLevel);
+                float baseFireRate = 1f / baseCooldown;
+                float newFireRate = baseFireRate * (1f + percentage / 100f);
+                baseCooldown = 1f / newFireRate;
             }
         }
         

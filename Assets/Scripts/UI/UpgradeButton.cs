@@ -174,12 +174,17 @@ public class UpgradeButton : MonoBehaviour
                 if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
                 {
                     float baseCooldown = baseValue;
-                    float newCooldown = baseCooldown * (1f - nextValue / 100f);
-                    
-                    float currentFireRate = 1f / baseCooldown;
-                    float newFireRate = 1f / newCooldown;
+                    float baseFireRate = 1f / baseCooldown;
+                    float currentFireRate = baseFireRate;
+                    float newFireRate = baseFireRate * (1f + nextValue / 100f);
                     
                     valuesText.text = $"{currentFireRate:F2} → {newFireRate:F2}";
+                }
+                else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot || 
+                         assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot || 
+                         assignedUpgrade.upgradeType == UpgradeType.Knockback)
+                {
+                    valuesText.text = $"0% → {nextValue:F1}%";
                 }
                 else if (assignedUpgrade.isPercentage)
                 {
@@ -225,13 +230,18 @@ public class UpgradeButton : MonoBehaviour
                 
                 if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
                 {
-                    float currentCooldown = baseValue * (1f - currentUpgradeValue / 100f);
-                    float nextCooldown = baseValue * (1f - nextUpgradeValue / 100f);
-                    
-                    float currentFireRate = 1f / currentCooldown;
-                    float nextFireRate = 1f / nextCooldown;
+                    float baseCooldown = baseValue;
+                    float baseFireRate = 1f / baseCooldown;
+                    float currentFireRate = baseFireRate * (1f + currentUpgradeValue / 100f);
+                    float nextFireRate = baseFireRate * (1f + nextUpgradeValue / 100f);
                     
                     valuesText.text = $"{currentFireRate:F2} → {nextFireRate:F2}";
+                }
+                else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot || 
+                         assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot || 
+                         assignedUpgrade.upgradeType == UpgradeType.Knockback)
+                {
+                    valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%";
                 }
                 else if (assignedUpgrade.isPercentage)
                 {

@@ -61,9 +61,17 @@ public class UpgradeDatabase : ScriptableObject
                 return false;
             
             if (isMilestoneLevel)
-                return premiumUpgrades.Contains(upgrade.upgradeType);
+            {
+                bool isPremium = premiumUpgrades.Contains(upgrade.upgradeType);
+                if (!isPremium)
+                {
+                    Debug.Log($"[Level {playerLevel}] Skipping non-premium: {upgrade.upgradeName}");
+                }
+                return isPremium;
+            }
             
-            return !premiumUpgrades.Contains(upgrade.upgradeType);
+            bool isNotPremium = !premiumUpgrades.Contains(upgrade.upgradeType);
+            return isNotPremium;
             
         }).ToList();
         
