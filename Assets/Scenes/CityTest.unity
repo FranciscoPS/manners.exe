@@ -3470,9 +3470,12 @@ MonoBehaviour:
   mediumOrbPitchMax: 1.2
   largeOrbPitchMin: 0.7
   largeOrbPitchMax: 0.9
+  coinPitchMin: 0.9
+  coinPitchMax: 1.1
   coinVolume: 1
-  diamondVolume: 1
+  diamondVolume: 0.6
   orbVolume: 0.8
+  diamondSoundCooldown: 0.05
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
