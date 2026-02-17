@@ -33,10 +33,15 @@ public class AutoAttackSystem : MonoBehaviour
 
         FindClosestEnemy();
 
+        // Usar cooldown modificado del PlayerStatsManager
+        float currentCooldown = PlayerStatsManager.Instance != null 
+            ? PlayerStatsManager.Instance.GetModifiedAttackCooldown() 
+            : attackCooldown;
+
         if (currentTarget != null && cooldownTimer <= 0f)
         {
             Shoot();
-            cooldownTimer = attackCooldown;
+            cooldownTimer = currentCooldown;
         }
     }
 

@@ -52,6 +52,18 @@ public class PlayerHealth : MonoBehaviour
             Die();
         }
     }
+    
+    /// <summary>
+    /// Aumenta la vida máxima y cura al jugador por esa cantidad
+    /// </summary>
+    public void AddMaxHealth(float amount)
+    {
+        maxHealth += amount;
+        currentHealth += amount; // También cura al jugador
+        
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        Debug.Log($"[PlayerHealth] Max health increased by {amount}. New max: {maxHealth}");
+    }
 
     private void Die()
     {

@@ -1,0 +1,248 @@
+using UnityEngine;
+using System.Collections.Generic;
+
+public class PlayerStatsManager : MonoBehaviour
+{
+    private static PlayerStatsManager instance;
+    public static PlayerStatsManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindFirstObjectByType<PlayerStatsManager>();
+                if (instance == null)
+                {
+                    GameObject obj = new GameObject("PlayerStatsManager");
+                    instance = obj.AddComponent<PlayerStatsManager>();
+                }
+            }
+            return instance;
+        }
+    }
+    
+    // Diccionario que guarda el nivel actual de cada tipo de upgrade
+    private Dictionary<UpgradeType, int> upgradeLevels = new Dictionary<UpgradeType, int>();
+    
+    // Evento que se dispara cuando se aplica un upgrade
+    public event System.Action<UpgradeType, int> OnUpgradeApplied;
+    
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+            InitializeUpgrades();
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
+    
+    private void InitializeUpgrades()
+    {
+        // Inicializar todos los tipos de upgrade en nivel 0
+        foreach (UpgradeType type in System.Enum.GetValues(typeof(UpgradeType)))
+        {
+            upgradeLevels[type] = 0;
+        }
+    }
+    
+    /// <summary>
+    /// Obtiene el nivel actual de un upgrade específico
+    /// </summary>
+    public int GetUpgradeLevel(UpgradeType type)
+    {
+        return upgradeLevels.ContainsKey(type) ? upgradeLevels[type] : 0;
+    }
+    
+    /// <summary>
+    /// Aplica un upgrade (incrementa su nivel)
+    /// </summary>
+    public void ApplyUpgrade(UpgradeData upgrade)
+    {
+        if (upgrade == null)
+        {
+            Debug.LogError("Trying to apply null upgrade!");
+            return;
+        }
+        
+        int currentLevel = GetUpgradeLevel(upgrade.upgradeType);
+        
+        if (currentLevel >= upgrade.maxLevel)
+        {
+            Debug.LogWarning($"Upgrade {upgrade.upgradeName} is already at max level ({upgrade.maxLevel})");
+            return;
+        }
+        
+        // Incrementar nivel
+        upgradeLevels[upgrade.upgradeType] = currentLevel + 1;
+        int newLevel = upgradeLevels[upgrade.upgradeType];
+        
+        Debug.Log($"[PlayerStatsManager] Applied {upgrade.upgradeName} - Level {currentLevel} → {newLevel}");
+        
+        // Notificar a otros sistemas
+        OnUpgradeApplied?.Invoke(upgrade.upgradeType, newLevel);
+        
+        // Aplicar el upgrade inmediatamente
+        ApplyUpgradeToPlayer(upgrade, newLevel);
+    }
+    
+    /// <summary>
+    /// Aplica los efectos del upgrade al jugador
+    /// </summary>
+    private void ApplyUpgradeToPlayer(UpgradeData upgrade, int level)
+    {
+        float value = upgrade.CalculateValueAtLevel(level);
+        
+        switch (upgrade.upgradeType)
+        {
+            case UpgradeType.Damage:
+                ApplyDamageUpgrade(value);
+                break;
+            case UpgradeType.AttackSpeed:
+                ApplyAttackSpeedUpgrade(value);
+                break;
+            case UpgradeType.MaxHealth:
+                ApplyMaxHealthUpgrade(value);
+                break;
+            case UpgradeType.MagnetRange:
+                ApplyMagnetRangeUpgrade(value);
+                break;
+            case UpgradeType.MoveSpeed:
+                ApplyMoveSpeedUpgrade(value);
+                break;
+        }
+    }
+    
+    // ========== APLICACIÓN DE UPGRADES ==========
+    
+    private void ApplyDamageUpgrade(float percentageIncrease)
+    {
+        // El daño se calculará dinámicamente desde GetModifiedDamage()
+        Debug.Log($"[PlayerStats] Damage modifier updated: +{percentageIncrease}%");
+    }
+    
+    private void ApplyAttackSpeedUpgrade(float percentageDecrease)
+    {
+        // El cooldown se calculará dinámicamente desde GetModifiedAttackCooldown()
+        Debug.Log($"[PlayerStats] Attack speed modifier updated: -{percentageDecrease}%");
+    }
+    
+    private void ApplyMaxHealthUpgrade(float healthIncrease)
+    {
+        PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
+        if (playerHealth != null)
+        {
+            playerHealth.AddMaxHealth(healthIncrease);
+            Debug.Log($"[PlayerStats] Max health increased by {healthIncrease}");
+        }
+    }
+    
+    private void ApplyMagnetRangeUpgrade(float percentageIncrease)
+    {
+        // El rango se calculará dinámicamente desde GetModifiedMagnetRange()
+        Debug.Log($"[PlayerStats] Magnet range modifier updated: +{percentageIncrease}%");
+    }
+    
+    private void ApplyMoveSpeedUpgrade(float percentageIncrease)
+    {
+        PlayerController playerController = FindFirstObjectByType<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.ApplySpeedModifier(percentageIncrease);
+            Debug.Log($"[PlayerStats] Move speed increased by {percentageIncrease}%");
+        }
+    }
+    
+    // ========== GETTERS DE STATS MODIFICADOS ==========
+    
+    /// <summary>
+    /// Obtiene el daño base del jugador con todos los modificadores aplicados
+    /// </summary>
+    public float GetModifiedDamage()
+    {
+        float baseDamage = GameBalanceConfig.Instance != null 
+            ? GameBalanceConfig.Instance.PlayerBaseDamage 
+            : 10f;
+        
+        int damageLevel = GetUpgradeLevel(UpgradeType.Damage);
+        if (damageLevel > 0 && UpgradeDatabase.Instance != null)
+        {
+            // Buscar el upgrade de daño en la database
+            UpgradeData damageUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.Damage);
+            if (damageUpgrade != null)
+            {
+                float percentageBonus = damageUpgrade.CalculateValueAtLevel(damageLevel);
+                baseDamage *= (1f + percentageBonus / 100f);
+            }
+        }
+        
+        return baseDamage;
+    }
+    
+    /// <summary>
+    /// Obtiene el cooldown de ataque con todos los modificadores aplicados
+    /// </summary>
+    public float GetModifiedAttackCooldown()
+    {
+        float baseCooldown = GameBalanceConfig.Instance != null 
+            ? GameBalanceConfig.Instance.PlayerAttackCooldown 
+            : 0.5f;
+        
+        int attackSpeedLevel = GetUpgradeLevel(UpgradeType.AttackSpeed);
+        if (attackSpeedLevel > 0 && UpgradeDatabase.Instance != null)
+        {
+            UpgradeData attackSpeedUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.AttackSpeed);
+            if (attackSpeedUpgrade != null)
+            {
+                float percentageReduction = attackSpeedUpgrade.CalculateValueAtLevel(attackSpeedLevel);
+                baseCooldown *= (1f - percentageReduction / 100f);
+            }
+        }
+        
+        return baseCooldown;
+    }
+    
+    /// <summary>
+    /// Obtiene el rango de atracción de orbes con todos los modificadores aplicados
+    /// </summary>
+    public float GetModifiedMagnetRange()
+    {
+        float baseRange = GameBalanceConfig.Instance != null 
+            ? GameBalanceConfig.Instance.OrbAttractionRange 
+            : 5f;
+        
+        int magnetLevel = GetUpgradeLevel(UpgradeType.MagnetRange);
+        if (magnetLevel > 0 && UpgradeDatabase.Instance != null)
+        {
+            UpgradeData magnetUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.MagnetRange);
+            if (magnetUpgrade != null)
+            {
+                float percentageBonus = magnetUpgrade.CalculateValueAtLevel(magnetLevel);
+                baseRange *= (1f + percentageBonus / 100f);
+            }
+        }
+        
+        return baseRange;
+    }
+    
+    /// <summary>
+    /// Obtiene una copia del diccionario de niveles de upgrade
+    /// </summary>
+    public Dictionary<UpgradeType, int> GetAllUpgradeLevels()
+    {
+        return new Dictionary<UpgradeType, int>(upgradeLevels);
+    }
+    
+    /// <summary>
+    /// Resetea todos los upgrades (útil para reiniciar partida)
+    /// </summary>
+    public void ResetUpgrades()
+    {
+        InitializeUpgrades();
+        Debug.Log("[PlayerStatsManager] All upgrades reset to level 0");
+    }
+}

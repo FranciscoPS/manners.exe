@@ -24,9 +24,14 @@ public class ProjectileConfiguration : ScriptableObject
     
     public void ApplyToProjectile(Projectile projectile)
     {
-        // Always use PlayerBaseDamage from GameBalanceConfig, then apply multiplier
-        float finalDamage = 10f; // Fallback
-        if (GameBalanceConfig.Instance != null)
+        // Usar el daño modificado del PlayerStatsManager (incluye upgrades)
+        float finalDamage = 10f; // Fall back
+        
+        if (PlayerStatsManager.Instance != null)
+        {
+            finalDamage = PlayerStatsManager.Instance.GetModifiedDamage() * damageMultiplier;
+        }
+        else if (GameBalanceConfig.Instance != null)
         {
             finalDamage = GameBalanceConfig.Instance.PlayerBaseDamage * damageMultiplier;
         }
