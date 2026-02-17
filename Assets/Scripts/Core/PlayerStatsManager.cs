@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class PlayerStatsManager : MonoBehaviour
 {
@@ -33,11 +34,25 @@ public class PlayerStatsManager : MonoBehaviour
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             InitializeUpgrades();
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else if (instance != this)
         {
             Destroy(gameObject);
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        InitializeUpgrades();
     }
     
     private void InitializeUpgrades()
@@ -89,8 +104,8 @@ public class PlayerStatsManager : MonoBehaviour
             case UpgradeType.AttackSpeed:
                 ApplyAttackSpeedUpgrade(value);
                 break;
-            case UpgradeType.MagnetRange:
-                ApplyMagnetRangeUpgrade(value);
+            case UpgradeType.AttackRange:
+                ApplyAttackRangeUpgrade(value);
                 break;
             case UpgradeType.MoveSpeed:
                 ApplyMoveSpeedUpgrade(value);
@@ -112,7 +127,7 @@ public class PlayerStatsManager : MonoBehaviour
     {
     }
     
-    private void ApplyMagnetRangeUpgrade(float percentageIncrease)
+    private void ApplyAttackRangeUpgrade(float percentageIncrease)
     {
     }
     
@@ -167,19 +182,19 @@ public class PlayerStatsManager : MonoBehaviour
         return baseCooldown;
     }
     
-    public float GetModifiedMagnetRange()
+    public float GetModifiedAttackRange()
     {
         float baseRange = GameBalanceConfig.Instance != null 
-            ? GameBalanceConfig.Instance.OrbAttractionRange 
-            : 5f;
+            ? GameBalanceConfig.Instance.PlayerAttackRange 
+            : 10f;
         
-        int magnetLevel = GetUpgradeLevel(UpgradeType.MagnetRange);
-        if (magnetLevel > 0 && UpgradeDatabase.Instance != null)
+        int attackRangeLevel = GetUpgradeLevel(UpgradeType.AttackRange);
+        if (attackRangeLevel > 0 && UpgradeDatabase.Instance != null)
         {
-            UpgradeData magnetUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.MagnetRange);
-            if (magnetUpgrade != null)
+            UpgradeData attackRangeUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.AttackRange);
+            if (attackRangeUpgrade != null)
             {
-                float percentageBonus = magnetUpgrade.CalculateValueAtLevel(magnetLevel);
+                float percentageBonus = attackRangeUpgrade.CalculateValueAtLevel(attackRangeLevel);
                 baseRange *= (1f + percentageBonus / 100f);
             }
         }
@@ -285,8 +300,8 @@ public class PlayerStatsManager : MonoBehaviour
             case UpgradeType.AttackSpeed:
                 return config.PlayerAttackCooldown;
             
-            case UpgradeType.MagnetRange:
-                return config.OrbAttractionRange;
+            case UpgradeType.AttackRange:
+                return config.PlayerAttackRange;
             
             case UpgradeType.MoveSpeed:
                 return config.PlayerMoveSpeed;

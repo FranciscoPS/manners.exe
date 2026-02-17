@@ -47,7 +47,11 @@ public class AutoAttackSystem : MonoBehaviour
 
     private void FindClosestEnemy()
     {
-        Collider[] enemies = Physics.OverlapSphere(transform.position, attackRange, enemyLayer);
+        float currentRange = PlayerStatsManager.Instance != null 
+            ? PlayerStatsManager.Instance.GetModifiedAttackRange() 
+            : attackRange;
+        
+        Collider[] enemies = Physics.OverlapSphere(transform.position, currentRange, enemyLayer);
         
         if (enemies.Length == 0)
         {
@@ -139,7 +143,11 @@ public class AutoAttackSystem : MonoBehaviour
         Gizmos.color = Color.yellow;
         float currentRange = attackRange;
         
-        if (Application.isPlaying && GameBalanceConfig.Instance != null)
+        if (Application.isPlaying && PlayerStatsManager.Instance != null)
+        {
+            currentRange = PlayerStatsManager.Instance.GetModifiedAttackRange();
+        }
+        else if (GameBalanceConfig.Instance != null)
         {
             currentRange = GameBalanceConfig.Instance.PlayerAttackRange;
         }
