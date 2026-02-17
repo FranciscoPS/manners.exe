@@ -12233,6 +12233,7 @@ GameObject:
   - component: {fileID: 2131817221}
   - component: {fileID: 2131817222}
   - component: {fileID: 2131817223}
+  - component: {fileID: 2131817224}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -12482,6 +12483,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79b963095cbb44542a92e2a4ce4c70aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolable
+--- !u!114 &2131817224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2131817211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a70793ec81503ff4fbe6731693ab9bad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageTween
+  playerLayer: 7
+  enemyLayer: 3
+  tweenTime: 0.4
+  tweenLoops: 4
+  targetRenderer: {fileID: 2131817213}
 --- !u!1 &2136865211
 GameObject:
   m_ObjectHideFlags: 0
