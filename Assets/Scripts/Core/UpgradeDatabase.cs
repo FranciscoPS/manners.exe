@@ -42,13 +42,6 @@ public class UpgradeDatabase : ScriptableObject
     {
         List<UpgradeData> selectedUpgrades = new List<UpgradeData>();
         
-        HashSet<UpgradeType> premiumUpgrades = new HashSet<UpgradeType>
-        {
-            UpgradeType.MultiShot,
-            UpgradeType.ExplosiveShot,
-            UpgradeType.Knockback
-        };
-        
         bool isMilestoneLevel = (playerLevel % 5 == 0);
         
         List<UpgradeData> availableUpgrades = allUpgrades.Where(upgrade =>
@@ -62,16 +55,14 @@ public class UpgradeDatabase : ScriptableObject
             
             if (isMilestoneLevel)
             {
-                bool isPremium = premiumUpgrades.Contains(upgrade.upgradeType);
-                if (!isPremium)
+                if (!upgrade.isPremium)
                 {
                     Debug.Log($"[Level {playerLevel}] Skipping non-premium: {upgrade.upgradeName}");
                 }
-                return isPremium;
+                return upgrade.isPremium;
             }
             
-            bool isNotPremium = !premiumUpgrades.Contains(upgrade.upgradeType);
-            return isNotPremium;
+            return !upgrade.isPremium;
             
         }).ToList();
         

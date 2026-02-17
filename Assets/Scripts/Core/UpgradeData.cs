@@ -36,13 +36,13 @@ public class UpgradeData : ScriptableObject
     [Tooltip("Si es true, muestra como porcentaje (15 → 15%). Si es false, muestra como valor absoluto (20 → 20 HP)")]
     public bool isPercentage = true;
     
-    [Tooltip("Si es true, el upgrade REDUCE el valor (ej: -8% cooldown). Si es false, AUMENTA (+15% daño)")]
-    public bool isReduction = false;
-    
     [Tooltip("Sufijo para mostrar en UI (ej: 'HP', 'Range')")]
     public string valueSuffix = "";
     
     [Header("Rarity & Weight")]
+    [Tooltip("Si es true, este upgrade solo aparece en niveles milestone (5, 10, 15...)")]
+    public bool isPremium = false;
+    
     [Tooltip("Peso de aparición (mayor = más probable de aparecer)")]
     [Range(1, 100)]
     public int spawnWeight = 50;
@@ -61,24 +61,11 @@ public class UpgradeData : ScriptableObject
         
         if (isPercentage)
         {
-            bool invertSign = (upgradeType == UpgradeType.AttackSpeed);
-            string sign;
-            
-            if (invertSign)
-            {
-                sign = "+";
-            }
-            else
-            {
-                sign = isReduction ? "-" : "+";
-            }
-            
-            return $"{sign}{value:F1}%";
+            return $"+{value:F1}%";
         }
         else
         {
-            string sign = isReduction ? "-" : "+";
-            return $"{sign}{value:F0}{valueSuffix}";
+            return $"+{value:F0}{valueSuffix}";
         }
     }
     

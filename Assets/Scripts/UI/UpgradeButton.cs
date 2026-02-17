@@ -188,32 +188,21 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else if (assignedUpgrade.isPercentage)
                 {
-                    float finalValue;
-                    if (assignedUpgrade.isReduction)
-                    {
-                        finalValue = baseValue * (1f - nextValue / 100f);
-                    }
-                    else
-                    {
-                        finalValue = baseValue * (1f + nextValue / 100f);
-                    }
+                    float finalValue = baseValue * (1f + nextValue / 100f);
                     
-                    // Usar formato apropiado según el tamaño del valor
                     string format;
                     if (baseValue < 1f)
-                        format = "F3"; // 3 decimales para valores muy pequeños (0.001 - 0.999)
+                        format = "F3";
                     else if (baseValue < 10f)
-                        format = "F2"; // 2 decimales para valores pequeños (1.00 - 9.99)
+                        format = "F2";
                     else
-                        format = "F1"; // 1 decimal para valores grandes (10.0+)
+                        format = "F1";
                     
                     valuesText.text = $"{baseValue.ToString(format)} → {finalValue.ToString(format)}";
                 }
                 else
                 {
-                    float finalValue = assignedUpgrade.isReduction 
-                        ? baseValue - nextValue 
-                        : baseValue + nextValue;
+                    float finalValue = baseValue + nextValue;
                     valuesText.text = $"{baseValue:F0} → {finalValue:F0}";
                 }
             }
@@ -245,38 +234,23 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else if (assignedUpgrade.isPercentage)
                 {
-                    float currentFinalValue, nextFinalValue;
+                    float currentFinalValue = baseValue * (1f + currentUpgradeValue / 100f);
+                    float nextFinalValue = baseValue * (1f + nextUpgradeValue / 100f);
                     
-                    if (assignedUpgrade.isReduction)
-                    {
-                        currentFinalValue = baseValue * (1f - currentUpgradeValue / 100f);
-                        nextFinalValue = baseValue * (1f - nextUpgradeValue / 100f);
-                    }
-                    else
-                    {
-                        currentFinalValue = baseValue * (1f + currentUpgradeValue / 100f);
-                        nextFinalValue = baseValue * (1f + nextUpgradeValue / 100f);
-                    }
-                    
-                    // Usar formato apropiado según el tamaño del valor
                     string format;
                     if (baseValue < 1f)
-                        format = "F3"; // 3 decimales para valores muy pequeños (0.001 - 0.999)
+                        format = "F3";
                     else if (baseValue < 10f)
-                        format = "F2"; // 2 decimales para valores pequeños (1.00 - 9.99)
+                        format = "F2";
                     else
-                        format = "F1"; // 1 decimal para valores grandes (10.0+)
+                        format = "F1";
                     
                     valuesText.text = $"{currentFinalValue.ToString(format)} → {nextFinalValue.ToString(format)}";
                 }
                 else
                 {
-                    float currentFinalValue = assignedUpgrade.isReduction 
-                        ? baseValue - currentUpgradeValue 
-                        : baseValue + currentUpgradeValue;
-                    float nextFinalValue = assignedUpgrade.isReduction 
-                        ? baseValue - nextUpgradeValue 
-                        : baseValue + nextUpgradeValue;
+                    float currentFinalValue = baseValue + currentUpgradeValue;
+                    float nextFinalValue = baseValue + nextUpgradeValue;
                     valuesText.text = $"{currentFinalValue:F0} → {nextFinalValue:F0}";
                 }
             }
