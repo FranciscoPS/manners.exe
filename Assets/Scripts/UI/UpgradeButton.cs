@@ -19,7 +19,11 @@ public class UpgradeButton : MonoBehaviour
     {
         button = GetComponent<Button>();
         if (button != null)
+        {
+            // Asegurarse de que solo haya UN listener
+            button.onClick.RemoveAllListeners();
             button.onClick.AddListener(OnUpgradeSelected);
+        }
         
         // Buscar componentes en hijos - más flexible que Find()
         TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
@@ -52,7 +56,7 @@ public class UpgradeButton : MonoBehaviour
     /// <summary>
     /// Configura el botón con los datos del upgrade
     /// </summary>
-    public void Setup(UpgradeData upgrade, int playerCurrentLevel)
+    public void Setup(UpgradeData upgrade, int currentUpgradeLevel)
     {
         assignedUpgrade = upgrade;
         
@@ -62,7 +66,7 @@ public class UpgradeButton : MonoBehaviour
             return;
         }
         
-        currentLevel = playerCurrentLevel;
+        currentLevel = currentUpgradeLevel;
         nextLevel = currentLevel + 1;
         
         // Si ya está al máximo, no mostrar
@@ -74,6 +78,12 @@ public class UpgradeButton : MonoBehaviour
         
         gameObject.SetActive(true);
         
+        // Re-habilitar el botón
+        if (button != null)
+        {
+            button.interactable = true;
+        }
+        
         // Asegurarse de tener referencias antes de actualizar UI
         EnsureReferences();
         UpdateUI();
@@ -84,11 +94,10 @@ public class UpgradeButton : MonoBehaviour
         // Si ya las tenemos, salir
         if (upgradeNameText != null && descriptionText != null) return;
         
+        // Solo obtener el botón si aún no lo tenemos (no agregar listener aquí)
         if (button == null)
         {
             button = GetComponent<Button>();
-            if (button != null)
-                button.onClick.AddListener(OnUpgradeSelected);
         }
         
         // Buscar componentes en hijos
@@ -126,7 +135,10 @@ public class UpgradeButton : MonoBehaviour
         // Nombre del upgrade
         if (upgradeNameText != null)
         {
+            // Mostrar el nivel que vas a obtener (número de veces comprado + 1)
             upgradeNameText.text = $"{assignedUpgrade.upgradeName} lvl.{nextLevel}";
+            
+            Debug.Log($"[UpgradeButton] Title: {assignedUpgrade.upgradeName} lvl.{nextLevel} (currentLevel={currentLevel}, nextLevel={nextLevel})");
         }
         
         // Descripción
@@ -186,8 +198,15 @@ public class UpgradeButton : MonoBehaviour
                         finalValue = baseValue * (1f + nextValue / 100f);
                     }
                     
-                    // Usar más decimales para valores pequeños (< 10)
-                    string format = baseValue < 10f ? "F2" : "F1";
+                    // Usar formato apropiado según el tamaño del valor
+                    string format;
+                    if (baseValue < 1f)
+                        format = "F3"; // 3 decimales para valores muy pequeños (0.001 - 0.999)
+                    else if (baseValue < 10f)
+                        format = "F2"; // 2 decimales para valores pequeños (1.00 - 9.99)
+                    else
+                        format = "F1"; // 1 decimal para valores grandes (10.0+)
+                    
                     valuesText.text = $"{baseValue.ToString(format)} → {finalValue.ToString(format)}";
                 }
                 else
@@ -201,10 +220,55 @@ public class UpgradeButton : MonoBehaviour
             }
             else
             {
-                // Para niveles superiores, solo mostramos los valores del upgrade
-                float currentValue = assignedUpgrade.CalculateValueAtLevel(currentLevel);
-                float nextValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
-                valuesText.text = $"{currentValue:F1} → {nextValue:F1}";
+                // Para niveles superiores, calcular el valor real del stat
+                float baseValue = 0f;
+                if (PlayerStatsManager.Instance != null)
+                {
+                    baseValue = PlayerStatsManager.Instance.GetBaseGameValue(assignedUpgrade.upgradeType);
+                }
+                
+                float currentUpgradeValue = assignedUpgrade.CalculateValueAtLevel(currentLevel);
+                float nextUpgradeValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
+                
+                if (assignedUpgrade.isPercentage)
+                {
+                    float currentFinalValue, nextFinalValue;
+                    
+                    if (assignedUpgrade.isReduction)
+                    {
+                        // Reducción: base × (1 - porcentaje/100)
+                        currentFinalValue = baseValue * (1f - currentUpgradeValue / 100f);
+                        nextFinalValue = baseValue * (1f - nextUpgradeValue / 100f);
+                    }
+                    else
+                    {
+                        // Aumento: base × (1 + porcentaje/100)
+                        currentFinalValue = baseValue * (1f + currentUpgradeValue / 100f);
+                        nextFinalValue = baseValue * (1f + nextUpgradeValue / 100f);
+                    }
+                    
+                    // Usar formato apropiado según el tamaño del valor
+                    string format;
+                    if (baseValue < 1f)
+                        format = "F3"; // 3 decimales para valores muy pequeños (0.001 - 0.999)
+                    else if (baseValue < 10f)
+                        format = "F2"; // 2 decimales para valores pequeños (1.00 - 9.99)
+                    else
+                        format = "F1"; // 1 decimal para valores grandes (10.0+)
+                    
+                    valuesText.text = $"{currentFinalValue.ToString(format)} → {nextFinalValue.ToString(format)}";
+                }
+                else
+                {
+                    // Valores absolutos
+                    float currentFinalValue = assignedUpgrade.isReduction 
+                        ? baseValue - currentUpgradeValue 
+                        : baseValue + currentUpgradeValue;
+                    float nextFinalValue = assignedUpgrade.isReduction 
+                        ? baseValue - nextUpgradeValue 
+                        : baseValue + nextUpgradeValue;
+                    valuesText.text = $"{currentFinalValue:F0} → {nextFinalValue:F0}";
+                }
             }
         }
         
@@ -218,6 +282,12 @@ public class UpgradeButton : MonoBehaviour
     private void OnUpgradeSelected()
     {
         if (assignedUpgrade == null) return;
+        
+        // Deshabilitar el botón inmediatamente para evitar doble clic
+        if (button != null)
+        {
+            button.interactable = false;
+        }
         
         // Aplicar upgrade a través del PlayerStatsManager
         if (PlayerStatsManager.Instance != null)
