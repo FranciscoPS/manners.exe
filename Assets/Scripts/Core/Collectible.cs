@@ -214,10 +214,20 @@ public class Collectible : MonoBehaviour, IPoolable
             if (type == CollectibleType.Coin)
             {
                 CurrencyManager.Instance.AddCoins(value);
+                
+                if (PickupAudioManager.Instance != null)
+                {
+                    PickupAudioManager.Instance.PlayCoinSound();
+                }
             }
             else if (type == CollectibleType.Diamond)
             {
                 CurrencyManager.Instance.AddDiamonds(value);
+                
+                if (PickupAudioManager.Instance != null)
+                {
+                    PickupAudioManager.Instance.PlayDiamondSound();
+                }
             }
         }
         
