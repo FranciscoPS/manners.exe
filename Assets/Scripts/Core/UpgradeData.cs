@@ -52,6 +52,11 @@ public class UpgradeData : ScriptableObject
         if (level <= 0) return 0f;
         if (level > maxLevel) level = maxLevel;
         
+        if (upgradeType == UpgradeType.AttackSpeed)
+        {
+            return baseValue + (multiplierPerLevel * (level - 1));
+        }
+        
         return baseValue * Mathf.Pow(multiplierPerLevel, level - 1);
     }
     
