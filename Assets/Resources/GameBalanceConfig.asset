@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: feabf78d2e6f6a744819140996fd52a5, type: 3}
+  m_Name: GameBalanceConfig
+  m_EditorClassIdentifier: Assembly-CSharp::GameBalanceConfig
+  playerMaxHealth: 20
+  playerBaseDamage: 10
+  playerMoveSpeed: 10
+  playerAttackRange: 10
+  playerAttackCooldown: 0.1
+  baseExperienceRequired: 1000
+  experienceMultiplier: 1.5
+  buildingCoinDropChance: 0.7
+  buildingMinCoins: 2
+  buildingMaxCoins: 5
+  buildingDiamondDropChance: 0.15
+  buildingMinDiamonds: 1
+  buildingMaxDiamonds: 2
+  buildingMinOrbs: 3
+  buildingMaxOrbs: 7
+  buildingOrbSpawnRadius: 2
+  buildingDefaultExperienceValue: 15
+  coinAttractionRange: 5
+  diamondAttractionRange: 5
+  orbAttractionRange: 5
+  coinLifetime: 30
+  diamondLifetime: 30
+  orbLifetime: 30

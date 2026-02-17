@@ -5,10 +5,6 @@ public class ExperienceManager : MonoBehaviour
 {
     public static ExperienceManager Instance { get; private set; }
 
-    [Header("Level Settings")]
-    [SerializeField] private int baseExperienceRequired = 100;
-    [SerializeField] private float experienceMultiplier = 1.5f;
-
     public event Action<int> OnLevelUp;
     public event Action<int, int> OnExperienceChanged;
 
@@ -27,7 +23,11 @@ public class ExperienceManager : MonoBehaviour
 
     public int CalculateExperienceForLevel(int level)
     {
-        return Mathf.RoundToInt(baseExperienceRequired * Mathf.Pow(experienceMultiplier, level - 1));
+        if (GameBalanceConfig.Instance != null)
+        {
+            return GameBalanceConfig.Instance.CalculateExperienceForLevel(level);
+        }
+        return Mathf.RoundToInt(100 * Mathf.Pow(1.5f, level - 1));
     }
 
     public void NotifyLevelUp(int newLevel)

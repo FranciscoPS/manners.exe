@@ -3,10 +3,10 @@ using UnityEngine;
 public class ExperienceOrb : MonoBehaviour, IPoolable
 {
     private int experienceValue = 10;
-    private float attractionRange = 5f;
+    private float attractionRange;
     private float moveSpeed = 8f;
     private float acceleration = 15f;
-    private float lifeTime = 30f;
+    private float lifeTime;
     
     [Header("Warning Settings")]
     [SerializeField] private float warningTime = 3f;
@@ -147,6 +147,17 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         {
             rb.isKinematic = true;
             rb.useGravity = false;
+        }
+        
+        if (GameBalanceConfig.Instance != null)
+        {
+            attractionRange = GameBalanceConfig.Instance.OrbAttractionRange;
+            lifeTime = GameBalanceConfig.Instance.OrbLifetime;
+        }
+        else
+        {
+            attractionRange = 5f;
+            lifeTime = 30f;
         }
     }
 

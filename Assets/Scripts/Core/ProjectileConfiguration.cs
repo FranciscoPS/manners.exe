@@ -5,7 +5,8 @@ public class ProjectileConfiguration : ScriptableObject
 {
     [Header("Stats")]
     public float speed = 15f;
-    public float damage = 10f;
+    [Tooltip("Multiplier for base damage. Leave at 1.0 for normal damage")]
+    public float damageMultiplier = 1f;
     public float lifetime = 5f;
     
     [Header("Visual")]
@@ -23,7 +24,19 @@ public class ProjectileConfiguration : ScriptableObject
     
     public void ApplyToProjectile(Projectile projectile)
     {
-        projectile.SetStats(speed, damage, lifetime);
+        // Always use PlayerBaseDamage from GameBalanceConfig, then apply multiplier
+        float finalDamage = 10f; // Fallback
+        if (GameBalanceConfig.Instance != null)
+        {
+            finalDamage = GameBalanceConfig.Instance.PlayerBaseDamage * damageMultiplier;
+            Debug.Log($"[ProjectileConfig] BaseDamage: {GameBalanceConfig.Instance.PlayerBaseDamage}, Multiplier: {damageMultiplier}, FinalDamage: {finalDamage}");
+        }
+        else
+        {
+            Debug.LogError("[ProjectileConfig] GameBalanceConfig.Instance is NULL! Using fallback damage: 10");
+        }
+        
+        projectile.SetStats(speed, finalDamage, lifetime);
         projectile.SetVisuals(mesh, material, color, scale);
         projectile.SetEffects(trailEffect, hitEffect, hasLight, lightColor, lightIntensity);
     }
