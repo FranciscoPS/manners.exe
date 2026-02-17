@@ -5,9 +5,10 @@ public class BuildingsScript : MonoBehaviour
 {
     [Header("Destruction Settings")]
     [SerializeField] private float sinkSpeed = 1.5f;
-    [SerializeField] private float sinkDuration = 2f;
     [SerializeField] private GameObject visual;
     [SerializeField] private Transform spawnPoint;
+    [SerializeField] private float groundLevel = 0f;
+    [SerializeField] private float sinkExtraDistance = 1f;
 
     [Header("Experience Orb Settings")]
     [SerializeField] private int minOrbs = 3;
@@ -40,16 +41,41 @@ public class BuildingsScript : MonoBehaviour
 
     private IEnumerator SinkAndDestroy()
     {
-        float elapsedTime = 0f;
-
-        while (elapsedTime < sinkDuration)
+        if (visual == null)
         {
-            visual.transform.Translate(Vector3.down * sinkSpeed * Time.deltaTime);
-            elapsedTime += Time.deltaTime;
-            yield return null;
+            yield break;
         }
 
-        //Destroy(gameObject);
+        float targetSinkDistance = CalculateSinkDistance();
+        float sunkDistance = 0f;
+
+        while (sunkDistance < targetSinkDistance)
+        {
+            float deltaMovement = sinkSpeed * Time.deltaTime;
+            visual.transform.Translate(Vector3.down * deltaMovement);
+            sunkDistance += deltaMovement;
+            yield return null;
+        }
+    }
+
+    private float CalculateSinkDistance()
+    {
+        if (visual == null)
+        {
+            return 5f;
+        }
+
+        Renderer visualRenderer = visual.GetComponent<Renderer>();
+        if (visualRenderer != null)
+        {
+            Bounds bounds = visualRenderer.bounds;
+            float topY = bounds.max.y;
+            float distanceToGround = topY - groundLevel;
+            return distanceToGround + sinkExtraDistance;
+        }
+
+        float fallbackHeight = visual.transform.position.y - groundLevel;
+        return fallbackHeight + sinkExtraDistance;
     }
 
     private void SpawnExperienceOrbs()
