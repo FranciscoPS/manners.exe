@@ -25,18 +25,6 @@ public class EnemyConfiguration : ScriptableObject
     public int minDiamonds = 1;
     public int maxDiamonds = 1;
     
-    [Header("Visual")]
-    public Mesh mesh;
-    public Material material;
-    public Color color = Color.white;
-    public Vector3 scale = Vector3.one;
-    
-    [Header("Effects")]
-    public GameObject deathEffect;
-    public bool hasLight = false;
-    public Color lightColor = Color.red;
-    public float lightIntensity = 3f;
-    
     public void ApplyToEnemy(GameObject enemyObject)
     {
         EnemyController controller = enemyObject.GetComponent<EnemyController>();
@@ -51,64 +39,6 @@ public class EnemyConfiguration : ScriptableObject
             health.SetConfiguration(maxHealth, orbConfig, minOrbs, maxOrbs, orbSpawnRadius,
                                    coinDropChance, minCoins, maxCoins,
                                    diamondDropChance, minDiamonds, maxDiamonds);
-        }
-        
-        ApplyVisuals(enemyObject);
-    }
-    
-    private void ApplyVisuals(GameObject enemyObject)
-    {
-        MeshFilter meshFilter = enemyObject.GetComponent<MeshFilter>();
-        if (meshFilter != null && mesh != null)
-        {
-            meshFilter.mesh = mesh;
-        }
-        
-        Renderer renderer = enemyObject.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            Material matInstance = null;
-            if (material != null)
-            {
-                matInstance = new Material(material);
-                renderer.material = matInstance;
-            }
-            else
-            {
-                matInstance = renderer.material;
-            }
-            
-            if (matInstance != null)
-            {
-                matInstance.color = color;
-                
-                if (matInstance.HasProperty("_BaseColor"))
-                    matInstance.SetColor("_BaseColor", color);
-                if (matInstance.HasProperty("_Color"))
-                    matInstance.SetColor("_Color", color);
-                if (matInstance.HasProperty("_EmissionColor"))
-                    matInstance.SetColor("_EmissionColor", color * 0.3f);
-            }
-        }
-        
-        enemyObject.transform.localScale = scale;
-        
-        Light light = enemyObject.GetComponent<Light>();
-        if (hasLight)
-        {
-            if (light == null)
-            {
-                light = enemyObject.AddComponent<Light>();
-                light.type = LightType.Point;
-            }
-            light.color = lightColor;
-            light.intensity = lightIntensity;
-            light.range = 5f;
-            light.enabled = true;
-        }
-        else if (light != null)
-        {
-            light.enabled = false;
         }
     }
 }

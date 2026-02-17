@@ -25,7 +25,10 @@ public class PlayerHealth : MonoBehaviour
         }
         
         currentHealth = maxHealth;
-        damageTween = GetComponent<DamageTween>();
+        
+        // Buscar DamageTween en este objeto o en hijos
+        damageTween = GetComponentInChildren<DamageTween>();
+        
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 

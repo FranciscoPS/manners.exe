@@ -50,9 +50,16 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void OnEnable()
     {
+        // Buscar player cada vez que se activa (importante para pooling)
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        
+        // Re-configurar velocidad si tenemos NavMeshAgent
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.speed = moveSpeed;
+        }
     }
 
     private void Update()

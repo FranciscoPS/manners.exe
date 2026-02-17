@@ -4,9 +4,11 @@ public enum UpgradeType
 {
     Damage,           // Aumenta daño base del jugador
     AttackSpeed,      // Reduce cooldown de ataque
-    MaxHealth,        // Aumenta vida máxima
     MagnetRange,      // Aumenta rango de atracción de orbes
-    MoveSpeed         // Aumenta velocidad de movimiento
+    MoveSpeed,        // Aumenta velocidad de movimiento
+    MultiShot,        // Dispara múltiples proyectiles
+    ExplosiveShot,    // Proyectiles explotan al impactar
+    Knockback         // Empuja enemigos al golpearlos
 }
 
 [CreateAssetMenu(fileName = "Upgrade", menuName = "Game/Upgrade Data")]

@@ -84,13 +84,39 @@ public class AutoAttackSystem : MonoBehaviour
             Debug.LogError("[AutoAttackSystem] projectileConfig is NULL! Assign a ProjectileConfiguration in the Inspector!");
             return;
         }
-
-        Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
         
-        if (projectile != null)
+        // Obtener número de proyectiles del PlayerStatsManager
+        int projectileCount = 1;
+        bool isExplosive = false;
+        float knockbackForce = 0f;
+        
+        if (PlayerStatsManager.Instance != null)
         {
-            Vector3 direction = (currentTarget.position - firePoint.position).normalized;
-            projectile.SetDirection(direction);
+            projectileCount = PlayerStatsManager.Instance.GetProjectileCount();
+            isExplosive = PlayerStatsManager.Instance.IsExplosiveShot();
+            knockbackForce = PlayerStatsManager.Instance.GetKnockbackForce();
+        }
+        
+        // Calcular ángulos de disparo para spread
+        float angleStep = projectileCount > 1 ? 15f : 0f;
+        float startAngle = -(angleStep * (projectileCount - 1)) / 2f;
+        
+        Vector3 baseDirection = (currentTarget.position - firePoint.position).normalized;
+        
+        for (int i = 0; i < projectileCount; i++)
+        {
+            Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
+            
+            if (projectile != null)
+            {
+                // Calcular dirección con spread
+                float angle = startAngle + (angleStep * i);
+                Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
+                
+                projectile.SetDirection(direction);
+                projectile.SetExplosive(isExplosive, 3f);
+                projectile.SetKnockback(knockbackForce);
+            }
         }
     }
 

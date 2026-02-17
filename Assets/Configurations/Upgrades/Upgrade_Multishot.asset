@@ -10,15 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
-  m_Name: Upgrade_MaxHealth
+  m_Name: Upgrade_Multishot
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
-  upgradeName: Vital Core
-  description: Increases maximum health
-  upgradeType: 2
+  upgradeName: Multi Shot
+  description: Fire multiple projectiles in a spread pattern
+  upgradeType: 4
   icon: {fileID: 0}
-  baseValue: 20
-  multiplierPerLevel: 1.25
+  baseValue: 1
+  multiplierPerLevel: 1
   maxLevel: 5
   isPercentage: 0
-  valueSuffix: HP
-  spawnWeight: 70
+  isReduction: 0
+  valueSuffix: projectiles
+  spawnWeight: 40

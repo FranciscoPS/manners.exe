@@ -137,8 +137,6 @@ public class UpgradeButton : MonoBehaviour
         {
             // Mostrar el nivel que vas a obtener (número de veces comprado + 1)
             upgradeNameText.text = $"{assignedUpgrade.upgradeName} lvl.{nextLevel}";
-            
-            Debug.Log($"[UpgradeButton] Title: {assignedUpgrade.upgradeName} lvl.{nextLevel} (currentLevel={currentLevel}, nextLevel={nextLevel})");
         }
         
         // Descripción

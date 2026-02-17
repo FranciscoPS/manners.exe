@@ -5,6 +5,9 @@ public class Projectile : MonoBehaviour, IPoolable
     private float speed = 15f;
     private float damage = 10f;
     private float lifetime = 5f;
+    private bool isExplosive = false;
+    private float explosionRadius = 3f;
+    private float knockbackForce = 0f;
 
     private Vector3 direction;
     private Rigidbody rb;
@@ -24,6 +27,17 @@ public class Projectile : MonoBehaviour, IPoolable
         speed = newSpeed;
         damage = newDamage;
         lifetime = newLifetime;
+    }
+    
+    public void SetExplosive(bool explosive, float radius = 3f)
+    {
+        isExplosive = explosive;
+        explosionRadius = radius;
+    }
+    
+    public void SetKnockback(float force)
+    {
+        knockbackForce = force;
     }
 
     public void SetVisuals(Mesh mesh, Material material, Color color, Vector3 scale)
@@ -112,10 +126,15 @@ public class Projectile : MonoBehaviour, IPoolable
     {
         if (other.CompareTag("Enemy"))
         {
-            EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
-            if (enemyHealth != null)
+            if (isExplosive)
             {
-                enemyHealth.TakeDamage(damage);
+                // Explosión de área
+                Explode(other.transform.position);
+            }
+            else
+            {
+                // Daño directo
+                DealDamageToEnemy(other.gameObject, other.transform.position);
             }
             
             if (PoolManager.Instance != null)
@@ -125,6 +144,36 @@ public class Projectile : MonoBehaviour, IPoolable
             else
             {
                 gameObject.SetActive(false);
+            }
+        }
+    }
+    
+    private void Explode(Vector3 impactPoint)
+    {
+        Collider[] enemiesInRadius = Physics.OverlapSphere(impactPoint, explosionRadius, LayerMask.GetMask("Enemy"));
+        
+        foreach (Collider enemyCollider in enemiesInRadius)
+        {
+            DealDamageToEnemy(enemyCollider.gameObject, impactPoint);
+        }
+    }
+    
+    private void DealDamageToEnemy(GameObject enemy, Vector3 impactPoint)
+    {
+        EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
+        if (enemyHealth != null)
+        {
+            enemyHealth.TakeDamage(damage);
+        }
+        
+        // Aplicar knockback si está configurado
+        if (knockbackForce > 0f)
+        {
+            Rigidbody enemyRb = enemy.GetComponent<Rigidbody>();
+            if (enemyRb != null)
+            {
+                Vector3 knockbackDirection = (enemy.transform.position - impactPoint).normalized;
+                enemyRb.AddForce(knockbackDirection * knockbackForce, ForceMode.Impulse);
             }
         }
     }
