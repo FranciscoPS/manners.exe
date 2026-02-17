@@ -19,6 +19,7 @@ public class EnemyHealth : MonoBehaviour
     private int maxDiamonds = 1;
 
     private float currentHealth;
+    private DamageTween damageTween;
 
     public void SetConfiguration(float newMaxHealth, OrbConfiguration newOrbConfig, int newMinOrbs, int newMaxOrbs, float newOrbRadius,
                                 float newCoinDropChance, int newMinCoins, int newMaxCoins,
@@ -37,6 +38,12 @@ public class EnemyHealth : MonoBehaviour
         diamondDropChance = newDiamondDropChance;
         minDiamonds = newMinDiamonds;
         maxDiamonds = newMaxDiamonds;
+        
+        // Buscar DamageTween en este objeto o en hijos (para pooling)
+        if (damageTween == null)
+        {
+            damageTween = GetComponentInChildren<DamageTween>();
+        }
     }
 
     private void Start()
@@ -51,6 +58,11 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (damageTween != null)
+        {
+            damageTween.TweenFx();
+        }
+        
         currentHealth -= damage;
 
         if (currentHealth <= 0)

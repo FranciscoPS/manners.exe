@@ -192,7 +192,14 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        if (distanceToPlayer <= attractionRange)
+        // Usar rango de atracción modificado del PlayerStatsManager (incluye upgrades)
+        float currentAttractionRange = attractionRange;
+        if (PlayerStatsManager.Instance != null)
+        {
+            currentAttractionRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
+        }
+
+        if (distanceToPlayer <= currentAttractionRange)
         {
             isMovingToPlayer = true;
             isFloating = false;

@@ -41,6 +41,7 @@ public class PickupAudioManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            transform.SetParent(null); // Convertir en root antes de DDOL
             DontDestroyOnLoad(gameObject);
             
             coinAudioSource = gameObject.AddComponent<AudioSource>();

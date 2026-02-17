@@ -26,6 +26,10 @@ public class GameBalanceConfig : ScriptableObject
     [SerializeField] private float playerMoveSpeed = 5f;
     [SerializeField] private float playerAttackRange = 10f;
     [SerializeField] private float playerAttackCooldown = 0.5f;
+    
+    [Header("=== COMBAT SETTINGS ===")]
+    [Tooltip("Duración del knockback en segundos")]
+    [SerializeField] private float knockbackDuration = 0.3f;
 
     [Header("=== EXPERIENCE SYSTEM ===")]
     [SerializeField] private int baseExperienceRequired = 100;
@@ -63,6 +67,8 @@ public class GameBalanceConfig : ScriptableObject
     public float PlayerMoveSpeed => playerMoveSpeed;
     public float PlayerAttackRange => playerAttackRange;
     public float PlayerAttackCooldown => playerAttackCooldown;
+    
+    public float KnockbackDuration => knockbackDuration;
 
     public int BaseExperienceRequired => baseExperienceRequired;
     public float ExperienceMultiplier => experienceMultiplier;

@@ -33,10 +33,15 @@ public class AutoAttackSystem : MonoBehaviour
 
         FindClosestEnemy();
 
+        // Usar cooldown modificado del PlayerStatsManager
+        float currentCooldown = PlayerStatsManager.Instance != null 
+            ? PlayerStatsManager.Instance.GetModifiedAttackCooldown() 
+            : attackCooldown;
+
         if (currentTarget != null && cooldownTimer <= 0f)
         {
             Shoot();
-            cooldownTimer = attackCooldown;
+            cooldownTimer = currentCooldown;
         }
     }
 
@@ -79,19 +84,71 @@ public class AutoAttackSystem : MonoBehaviour
             Debug.LogError("[AutoAttackSystem] projectileConfig is NULL! Assign a ProjectileConfiguration in the Inspector!");
             return;
         }
-
-        Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
         
-        if (projectile != null)
+        float multiShotProb = 0f;
+        int extraBullets = 0;
+        float explosiveProb = 0f;
+        float explosionRadius = 0f;
+        float knockbackProb = 0f;
+        float knockbackForce = 0f;
+        
+        if (PlayerStatsManager.Instance != null)
         {
-            Vector3 direction = (currentTarget.position - firePoint.position).normalized;
-            projectile.SetDirection(direction);
+            multiShotProb = PlayerStatsManager.Instance.GetMultiShotProbability();
+            extraBullets = PlayerStatsManager.Instance.GetMultiShotExtraBullets();
+            explosiveProb = PlayerStatsManager.Instance.GetExplosiveShotProbability();
+            explosionRadius = PlayerStatsManager.Instance.GetExplosionRadius();
+            knockbackProb = PlayerStatsManager.Instance.GetKnockbackProbability();
+            knockbackForce = PlayerStatsManager.Instance.GetKnockbackForce();
+        }
+        
+        int totalBullets = 1;
+        
+        if (multiShotProb > 0f && Random.Range(0f, 100f) < multiShotProb)
+        {
+            totalBullets += extraBullets;
+        }
+        
+        float angleStep = totalBullets > 1 ? 15f : 0f;
+        float startAngle = -(angleStep * (totalBullets - 1)) / 2f;
+        
+        Vector3 baseDirection = (currentTarget.position - firePoint.position).normalized;
+        
+        for (int i = 0; i < totalBullets; i++)
+        {
+            Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
+            
+            if (projectile != null)
+            {
+                float angle = startAngle + (angleStep * i);
+                Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
+                
+                projectile.SetDirection(direction);
+                
+                bool isExplosive = explosiveProb > 0f && Random.Range(0f, 100f) < explosiveProb;
+                projectile.SetExplosive(isExplosive, explosionRadius);
+                
+                float bulletKnockback = (knockbackProb > 0f && Random.Range(0f, 100f) < knockbackProb) ? knockbackForce : 0f;
+                projectile.SetKnockback(bulletKnockback);
+            }
         }
     }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        float currentRange = attackRange;
+        
+        if (Application.isPlaying && GameBalanceConfig.Instance != null)
+        {
+            currentRange = GameBalanceConfig.Instance.PlayerAttackRange;
+        }
+        
+        Gizmos.DrawWireSphere(transform.position, currentRange);
+        
+        // Mostrar el valor en Scene view
+        #if UNITY_EDITOR
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 2, $"Attack Range: {currentRange:F2}");
+        #endif
     }
 }

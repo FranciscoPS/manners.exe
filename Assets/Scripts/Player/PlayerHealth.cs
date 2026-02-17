@@ -25,7 +25,10 @@ public class PlayerHealth : MonoBehaviour
         }
         
         currentHealth = maxHealth;
-        damageTween = GetComponent<DamageTween>();
+        
+        // Buscar DamageTween en este objeto o en hijos
+        damageTween = GetComponentInChildren<DamageTween>();
+        
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
@@ -51,6 +54,18 @@ public class PlayerHealth : MonoBehaviour
         {
             Die();
         }
+    }
+    
+    /// <summary>
+    /// Aumenta la vida máxima y cura al jugador por esa cantidad
+    /// </summary>
+    public void AddMaxHealth(float amount)
+    {
+        maxHealth += amount;
+        currentHealth += amount; // También cura al jugador
+        
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        Debug.Log($"[PlayerHealth] Max health increased by {amount}. New max: {maxHealth}");
     }
 
     private void Die()

@@ -20,6 +20,7 @@ public class CurrencyManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            transform.SetParent(null); // Convertir en root antes de DDOL
             DontDestroyOnLoad(gameObject);
         }
         else

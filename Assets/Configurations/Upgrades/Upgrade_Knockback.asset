@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
+  m_Name: Upgrade_Knockback
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
+  upgradeName: 'Impact Force '
+  description: Push enemies back when hitting them
+  upgradeType: 6
+  icon: {fileID: 21300000, guid: 6734fc76202f58e41a1987339af1d76c, type: 3}
+  baseValue: 15
+  multiplierPerLevel: 1.15
+  maxLevel: 999
+  isPercentage: 1
+  valueSuffix: force
+  isPremium: 1
+  spawnWeight: 40
