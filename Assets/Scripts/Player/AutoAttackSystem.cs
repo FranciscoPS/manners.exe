@@ -123,6 +123,19 @@ public class AutoAttackSystem : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        float currentRange = attackRange;
+        
+        // Si está en play mode, usar el valor actual
+        if (Application.isPlaying && GameBalanceConfig.Instance != null)
+        {
+            currentRange = GameBalanceConfig.Instance.PlayerAttackRange;
+        }
+        
+        Gizmos.DrawWireSphere(transform.position, currentRange);
+        
+        // Mostrar el valor en Scene view
+        #if UNITY_EDITOR
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 2, $"Attack Range: {currentRange:F2}");
+        #endif
     }
 }

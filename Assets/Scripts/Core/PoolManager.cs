@@ -124,6 +124,9 @@ public class PoolManager : MonoBehaviour
         
         obj.transform.position = position;
         obj.transform.rotation = rotation;
+        
+        // Sync physics immediately to prevent OverlapSphere detecting old positions
+        Physics.SyncTransforms();
 
         activeObjects[obj] = poolType;
 
