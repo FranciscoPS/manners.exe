@@ -221,29 +221,52 @@ public class PlayerStatsManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Obtiene el número de proyectiles a disparar (multishot)
+    /// Obtiene el número base de proyectiles (siempre 1)
     /// </summary>
     public int GetProjectileCount()
     {
-        int multiShotLevel = GetUpgradeLevel(UpgradeType.MultiShot);
-        
-        // Progresión lineal simple: nivel 0 = 1 proyectil, nivel 1 = 2, nivel 2 = 3, etc.
-        return 1 + multiShotLevel;
+        return 1;
     }
     
     /// <summary>
-    /// Verifica si los proyectiles son explosivos
+    /// Obtiene la probabilidad de disparar una bala extra (MultiShot)
+    /// Retorna un porcentaje (0-100+)
     /// </summary>
-    public bool IsExplosiveShot()
+    public float GetMultiShotProbability()
     {
-        return GetUpgradeLevel(UpgradeType.ExplosiveShot) > 0;
+        int multiShotLevel = GetUpgradeLevel(UpgradeType.MultiShot);
+        if (multiShotLevel <= 0) return 0f;
+        
+        if (UpgradeDatabase.Instance != null)
+        {
+            UpgradeData multiShotUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.MultiShot);
+            if (multiShotUpgrade != null)
+            {
+                return multiShotUpgrade.CalculateValueAtLevel(multiShotLevel);
+            }
+        }
+        
+        return 0f;
     }
     
     /// <summary>
-    /// Obtiene el radio de explosión basado en el nivel del upgrade ExplosiveShot
-    /// El valor se configura en el ScriptableObject Upgrade_ExplosiveShot
+    /// Obtiene el número extra de balas que dispara MultiShot cuando se activa
+    /// Escala con el nivel: nivel 1-5 = 1 bala, 6-10 = 2 balas, 11-15 = 3 balas...
     /// </summary>
-    public float GetExplosionRadius()
+    public int GetMultiShotExtraBullets()
+    {
+        int multiShotLevel = GetUpgradeLevel(UpgradeType.MultiShot);
+        if (multiShotLevel <= 0) return 0;
+        
+        // Cada 5 niveles se añade una bala extra
+        return 1 + (multiShotLevel - 1) / 5;
+    }
+    
+    /// <summary>
+    /// Obtiene la probabilidad de que un proyectil sea explosivo
+    /// Retorna un porcentaje (0-100)
+    /// </summary>
+    public float GetExplosiveShotProbability()
     {
         int explosiveLevel = GetUpgradeLevel(UpgradeType.ExplosiveShot);
         if (explosiveLevel <= 0) return 0f;
@@ -253,19 +276,30 @@ public class PlayerStatsManager : MonoBehaviour
             UpgradeData explosiveUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.ExplosiveShot);
             if (explosiveUpgrade != null)
             {
-                // Usa CalculateValueAtLevel del ScriptableObject
                 return explosiveUpgrade.CalculateValueAtLevel(explosiveLevel);
             }
         }
         
-        return 3f; // Fallback
+        return 0f;
     }
     
     /// <summary>
-    /// Obtiene la fuerza de knockback basada en el nivel del upgrade Knockback
-    /// El valor se configura en el ScriptableObject Upgrade_Knockback
+    /// Obtiene el radio de explosión (fijo)
     /// </summary>
-    public float GetKnockbackForce()
+    public float GetExplosionRadius()
+    {
+        int explosiveLevel = GetUpgradeLevel(UpgradeType.ExplosiveShot);
+        if (explosiveLevel <= 0) return 0f;
+        
+        // Radio fijo de 3 unidades
+        return 3f;
+    }
+    
+    /// <summary>
+    /// Obtiene la probabilidad de aplicar knockback
+    /// Retorna un porcentaje (0-100)
+    /// </summary>
+    public float GetKnockbackProbability()
     {
         int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
         if (knockbackLevel <= 0) return 0f;
@@ -275,12 +309,23 @@ public class PlayerStatsManager : MonoBehaviour
             UpgradeData knockbackUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.Knockback);
             if (knockbackUpgrade != null)
             {
-                // Usa CalculateValueAtLevel del ScriptableObject
                 return knockbackUpgrade.CalculateValueAtLevel(knockbackLevel);
             }
         }
         
         return 0f;
+    }
+    
+    /// <summary>
+    /// Obtiene la fuerza de knockback (fija)
+    /// </summary>
+    public float GetKnockbackForce()
+    {
+        int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
+        if (knockbackLevel <= 0) return 0f;
+        
+        // Fuerza fija de 5 unidades
+        return 5f;
     }
     
     /// <summary>

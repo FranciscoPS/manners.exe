@@ -28,9 +28,9 @@ public class UpgradeData : ScriptableObject
     [Tooltip("Multiplicador aplicado por nivel (ej: 1.2 significa +20% por nivel)")]
     public float multiplierPerLevel = 1.2f;
     
-    [Tooltip("Máximo nivel que puede alcanzar este upgrade")]
-    [Range(1, 10)]
-    public int maxLevel = 5;
+    [Tooltip("Máximo nivel que puede alcanzar este upgrade (999 = infinito)")]
+    [Range(1, 999)]
+    public int maxLevel = 999;
     
     [Header("Display Settings")]
     [Tooltip("Si es true, muestra como porcentaje (15 → 15%). Si es false, muestra como valor absoluto (20 → 20 HP)")]
@@ -68,7 +68,20 @@ public class UpgradeData : ScriptableObject
         
         if (isPercentage)
         {
-            string sign = isReduction ? "-" : "+";
+            // Para AttackSpeed, invertir el signo para mostrar como aumento de velocidad
+            bool invertSign = (upgradeType == UpgradeType.AttackSpeed);
+            string sign;
+            
+            if (invertSign)
+            {
+                // AttackSpeed: mostrar como positivo aunque internamente sea reducción
+                sign = "+";
+            }
+            else
+            {
+                sign = isReduction ? "-" : "+";
+            }
+            
             return $"{sign}{value:F1}%";
         }
         else

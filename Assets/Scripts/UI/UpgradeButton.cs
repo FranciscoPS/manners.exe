@@ -162,7 +162,16 @@ public class UpgradeButton : MonoBehaviour
             labelText.color = new Color(1f, 0.9f, 0.3f, 1f); // Yellow
             
             string formattedValue = assignedUpgrade.GetFormattedValue(nextLevel);
-            labelText.text = formattedValue;
+            
+            // Para AttackSpeed, agregar texto descriptivo
+            if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
+            {
+                labelText.text = $"{formattedValue}";
+            }
+            else
+            {
+                labelText.text = formattedValue;
+            }
         }
         
         // ValuesText: Muestra el valor numérico absoluto (ej: 15 → 18)
@@ -181,8 +190,19 @@ public class UpgradeButton : MonoBehaviour
                 
                 float nextValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
                 
+                // CASO ESPECIAL: AttackSpeed muestra disparos/segundo en lugar de cooldown
+                if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
+                {
+                    float baseCooldown = baseValue;
+                    float newCooldown = baseCooldown * (1f - nextValue / 100f);
+                    
+                    float currentFireRate = 1f / baseCooldown;
+                    float newFireRate = 1f / newCooldown;
+                    
+                    valuesText.text = $"{currentFireRate:F2} → {newFireRate:F2}";
+                }
                 // Si es porcentaje, calculamos el valor real que tendrá
-                if (assignedUpgrade.isPercentage)
+                else if (assignedUpgrade.isPercentage)
                 {
                     float finalValue;
                     if (assignedUpgrade.isReduction)
@@ -228,7 +248,18 @@ public class UpgradeButton : MonoBehaviour
                 float currentUpgradeValue = assignedUpgrade.CalculateValueAtLevel(currentLevel);
                 float nextUpgradeValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
                 
-                if (assignedUpgrade.isPercentage)
+                // CASO ESPECIAL: AttackSpeed muestra disparos/segundo en lugar de cooldown
+                if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
+                {
+                    float currentCooldown = baseValue * (1f - currentUpgradeValue / 100f);
+                    float nextCooldown = baseValue * (1f - nextUpgradeValue / 100f);
+                    
+                    float currentFireRate = 1f / currentCooldown;
+                    float nextFireRate = 1f / nextCooldown;
+                    
+                    valuesText.text = $"{currentFireRate:F2} → {nextFireRate:F2}";
+                }
+                else if (assignedUpgrade.isPercentage)
                 {
                     float currentFinalValue, nextFinalValue;
                     

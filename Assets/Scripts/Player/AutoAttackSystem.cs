@@ -85,27 +85,40 @@ public class AutoAttackSystem : MonoBehaviour
             return;
         }
         
-        // Obtener número de proyectiles del PlayerStatsManager
-        int projectileCount = 1;
-        bool isExplosive = false;
+        // Obtener probabilidades de premium upgrades
+        float multiShotProb = 0f;
+        int extraBullets = 0;
+        float explosiveProb = 0f;
         float explosionRadius = 0f;
+        float knockbackProb = 0f;
         float knockbackForce = 0f;
         
         if (PlayerStatsManager.Instance != null)
         {
-            projectileCount = PlayerStatsManager.Instance.GetProjectileCount();
-            isExplosive = PlayerStatsManager.Instance.IsExplosiveShot();
+            multiShotProb = PlayerStatsManager.Instance.GetMultiShotProbability();
+            extraBullets = PlayerStatsManager.Instance.GetMultiShotExtraBullets();
+            explosiveProb = PlayerStatsManager.Instance.GetExplosiveShotProbability();
             explosionRadius = PlayerStatsManager.Instance.GetExplosionRadius();
+            knockbackProb = PlayerStatsManager.Instance.GetKnockbackProbability();
             knockbackForce = PlayerStatsManager.Instance.GetKnockbackForce();
         }
         
-        // Calcular ángulos de disparo para spread
-        float angleStep = projectileCount > 1 ? 15f : 0f;
-        float startAngle = -(angleStep * (projectileCount - 1)) / 2f;
+        // Calcular cuántas balas disparar (1 + balas extra por MultiShot)
+        int totalBullets = 1;
+        
+        // Tirar probabilidad para MultiShot
+        if (multiShotProb > 0f && Random.Range(0f, 100f) < multiShotProb)
+        {
+            totalBullets += extraBullets;
+        }
+        
+        // Calcular spread para múltiples balas
+        float angleStep = totalBullets > 1 ? 15f : 0f;
+        float startAngle = -(angleStep * (totalBullets - 1)) / 2f;
         
         Vector3 baseDirection = (currentTarget.position - firePoint.position).normalized;
         
-        for (int i = 0; i < projectileCount; i++)
+        for (int i = 0; i < totalBullets; i++)
         {
             Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
             
@@ -116,8 +129,14 @@ public class AutoAttackSystem : MonoBehaviour
                 Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
                 
                 projectile.SetDirection(direction);
+                
+                // Determinar si esta bala específica es explosiva (probabilidad)
+                bool isExplosive = explosiveProb > 0f && Random.Range(0f, 100f) < explosiveProb;
                 projectile.SetExplosive(isExplosive, explosionRadius);
-                projectile.SetKnockback(knockbackForce);
+                
+                // Determinar si esta bala específica tiene knockback (probabilidad)
+                float bulletKnockback = (knockbackProb > 0f && Random.Range(0f, 100f) < knockbackProb) ? knockbackForce : 0f;
+                projectile.SetKnockback(bulletKnockback);
             }
         }
     }

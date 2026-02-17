@@ -16,10 +16,10 @@ MonoBehaviour:
   description: Projectiles explode on impact, damaging nearby enemies
   upgradeType: 5
   icon: {fileID: 21300000, guid: 6734fc76202f58e41a1987339af1d76c, type: 3}
-  baseValue: 1
-  multiplierPerLevel: 1
-  maxLevel: 1
-  isPercentage: 0
+  baseValue: 10
+  multiplierPerLevel: 1.15
+  maxLevel: 999
+  isPercentage: 1
   isReduction: 0
   valueSuffix: (active)
   spawnWeight: 10
