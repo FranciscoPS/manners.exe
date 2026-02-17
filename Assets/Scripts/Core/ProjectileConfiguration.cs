@@ -29,7 +29,6 @@ public class ProjectileConfiguration : ScriptableObject
         if (GameBalanceConfig.Instance != null)
         {
             finalDamage = GameBalanceConfig.Instance.PlayerBaseDamage * damageMultiplier;
-            Debug.Log($"[ProjectileConfig] BaseDamage: {GameBalanceConfig.Instance.PlayerBaseDamage}, Multiplier: {damageMultiplier}, FinalDamage: {finalDamage}");
         }
         else
         {
