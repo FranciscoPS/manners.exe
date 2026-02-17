@@ -1,12 +1,12 @@
 using UnityEngine;
 using Unity.Cinemachine;
 
+[RequireComponent(typeof(CinemachineImpulseSource))]
 public class CameraShakeManager : MonoBehaviour
 {
     public static CameraShakeManager Instance { get; private set; }
 
-    [Header("Impulse Source")]
-    [SerializeField] private CinemachineImpulseSource impulseSource;
+    private CinemachineImpulseSource impulseSource;
 
     [Header("Shake Presets")]
     [SerializeField] private float lightShakeForce = 0.5f;
@@ -24,9 +24,15 @@ public class CameraShakeManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        if (impulseSource == null)
+        impulseSource = GetComponent<CinemachineImpulseSource>();
+        ConfigureImpulseSource();
+    }
+
+    private void ConfigureImpulseSource()
+    {
+        if (impulseSource != null)
         {
-            impulseSource = GetComponent<CinemachineImpulseSource>();
+            impulseSource.DefaultVelocity = new Vector3(0, -1, 0);
         }
     }
 
