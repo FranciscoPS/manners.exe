@@ -26,7 +26,7 @@ public class HealthBarUI : MonoBehaviour
             originalColor = healthBarFill.color;
         }
 
-        playerHealth = FindObjectOfType<PlayerHealth>();
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged += UpdateHealthBar;

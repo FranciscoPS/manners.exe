@@ -32,6 +32,7 @@ public class PlayerStatsManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+            transform.SetParent(null); // Convertir en root antes de DDOL
             DontDestroyOnLoad(gameObject);
             InitializeUpgrades();
         }
@@ -235,6 +236,38 @@ public class PlayerStatsManager : MonoBehaviour
     public Dictionary<UpgradeType, int> GetAllUpgradeLevels()
     {
         return new Dictionary<UpgradeType, int>(upgradeLevels);
+    }
+    
+    /// <summary>
+    /// Obtiene el valor base del juego (sin upgrades) para un tipo específico
+    /// </summary>
+    public float GetBaseGameValue(UpgradeType upgradeType)
+    {
+        GameBalanceConfig config = GameBalanceConfig.Instance;
+        if (config == null) return 0f;
+        
+        switch (upgradeType)
+        {
+            case UpgradeType.Damage:
+                return config.PlayerBaseDamage;
+            
+            case UpgradeType.AttackSpeed:
+                // Para attack speed mostramos el cooldown base
+                return config.PlayerAttackCooldown;
+            
+            case UpgradeType.MaxHealth:
+                return config.PlayerMaxHealth;
+            
+            case UpgradeType.MagnetRange:
+                // Valor base del rango de atracción (desde config)
+                return config.OrbAttractionRange;
+            
+            case UpgradeType.MoveSpeed:
+                return config.PlayerMoveSpeed;
+            
+            default:
+                return 0f;
+        }
     }
     
     /// <summary>

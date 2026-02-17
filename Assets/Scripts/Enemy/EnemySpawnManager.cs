@@ -18,9 +18,6 @@ public class EnemySpawnManager : MonoBehaviour
     [SerializeField] private int continuousEnemiesPerSpawn = 2;
     [SerializeField] private EnemyConfiguration[] continuousEnemyTypes;
 
-    [Header("Debug")]
-    [SerializeField] private bool showDebugLogs = false;
-
     private List<SpawnPoint> allSpawnPoints = new List<SpawnPoint>();
     private int currentWaveIndex = 0;
     private bool isSpawningWave = false;

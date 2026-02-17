@@ -34,6 +34,9 @@ public class UpgradeData : ScriptableObject
     [Tooltip("Si es true, muestra como porcentaje (15 → 15%). Si es false, muestra como valor absoluto (20 → 20 HP)")]
     public bool isPercentage = true;
     
+    [Tooltip("Si es true, el upgrade REDUCE el valor (ej: -8% cooldown). Si es false, AUMENTA (+15% daño)")]
+    public bool isReduction = false;
+    
     [Tooltip("Sufijo para mostrar en UI (ej: 'HP', 'Range')")]
     public string valueSuffix = "";
     
@@ -63,11 +66,13 @@ public class UpgradeData : ScriptableObject
         
         if (isPercentage)
         {
-            return $"+{value:F1}%";
+            string sign = isReduction ? "-" : "+";
+            return $"{sign}{value:F1}%";
         }
         else
         {
-            return $"+{value:F0}{valueSuffix}";
+            string sign = isReduction ? "-" : "+";
+            return $"{sign}{value:F0}{valueSuffix}";
         }
     }
     

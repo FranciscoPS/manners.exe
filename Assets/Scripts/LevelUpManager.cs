@@ -132,8 +132,6 @@ public class LevelUpManager : MonoBehaviour
                 upgradeButton3.gameObject.SetActive(false);
             }
         }
-        
-        Debug.Log($"[LevelUpManager] Generated {selectedUpgrades.Count} upgrade options for level {currentPlayerLevel}");
     }
     
     public void OnUpgradeChosen()

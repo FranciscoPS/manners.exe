@@ -4,19 +4,12 @@ using TMPro;
 
 public class UpgradeButton : MonoBehaviour
 {
-    [Header("UI References")]
-    [SerializeField] private TextMeshProUGUI upgradeNameText;
-    [SerializeField] private TextMeshProUGUI descriptionText;
-    [SerializeField] private TextMeshProUGUI currentValueText;
-    [SerializeField] private TextMeshProUGUI nextValueText;
-    [SerializeField] private TextMeshProUGUI levelText;
-    [SerializeField] private Image iconImage;
-    [SerializeField] private Button button;
-    
-    [Header("Visual Settings")]
-    [SerializeField] private Color normalColor = Color.white;
-    [SerializeField] private Color hoverColor = new Color(1f, 1f, 0.7f);
-    [SerializeField] private Color maxLevelColor = new Color(1f, 0.84f, 0f); // Gold
+    private TextMeshProUGUI upgradeNameText;
+    private TextMeshProUGUI descriptionText;
+    private TextMeshProUGUI labelText;
+    private TextMeshProUGUI valuesText;
+    private Image iconImage;
+    private Button button;
     
     private UpgradeData assignedUpgrade;
     private int currentLevel;
@@ -24,11 +17,36 @@ public class UpgradeButton : MonoBehaviour
     
     private void Awake()
     {
-        if (button == null)
-            button = GetComponent<Button>();
-        
+        button = GetComponent<Button>();
         if (button != null)
             button.onClick.AddListener(OnUpgradeSelected);
+        
+        // Buscar componentes en hijos - más flexible que Find()
+        TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
+        Image[] allImages = GetComponentsInChildren<Image>();
+        
+        foreach (var img in allImages)
+        {
+            if (img.gameObject.name.Contains("Icon"))
+            {
+                iconImage = img;
+                break;
+            }
+        }
+        
+        foreach (var text in allTexts)
+        {
+            string name = text.gameObject.name;
+            
+            if (name.Contains("Name") || name.Contains("Title"))
+                upgradeNameText = text;
+            else if (name.Contains("Description") || name.Contains("Desc"))
+                descriptionText = text;
+            else if (name.Contains("Label") || name.Contains("Status"))
+                labelText = text;
+            else if (name.Contains("Value") || name.Contains("Stats") || name.Contains("Number"))
+                valuesText = text;
+        }
     }
     
     /// <summary>
@@ -55,7 +73,50 @@ public class UpgradeButton : MonoBehaviour
         }
         
         gameObject.SetActive(true);
+        
+        // Asegurarse de tener referencias antes de actualizar UI
+        EnsureReferences();
         UpdateUI();
+    }
+    
+    private void EnsureReferences()
+    {
+        // Si ya las tenemos, salir
+        if (upgradeNameText != null && descriptionText != null) return;
+        
+        if (button == null)
+        {
+            button = GetComponent<Button>();
+            if (button != null)
+                button.onClick.AddListener(OnUpgradeSelected);
+        }
+        
+        // Buscar componentes en hijos
+        TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
+        Image[] allImages = GetComponentsInChildren<Image>();
+        
+        foreach (var img in allImages)
+        {
+            if (img.gameObject.name.Contains("Icon"))
+            {
+                iconImage = img;
+                break;
+            }
+        }
+        
+        foreach (var text in allTexts)
+        {
+            string name = text.gameObject.name;
+            
+            if (name.Contains("Name") || name.Contains("Title"))
+                upgradeNameText = text;
+            else if (name.Contains("Description") || name.Contains("Desc"))
+                descriptionText = text;
+            else if (name.Contains("Label") || name.Contains("Status"))
+                labelText = text;
+            else if (name.Contains("Value") || name.Contains("Stats") || name.Contains("Number"))
+                valuesText = text;
+        }
     }
     
     private void UpdateUI()
@@ -65,7 +126,7 @@ public class UpgradeButton : MonoBehaviour
         // Nombre del upgrade
         if (upgradeNameText != null)
         {
-            upgradeNameText.text = assignedUpgrade.upgradeName;
+            upgradeNameText.text = $"{assignedUpgrade.upgradeName} lvl.{nextLevel}";
         }
         
         // Descripción
@@ -85,45 +146,72 @@ public class UpgradeButton : MonoBehaviour
             iconImage.gameObject.SetActive(false);
         }
         
-        // Nivel actual (si es 0, es "NEW!")
-        if (levelText != null)
+        // LabelText: Muestra el porcentaje formateado (ej: -8%, +15%)
+        if (labelText != null)
         {
+            labelText.color = new Color(1f, 0.9f, 0.3f, 1f); // Yellow
+            
+            string formattedValue = assignedUpgrade.GetFormattedValue(nextLevel);
+            labelText.text = formattedValue;
+        }
+        
+        // ValuesText: Muestra el valor numérico absoluto (ej: 15 → 18)
+        if (valuesText != null)
+        {
+            valuesText.color = new Color(0.4f, 1f, 0.5f, 1f); // Green
+            
             if (currentLevel == 0)
             {
-                levelText.text = "NEW!";
-                levelText.color = Color.green;
+                // Primera mejora: obtener valor base del juego
+                float baseValue = 0f;
+                if (PlayerStatsManager.Instance != null)
+                {
+                    baseValue = PlayerStatsManager.Instance.GetBaseGameValue(assignedUpgrade.upgradeType);
+                }
+                
+                float nextValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
+                
+                // Si es porcentaje, calculamos el valor real que tendrá
+                if (assignedUpgrade.isPercentage)
+                {
+                    float finalValue;
+                    if (assignedUpgrade.isReduction)
+                    {
+                        // Para reducciones (ej: -8% cooldown): 1.0 * (1 - 0.08) = 0.92
+                        finalValue = baseValue * (1f - nextValue / 100f);
+                    }
+                    else
+                    {
+                        // Para aumentos (ej: +15% daño): 10 * (1 + 0.15) = 11.5
+                        finalValue = baseValue * (1f + nextValue / 100f);
+                    }
+                    
+                    // Usar más decimales para valores pequeños (< 10)
+                    string format = baseValue < 10f ? "F2" : "F1";
+                    valuesText.text = $"{baseValue.ToString(format)} → {finalValue.ToString(format)}";
+                }
+                else
+                {
+                    // Para valores absolutos (como +20 HP)
+                    float finalValue = assignedUpgrade.isReduction 
+                        ? baseValue - nextValue 
+                        : baseValue + nextValue;
+                    valuesText.text = $"{baseValue:F0} → {finalValue:F0}";
+                }
             }
             else
             {
-                levelText.text = $"Lvl {currentLevel} → {nextLevel}";
-                levelText.color = normalColor;
+                // Para niveles superiores, solo mostramos los valores del upgrade
+                float currentValue = assignedUpgrade.CalculateValueAtLevel(currentLevel);
+                float nextValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
+                valuesText.text = $"{currentValue:F1} → {nextValue:F1}";
             }
-        }
-        
-        // Valor actual
-        if (currentValueText != null)
-        {
-            if (currentLevel == 0)
-            {
-                currentValueText.text = "—";
-            }
-            else
-            {
-                currentValueText.text = assignedUpgrade.GetFormattedValue(currentLevel);
-            }
-        }
-        
-        // Valor siguiente (con flecha)
-        if (nextValueText != null)
-        {
-            nextValueText.text = $"→ {assignedUpgrade.GetFormattedValue(nextLevel)}";
-            nextValueText.color = Color.green;
         }
         
         // Color especial si va a ser max level
         if (nextLevel >= assignedUpgrade.maxLevel && upgradeNameText != null)
         {
-            upgradeNameText.color = maxLevelColor;
+            upgradeNameText.color = new Color(1f, 0.84f, 0f); // Gold
         }
     }
     
@@ -142,25 +230,6 @@ public class UpgradeButton : MonoBehaviour
         if (levelUpManager != null)
         {
             levelUpManager.OnUpgradeChosen();
-        }
-    }
-    
-    /// <summary>
-    /// Efecto visual al pasar el ratón (opcional)
-    /// </summary>
-    public void OnPointerEnter()
-    {
-        if (upgradeNameText != null && currentLevel < assignedUpgrade.maxLevel - 1)
-        {
-            upgradeNameText.color = hoverColor;
-        }
-    }
-    
-    public void OnPointerExit()
-    {
-        if (upgradeNameText != null && currentLevel < assignedUpgrade.maxLevel - 1)
-        {
-            upgradeNameText.color = normalColor;
         }
     }
 }
