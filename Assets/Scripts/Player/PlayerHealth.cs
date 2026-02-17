@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
@@ -7,15 +8,26 @@ public class PlayerHealth : MonoBehaviour
     private float currentHealth;
     private DamageTween damageTween;
 
+    public event Action<float, float> OnHealthChanged;
+    public event Action OnDamageTaken;
+
+    public float CurrentHealth => currentHealth;
+    public float MaxHealth => maxHealth;
+
     private void Start()
     {
         currentHealth = maxHealth;
         damageTween = GetComponent<DamageTween>();
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
+        currentHealth = Mathf.Max(0, currentHealth);
+        
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        OnDamageTaken?.Invoke();
         
         if (CameraShakeManager.Instance != null)
         {
