@@ -6,7 +6,8 @@ public class BuildingsScript : MonoBehaviour
     [Header("Destruction Settings")]
     [SerializeField] private float sinkSpeed = 1.5f;
     [SerializeField] private float sinkDuration = 2f;
-    [SerializeField] private GameObject visual; 
+    [SerializeField] private GameObject visual;
+    [SerializeField] private Transform spawnPoint;
 
     [Header("Experience Orb Settings")]
     [SerializeField] private int minOrbs = 3;
@@ -60,10 +61,7 @@ public class BuildingsScript : MonoBehaviour
         }
 
         int orbCount = Random.Range(minOrbs, maxOrbs + 1);
-        
-        Bounds bounds = GetComponent<Collider>().bounds;
-        Vector3 spawnCenter = bounds.center;
-        spawnCenter.y = bounds.max.y + orbSpawnHeight;
+        Vector3 spawnCenter = GetSpawnCenter();
 
         for (int i = 0; i < orbCount; i++)
         {
@@ -82,9 +80,7 @@ public class BuildingsScript : MonoBehaviour
     {
         if (PoolManager.Instance == null) return;
 
-        Bounds bounds = GetComponent<Collider>().bounds;
-        Vector3 spawnCenter = bounds.center;
-        spawnCenter.y = bounds.max.y + orbSpawnHeight;
+        Vector3 spawnCenter = GetSpawnCenter();
 
         if (Random.value <= coinDropChance)
         {
@@ -107,5 +103,28 @@ public class BuildingsScript : MonoBehaviour
                 PoolManager.Instance.SpawnCollectible(spawnPosition, Collectible.CollectibleType.Diamond, 1);
             }
         }
+    }
+
+    private Vector3 GetSpawnCenter()
+    {
+        if (spawnPoint != null)
+        {
+            return spawnPoint.position;
+        }
+        
+        if (visual != null)
+        {
+            Renderer visualRenderer = visual.GetComponent<Renderer>();
+            if (visualRenderer != null)
+            {
+                Bounds bounds = visualRenderer.bounds;
+                Vector3 center = bounds.center;
+                center.y = bounds.max.y + orbSpawnHeight;
+                return center;
+            }
+            return visual.transform.position + Vector3.up * orbSpawnHeight;
+        }
+        
+        return transform.position + Vector3.up * orbSpawnHeight;
     }
 }
