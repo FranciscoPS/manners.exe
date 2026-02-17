@@ -247,6 +247,11 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             playerExp.AddExperience(experienceValue);
         }
         
+        if (PickupAudioManager.Instance != null)
+        {
+            PickupAudioManager.Instance.PlayExperienceOrbSound(experienceValue);
+        }
+        
         if (PoolManager.Instance != null)
         {
             PoolManager.Instance.Despawn(gameObject);

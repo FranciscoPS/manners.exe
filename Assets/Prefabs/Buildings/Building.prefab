@@ -32,6 +32,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7016334940476008232}
+  - {fileID: 3043078021786141712}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &963508934966439508
@@ -47,20 +48,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
   sinkSpeed: 1.5
-  sinkDuration: 2.5
   visual: {fileID: 8272095557796569798}
-  minOrbs: 3
-  maxOrbs: 7
+  spawnPoint: {fileID: 3043078021786141712}
+  groundLevel: 0
+  sinkExtraDistance: 1
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 2
   orbSpawnHeight: 1
-  orbConfig: {fileID: 0}
+  orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
   defaultExperienceValue: 15
   coinDropChance: 0.7
-  minCoins: 2
-  maxCoins: 5
-  diamondDropChance: 0.15
+  minCoins: 1
+  maxCoins: 2
+  diamondDropChance: 0.05
   minDiamonds: 1
-  maxDiamonds: 2
+  maxDiamonds: 1
 --- !u!65 &8520553520846978520
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -76,12 +79,43 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1.86934, y: 1.2175704, z: 1.0819526}
   m_Center: {x: 0.0011143386, y: 0.6087753, z: -0.015089422}
+--- !u!1 &8090519040450524924
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3043078021786141712}
+  m_Layer: 0
+  m_Name: Spawn Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3043078021786141712
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8090519040450524924}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.299, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 607832523003636405}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8272095557796569798
 GameObject:
   m_ObjectHideFlags: 0
