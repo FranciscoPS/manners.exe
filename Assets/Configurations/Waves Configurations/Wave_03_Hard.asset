@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: Wave_03_Hard
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Oleada Pesada
-  totalEnemies: 25
+  totalEnemies: 280
   enemyDistribution:
+  - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
+    percentage: 40
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
-    percentage: 100
-  spawnInterval: 3
-  enemiesPerBatch: 4
+    percentage: 60
+  spawnInterval: 0.6
+  enemiesPerBatch: 6

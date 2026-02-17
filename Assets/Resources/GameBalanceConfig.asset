@@ -12,26 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: feabf78d2e6f6a744819140996fd52a5, type: 3}
   m_Name: GameBalanceConfig
   m_EditorClassIdentifier: Assembly-CSharp::GameBalanceConfig
-  playerMaxHealth: 20
-  playerBaseDamage: 10
-  playerMoveSpeed: 10
-  playerAttackRange: 10
-  playerAttackCooldown: 0.1
-  baseExperienceRequired: 1000
-  experienceMultiplier: 1.5
-  buildingCoinDropChance: 0.7
+  playerMaxHealth: 120
+  playerBaseDamage: 12
+  playerMoveSpeed: 5.5
+  playerAttackRange: 11
+  playerAttackCooldown: 0.55
+  baseExperienceRequired: 100
+  experienceMultiplier: 1.3
+  buildingCoinDropChance: 0.65
   buildingMinCoins: 2
-  buildingMaxCoins: 5
-  buildingDiamondDropChance: 0.15
+  buildingMaxCoins: 4
+  buildingDiamondDropChance: 0.12
   buildingMinDiamonds: 1
-  buildingMaxDiamonds: 2
+  buildingMaxDiamonds: 1
   buildingMinOrbs: 0
   buildingMaxOrbs: 0
   buildingOrbSpawnRadius: 0
   buildingDefaultExperienceValue: 0
-  coinAttractionRange: 5
-  diamondAttractionRange: 5
-  orbAttractionRange: 5
-  coinLifetime: 30
-  diamondLifetime: 30
-  orbLifetime: 30
+  coinAttractionRange: 6
+  diamondAttractionRange: 6
+  orbAttractionRange: 7
+  coinLifetime: 25
+  diamondLifetime: 25
+  orbLifetime: 20

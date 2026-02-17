@@ -13,12 +13,18 @@ MonoBehaviour:
   m_Name: FastEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfiguration
   maxHealth: 30
-  moveSpeed: 5
-  contactDamage: 10
+  moveSpeed: 6
+  contactDamage: 8
   orbConfig: {fileID: 11400000, guid: 9aa33dee36f8c410e94d6692d6a6f402, type: 2}
   minOrbs: 1
   maxOrbs: 2
   orbSpawnRadius: 1
+  coinDropChance: 0.45
+  minCoins: 1
+  maxCoins: 2
+  diamondDropChance: 0.08
+  minDiamonds: 1
+  maxDiamonds: 1
   mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
   material: {fileID: 2100000, guid: c81feac6c647f4766ac970fd7e40549b, type: 2}
   color: {r: 1, g: 0, b: 0, a: 1}
