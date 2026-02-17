@@ -38,14 +38,10 @@ public class UpgradeDatabase : ScriptableObject
         }
     }
     
-    /// <summary>
-    /// Obtiene upgrades aleatorios basados en el estado actual del jugador
-    /// </summary>
     public List<UpgradeData> GetRandomUpgrades(Dictionary<UpgradeType, int> currentUpgradeLevels, int playerLevel)
     {
         List<UpgradeData> selectedUpgrades = new List<UpgradeData>();
         
-        // Define premium upgrades (aparecen solo en niveles milestone: 5, 10, 15...)
         HashSet<UpgradeType> premiumUpgrades = new HashSet<UpgradeType>
         {
             UpgradeType.MultiShot,
@@ -55,22 +51,18 @@ public class UpgradeDatabase : ScriptableObject
         
         bool isMilestoneLevel = (playerLevel % 5 == 0);
         
-        // Filtrar upgrades que aún pueden subir de nivel
         List<UpgradeData> availableUpgrades = allUpgrades.Where(upgrade =>
         {
             int currentLevel = currentUpgradeLevels.ContainsKey(upgrade.upgradeType) 
                 ? currentUpgradeLevels[upgrade.upgradeType] 
                 : 0;
             
-            // Verificar que no está en max level
             if (currentLevel >= upgrade.maxLevel)
                 return false;
             
-            // En niveles milestone (5, 10, 15...) solo mostrar premium upgrades
             if (isMilestoneLevel)
                 return premiumUpgrades.Contains(upgrade.upgradeType);
             
-            // En otros niveles, excluir premium upgrades
             return !premiumUpgrades.Contains(upgrade.upgradeType);
             
         }).ToList();
@@ -81,18 +73,15 @@ public class UpgradeDatabase : ScriptableObject
             return selectedUpgrades;
         }
         
-        // Crear lista ponderada para selección
         List<UpgradeData> weightedList = new List<UpgradeData>();
         foreach (var upgrade in availableUpgrades)
         {
-            // Añadir el upgrade tantas veces como su peso indica
             for (int i = 0; i < upgrade.spawnWeight; i++)
             {
                 weightedList.Add(upgrade);
             }
         }
         
-        // Seleccionar aleatoriamente
         int selectCount = Mathf.Min(optionsPerLevelUp, availableUpgrades.Count);
         HashSet<UpgradeType> selectedTypes = new HashSet<UpgradeType>();
         
@@ -110,7 +99,6 @@ public class UpgradeDatabase : ScriptableObject
                 selected = weightedList[randomIndex];
                 attempts++;
                 
-                // Si no prevenimos duplicados o el tipo no está seleccionado, aceptar
                 if (!preventDuplicates || !selectedTypes.Contains(selected.upgradeType))
                 {
                     break;
@@ -123,7 +111,6 @@ public class UpgradeDatabase : ScriptableObject
                 selectedUpgrades.Add(selected);
                 selectedTypes.Add(selected.upgradeType);
                 
-                // Remover todas las instancias de este upgrade de la lista ponderada
                 if (preventDuplicates)
                 {
                     weightedList.RemoveAll(u => u.upgradeType == selected.upgradeType);

@@ -21,10 +21,8 @@ public class PlayerStatsManager : MonoBehaviour
         }
     }
     
-    // Diccionario que guarda el nivel actual de cada tipo de upgrade
     private Dictionary<UpgradeType, int> upgradeLevels = new Dictionary<UpgradeType, int>();
     
-    // Evento que se dispara cuando se aplica un upgrade
     public event System.Action<UpgradeType, int> OnUpgradeApplied;
     
     private void Awake()
@@ -32,7 +30,7 @@ public class PlayerStatsManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            transform.SetParent(null); // Convertir en root antes de DDOL
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             InitializeUpgrades();
         }
@@ -44,24 +42,17 @@ public class PlayerStatsManager : MonoBehaviour
     
     private void InitializeUpgrades()
     {
-        // Inicializar todos los tipos de upgrade en nivel 0
         foreach (UpgradeType type in System.Enum.GetValues(typeof(UpgradeType)))
         {
             upgradeLevels[type] = 0;
         }
     }
     
-    /// <summary>
-    /// Obtiene el nivel actual de un upgrade específico
-    /// </summary>
     public int GetUpgradeLevel(UpgradeType type)
     {
         return upgradeLevels.ContainsKey(type) ? upgradeLevels[type] : 0;
     }
     
-    /// <summary>
-    /// Aplica un upgrade (incrementa su nivel)
-    /// </summary>
     public void ApplyUpgrade(UpgradeData upgrade)
     {
         if (upgrade == null)
@@ -78,20 +69,14 @@ public class PlayerStatsManager : MonoBehaviour
             return;
         }
         
-        // Incrementar nivel
         upgradeLevels[upgrade.upgradeType] = currentLevel + 1;
         int newLevel = upgradeLevels[upgrade.upgradeType];
         
-        // Notificar a otros sistemas
         OnUpgradeApplied?.Invoke(upgrade.upgradeType, newLevel);
         
-        // Aplicar el upgrade inmediatamente
         ApplyUpgradeToPlayer(upgrade, newLevel);
     }
     
-    /// <summary>
-    /// Aplica los efectos del upgrade al jugador
-    /// </summary>
     private void ApplyUpgradeToPlayer(UpgradeData upgrade, int level)
     {
         float value = upgrade.CalculateValueAtLevel(level);
@@ -111,32 +96,24 @@ public class PlayerStatsManager : MonoBehaviour
                 ApplyMoveSpeedUpgrade(value);
                 break;
             case UpgradeType.MultiShot:
-                // Multishot se calcula dinámicamente
                 break;
             case UpgradeType.ExplosiveShot:
-                // ExplosiveShot es booleano
                 break;
             case UpgradeType.Knockback:
-                // Knockback se calcula dinámicamente
                 break;
         }
     }
     
-    // ========== APLICACIÓN DE UPGRADES ==========
-    
     private void ApplyDamageUpgrade(float percentageIncrease)
     {
-        // El daño se calculará dinámicamente desde GetModifiedDamage()
     }
     
     private void ApplyAttackSpeedUpgrade(float percentageDecrease)
     {
-        // El cooldown se calculará dinámicamente desde GetModifiedAttackCooldown()
     }
     
     private void ApplyMagnetRangeUpgrade(float percentageIncrease)
     {
-        // El rango se calculará dinámicamente desde GetModifiedMagnetRange()
     }
     
     private void ApplyMoveSpeedUpgrade(float percentageIncrease)
@@ -148,11 +125,6 @@ public class PlayerStatsManager : MonoBehaviour
         }
     }
     
-    // ========== GETTERS DE STATS MODIFICADOS ==========
-    
-    /// <summary>
-    /// Obtiene el daño base del jugador con todos los modificadores aplicados
-    /// </summary>
     public float GetModifiedDamage()
     {
         float baseDamage = GameBalanceConfig.Instance != null 
@@ -162,7 +134,6 @@ public class PlayerStatsManager : MonoBehaviour
         int damageLevel = GetUpgradeLevel(UpgradeType.Damage);
         if (damageLevel > 0 && UpgradeDatabase.Instance != null)
         {
-            // Buscar el upgrade de daño en la database
             UpgradeData damageUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.Damage);
             if (damageUpgrade != null)
             {
@@ -174,9 +145,6 @@ public class PlayerStatsManager : MonoBehaviour
         return baseDamage;
     }
     
-    /// <summary>
-    /// Obtiene el cooldown de ataque con todos los modificadores aplicados
-    /// </summary>
     public float GetModifiedAttackCooldown()
     {
         float baseCooldown = GameBalanceConfig.Instance != null 
@@ -197,9 +165,6 @@ public class PlayerStatsManager : MonoBehaviour
         return baseCooldown;
     }
     
-    /// <summary>
-    /// Obtiene el rango de atracción de orbes con todos los modificadores aplicados
-    /// </summary>
     public float GetModifiedMagnetRange()
     {
         float baseRange = GameBalanceConfig.Instance != null 
@@ -220,18 +185,11 @@ public class PlayerStatsManager : MonoBehaviour
         return baseRange;
     }
     
-    /// <summary>
-    /// Obtiene el número base de proyectiles (siempre 1)
-    /// </summary>
     public int GetProjectileCount()
     {
         return 1;
     }
     
-    /// <summary>
-    /// Obtiene la probabilidad de disparar una bala extra (MultiShot)
-    /// Retorna un porcentaje (0-100+)
-    /// </summary>
     public float GetMultiShotProbability()
     {
         int multiShotLevel = GetUpgradeLevel(UpgradeType.MultiShot);
@@ -249,23 +207,14 @@ public class PlayerStatsManager : MonoBehaviour
         return 0f;
     }
     
-    /// <summary>
-    /// Obtiene el número extra de balas que dispara MultiShot cuando se activa
-    /// Escala con el nivel: nivel 1-5 = 1 bala, 6-10 = 2 balas, 11-15 = 3 balas...
-    /// </summary>
     public int GetMultiShotExtraBullets()
     {
         int multiShotLevel = GetUpgradeLevel(UpgradeType.MultiShot);
         if (multiShotLevel <= 0) return 0;
         
-        // Cada 5 niveles se añade una bala extra
         return 1 + (multiShotLevel - 1) / 5;
     }
     
-    /// <summary>
-    /// Obtiene la probabilidad de que un proyectil sea explosivo
-    /// Retorna un porcentaje (0-100)
-    /// </summary>
     public float GetExplosiveShotProbability()
     {
         int explosiveLevel = GetUpgradeLevel(UpgradeType.ExplosiveShot);
@@ -283,22 +232,14 @@ public class PlayerStatsManager : MonoBehaviour
         return 0f;
     }
     
-    /// <summary>
-    /// Obtiene el radio de explosión (fijo)
-    /// </summary>
     public float GetExplosionRadius()
     {
         int explosiveLevel = GetUpgradeLevel(UpgradeType.ExplosiveShot);
         if (explosiveLevel <= 0) return 0f;
         
-        // Radio fijo de 3 unidades
         return 3f;
     }
     
-    /// <summary>
-    /// Obtiene la probabilidad de aplicar knockback
-    /// Retorna un porcentaje (0-100)
-    /// </summary>
     public float GetKnockbackProbability()
     {
         int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
@@ -316,29 +257,19 @@ public class PlayerStatsManager : MonoBehaviour
         return 0f;
     }
     
-    /// <summary>
-    /// Obtiene la fuerza de knockback (fija)
-    /// </summary>
     public float GetKnockbackForce()
     {
         int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
         if (knockbackLevel <= 0) return 0f;
         
-        // Fuerza fija de 5 unidades
         return 5f;
     }
     
-    /// <summary>
-    /// Obtiene una copia del diccionario de niveles de upgrade
-    /// </summary>
     public Dictionary<UpgradeType, int> GetAllUpgradeLevels()
     {
         return new Dictionary<UpgradeType, int>(upgradeLevels);
     }
     
-    /// <summary>
-    /// Obtiene el valor base del juego (sin upgrades) para un tipo específico
-    /// </summary>
     public float GetBaseGameValue(UpgradeType upgradeType)
     {
         GameBalanceConfig config = GameBalanceConfig.Instance;
@@ -350,33 +281,28 @@ public class PlayerStatsManager : MonoBehaviour
                 return config.PlayerBaseDamage;
             
             case UpgradeType.AttackSpeed:
-                // Para attack speed mostramos el cooldown base
                 return config.PlayerAttackCooldown;
             
             case UpgradeType.MagnetRange:
-                // Valor base del rango de atracción (desde config)
                 return config.OrbAttractionRange;
             
             case UpgradeType.MoveSpeed:
                 return config.PlayerMoveSpeed;
             
             case UpgradeType.MultiShot:
-                return 1f; // 1 proyectil base
+                return 1f;
             
             case UpgradeType.ExplosiveShot:
-                return 0f; // No explosivo por defecto
+                return 0f;
             
             case UpgradeType.Knockback:
-                return 0f; // Sin knockback por defecto
+                return 0f;
             
             default:
                 return 0f;
         }
     }
     
-    /// <summary>
-    /// Resetea todos los upgrades (útil para reiniciar partida)
-    /// </summary>
     public void ResetUpgrades()
     {
         InitializeUpgrades();

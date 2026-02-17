@@ -20,12 +20,10 @@ public class UpgradeButton : MonoBehaviour
         button = GetComponent<Button>();
         if (button != null)
         {
-            // Asegurarse de que solo haya UN listener
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(OnUpgradeSelected);
         }
         
-        // Buscar componentes en hijos - más flexible que Find()
         TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
         Image[] allImages = GetComponentsInChildren<Image>();
         
@@ -53,9 +51,6 @@ public class UpgradeButton : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// Configura el botón con los datos del upgrade
-    /// </summary>
     public void Setup(UpgradeData upgrade, int currentUpgradeLevel)
     {
         assignedUpgrade = upgrade;
@@ -69,7 +64,6 @@ public class UpgradeButton : MonoBehaviour
         currentLevel = currentUpgradeLevel;
         nextLevel = currentLevel + 1;
         
-        // Si ya está al máximo, no mostrar
         if (currentLevel >= upgrade.maxLevel)
         {
             gameObject.SetActive(false);
@@ -78,29 +72,24 @@ public class UpgradeButton : MonoBehaviour
         
         gameObject.SetActive(true);
         
-        // Re-habilitar el botón
         if (button != null)
         {
             button.interactable = true;
         }
         
-        // Asegurarse de tener referencias antes de actualizar UI
         EnsureReferences();
         UpdateUI();
     }
     
     private void EnsureReferences()
     {
-        // Si ya las tenemos, salir
         if (upgradeNameText != null && descriptionText != null) return;
         
-        // Solo obtener el botón si aún no lo tenemos (no agregar listener aquí)
         if (button == null)
         {
             button = GetComponent<Button>();
         }
         
-        // Buscar componentes en hijos
         TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
         Image[] allImages = GetComponentsInChildren<Image>();
         
@@ -132,20 +121,16 @@ public class UpgradeButton : MonoBehaviour
     {
         if (assignedUpgrade == null) return;
         
-        // Nombre del upgrade
         if (upgradeNameText != null)
         {
-            // Mostrar el nivel que vas a obtener (número de veces comprado + 1)
             upgradeNameText.text = $"{assignedUpgrade.upgradeName} lvl.{nextLevel}";
         }
         
-        // Descripción
         if (descriptionText != null)
         {
             descriptionText.text = assignedUpgrade.description;
         }
         
-        // Icono
         if (iconImage != null && assignedUpgrade.icon != null)
         {
             iconImage.sprite = assignedUpgrade.icon;
@@ -156,14 +141,12 @@ public class UpgradeButton : MonoBehaviour
             iconImage.gameObject.SetActive(false);
         }
         
-        // LabelText: Muestra el porcentaje formateado (ej: -8%, +15%)
         if (labelText != null)
         {
-            labelText.color = new Color(1f, 0.9f, 0.3f, 1f); // Yellow
+            labelText.color = new Color(1f, 0.9f, 0.3f, 1f);
             
             string formattedValue = assignedUpgrade.GetFormattedValue(nextLevel);
             
-            // Para AttackSpeed, agregar texto descriptivo
             if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
             {
                 labelText.text = $"{formattedValue}";
@@ -174,14 +157,12 @@ public class UpgradeButton : MonoBehaviour
             }
         }
         
-        // ValuesText: Muestra el valor numérico absoluto (ej: 15 → 18)
         if (valuesText != null)
         {
-            valuesText.color = new Color(0.4f, 1f, 0.5f, 1f); // Green
+            valuesText.color = new Color(0.4f, 1f, 0.5f, 1f);
             
             if (currentLevel == 0)
             {
-                // Primera mejora: obtener valor base del juego
                 float baseValue = 0f;
                 if (PlayerStatsManager.Instance != null)
                 {
@@ -190,7 +171,6 @@ public class UpgradeButton : MonoBehaviour
                 
                 float nextValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
                 
-                // CASO ESPECIAL: AttackSpeed muestra disparos/segundo en lugar de cooldown
                 if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
                 {
                     float baseCooldown = baseValue;
@@ -201,18 +181,15 @@ public class UpgradeButton : MonoBehaviour
                     
                     valuesText.text = $"{currentFireRate:F2} → {newFireRate:F2}";
                 }
-                // Si es porcentaje, calculamos el valor real que tendrá
                 else if (assignedUpgrade.isPercentage)
                 {
                     float finalValue;
                     if (assignedUpgrade.isReduction)
                     {
-                        // Para reducciones (ej: -8% cooldown): 1.0 * (1 - 0.08) = 0.92
                         finalValue = baseValue * (1f - nextValue / 100f);
                     }
                     else
                     {
-                        // Para aumentos (ej: +15% daño): 10 * (1 + 0.15) = 11.5
                         finalValue = baseValue * (1f + nextValue / 100f);
                     }
                     
@@ -229,7 +206,6 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else
                 {
-                    // Para valores absolutos (como +20 HP)
                     float finalValue = assignedUpgrade.isReduction 
                         ? baseValue - nextValue 
                         : baseValue + nextValue;
@@ -238,7 +214,6 @@ public class UpgradeButton : MonoBehaviour
             }
             else
             {
-                // Para niveles superiores, calcular el valor real del stat
                 float baseValue = 0f;
                 if (PlayerStatsManager.Instance != null)
                 {
@@ -248,7 +223,6 @@ public class UpgradeButton : MonoBehaviour
                 float currentUpgradeValue = assignedUpgrade.CalculateValueAtLevel(currentLevel);
                 float nextUpgradeValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
                 
-                // CASO ESPECIAL: AttackSpeed muestra disparos/segundo en lugar de cooldown
                 if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
                 {
                     float currentCooldown = baseValue * (1f - currentUpgradeValue / 100f);
@@ -265,13 +239,11 @@ public class UpgradeButton : MonoBehaviour
                     
                     if (assignedUpgrade.isReduction)
                     {
-                        // Reducción: base × (1 - porcentaje/100)
                         currentFinalValue = baseValue * (1f - currentUpgradeValue / 100f);
                         nextFinalValue = baseValue * (1f - nextUpgradeValue / 100f);
                     }
                     else
                     {
-                        // Aumento: base × (1 + porcentaje/100)
                         currentFinalValue = baseValue * (1f + currentUpgradeValue / 100f);
                         nextFinalValue = baseValue * (1f + nextUpgradeValue / 100f);
                     }
@@ -289,7 +261,6 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else
                 {
-                    // Valores absolutos
                     float currentFinalValue = assignedUpgrade.isReduction 
                         ? baseValue - currentUpgradeValue 
                         : baseValue + currentUpgradeValue;
@@ -301,10 +272,9 @@ public class UpgradeButton : MonoBehaviour
             }
         }
         
-        // Color especial si va a ser max level
         if (nextLevel >= assignedUpgrade.maxLevel && upgradeNameText != null)
         {
-            upgradeNameText.color = new Color(1f, 0.84f, 0f); // Gold
+            upgradeNameText.color = new Color(1f, 0.84f, 0f);
         }
     }
     
@@ -312,19 +282,16 @@ public class UpgradeButton : MonoBehaviour
     {
         if (assignedUpgrade == null) return;
         
-        // Deshabilitar el botón inmediatamente para evitar doble clic
         if (button != null)
         {
             button.interactable = false;
         }
         
-        // Aplicar upgrade a través del PlayerStatsManager
         if (PlayerStatsManager.Instance != null)
         {
             PlayerStatsManager.Instance.ApplyUpgrade(assignedUpgrade);
         }
         
-        // Notificar al LevelUpManager que cerramos
         LevelUpManager levelUpManager = FindFirstObjectByType<LevelUpManager>();
         if (levelUpManager != null)
         {

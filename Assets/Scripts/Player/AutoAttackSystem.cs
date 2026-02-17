@@ -85,7 +85,6 @@ public class AutoAttackSystem : MonoBehaviour
             return;
         }
         
-        // Obtener probabilidades de premium upgrades
         float multiShotProb = 0f;
         int extraBullets = 0;
         float explosiveProb = 0f;
@@ -103,16 +102,13 @@ public class AutoAttackSystem : MonoBehaviour
             knockbackForce = PlayerStatsManager.Instance.GetKnockbackForce();
         }
         
-        // Calcular cuántas balas disparar (1 + balas extra por MultiShot)
         int totalBullets = 1;
         
-        // Tirar probabilidad para MultiShot
         if (multiShotProb > 0f && Random.Range(0f, 100f) < multiShotProb)
         {
             totalBullets += extraBullets;
         }
         
-        // Calcular spread para múltiples balas
         float angleStep = totalBullets > 1 ? 15f : 0f;
         float startAngle = -(angleStep * (totalBullets - 1)) / 2f;
         
@@ -124,17 +120,14 @@ public class AutoAttackSystem : MonoBehaviour
             
             if (projectile != null)
             {
-                // Calcular dirección con spread
                 float angle = startAngle + (angleStep * i);
                 Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
                 
                 projectile.SetDirection(direction);
                 
-                // Determinar si esta bala específica es explosiva (probabilidad)
                 bool isExplosive = explosiveProb > 0f && Random.Range(0f, 100f) < explosiveProb;
                 projectile.SetExplosive(isExplosive, explosionRadius);
                 
-                // Determinar si esta bala específica tiene knockback (probabilidad)
                 float bulletKnockback = (knockbackProb > 0f && Random.Range(0f, 100f) < knockbackProb) ? knockbackForce : 0f;
                 projectile.SetKnockback(bulletKnockback);
             }
@@ -146,7 +139,6 @@ public class AutoAttackSystem : MonoBehaviour
         Gizmos.color = Color.yellow;
         float currentRange = attackRange;
         
-        // Si está en play mode, usar el valor actual
         if (Application.isPlaying && GameBalanceConfig.Instance != null)
         {
             currentRange = GameBalanceConfig.Instance.PlayerAttackRange;
