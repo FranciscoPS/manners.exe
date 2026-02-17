@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Wave_02_Medium
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Asalto Medio
-  totalEnemies: 15
+  totalEnemies: 300
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
-    percentage: 50.9
+    percentage: 60
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
-    percentage: 58
-  spawnInterval: 3
+    percentage: 40
+  spawnInterval: 0.8
   enemiesPerBatch: 4

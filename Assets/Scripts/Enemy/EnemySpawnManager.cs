@@ -212,10 +212,7 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void LogDebug(string message)
     {
-        if (showDebugLogs)
-        {
-            Debug.Log($"[EnemySpawnManager] {message}");
-        }
+        // Logs removed for optimization
     }
 
     public void TriggerWave(int waveIndex)

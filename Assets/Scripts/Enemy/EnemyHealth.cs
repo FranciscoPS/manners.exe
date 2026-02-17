@@ -9,18 +9,20 @@ public class EnemyHealth : MonoBehaviour
     private float orbSpawnRadius = 1f;
     private OrbConfiguration orbConfig;
     private int defaultExperienceValue = 10;
-
-    [Header("Collectible Drop Settings")]
-    [SerializeField] private float coinDropChance = 0.5f;
-    [SerializeField] private int minCoins = 1;
-    [SerializeField] private int maxCoins = 3;
-    [SerializeField] private float diamondDropChance = 0.1f;
-    [SerializeField] private int minDiamonds = 1;
-    [SerializeField] private int maxDiamonds = 1;
+    
+    // Currency drop settings
+    private float coinDropChance = 0.5f;
+    private int minCoins = 1;
+    private int maxCoins = 3;
+    private float diamondDropChance = 0.1f;
+    private int minDiamonds = 1;
+    private int maxDiamonds = 1;
 
     private float currentHealth;
 
-    public void SetConfiguration(float newMaxHealth, OrbConfiguration newOrbConfig, int newMinOrbs, int newMaxOrbs, float newOrbRadius)
+    public void SetConfiguration(float newMaxHealth, OrbConfiguration newOrbConfig, int newMinOrbs, int newMaxOrbs, float newOrbRadius,
+                                float newCoinDropChance, int newMinCoins, int newMaxCoins,
+                                float newDiamondDropChance, int newMinDiamonds, int newMaxDiamonds)
     {
         maxHealth = newMaxHealth;
         currentHealth = maxHealth;
@@ -28,6 +30,13 @@ public class EnemyHealth : MonoBehaviour
         minOrbs = newMinOrbs;
         maxOrbs = newMaxOrbs;
         orbSpawnRadius = newOrbRadius;
+        
+        coinDropChance = newCoinDropChance;
+        minCoins = newMinCoins;
+        maxCoins = newMaxCoins;
+        diamondDropChance = newDiamondDropChance;
+        minDiamonds = newMinDiamonds;
+        maxDiamonds = newMaxDiamonds;
     }
 
     private void Start()
@@ -69,7 +78,6 @@ public class EnemyHealth : MonoBehaviour
     {
         if (PoolManager.Instance == null)
         {
-            Debug.LogWarning("PoolManager not initialized!");
             return;
         }
 
@@ -95,6 +103,7 @@ public class EnemyHealth : MonoBehaviour
 
         Vector3 spawnCenter = transform.position + Vector3.up * 0.5f;
 
+        // Spawn coins based on this enemy's configuration
         if (Random.value <= coinDropChance)
         {
             int coinCount = Random.Range(minCoins, maxCoins + 1);
@@ -106,6 +115,7 @@ public class EnemyHealth : MonoBehaviour
             }
         }
 
+        // Spawn diamonds based on this enemy's configuration
         if (Random.value <= diamondDropChance)
         {
             int diamondCount = Random.Range(minDiamonds, maxDiamonds + 1);

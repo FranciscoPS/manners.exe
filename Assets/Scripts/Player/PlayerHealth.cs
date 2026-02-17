@@ -3,8 +3,7 @@ using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
-    [SerializeField] private float maxHealth = 100f;
-    
+    private float maxHealth;
     private float currentHealth;
     private DamageTween damageTween;
 
@@ -16,6 +15,15 @@ public class PlayerHealth : MonoBehaviour
 
     private void Start()
     {
+        if (GameBalanceConfig.Instance != null)
+        {
+            maxHealth = GameBalanceConfig.Instance.PlayerMaxHealth;
+        }
+        else
+        {
+            maxHealth = 100f;
+        }
+        
         currentHealth = maxHealth;
         damageTween = GetComponent<DamageTween>();
         OnHealthChanged?.Invoke(currentHealth, maxHealth);

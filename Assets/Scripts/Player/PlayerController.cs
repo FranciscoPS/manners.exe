@@ -3,17 +3,26 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float rotationSpeed = 10f;
     
     private Rigidbody rb;
     private Vector2 moveInput;
     private Vector3 moveDirection;
+    private float moveSpeed;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        
+        if (GameBalanceConfig.Instance != null)
+        {
+            moveSpeed = GameBalanceConfig.Instance.PlayerMoveSpeed;
+        }
+        else
+        {
+            moveSpeed = 5f;
+        }
     }
 
     public void OnMove(InputAction.CallbackContext context)

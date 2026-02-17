@@ -45,7 +45,6 @@ public class EnemySpawner : MonoBehaviour
     {
         currentWave++;
         currentEnemiesPerWave += enemyIncreasePerWave;
-        Debug.Log($"Wave {currentWave}");
         SpawnEnemies(currentEnemiesPerWave);
     }
 
@@ -53,7 +52,6 @@ public class EnemySpawner : MonoBehaviour
     {
         if (PoolManager.Instance == null)
         {
-            Debug.LogWarning("PoolManager not initialized!");
             return;
         }
 

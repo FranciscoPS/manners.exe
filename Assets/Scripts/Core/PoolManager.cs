@@ -157,6 +157,10 @@ public class PoolManager : MonoBehaviour
         {
             config.ApplyToProjectile(projectile);
         }
+        else if (config == null)
+        {
+            Debug.LogWarning($"[PoolManager] ProjectileConfiguration is NULL! Projectile will use default values.");
+        }
 
         return projectile;
     }

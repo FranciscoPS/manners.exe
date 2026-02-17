@@ -14,6 +14,17 @@ public class EnemyConfiguration : ScriptableObject
     public int maxOrbs = 3;
     public float orbSpawnRadius = 1f;
     
+    [Header("Currency Drops")]
+    [Tooltip("Chance to drop coins (0-1)")]
+    [Range(0f, 1f)] public float coinDropChance = 0.5f;
+    public int minCoins = 1;
+    public int maxCoins = 3;
+    
+    [Tooltip("Chance to drop diamonds (0-1)")]
+    [Range(0f, 1f)] public float diamondDropChance = 0.1f;
+    public int minDiamonds = 1;
+    public int maxDiamonds = 1;
+    
     [Header("Visual")]
     public Mesh mesh;
     public Material material;
@@ -37,7 +48,9 @@ public class EnemyConfiguration : ScriptableObject
         EnemyHealth health = enemyObject.GetComponent<EnemyHealth>();
         if (health != null)
         {
-            health.SetConfiguration(maxHealth, orbConfig, minOrbs, maxOrbs, orbSpawnRadius);
+            health.SetConfiguration(maxHealth, orbConfig, minOrbs, maxOrbs, orbSpawnRadius,
+                                   coinDropChance, minCoins, maxCoins,
+                                   diamondDropChance, minDiamonds, maxDiamonds);
         }
         
         ApplyVisuals(enemyObject);

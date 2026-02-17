@@ -3,13 +3,29 @@ using UnityEngine;
 public class AutoAttackSystem : MonoBehaviour
 {
     [SerializeField] private Transform firePoint;
-    [SerializeField] private float attackRange = 10f;
-    [SerializeField] private float attackCooldown = 0.5f;
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private ProjectileConfiguration projectileConfig;
 
+    private float attackRange;
+    private float attackCooldown;
     private float cooldownTimer = 0f;
     private Transform currentTarget;
+
+    private void Awake()
+    {
+        // Load attack values from GameBalanceConfig
+        if (GameBalanceConfig.Instance != null)
+        {
+            attackRange = GameBalanceConfig.Instance.PlayerAttackRange;
+            attackCooldown = GameBalanceConfig.Instance.PlayerAttackCooldown;
+        }
+        else
+        {
+            // Fallback values if config is missing
+            attackRange = 10f;
+            attackCooldown = 0.5f;
+        }
+    }
 
     private void Update()
     {
@@ -55,6 +71,12 @@ public class AutoAttackSystem : MonoBehaviour
         if (PoolManager.Instance == null)
         {
             Debug.LogWarning("PoolManager not initialized!");
+            return;
+        }
+
+        if (projectileConfig == null)
+        {
+            Debug.LogError("[AutoAttackSystem] projectileConfig is NULL! Assign a ProjectileConfiguration in the Inspector!");
             return;
         }
 

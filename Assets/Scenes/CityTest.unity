@@ -7829,6 +7829,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 850395906}
   m_CullTransparentMesh: 1
+--- !u!4 &856830824 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
+  m_PrefabInstance: {fileID: 1179520282}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &863948964
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10875,7 +10880,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 543450653586150669}
     m_Modifications:
     - target: {fileID: 1796849577866718654, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_Name
@@ -10883,7 +10888,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3.2373998
+      value: 3.2374
       objectReference: {fileID: 0}
     - target: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_LocalScale.y
@@ -10891,19 +10896,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3.2373998
+      value: 3.2374
       objectReference: {fileID: 0}
     - target: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -36.05
+      value: -42.93342
       objectReference: {fileID: 0}
     - target: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.01
+      value: 0.009933088
       objectReference: {fileID: 0}
     - target: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.5
+      value: -3.5802412
       objectReference: {fileID: 0}
     - target: {fileID: 6863659097109091124, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
       propertyPath: m_LocalRotation.w
@@ -15341,8 +15346,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d770b1a991b82174f8a45d6d6e364c38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExperienceManager
-  baseExperienceRequired: 1000
-  experienceMultiplier: 1.5
 --- !u!1 &1660883948
 GameObject:
   m_ObjectHideFlags: 0
@@ -20556,8 +20559,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoAttackSystem
   firePoint: {fileID: 1465477815}
-  attackRange: 10
-  attackCooldown: 0.5
   enemyLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -20574,7 +20575,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d6ceb5db09c748dd996c6f23e3d4e5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
-  maxHealth: 100
 --- !u!114 &2131817220
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20587,7 +20587,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2ed48f2f73444e3bbf6df03535980c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  moveSpeed: 5
   rotationSpeed: 10
 --- !u!114 &2131817221
 MonoBehaviour:
@@ -21009,6 +21008,7 @@ Transform:
   - {fileID: 1664629559}
   - {fileID: 1468242628}
   - {fileID: 1537995721}
+  - {fileID: 856830824}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &919132149310066615
@@ -21214,7 +21214,6 @@ SceneRoots:
   - {fileID: 1971910509}
   - {fileID: 1725578252}
   - {fileID: 1340984783}
-  - {fileID: 1179520282}
   - {fileID: 550828764}
   - {fileID: 265672817}
   - {fileID: 401712760}

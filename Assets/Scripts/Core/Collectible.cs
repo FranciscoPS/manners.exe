@@ -10,10 +10,10 @@ public class Collectible : MonoBehaviour, IPoolable
 
     private CollectibleType type;
     private int value = 1;
-    private float attractionRange = 5f;
+    private float attractionRange;
     private float moveSpeed = 8f;
     private float acceleration = 15f;
-    private float lifeTime = 30f;
+    private float lifeTime;
     
     [Header("Warning Settings")]
     [SerializeField] private float warningTime = 3f;
@@ -40,6 +40,22 @@ public class Collectible : MonoBehaviour, IPoolable
     public void SetType(CollectibleType collectibleType)
     {
         type = collectibleType;
+        
+        if (GameBalanceConfig.Instance != null)
+        {
+            attractionRange = type == CollectibleType.Coin ? 
+                GameBalanceConfig.Instance.CoinAttractionRange : 
+                GameBalanceConfig.Instance.DiamondAttractionRange;
+            
+            lifeTime = type == CollectibleType.Coin ? 
+                GameBalanceConfig.Instance.CoinLifetime : 
+                GameBalanceConfig.Instance.DiamondLifetime;
+        }
+        else
+        {
+            attractionRange = 5f;
+            lifeTime = 30f;
+        }
     }
 
     public void SetValue(int amount)
