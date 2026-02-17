@@ -30,6 +30,7 @@ public class PoolManager : MonoBehaviour
 
     private Dictionary<PoolType, ObjectPool<GameObject>> pools = new Dictionary<PoolType, ObjectPool<GameObject>>();
     private Dictionary<PoolType, GameObject> poolPrefabs = new Dictionary<PoolType, GameObject>();
+    private Dictionary<PoolType, Quaternion> poolPrefabRotations = new Dictionary<PoolType, Quaternion>();
     private Dictionary<GameObject, PoolType> activeObjects = new Dictionary<GameObject, PoolType>();
 
     private void Awake()
@@ -57,6 +58,7 @@ public class PoolManager : MonoBehaviour
             }
 
             poolPrefabs[config.poolType] = config.prefab;
+            poolPrefabRotations[config.poolType] = config.prefab.transform.rotation;
 
             var pool = new ObjectPool<GameObject>(
                 () => CreatePooledObject(config.poolType, config.prefab),
@@ -187,7 +189,8 @@ public class PoolManager : MonoBehaviour
     public Collectible SpawnCollectible(Vector3 position, Collectible.CollectibleType type, int value)
     {
         PoolType poolType = type == Collectible.CollectibleType.Coin ? PoolType.Coin : PoolType.Diamond;
-        GameObject obj = Spawn(poolType, position, Quaternion.identity);
+        Quaternion rotation = poolPrefabRotations.ContainsKey(poolType) ? poolPrefabRotations[poolType] : Quaternion.identity;
+        GameObject obj = Spawn(poolType, position, rotation);
         
         if (obj != null)
         {
