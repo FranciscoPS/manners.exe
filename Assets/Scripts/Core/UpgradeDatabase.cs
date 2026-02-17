@@ -45,13 +45,34 @@ public class UpgradeDatabase : ScriptableObject
     {
         List<UpgradeData> selectedUpgrades = new List<UpgradeData>();
         
+        // Define premium upgrades (aparecen solo en niveles milestone: 5, 10, 15...)
+        HashSet<UpgradeType> premiumUpgrades = new HashSet<UpgradeType>
+        {
+            UpgradeType.MultiShot,
+            UpgradeType.ExplosiveShot,
+            UpgradeType.Knockback
+        };
+        
+        bool isMilestoneLevel = (playerLevel % 5 == 0);
+        
         // Filtrar upgrades que aún pueden subir de nivel
         List<UpgradeData> availableUpgrades = allUpgrades.Where(upgrade =>
         {
             int currentLevel = currentUpgradeLevels.ContainsKey(upgrade.upgradeType) 
                 ? currentUpgradeLevels[upgrade.upgradeType] 
                 : 0;
-            return currentLevel < upgrade.maxLevel;
+            
+            // Verificar que no está en max level
+            if (currentLevel >= upgrade.maxLevel)
+                return false;
+            
+            // En niveles milestone (5, 10, 15...) solo mostrar premium upgrades
+            if (isMilestoneLevel)
+                return premiumUpgrades.Contains(upgrade.upgradeType);
+            
+            // En otros niveles, excluir premium upgrades
+            return !premiumUpgrades.Contains(upgrade.upgradeType);
+            
         }).ToList();
         
         if (availableUpgrades.Count == 0)

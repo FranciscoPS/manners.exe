@@ -27,16 +27,7 @@ public class GameBalanceConfig : ScriptableObject
     [SerializeField] private float playerAttackRange = 10f;
     [SerializeField] private float playerAttackCooldown = 0.5f;
     
-    [Header("=== PLAYER UPGRADES ===")]
-    [Tooltip("Fuerza base del knockback (por nivel de upgrade)")]
-    [SerializeField] private float baseKnockbackForce = 5f;
-    
-    [Tooltip("Radio base de la explosión (primer nivel de ExplosiveShot)")]
-    [SerializeField] private float baseExplosionRadius = 3f;
-    
-    [Tooltip("Incremento del radio de explosión por nivel adicional")]
-    [SerializeField] private float explosionRadiusPerLevel = 1f;
-    
+    [Header("=== COMBAT SETTINGS ===")]
     [Tooltip("Duración del knockback en segundos")]
     [SerializeField] private float knockbackDuration = 0.3f;
 
@@ -77,9 +68,6 @@ public class GameBalanceConfig : ScriptableObject
     public float PlayerAttackRange => playerAttackRange;
     public float PlayerAttackCooldown => playerAttackCooldown;
     
-    public float BaseKnockbackForce => baseKnockbackForce;
-    public float BaseExplosionRadius => baseExplosionRadius;
-    public float ExplosionRadiusPerLevel => explosionRadiusPerLevel;
     public float KnockbackDuration => knockbackDuration;
 
     public int BaseExperienceRequired => baseExperienceRequired;

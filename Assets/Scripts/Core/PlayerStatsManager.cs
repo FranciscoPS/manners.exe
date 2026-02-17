@@ -240,36 +240,44 @@ public class PlayerStatsManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Obtiene el radio de explosión basado en el nivel del upgrade
+    /// Obtiene el radio de explosión basado en el nivel del upgrade ExplosiveShot
+    /// El valor se configura en el ScriptableObject Upgrade_ExplosiveShot
     /// </summary>
     public float GetExplosionRadius()
     {
         int explosiveLevel = GetUpgradeLevel(UpgradeType.ExplosiveShot);
         if (explosiveLevel <= 0) return 0f;
         
-        if (GameBalanceConfig.Instance != null)
+        if (UpgradeDatabase.Instance != null)
         {
-            // Nivel 1: radio base, cada nivel adicional suma explosionRadiusPerLevel
-            float baseRadius = GameBalanceConfig.Instance.BaseExplosionRadius;
-            float radiusPerLevel = GameBalanceConfig.Instance.ExplosionRadiusPerLevel;
-            return baseRadius + (radiusPerLevel * (explosiveLevel - 1));
+            UpgradeData explosiveUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.ExplosiveShot);
+            if (explosiveUpgrade != null)
+            {
+                // Usa CalculateValueAtLevel del ScriptableObject
+                return explosiveUpgrade.CalculateValueAtLevel(explosiveLevel);
+            }
         }
         
         return 3f; // Fallback
     }
     
     /// <summary>
-    /// Obtiene la fuerza de knockback
+    /// Obtiene la fuerza de knockback basada en el nivel del upgrade Knockback
+    /// El valor se configura en el ScriptableObject Upgrade_Knockback
     /// </summary>
     public float GetKnockbackForce()
     {
         int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
         if (knockbackLevel <= 0) return 0f;
         
-        if (GameBalanceConfig.Instance != null)
+        if (UpgradeDatabase.Instance != null)
         {
-            // Cada nivel multiplica la fuerza base
-            return GameBalanceConfig.Instance.BaseKnockbackForce * knockbackLevel;
+            UpgradeData knockbackUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.Knockback);
+            if (knockbackUpgrade != null)
+            {
+                // Usa CalculateValueAtLevel del ScriptableObject
+                return knockbackUpgrade.CalculateValueAtLevel(knockbackLevel);
+            }
         }
         
         return 0f;
