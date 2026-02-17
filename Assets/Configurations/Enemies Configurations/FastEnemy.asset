@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c885be7fc80148b29768c11ebb90e90, type: 3}
   m_Name: FastEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfiguration
+  enemyPoolType: 4
   maxHealth: 30
   moveSpeed: 6
   contactDamage: 8
@@ -25,11 +26,3 @@ MonoBehaviour:
   diamondDropChance: 0.08
   minDiamonds: 1
   maxDiamonds: 1
-  mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
-  material: {fileID: 2100000, guid: c81feac6c647f4766ac970fd7e40549b, type: 2}
-  color: {r: 0.86888003, g: 0.9160756, b: 0.4414447, a: 1}
-  scale: {x: 1, y: 1, z: 1}
-  deathEffect: {fileID: 0}
-  hasLight: 0
-  lightColor: {r: 1, g: 0, b: 0, a: 1}
-  lightIntensity: 3

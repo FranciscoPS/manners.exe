@@ -11,7 +11,9 @@ public class PoolManager : MonoBehaviour
     {
         Projectile,
         ExperienceOrb,
-        Enemy,
+        Enemy,          // Pool genérico (deprecated)
+        BasicEnemy,     // Enemy básico
+        FastEnemy,      // Enemy rápido
         Coin,
         Diamond
     }
@@ -182,7 +184,12 @@ public class PoolManager : MonoBehaviour
 
     public GameObject SpawnEnemy(Vector3 position, EnemyConfiguration config = null)
     {
-        GameObject obj = Spawn(PoolType.Enemy, position, Quaternion.identity);
+        // Determinar qué pool usar basándose en la configuración
+        PoolType poolType = config != null && config.enemyPoolType != PoolType.Enemy 
+            ? config.enemyPoolType 
+            : PoolType.Enemy;
+        
+        GameObject obj = Spawn(poolType, position, Quaternion.identity);
         if (obj != null && config != null)
         {
             config.ApplyToEnemy(obj);

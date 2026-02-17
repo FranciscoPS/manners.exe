@@ -28,6 +28,18 @@ public class DamageTween : MonoBehaviour
         }
     }
     
+    private void OnDisable()
+    {
+        // Restaurar color original al desactivarse (pooling)
+        if (materialInstance != null)
+        {
+            SetMaterialColor(originalColor);
+        }
+        
+        // Matar el tween si está activo
+        damageTween?.Kill();
+    }
+    
     public void InitializeMaterial()
     {
         if (targetRenderer == null)

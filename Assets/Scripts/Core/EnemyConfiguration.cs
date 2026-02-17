@@ -3,6 +3,10 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "EnemyConfig", menuName = "Game/Enemy Configuration")]
 public class EnemyConfiguration : ScriptableObject
 {
+    [Header("Pool Settings")]
+    [Tooltip("Tipo de pool a usar para este enemigo")]
+    public PoolManager.PoolType enemyPoolType = PoolManager.PoolType.BasicEnemy;
+    
     [Header("Stats")]
     public float maxHealth = 30f;
     public float moveSpeed = 3f;
