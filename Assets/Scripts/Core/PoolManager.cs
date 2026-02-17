@@ -155,7 +155,6 @@ public class PoolManager : MonoBehaviour
         Projectile projectile = obj.GetComponent<Projectile>();
         if (projectile != null && config != null)
         {
-            Debug.Log($"[PoolManager] Applying ProjectileConfiguration to projectile");
             config.ApplyToProjectile(projectile);
         }
         else if (config == null)

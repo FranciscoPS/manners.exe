@@ -15,10 +15,6 @@ public class GameBalanceConfig : ScriptableObject
                 {
                     Debug.LogError("GameBalanceConfig not found in Resources folder! Create it at Assets/Resources/GameBalanceConfig.asset");
                 }
-                else
-                {
-                    Debug.Log($"[GameBalanceConfig] Loaded successfully. PlayerBaseDamage = {instance.playerBaseDamage}");
-                }
             }
             return instance;
         }

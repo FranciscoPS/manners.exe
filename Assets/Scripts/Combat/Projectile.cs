@@ -24,7 +24,6 @@ public class Projectile : MonoBehaviour, IPoolable
         speed = newSpeed;
         damage = newDamage;
         lifetime = newLifetime;
-        Debug.Log($"[Projectile] SetStats called - Speed: {speed}, Damage: {damage}, Lifetime: {lifetime}");
     }
 
     public void SetVisuals(Mesh mesh, Material material, Color color, Vector3 scale)
@@ -116,7 +115,6 @@ public class Projectile : MonoBehaviour, IPoolable
             EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
             if (enemyHealth != null)
             {
-                Debug.Log($"[Projectile] Hitting enemy with damage: {damage}");
                 enemyHealth.TakeDamage(damage);
             }
             

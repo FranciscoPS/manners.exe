@@ -69,7 +69,6 @@ public class BuildingsScript : MonoBehaviour
     {
         if (PoolManager.Instance == null || GameBalanceConfig.Instance == null)
         {
-            Debug.LogWarning("PoolManager or GameBalanceConfig not initialized!");
             return;
         }
 

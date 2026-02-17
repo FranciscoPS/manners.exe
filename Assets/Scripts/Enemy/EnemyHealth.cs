@@ -51,9 +51,7 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        float previousHealth = currentHealth;
         currentHealth -= damage;
-        Debug.Log($"[EnemyHealth] Took {damage} damage. Health: {previousHealth} -> {currentHealth} (Max: {maxHealth})");
 
         if (currentHealth <= 0)
         {
@@ -80,7 +78,6 @@ public class EnemyHealth : MonoBehaviour
     {
         if (PoolManager.Instance == null)
         {
-            Debug.LogWarning("PoolManager not initialized!");
             return;
         }
 
