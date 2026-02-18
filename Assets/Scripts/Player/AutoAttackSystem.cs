@@ -113,7 +113,7 @@ public class AutoAttackSystem : MonoBehaviour
             totalBullets += extraBullets;
         }
         
-        float angleStep = totalBullets > 1 ? 15f : 0f;
+        float angleStep = totalBullets > 1 ? 20f : 0f;
         float startAngle = -(angleStep * (totalBullets - 1)) / 2f;
         
         Vector3 baseDirection = (currentTarget.position - firePoint.position).normalized;
