@@ -269,6 +269,16 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         }
     }
 
+    private void OnTriggerStay(Collider other)
+    {
+        if (collected) return;
+
+        if (other.CompareTag("Player"))
+        {
+            CollectExperience(other.transform);
+        }
+    }
+
     private void CollectExperience(Transform playerTransform)
     {
         collected = true;

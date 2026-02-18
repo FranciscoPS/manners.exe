@@ -41,19 +41,29 @@ public class Collectible : MonoBehaviour, IPoolable
     {
         type = collectibleType;
         
-        if (GameBalanceConfig.Instance != null)
+        if (PlayerStatsManager.Instance != null)
+        {
+            attractionRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
+        }
+        else if (GameBalanceConfig.Instance != null)
         {
             attractionRange = type == CollectibleType.Coin ? 
                 GameBalanceConfig.Instance.CoinAttractionRange : 
                 GameBalanceConfig.Instance.DiamondAttractionRange;
-            
+        }
+        else
+        {
+            attractionRange = 5f;
+        }
+        
+        if (GameBalanceConfig.Instance != null)
+        {
             lifeTime = type == CollectibleType.Coin ? 
                 GameBalanceConfig.Instance.CoinLifetime : 
                 GameBalanceConfig.Instance.DiamondLifetime;
         }
         else
         {
-            attractionRange = 5f;
             lifeTime = 30f;
         }
     }
@@ -165,7 +175,13 @@ public class Collectible : MonoBehaviour, IPoolable
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        if (distanceToPlayer <= attractionRange)
+        float currentAttractionRange = attractionRange;
+        if (PlayerStatsManager.Instance != null)
+        {
+            currentAttractionRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
+        }
+
+        if (distanceToPlayer <= currentAttractionRange)
         {
             isMovingToPlayer = true;
             isFloating = false;
@@ -212,6 +228,16 @@ public class Collectible : MonoBehaviour, IPoolable
     }
 
     private void OnTriggerEnter(Collider other)
+    {
+        if (collected) return;
+
+        if (other.CompareTag("Player"))
+        {
+            CollectItem();
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
     {
         if (collected) return;
 
