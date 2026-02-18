@@ -32,7 +32,10 @@ public class PlayerStatsManager : MonoBehaviour
         {
             instance = this;
             transform.SetParent(null);
+            
+#if !UNITY_EDITOR
             DontDestroyOnLoad(gameObject);
+#endif
             InitializeUpgrades();
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
@@ -41,30 +44,7 @@ public class PlayerStatsManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-#endif
     }
-
-#if UNITY_EDITOR
-    private void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
-    {
-        if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
-        {
-            if (instance == this)
-            {
-                SceneManager.sceneLoaded -= OnSceneLoaded;
-                UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-                instance = null;
-                if (gameObject != null)
-                {
-                    DestroyImmediate(gameObject);
-                }
-            }
-        }
-    }
-#endif
 
     private void OnDestroy()
     {
@@ -134,6 +114,8 @@ public class PlayerStatsManager : MonoBehaviour
                 break;
             case UpgradeType.MoveSpeed:
                 ApplyMoveSpeedUpgrade(value);
+                break;
+            case UpgradeType.MagnetRange:
                 break;
             case UpgradeType.MultiShot:
                 break;
@@ -220,6 +202,26 @@ public class PlayerStatsManager : MonoBehaviour
             if (attackRangeUpgrade != null)
             {
                 float percentageBonus = attackRangeUpgrade.CalculateValueAtLevel(attackRangeLevel);
+                baseRange *= (1f + percentageBonus / 100f);
+            }
+        }
+        
+        return baseRange;
+    }
+    
+    public float GetModifiedMagnetRange()
+    {
+        float baseRange = GameBalanceConfig.Instance != null 
+            ? GameBalanceConfig.Instance.OrbAttractionRange 
+            : 5f;
+        
+        int magnetRangeLevel = GetUpgradeLevel(UpgradeType.MagnetRange);
+        if (magnetRangeLevel > 0 && UpgradeDatabase.Instance != null)
+        {
+            UpgradeData magnetRangeUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.MagnetRange);
+            if (magnetRangeUpgrade != null)
+            {
+                float percentageBonus = magnetRangeUpgrade.CalculateValueAtLevel(magnetRangeLevel);
                 baseRange *= (1f + percentageBonus / 100f);
             }
         }
@@ -330,6 +332,9 @@ public class PlayerStatsManager : MonoBehaviour
             
             case UpgradeType.MoveSpeed:
                 return config.PlayerMoveSpeed;
+            
+            case UpgradeType.MagnetRange:
+                return config.OrbAttractionRange;
             
             case UpgradeType.MultiShot:
                 return 1f;

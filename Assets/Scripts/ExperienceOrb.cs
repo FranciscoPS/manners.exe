@@ -149,14 +149,25 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             rb.useGravity = false;
         }
         
-        if (GameBalanceConfig.Instance != null)
+        if (PlayerStatsManager.Instance != null)
+        {
+            attractionRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
+        }
+        else if (GameBalanceConfig.Instance != null)
         {
             attractionRange = GameBalanceConfig.Instance.OrbAttractionRange;
-            lifeTime = GameBalanceConfig.Instance.OrbLifetime;
         }
         else
         {
             attractionRange = 5f;
+        }
+        
+        if (GameBalanceConfig.Instance != null)
+        {
+            lifeTime = GameBalanceConfig.Instance.OrbLifetime;
+        }
+        else
+        {
             lifeTime = 30f;
         }
     }
@@ -193,7 +204,11 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
         float currentAttractionRange = attractionRange;
-        if (GameBalanceConfig.Instance != null)
+        if (PlayerStatsManager.Instance != null)
+        {
+            currentAttractionRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
+        }
+        else if (GameBalanceConfig.Instance != null)
         {
             currentAttractionRange = GameBalanceConfig.Instance.OrbAttractionRange;
         }

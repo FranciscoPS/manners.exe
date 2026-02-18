@@ -8,6 +8,7 @@ public class PlayerStatsHUD : MonoBehaviour
     [SerializeField] private TextMeshProUGUI attackSpeedText;
     [SerializeField] private TextMeshProUGUI attackRangeText;
     [SerializeField] private TextMeshProUGUI moveSpeedText;
+    [SerializeField] private TextMeshProUGUI magnetRangeText;
     [SerializeField] private TextMeshProUGUI multiShotText;
     [SerializeField] private TextMeshProUGUI explosiveShotText;
     [SerializeField] private TextMeshProUGUI knockbackText;
@@ -43,6 +44,7 @@ public class PlayerStatsHUD : MonoBehaviour
         UpdateAttackSpeed();
         UpdateAttackRange();
         UpdateMoveSpeed();
+        UpdateMagnetRange();
         UpdateMultiShot();
         UpdateExplosiveShot();
         UpdateKnockback();
@@ -99,6 +101,16 @@ public class PlayerStatsHUD : MonoBehaviour
         }
         
         moveSpeedText.text = FormatStatLine("Speed", moveSpeed.ToString("F1"), level);
+    }
+
+    private void UpdateMagnetRange()
+    {
+        if (magnetRangeText == null) return;
+        
+        float magnetRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
+        int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.MagnetRange);
+        
+        magnetRangeText.text = FormatStatLine("Magnet Range", magnetRange.ToString("F1"), level);
     }
 
     private void UpdateMultiShot()
