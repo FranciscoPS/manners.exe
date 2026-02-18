@@ -110,7 +110,7 @@ public class PoolManager : MonoBehaviour
         Destroy(obj);
     }
 
-    public GameObject Spawn(PoolType poolType, Vector3 position, Quaternion rotation)
+    private GameObject GetFromPool(PoolType poolType, Vector3 position, Quaternion rotation)
     {
         if (!pools.ContainsKey(poolType))
         {
@@ -128,6 +128,14 @@ public class PoolManager : MonoBehaviour
         
         obj.transform.position = position;
         obj.transform.rotation = rotation;
+
+        return obj;
+    }
+
+    public GameObject Spawn(PoolType poolType, Vector3 position, Quaternion rotation)
+    {
+        GameObject obj = GetFromPool(poolType, position, rotation);
+        if (obj == null) return null;
 
         IPoolable poolable = obj.GetComponent<IPoolable>();
         if (poolable != null)
@@ -178,29 +186,54 @@ public class PoolManager : MonoBehaviour
 
     public ExperienceOrb SpawnOrb(Vector3 position, OrbConfiguration config = null)
     {
-        GameObject obj = Spawn(PoolType.ExperienceOrb, position, Quaternion.identity);
+        GameObject obj = GetFromPool(PoolType.ExperienceOrb, position, Quaternion.identity);
         if (obj == null) return null;
 
         ExperienceOrb orb = obj.GetComponent<ExperienceOrb>();
-        if (orb != null && config != null)
+        if (orb != null)
         {
-            config.ApplyToOrb(orb);
+            if (config != null)
+            {
+                config.ApplyToOrb(orb);
+            }
+            
+            IPoolable poolable = orb as IPoolable;
+            if (poolable != null)
+            {
+                poolable.OnSpawn();
+            }
         }
+
+        obj.SetActive(true);
+        Physics.SyncTransforms();
+        activeObjects[obj] = PoolType.ExperienceOrb;
 
         return orb;
     }
 
     public GameObject SpawnEnemy(Vector3 position, EnemyConfiguration config = null)
     {
-        // Determinar qué pool usar basándose en la configuración
         PoolType poolType = config != null && config.enemyPoolType != PoolType.Enemy 
             ? config.enemyPoolType 
             : PoolType.Enemy;
         
-        GameObject obj = Spawn(poolType, position, Quaternion.identity);
-        if (obj != null && config != null)
+        GameObject obj = GetFromPool(poolType, position, Quaternion.identity);
+        if (obj != null)
         {
-            config.ApplyToEnemy(obj);
+            if (config != null)
+            {
+                config.ApplyToEnemy(obj);
+            }
+            
+            IPoolable poolable = obj.GetComponent<IPoolable>();
+            if (poolable != null)
+            {
+                poolable.OnSpawn();
+            }
+            
+            obj.SetActive(true);
+            Physics.SyncTransforms();
+            activeObjects[obj] = poolType;
         }
 
         return obj;
@@ -210,7 +243,7 @@ public class PoolManager : MonoBehaviour
     {
         PoolType poolType = type == Collectible.CollectibleType.Coin ? PoolType.Coin : PoolType.Diamond;
         Quaternion rotation = poolPrefabRotations.ContainsKey(poolType) ? poolPrefabRotations[poolType] : Quaternion.identity;
-        GameObject obj = Spawn(poolType, position, rotation);
+        GameObject obj = GetFromPool(poolType, position, rotation);
         
         if (obj != null)
         {
@@ -219,7 +252,18 @@ public class PoolManager : MonoBehaviour
             {
                 collectible.SetType(type);
                 collectible.SetValue(value);
+                
+                IPoolable poolable = collectible as IPoolable;
+                if (poolable != null)
+                {
+                    poolable.OnSpawn();
+                }
             }
+            
+            obj.SetActive(true);
+            Physics.SyncTransforms();
+            activeObjects[obj] = poolType;
+            
             return collectible;
         }
         
