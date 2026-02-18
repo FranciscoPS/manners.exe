@@ -31,9 +31,9 @@ public class PlayerStatsManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            transform.SetParent(null);
             
 #if !UNITY_EDITOR
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
 #endif
             InitializeUpgrades();
