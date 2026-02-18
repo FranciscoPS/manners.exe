@@ -13,6 +13,14 @@ public class PlayerHealth : MonoBehaviour
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
 
+    private int consecutiveHits = 0;
+    private float lastHitTime = -999f;
+    private float consecutiveHitWindow = 1f;
+    private bool isInvulnerable = false;
+    private float invulnerabilityEndTime;
+    private const float invulnerabilityDuration = 0.5f;
+    private const int hitsForInvulnerability = 3;
+
     private void Start()
     {
         if (GameBalanceConfig.Instance != null)
@@ -32,8 +40,37 @@ public class PlayerHealth : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
+    private void Update()
+    {
+        if (Time.time - lastHitTime > consecutiveHitWindow)
+        {
+            consecutiveHits = 0;
+        }
+
+        if (isInvulnerable && Time.time >= invulnerabilityEndTime)
+        {
+            isInvulnerable = false;
+        }
+    }
+
     public void TakeDamage(float damage)
     {
+        if (isInvulnerable)
+        {
+            return;
+        }
+
+        consecutiveHits++;
+        lastHitTime = Time.time;
+
+        if (consecutiveHits >= hitsForInvulnerability)
+        {
+            isInvulnerable = true;
+            invulnerabilityEndTime = Time.time + invulnerabilityDuration;
+            consecutiveHits = 0;
+            Debug.Log("[PlayerHealth] Invulnerability activated after 3 consecutive hits!");
+        }
+
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
         
