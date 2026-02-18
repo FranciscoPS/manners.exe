@@ -39,14 +39,39 @@ public class PlayerStatsManager : MonoBehaviour
         else if (instance != this)
         {
             Destroy(gameObject);
+            return;
+        }
+        
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
+    }
+
+#if UNITY_EDITOR
+    private void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
+    {
+        if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+        {
+            if (instance == this)
+            {
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+                UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+                instance = null;
+                if (gameObject != null)
+                {
+                    DestroyImmediate(gameObject);
+                }
+            }
         }
     }
+#endif
 
     private void OnDestroy()
     {
         if (instance == this)
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            instance = null;
         }
     }
 
