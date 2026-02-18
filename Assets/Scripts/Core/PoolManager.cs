@@ -89,7 +89,6 @@ public class PoolManager : MonoBehaviour
     {
         if (obj != null)
         {
-            obj.SetActive(true);
         }
     }
 
@@ -97,6 +96,11 @@ public class PoolManager : MonoBehaviour
     {
         if (obj != null)
         {
+            IPoolable poolable = obj.GetComponent<IPoolable>();
+            if (poolable != null)
+            {
+                poolable.OnDespawn();
+            }
             obj.SetActive(false);
         }
     }
@@ -124,17 +128,18 @@ public class PoolManager : MonoBehaviour
         
         obj.transform.position = position;
         obj.transform.rotation = rotation;
-        
-        // Sync physics immediately to prevent OverlapSphere detecting old positions
-        Physics.SyncTransforms();
-
-        activeObjects[obj] = poolType;
 
         IPoolable poolable = obj.GetComponent<IPoolable>();
         if (poolable != null)
         {
             poolable.OnSpawn();
         }
+
+        obj.SetActive(true);
+        
+        Physics.SyncTransforms();
+
+        activeObjects[obj] = poolType;
 
         return obj;
     }

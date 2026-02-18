@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
-  m_Name: Upgrade_Knockback
+  m_Name: Upgrade_AttackRange
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
-  upgradeName: 'Impact Force '
-  description: Each projectile hit has a % chance to knock the enemy back.
-  upgradeType: 6
-  icon: {fileID: 21300000, guid: 325072b8ec28ae7408f7b21cb89f00dd, type: 3}
-  baseValue: 15
+  upgradeName: Attack Range
+  description: Increases attack range
+  upgradeType: 2
+  icon: {fileID: 21300000, guid: d0dbed677e5bcc64e9d7e155f4089767, type: 3}
+  baseValue: 10
   multiplierPerLevel: 1.15
   maxLevel: 999
   isPercentage: 1
-  valueSuffix: force
-  isPremium: 1
+  valueSuffix: 
+  isPremium: 0
   spawnWeight: 40

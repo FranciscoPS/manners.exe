@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
   m_Name: Upgrade_MagnetRange
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
-  upgradeName: Magnet Field
-  description: Increases orb attraction range
-  upgradeType: 3
+  upgradeName: Magnet Range
+  description: Increases the range at which orbs are attracted to you
+  upgradeType: 4
   icon: {fileID: 21300000, guid: 2388c55eeb9cde34cb4d6820c6205484, type: 3}
-  baseValue: 20
-  multiplierPerLevel: 1.2
+  baseValue: 25
+  multiplierPerLevel: 1.1
   maxLevel: 999
   isPercentage: 1
-  isReduction: 0
   valueSuffix: 
+  isPremium: 0
   spawnWeight: 40

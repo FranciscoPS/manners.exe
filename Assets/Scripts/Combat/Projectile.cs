@@ -173,11 +173,7 @@ public class Projectile : MonoBehaviour, IPoolable
             if (enemyController != null)
             {
                 Vector3 knockbackDirection = (enemy.transform.position - impactPoint).normalized;
-                
-                float duration = GameBalanceConfig.Instance != null 
-                    ? GameBalanceConfig.Instance.KnockbackDuration 
-                    : 0.3f;
-                
+                float duration = 0.3f;
                 enemyController.ApplyKnockback(knockbackDirection, knockbackForce, duration);
             }
         }

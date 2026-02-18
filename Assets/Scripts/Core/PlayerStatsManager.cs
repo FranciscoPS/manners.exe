@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class PlayerStatsManager : MonoBehaviour
 {
@@ -30,14 +31,33 @@ public class PlayerStatsManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+            
+#if !UNITY_EDITOR
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
+#endif
             InitializeUpgrades();
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else if (instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            instance = null;
+        }
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        InitializeUpgrades();
     }
     
     private void InitializeUpgrades()
@@ -89,11 +109,13 @@ public class PlayerStatsManager : MonoBehaviour
             case UpgradeType.AttackSpeed:
                 ApplyAttackSpeedUpgrade(value);
                 break;
-            case UpgradeType.MagnetRange:
-                ApplyMagnetRangeUpgrade(value);
+            case UpgradeType.AttackRange:
+                ApplyAttackRangeUpgrade(value);
                 break;
             case UpgradeType.MoveSpeed:
                 ApplyMoveSpeedUpgrade(value);
+                break;
+            case UpgradeType.MagnetRange:
                 break;
             case UpgradeType.MultiShot:
                 break;
@@ -112,7 +134,7 @@ public class PlayerStatsManager : MonoBehaviour
     {
     }
     
-    private void ApplyMagnetRangeUpgrade(float percentageIncrease)
+    private void ApplyAttackRangeUpgrade(float percentageIncrease)
     {
     }
     
@@ -167,19 +189,39 @@ public class PlayerStatsManager : MonoBehaviour
         return baseCooldown;
     }
     
+    public float GetModifiedAttackRange()
+    {
+        float baseRange = GameBalanceConfig.Instance != null 
+            ? GameBalanceConfig.Instance.PlayerAttackRange 
+            : 10f;
+        
+        int attackRangeLevel = GetUpgradeLevel(UpgradeType.AttackRange);
+        if (attackRangeLevel > 0 && UpgradeDatabase.Instance != null)
+        {
+            UpgradeData attackRangeUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.AttackRange);
+            if (attackRangeUpgrade != null)
+            {
+                float percentageBonus = attackRangeUpgrade.CalculateValueAtLevel(attackRangeLevel);
+                baseRange *= (1f + percentageBonus / 100f);
+            }
+        }
+        
+        return baseRange;
+    }
+    
     public float GetModifiedMagnetRange()
     {
         float baseRange = GameBalanceConfig.Instance != null 
             ? GameBalanceConfig.Instance.OrbAttractionRange 
             : 5f;
         
-        int magnetLevel = GetUpgradeLevel(UpgradeType.MagnetRange);
-        if (magnetLevel > 0 && UpgradeDatabase.Instance != null)
+        int magnetRangeLevel = GetUpgradeLevel(UpgradeType.MagnetRange);
+        if (magnetRangeLevel > 0 && UpgradeDatabase.Instance != null)
         {
-            UpgradeData magnetUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.MagnetRange);
-            if (magnetUpgrade != null)
+            UpgradeData magnetRangeUpgrade = UpgradeDatabase.Instance.allUpgrades.Find(u => u.upgradeType == UpgradeType.MagnetRange);
+            if (magnetRangeUpgrade != null)
             {
-                float percentageBonus = magnetUpgrade.CalculateValueAtLevel(magnetLevel);
+                float percentageBonus = magnetRangeUpgrade.CalculateValueAtLevel(magnetRangeLevel);
                 baseRange *= (1f + percentageBonus / 100f);
             }
         }
@@ -285,11 +327,14 @@ public class PlayerStatsManager : MonoBehaviour
             case UpgradeType.AttackSpeed:
                 return config.PlayerAttackCooldown;
             
-            case UpgradeType.MagnetRange:
-                return config.OrbAttractionRange;
+            case UpgradeType.AttackRange:
+                return config.PlayerAttackRange;
             
             case UpgradeType.MoveSpeed:
                 return config.PlayerMoveSpeed;
+            
+            case UpgradeType.MagnetRange:
+                return config.OrbAttractionRange;
             
             case UpgradeType.MultiShot:
                 return 1f;

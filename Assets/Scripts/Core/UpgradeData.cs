@@ -4,8 +4,9 @@ public enum UpgradeType
 {
     Damage,
     AttackSpeed,
-    MagnetRange,
+    AttackRange,
     MoveSpeed,
+    MagnetRange,
     MultiShot,
     ExplosiveShot,
     Knockback
