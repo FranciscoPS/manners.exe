@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class SpawnPoint : MonoBehaviour
 {
@@ -22,14 +23,32 @@ public class SpawnPoint : MonoBehaviour
     [SerializeField] private float spawnRadius = 3f;
     [SerializeField] private bool useNavMesh = true;
 
-    [Header("Enemy Configuration")]
-    [SerializeField] private EnemyConfiguration[] allowedEnemyTypes;
+    [Header("Warning Settings")]
+    [SerializeField] private bool showSpawnWarning = true;
+    [SerializeField] private float warningDuration = 1f;
 
     private float cooldownTimer = 0f;
+    private SpawnWarningIndicator warningIndicator;
 
     public SpawnSector Sector => sector;
     public int MaxEnemiesPerSpawn => maxEnemiesPerSpawn;
     public bool IsReady => cooldownTimer <= 0f;
+
+    private void Awake()
+    {
+        if (showSpawnWarning)
+        {
+            CreateWarningIndicator();
+        }
+    }
+
+    private void CreateWarningIndicator()
+    {
+        GameObject warningObj = new GameObject("SpawnWarningIndicator");
+        warningObj.transform.SetParent(transform);
+        warningObj.transform.localPosition = Vector3.zero;
+        warningIndicator = warningObj.AddComponent<SpawnWarningIndicator>();
+    }
 
     private void Update()
     {
@@ -43,6 +62,25 @@ public class SpawnPoint : MonoBehaviour
     {
         if (config == null || count <= 0) return;
 
+        if (showSpawnWarning && warningIndicator != null)
+        {
+            StartCoroutine(SpawnWithWarning(count, config));
+        }
+        else
+        {
+            SpawnEnemiesImmediate(count, config);
+        }
+    }
+
+    private IEnumerator SpawnWithWarning(int count, EnemyConfiguration config)
+    {
+        warningIndicator.ShowWarning(transform.position, warningDuration, spawnRadius);
+        yield return new WaitForSeconds(warningDuration);
+        SpawnEnemiesImmediate(count, config);
+    }
+
+    private void SpawnEnemiesImmediate(int count, EnemyConfiguration config)
+    {
         int enemiesToSpawn = Mathf.Min(count, maxEnemiesPerSpawn);
 
         for (int i = 0; i < enemiesToSpawn; i++)
@@ -78,20 +116,6 @@ public class SpawnPoint : MonoBehaviour
         {
             PoolManager.Instance.SpawnEnemy(position, config);
         }
-    }
-
-    public bool CanSpawnEnemyType(EnemyConfiguration config)
-    {
-        if (allowedEnemyTypes == null || allowedEnemyTypes.Length == 0)
-            return true;
-
-        foreach (var allowed in allowedEnemyTypes)
-        {
-            if (allowed == config)
-                return true;
-        }
-
-        return false;
     }
 
     private void OnDrawGizmos()

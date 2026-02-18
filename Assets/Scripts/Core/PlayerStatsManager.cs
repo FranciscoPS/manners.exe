@@ -37,6 +37,8 @@ public class PlayerStatsManager : MonoBehaviour
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
+#else
+            gameObject.hideFlags = HideFlags.DontSave;
 #endif
         }
         else if (instance != this)
