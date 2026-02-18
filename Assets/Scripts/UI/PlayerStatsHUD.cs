@@ -153,13 +153,14 @@ public class PlayerStatsHUD : MonoBehaviour
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.Knockback);
         if (level == 0)
         {
-            knockbackText.text = FormatStatLine("Knockback", "0%", 0);
+            knockbackText.text = FormatStatLine("Chain Impact", "0%", 0);
             return;
         }
         
         float probability = PlayerStatsManager.Instance.GetKnockbackProbability();
+        float force = PlayerStatsManager.Instance.GetKnockbackForce();
         
-        knockbackText.text = FormatStatLine("Knockback", $"{probability:F0}%", level);
+        knockbackText.text = FormatStatLine("Chain Impact", $"{probability:F0}% [{force:F1}F]", level);
     }
 
     private string FormatStatLine(string label, string value, int level)

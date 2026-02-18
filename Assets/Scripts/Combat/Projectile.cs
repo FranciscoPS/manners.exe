@@ -8,6 +8,8 @@ public class Projectile : MonoBehaviour, IPoolable
     private bool isExplosive = false;
     private float explosionRadius = 3f;
     private float knockbackForce = 0f;
+    private bool isChainKnockback = false;
+    private float chainKnockbackRadius = 2f;
 
     private Vector3 direction;
     private Rigidbody rb;
@@ -35,9 +37,10 @@ public class Projectile : MonoBehaviour, IPoolable
         explosionRadius = radius;
     }
     
-    public void SetKnockback(float force)
+    public void SetKnockback(float force, bool isChain = false)
     {
         knockbackForce = force;
+        isChainKnockback = isChain;
     }
 
     public void SetVisuals(Mesh mesh, Material material, Color color, Vector3 scale)
@@ -166,7 +169,6 @@ public class Projectile : MonoBehaviour, IPoolable
             enemyHealth.TakeDamage(damage);
         }
         
-        // Aplicar knockback si está configurado
         if (knockbackForce > 0f)
         {
             EnemyController enemyController = enemy.GetComponent<EnemyController>();
@@ -175,6 +177,31 @@ public class Projectile : MonoBehaviour, IPoolable
                 Vector3 knockbackDirection = (enemy.transform.position - impactPoint).normalized;
                 float duration = 0.3f;
                 enemyController.ApplyKnockback(knockbackDirection, knockbackForce, duration);
+                
+                if (isChainKnockback)
+                {
+                    ApplyChainKnockback(enemy.transform.position, knockbackDirection);
+                }
+            }
+        }
+    }
+    
+    private void ApplyChainKnockback(Vector3 knockedEnemyPosition, Vector3 knockbackDirection)
+    {
+        Collider[] nearbyEnemies = Physics.OverlapSphere(knockedEnemyPosition, chainKnockbackRadius, LayerMask.GetMask("Enemy"));
+        
+        foreach (Collider enemyCollider in nearbyEnemies)
+        {
+            if (enemyCollider.transform.position == knockedEnemyPosition)
+                continue;
+            
+            EnemyController chainEnemy = enemyCollider.GetComponent<EnemyController>();
+            if (chainEnemy != null)
+            {
+                Vector3 chainDirection = (enemyCollider.transform.position - knockedEnemyPosition).normalized;
+                float chainForce = knockbackForce * 0.7f;
+                float duration = 0.25f;
+                chainEnemy.ApplyKnockback(chainDirection, chainForce, duration);
             }
         }
     }

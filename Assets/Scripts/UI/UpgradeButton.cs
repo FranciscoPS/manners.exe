@@ -185,8 +185,12 @@ public class UpgradeButton : MonoBehaviour
                     int nextBullets = 3;
                     valuesText.text = $"0% → {nextValue:F1}% (+{nextBullets} bullets)";
                 }
-                else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot || 
-                         assignedUpgrade.upgradeType == UpgradeType.Knockback)
+                else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
+                {
+                    float nextForce = 5f;
+                    valuesText.text = $"0% → {nextValue:F1}% [{nextForce:F1}F]";
+                }
+                else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
                     valuesText.text = $"0% → {nextValue:F1}%";
                 }
@@ -236,8 +240,13 @@ public class UpgradeButton : MonoBehaviour
                     int nextBullets = 3 + ((nextLevel - 1) / 4) * 3;
                     valuesText.text = $"{currentUpgradeValue:F1}% (+{currentBullets}) → {nextUpgradeValue:F1}% (+{nextBullets})";
                 }
-                else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot || 
-                         assignedUpgrade.upgradeType == UpgradeType.Knockback)
+                else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
+                {
+                    float currentForce = PlayerStatsManager.Instance.GetKnockbackForce();
+                    float nextForce = 5f + (nextLevel - 1) * 0.5f;
+                    valuesText.text = $"{currentUpgradeValue:F1}% [{currentForce:F1}F] → {nextUpgradeValue:F1}% [{nextForce:F1}F]";
+                }
+                else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
                     valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%";
                 }

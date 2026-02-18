@@ -132,8 +132,9 @@ public class AutoAttackSystem : MonoBehaviour
                 bool isExplosive = explosiveProb > 0f && Random.Range(0f, 100f) < explosiveProb;
                 projectile.SetExplosive(isExplosive, explosionRadius);
                 
-                float bulletKnockback = (knockbackProb > 0f && Random.Range(0f, 100f) < knockbackProb) ? knockbackForce : 0f;
-                projectile.SetKnockback(bulletKnockback);
+                bool hasKnockback = knockbackProb > 0f && Random.Range(0f, 100f) < knockbackProb;
+                float bulletKnockback = hasKnockback ? knockbackForce : 0f;
+                projectile.SetKnockback(bulletKnockback, hasKnockback);
             }
         }
     }
