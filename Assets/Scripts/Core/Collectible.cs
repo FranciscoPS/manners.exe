@@ -19,9 +19,9 @@ public class Collectible : MonoBehaviour, IPoolable
     [SerializeField] private float warningTime = 3f;
     [SerializeField] private float blinkSpeed = 5f;
     
-    [Header("Floating Settings")]
-    [SerializeField] private float floatSpeed = 1.5f;
-    [SerializeField] private float floatAmount = 0.4f;
+    [Header("Performance Settings")]
+    [SerializeField] private float updateInterval = 0.1f;
+    [SerializeField] private float distantCullDistance = 50f;
     
     private Transform player;
     private bool isMovingToPlayer = false;
@@ -33,19 +33,17 @@ public class Collectible : MonoBehaviour, IPoolable
     private Color originalColor;
     private Material materialInstance;
     
-    private Vector3 startPosition;
-    private float randomOffset;
-    private bool isFloating = true;
+    private float cachedMagnetRange;
+    private float nextUpdateTime;
+    private float updateOffset;
 
     public void SetType(CollectibleType collectibleType)
     {
         type = collectibleType;
         
-        if (PlayerStatsManager.Instance != null)
-        {
-            attractionRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
-        }
-        else if (GameBalanceConfig.Instance != null)
+        UpdateCachedMagnetRange();
+        
+        if (GameBalanceConfig.Instance != null)
         {
             attractionRange = type == CollectibleType.Coin ? 
                 GameBalanceConfig.Instance.CoinAttractionRange : 
@@ -106,6 +104,9 @@ public class Collectible : MonoBehaviour, IPoolable
                 materialInstance.SetColor("_Color", color);
             if (materialInstance.HasProperty("_EmissionColor"))
                 materialInstance.SetColor("_EmissionColor", color);
+            
+            if (materialInstance.HasProperty("_RandomOffset"))
+                materialInstance.SetFloat("_RandomOffset", Random.Range(0f, 100f));
         }
 
         transform.localScale = Vector3.one * scale;
@@ -130,6 +131,27 @@ public class Collectible : MonoBehaviour, IPoolable
         
         collectibleRenderer = GetComponent<Renderer>();
         
+        if (collectibleRenderer != null && materialInstance == null)
+        {
+            materialInstance = collectibleRenderer.material;
+            
+            if (materialInstance.HasProperty("_RandomOffset"))
+                materialInstance.SetFloat("_RandomOffset", Random.Range(0f, 100f));
+            
+            if (originalColor == Color.clear || originalColor == Color.black)
+            {
+                if (materialInstance.HasProperty("_BaseColor"))
+                    originalColor = materialInstance.GetColor("_BaseColor");
+                else if (materialInstance.HasProperty("_Color"))
+                    originalColor = materialInstance.GetColor("_Color");
+                else
+                    originalColor = materialInstance.color;
+                    
+                if (originalColor == Color.clear || originalColor == Color.black)
+                    originalColor = Color.yellow;
+            }
+        }
+        
         SphereCollider collider = GetComponent<SphereCollider>();
         if (collider != null)
         {
@@ -142,6 +164,10 @@ public class Collectible : MonoBehaviour, IPoolable
             rb.isKinematic = true;
             rb.useGravity = false;
         }
+        
+        updateOffset = Random.Range(0f, updateInterval);
+        nextUpdateTime = Time.time + updateOffset;
+        UpdateCachedMagnetRange();
     }
 
     private void Update()
@@ -173,20 +199,6 @@ public class Collectible : MonoBehaviour, IPoolable
             return;
         }
 
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
-        float currentAttractionRange = attractionRange;
-        if (PlayerStatsManager.Instance != null)
-        {
-            currentAttractionRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
-        }
-
-        if (distanceToPlayer <= currentAttractionRange)
-        {
-            isMovingToPlayer = true;
-            isFloating = false;
-        }
-
         if (isMovingToPlayer)
         {
             currentSpeed = Mathf.Min(currentSpeed + acceleration * Time.deltaTime, moveSpeed);
@@ -194,27 +206,49 @@ public class Collectible : MonoBehaviour, IPoolable
             Vector3 direction = (player.position - transform.position).normalized;
             transform.position += direction * currentSpeed * Time.deltaTime;
         }
-        else if (isFloating)
+        
+        if (Time.time >= nextUpdateTime)
         {
-            HandleFloating();
+            nextUpdateTime = Time.time + updateInterval + updateOffset;
+            UpdateDistanceCheck();
         }
     }
     
-    private void HandleFloating()
+    private void UpdateDistanceCheck()
     {
-        float time = Time.time * floatSpeed + randomOffset;
+        if (player == null || isMovingToPlayer) return;
         
-        Vector3 offset = new Vector3(
-            Mathf.Sin(time * 0.7f) * floatAmount,
-            Mathf.Sin(time * 0.9f + 1.5f) * floatAmount * 1.2f,
-            Mathf.Cos(time * 0.6f + 3.0f) * floatAmount
-        );
+        float sqrDistance = (transform.position - player.position).sqrMagnitude;
+        float cullDistanceSqr = distantCullDistance * distantCullDistance;
         
-        offset.x += Mathf.Cos(time * 0.4f + 2.1f) * floatAmount * 0.5f;
-        offset.y += Mathf.Cos(time * 0.5f + 2.5f) * floatAmount * 0.6f;
-        offset.z += Mathf.Sin(time * 0.3f + 4.0f) * floatAmount * 0.5f;
+        if (sqrDistance > cullDistanceSqr)
+        {
+            if (collectibleRenderer != null)
+                collectibleRenderer.enabled = false;
+            return;
+        }
         
-        transform.position = startPosition + offset;
+        if (collectibleRenderer != null)
+            collectibleRenderer.enabled = true;
+        
+        float attractionRangeSqr = cachedMagnetRange * cachedMagnetRange;
+        
+        if (sqrDistance <= attractionRangeSqr)
+        {
+            isMovingToPlayer = true;
+        }
+    }
+    
+    private void UpdateCachedMagnetRange()
+    {
+        if (PlayerStatsManager.Instance != null)
+        {
+            cachedMagnetRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
+        }
+        else
+        {
+            cachedMagnetRange = attractionRange;
+        }
     }
     
     private void HandleBlinking()
@@ -290,10 +324,6 @@ public class Collectible : MonoBehaviour, IPoolable
         currentSpeed = 0f;
         lifetimeTimer = lifeTime;
         isBlinking = false;
-        isFloating = true;
-        
-        startPosition = transform.position;
-        randomOffset = Random.Range(0f, 100f);
 
         if (player == null)
         {
