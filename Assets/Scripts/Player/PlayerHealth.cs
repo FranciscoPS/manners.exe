@@ -21,6 +21,9 @@ public class PlayerHealth : MonoBehaviour
     private const float invulnerabilityDuration = 0.5f;
     private const int hitsForInvulnerability = 3;
 
+    private int playerLayer;
+    private int enemyLayer;
+
     private void Start()
     {
         if (GameBalanceConfig.Instance != null)
@@ -34,10 +37,20 @@ public class PlayerHealth : MonoBehaviour
         
         currentHealth = maxHealth;
         
-        // Buscar DamageTween en este objeto o en hijos
         damageTween = GetComponentInChildren<DamageTween>();
         
+        playerLayer = gameObject.layer;
+        enemyLayer = LayerMask.NameToLayer("Enemy");
+        
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    private void OnDestroy()
+    {
+        if (isInvulnerable)
+        {
+            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+        }
     }
 
     private void Update()
@@ -50,6 +63,7 @@ public class PlayerHealth : MonoBehaviour
         if (isInvulnerable && Time.time >= invulnerabilityEndTime)
         {
             isInvulnerable = false;
+            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
     }
 
@@ -68,7 +82,7 @@ public class PlayerHealth : MonoBehaviour
             isInvulnerable = true;
             invulnerabilityEndTime = Time.time + invulnerabilityDuration;
             consecutiveHits = 0;
-            Debug.Log("[PlayerHealth] Invulnerability activated after 3 consecutive hits!");
+            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, true);
         }
 
         currentHealth -= damage;
@@ -99,15 +113,17 @@ public class PlayerHealth : MonoBehaviour
     public void AddMaxHealth(float amount)
     {
         maxHealth += amount;
-        currentHealth += amount; // También cura al jugador
+        currentHealth += amount;
         
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        Debug.Log($"[PlayerHealth] Max health increased by {amount}. New max: {maxHealth}");
     }
 
     private void Die()
     {
-        Debug.Log("Player Died");
+        if (isInvulnerable)
+        {
+            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+        }
         Time.timeScale = 0f;
     }
 
