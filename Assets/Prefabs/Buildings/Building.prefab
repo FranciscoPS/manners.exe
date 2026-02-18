@@ -52,18 +52,8 @@ MonoBehaviour:
   spawnPoint: {fileID: 3043078021786141712}
   groundLevel: 0
   sinkExtraDistance: 1
-  minOrbs: 1
-  maxOrbs: 3
-  orbSpawnRadius: 2
-  orbSpawnHeight: 1
+  dropSpawnDelay: 1.5
   orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
-  defaultExperienceValue: 15
-  coinDropChance: 0.7
-  minCoins: 1
-  maxCoins: 2
-  diamondDropChance: 0.05
-  minDiamonds: 1
-  maxDiamonds: 1
 --- !u!65 &8520553520846978520
 BoxCollider:
   m_ObjectHideFlags: 0

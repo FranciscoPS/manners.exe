@@ -10,6 +10,9 @@ public class BuildingsScript : MonoBehaviour
     [SerializeField] private float groundLevel = 0f;
     [SerializeField] private float sinkExtraDistance = 1f;
 
+    [Header("Drop Settings")]
+    [SerializeField] private float dropSpawnDelay = 1f;
+
     [Header("Experience Orb Settings")]
     [SerializeField] private OrbConfiguration orbConfig;
 
@@ -20,10 +23,18 @@ public class BuildingsScript : MonoBehaviour
         if (other.CompareTag("Player") && !isDestroying)
         {
             isDestroying = true;
-            SpawnExperienceOrbs();
-            SpawnCollectibles();
-            StartCoroutine(SinkAndDestroy());
+            StartCoroutine(DestroySequence());
         }
+    }
+
+    private IEnumerator DestroySequence()
+    {
+        StartCoroutine(SinkAndDestroy());
+        
+        yield return new WaitForSeconds(dropSpawnDelay);
+        
+        SpawnExperienceOrbs();
+        SpawnCollectibles();
     }
 
     private IEnumerator SinkAndDestroy()

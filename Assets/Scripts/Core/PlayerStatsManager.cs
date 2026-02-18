@@ -31,13 +31,13 @@ public class PlayerStatsManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+            InitializeUpgrades();
             
 #if !UNITY_EDITOR
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
-#endif
-            InitializeUpgrades();
             SceneManager.sceneLoaded += OnSceneLoaded;
+#endif
         }
         else if (instance != this)
         {
@@ -50,7 +50,9 @@ public class PlayerStatsManager : MonoBehaviour
     {
         if (instance == this)
         {
+#if !UNITY_EDITOR
             SceneManager.sceneLoaded -= OnSceneLoaded;
+#endif
             instance = null;
         }
     }
