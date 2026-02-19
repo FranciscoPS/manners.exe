@@ -1,11 +1,16 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
+using System.Collections;
 
 public class ShopScript : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject interactionText;
     [SerializeField] private GameObject shopPanel;
+    
+    [Header("Managers")]
+    [SerializeField] private LevelUpManager levelUpManager;
 
     private bool playerInRange = false;
     private bool shopOpen = false;
@@ -34,7 +39,17 @@ public class ShopScript : MonoBehaviour
     {
         interactionText.SetActive(false);
         shopPanel.SetActive(false);
-
+        
+        if (levelUpManager == null)
+        {
+            levelUpManager = FindFirstObjectByType<LevelUpManager>();
+        }
+        
+        // Registrar este shop con el LevelUpManager
+        if (levelUpManager != null)
+        {
+            levelUpManager.RegisterShop(this);
+        }
     }
 
     private void Update()
@@ -62,22 +77,34 @@ public class ShopScript : MonoBehaviour
             interactionText.SetActive(false);
         }
     }
+    
     private void OpenShop()
     {
         shopOpen = true;
-        Time.timeScale = 0f;
-
-
         interactionText.SetActive(false);
-        shopPanel.SetActive(true);
+        
+        // Use LevelUpManager in Shop mode
+        if (levelUpManager != null)
+        {
+            levelUpManager.ShowShop();
+        }
     }
 
     public void CloseShop()
     {
         shopOpen = false;
 
-        Time.timeScale = 1f;
-
-        shopPanel.SetActive(false);
+        if (levelUpManager != null)
+        {
+            levelUpManager.CloseLevelUp();
+        }
+    }
+    
+    /// <summary>
+    /// Llamado por LevelUpManager cuando la tienda se cierra
+    /// </summary>
+    public void OnShopClosed()
+    {
+        shopOpen = false;
     }
 }

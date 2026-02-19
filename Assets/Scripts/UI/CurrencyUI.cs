@@ -35,7 +35,7 @@ public class CurrencyUI : MonoBehaviour
     {
         if (coinText != null)
         {
-            coinText.text = amount.ToString();
+            coinText.text = $"Coins: {amount}";
         }
     }
 
@@ -43,7 +43,7 @@ public class CurrencyUI : MonoBehaviour
     {
         if (diamondText != null)
         {
-            diamondText.text = amount.ToString();
+            diamondText.text = $"Gems: {amount}";
         }
     }
 }
