@@ -57,12 +57,9 @@ public class UpgradeButton : MonoBehaviour
             }
         }
         
-        Debug.Log($"[{gameObject.name}] Found {allTexts.Length} TextMeshPro components:");
-        
         foreach (var text in allTexts)
         {
             string name = text.gameObject.name;
-            Debug.Log($"  - {name}");
             
             if (name.Contains("Name") || name.Contains("Title"))
                 upgradeNameText = text;
@@ -73,15 +70,7 @@ public class UpgradeButton : MonoBehaviour
             else if (name.Contains("Value") || name.Contains("Stats") || name.Contains("Number"))
                 valuesText = text;
             else if (name.Contains("Cost") || name.Contains("Price"))
-            {
                 costText = text;
-                Debug.Log($"  -> COST TEXT FOUND: {name}");
-            }
-        }
-        
-        if (costText == null)
-        {
-            Debug.LogWarning($"[{gameObject.name}] NO COST TEXT FOUND! Add a TextMeshPro child with 'Cost' or 'Price' in the name.");
         }
     }
     
@@ -240,7 +229,7 @@ public class UpgradeButton : MonoBehaviour
         }
         else if (currentMode == UpgradeMode.Shop)
         {
-            Debug.LogWarning($"No Cost Text found for {assignedUpgrade.upgradeName}! Add a TextMeshPro child named 'CostText' or 'PriceText'");
+            Debug.LogWarning($"[SHOP UI] Missing cost display for '{assignedUpgrade.upgradeName}'! Add a TextMeshPro child to {gameObject.name} with 'Cost' or 'Price' in its name.");
         }
         
         if (labelText != null)
@@ -392,20 +381,14 @@ public class UpgradeButton : MonoBehaviour
         if (currentMode == UpgradeMode.Shop)
         {
             if (!canAfford)
-            {
-                Debug.Log("Not enough coins!");
                 return;
-            }
             
             if (CurrencyManager.Instance != null)
             {
                 bool success = CurrencyManager.Instance.SpendCoins(upgradeCost);
                 
                 if (!success)
-                {
-                    Debug.LogError("Failed to spend coins!");
                     return;
-                }
             }
         }
         

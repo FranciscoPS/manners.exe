@@ -11,6 +11,7 @@ public class LevelUpManager : MonoBehaviour
     [SerializeField] private GameObject levelUpPanel;
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private TextMeshProUGUI cooldownWarningText; // Texto DENTRO del panel que muestra cooldown
+    [SerializeField] private TextMeshProUGUI closeInstructionText; // "Press P or ESC to close"
     
     [Header("Upgrade Buttons")]
     [SerializeField] private UpgradeButton upgradeButton1;
@@ -32,6 +33,7 @@ public class LevelUpManager : MonoBehaviour
     private ShopScript connectedShop;
     
     private InputAction closeShopAction;
+    private InputAction closeShopWithPAction;
 
     private void Awake()
     {
@@ -44,6 +46,13 @@ public class LevelUpManager : MonoBehaviour
             binding: "<Keyboard>/escape"
         );
         closeShopAction.Enable();
+        
+        // Setup P key to also close shop
+        closeShopWithPAction = new InputAction(
+            name: "CloseShopWithP",
+            binding: "<Keyboard>/p"
+        );
+        closeShopWithPAction.Enable();
     }
 
     private void Start()
@@ -73,11 +82,13 @@ public class LevelUpManager : MonoBehaviour
         }
         
         closeShopAction?.Disable();
+        closeShopWithPAction?.Disable();
     }
     
     private void OnDestroy()
     {
         closeShopAction?.Dispose();
+        closeShopWithPAction?.Dispose();
     }
 
     private void Update()
@@ -88,20 +99,20 @@ public class LevelUpManager : MonoBehaviour
             levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
         }
         
-        // ESC key to close shop using Input System
-        if (levelUpActive && currentMode == UpgradeMode.Shop && closeShopAction.triggered)
+        // ESC or P key to close shop using Input System
+        if (levelUpActive && currentMode == UpgradeMode.Shop && (closeShopAction.triggered || closeShopWithPAction.triggered))
         {
             CloseLevelUp();
         }
         
-        // Actualizar cooldown DENTRO del panel si está abierto en modo Shop
+        // Actualizar cooldown DENTRO del panel si está abierto en modo Shop (TIEMPO REAL)
         if (levelUpActive && currentMode == UpgradeMode.Shop && shopOnCooldown)
         {
             UpdateCooldownDisplay();
         }
         
         // Verificar si el cooldown terminó
-        if (shopOnCooldown && Time.time - lastPurchaseTime >= shopGlobalCooldown)
+        if (shopOnCooldown && Time.unscaledTime - lastPurchaseTime >= shopGlobalCooldown)
         {
             shopOnCooldown = false;
             
@@ -132,10 +143,15 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
             levelUpText.text = $"LEVEL {newLevel}!";
         
-        // Ocultar el texto de cooldown en modo LevelUp
+        // Ocultar textos de Shop en modo LevelUp
         if (cooldownWarningText != null)
         {
             cooldownWarningText.gameObject.SetActive(false);
+        }
+        
+        if (closeInstructionText != null)
+        {
+            closeInstructionText.gameObject.SetActive(false);
         }
 
         // Generar opciones de upgrade aleatorias
@@ -228,7 +244,7 @@ public class LevelUpManager : MonoBehaviour
     {
         if (cooldownWarningText == null) return;
         
-        float timeElapsed = Time.time - lastPurchaseTime;
+        float timeElapsed = Time.unscaledTime - lastPurchaseTime;
         float timeRemaining = shopGlobalCooldown - timeElapsed;
         
         if (timeRemaining > 0)
@@ -253,6 +269,14 @@ public class LevelUpManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Verifica si el panel de level up está activo
+    /// </summary>
+    public bool IsLevelUpActive()
+    {
+        return levelUpActive;
+    }
+    
+    /// <summary>
     /// Verifica si la tienda está disponible (no en cooldown)
     /// </summary>
     public bool IsShopAvailable()
@@ -268,7 +292,7 @@ public class LevelUpManager : MonoBehaviour
         if (!shopOnCooldown)
             return 0f;
         
-        float timeElapsed = Time.time - lastPurchaseTime;
+        float timeElapsed = Time.unscaledTime - lastPurchaseTime;
         return Mathf.Max(0f, shopGlobalCooldown - timeElapsed);
     }
     
@@ -284,6 +308,12 @@ public class LevelUpManager : MonoBehaviour
         
         if (levelUpText != null)
             levelUpText.text = "SHOP";
+        
+        // Mostrar instrucciones de cierre
+        if (closeInstructionText != null)
+        {
+            closeInstructionText.gameObject.SetActive(true);
+        }
         
         GenerateUpgradeOptions(UpgradeMode.Shop);
         
@@ -310,7 +340,7 @@ public class LevelUpManager : MonoBehaviour
         // En modo Shop, después de UNA compra, deshabilitar todo y empezar cooldown
         if (currentMode == UpgradeMode.Shop)
         {
-            lastPurchaseTime = Time.time;
+            lastPurchaseTime = Time.unscaledTime;
             shopOnCooldown = true;
             
             // Deshabilitar todos los botones inmediatamente

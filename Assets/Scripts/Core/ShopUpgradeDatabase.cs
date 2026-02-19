@@ -60,7 +60,10 @@ public class ShopUpgradeDatabase : ScriptableObject
         
         if (availableUpgrades.Count == 0)
         {
-            Debug.LogWarning("No shop upgrades available!");
+            Debug.LogWarning("[SHOP] No upgrades available! Check:\n" +
+                           "1. ShopUpgradeDatabase in Resources/ has upgrades assigned\n" +
+                           "2. Upgrades have 'Is Available In Shop' checked\n" +
+                           "3. Upgrades are not all at max level");
             return new List<UpgradeData>();
         }
         

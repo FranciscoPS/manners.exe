@@ -14,6 +14,8 @@ public class ShopScript : MonoBehaviour
 
     private bool playerInRange = false;
     private bool shopOpen = false;
+    private float lastCloseTime = -999f;
+    private const float REOPEN_COOLDOWN = 0.2f; // Cooldown para evitar reabrir inmediatamente
 
     private InputAction openShopAction;
 
@@ -54,9 +56,19 @@ public class ShopScript : MonoBehaviour
 
     private void Update()
     {
+        // Solo permitir abrir si:
+        // 1. NO está ya abierto
+        // 2. El panel no está activo
+        // 3. Ha pasado el cooldown desde el último cierre
         if (playerInRange && !shopOpen && openShopAction.triggered)
         {
-            OpenShop();
+            // Verificar que el LevelUpManager no esté activo y que haya pasado el cooldown
+            if (levelUpManager != null && 
+                !levelUpManager.IsLevelUpActive() && 
+                Time.unscaledTime - lastCloseTime >= REOPEN_COOLDOWN)
+            {
+                OpenShop();
+            }
         }
     }
 
@@ -93,6 +105,7 @@ public class ShopScript : MonoBehaviour
     public void CloseShop()
     {
         shopOpen = false;
+        lastCloseTime = Time.unscaledTime;
 
         if (levelUpManager != null)
         {
@@ -106,5 +119,6 @@ public class ShopScript : MonoBehaviour
     public void OnShopClosed()
     {
         shopOpen = false;
+        lastCloseTime = Time.unscaledTime;
     }
 }
