@@ -1,11 +1,17 @@
 using System;
 using UnityEngine;
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
+    [SerializeField] private Animator animator;
+    [SerializeField] private float animationHitDelay = 0.3f;
+
     private float maxHealth;
     private float currentHealth;
     private DamageTween damageTween;
+
+    private IEnumerator hitAnmationCorrutine; 
 
     public event Action<float, float> OnHealthChanged;
     public event Action OnDamageTaken;
@@ -20,6 +26,7 @@ public class PlayerHealth : MonoBehaviour
     private float invulnerabilityEndTime;
     private const float invulnerabilityDuration = 0.5f;
     private const int hitsForInvulnerability = 3;
+    private float currentAnimationSpeed; 
 
     private int playerLayer;
     private int enemyLayer;
@@ -124,6 +131,8 @@ public class PlayerHealth : MonoBehaviour
         {
             Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
+        if (animator != null)
+            animator.SetBool("isDead", true);
         Time.timeScale = 0f;
     }
 
@@ -134,8 +143,25 @@ public class PlayerHealth : MonoBehaviour
             EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
             if (enemy != null)
             {
+                currentAnimationSpeed = animator.speed;
                 TakeDamage(enemy.ContactDamage);
+                if (hitAnmationCorrutine == null)
+                {
+                    hitAnmationCorrutine = ResetAnimationSpeed();
+                    StartCoroutine(hitAnmationCorrutine);
+                }
+                else {
+                    StopAllCoroutines();
+                }
+                    animator.speed = 0f; 
             }
         }
+    }
+
+    private IEnumerator ResetAnimationSpeed()
+    {
+        yield return new WaitForSeconds(animationHitDelay);
+        animator.speed = currentAnimationSpeed;
+        hitAnmationCorrutine = null;
     }
 }

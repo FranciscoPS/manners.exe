@@ -275,6 +275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d6ceb5db09c748dd996c6f23e3d4e5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  animator: {fileID: 0}
 --- !u!114 &5744792153705871918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -431,6 +432,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 627fe4b88f81f254882295e041a0629c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4037166369235075890}
+    - targetCorrespondingSourceObject: {fileID: 715443890773296759, guid: 627fe4b88f81f254882295e041a0629c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7266162971477315311}
   m_SourcePrefab: {fileID: 100100000, guid: 627fe4b88f81f254882295e041a0629c, type: 3}
 --- !u!1 &8245068596000408286 stripped
 GameObject:
@@ -459,6 +463,27 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1 &8593135856059709944 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 715443890773296759, guid: 627fe4b88f81f254882295e041a0629c, type: 3}
+  m_PrefabInstance: {fileID: 9128013479814922127}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7266162971477315311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8593135856059709944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a70793ec81503ff4fbe6731693ab9bad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageTween
+  targetObject: {fileID: 8593135856059709944}
+  damageColor: {r: 1, g: 0, b: 0, a: 1}
+  tweenTime: 0.3
+  tweenLoops: 3
 --- !u!4 &8730103189252413540 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 627fe4b88f81f254882295e041a0629c, type: 3}

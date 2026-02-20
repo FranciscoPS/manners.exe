@@ -1,16 +1,24 @@
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DamageTween : MonoBehaviour
 {
     [Header("Visual Settings")]
-    [SerializeField] private MeshRenderer targetRenderer;
     [SerializeField] private Color damageColor = Color.red;
     [SerializeField] private float tweenTime = 0.3f;
     [SerializeField] private int tweenLoops = 3;
     
+
+    private GameObject targetObject; 
+    private SpriteRenderer spriteRenderer;
+    private Graphic uiGraphic;
+    private Renderer meshRenderer; 
+    
     private Material materialInstance;
-    private Color originalColor;
+    private bool createdMaterialInstance = false;
+
+    private Color originalColor = Color.white;
     private Tween damageTween;
     private bool isInitialized = false;
 
@@ -21,97 +29,137 @@ public class DamageTween : MonoBehaviour
     
     private void OnEnable()
     {
-        // Re-capturar el color cuando se activa (para objetos del pool)
-        if (targetRenderer != null && materialInstance != null)
-        {
-            CaptureOriginalColor();
-        }
+        if (!isInitialized) InitializeMaterial();
+        CaptureOriginalColor();
     }
     
     private void OnDisable()
     {
-        // Restaurar color original al desactivarse (pooling)
-        if (materialInstance != null)
-        {
-            SetMaterialColor(originalColor);
-        }
+        SetTargetColor(originalColor);
         
-        // Matar el tween si está activo
         damageTween?.Kill();
     }
     
     public void InitializeMaterial()
     {
-        if (targetRenderer == null)
+        if (targetObject == null)
         {
-            targetRenderer = GetComponent<MeshRenderer>();
+            targetObject = gameObject;
         }
         
-        if (targetRenderer != null && !isInitialized)
+        if (targetObject == null) return;
+        if (isInitialized) return;
+
+        spriteRenderer = targetObject.GetComponent<SpriteRenderer>();
+        uiGraphic = targetObject.GetComponent<Graphic>();
+        meshRenderer = (spriteRenderer == null && uiGraphic == null) ? targetObject.GetComponent<Renderer>() : null;
+
+        if (meshRenderer != null)
         {
-            // Crear material instance para evitar modificar el material compartido
-            materialInstance = targetRenderer.material;
-            isInitialized = true;
+            materialInstance = meshRenderer.material;
+            createdMaterialInstance = true;
         }
-        
+
+        isInitialized = true;
         CaptureOriginalColor();
     }
     
     private void CaptureOriginalColor()
     {
-        if (materialInstance == null) return;
-        
-        // Guardar color original del material
-        if (materialInstance.HasProperty("_BaseColor"))
-            originalColor = materialInstance.GetColor("_BaseColor");
-        else if (materialInstance.HasProperty("_Color"))
-            originalColor = materialInstance.GetColor("_Color");
-        else
-            originalColor = materialInstance.color;
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+            return;
+        }
+
+        if (uiGraphic != null)
+        {
+            originalColor = uiGraphic.color;
+            return;
+        }
+
+        if (materialInstance != null)
+        {
+            if (materialInstance.HasProperty("_BaseColor"))
+                originalColor = materialInstance.GetColor("_BaseColor");
+            else if (materialInstance.HasProperty("_Color"))
+                originalColor = materialInstance.GetColor("_Color");
+            else
+                originalColor = materialInstance.color;
+            return;
+        }
+
+        originalColor = Color.white;
     }
 
     public void TweenFx()
     {
-        if (materialInstance == null || targetRenderer == null)
-        {
+        if (!isInitialized) InitializeMaterial();
+
+        if (spriteRenderer == null && uiGraphic == null && materialInstance == null)
             return;
-        }
 
         damageTween?.Kill(true);
 
-        float adjustedTweenTime = tweenTime / tweenLoops;
+        float adjustedTweenTime = tweenTime / Mathf.Max(1, tweenLoops);
 
         damageTween = DOTween.To(
-            () => originalColor,
-            color => SetMaterialColor(color),
+            () => GetCurrentColor(),
+            color => SetTargetColor(color),
             damageColor,
             adjustedTweenTime
         )
         .SetLoops(tweenLoops, LoopType.Yoyo)
         .OnComplete(() => 
         {
-            SetMaterialColor(originalColor);
+            SetTargetColor(originalColor);
         });
     }
     
-    private void SetMaterialColor(Color color)
+    private Color GetCurrentColor()
     {
-        if (materialInstance == null) return;
-        
-        if (materialInstance.HasProperty("_BaseColor"))
-            materialInstance.SetColor("_BaseColor", color);
-        if (materialInstance.HasProperty("_Color"))
-            materialInstance.SetColor("_Color", color);
-        
-        materialInstance.color = color;
+        if (spriteRenderer != null) return spriteRenderer.color;
+        if (uiGraphic != null) return uiGraphic.color;
+        if (materialInstance != null)
+        {
+            if (materialInstance.HasProperty("_BaseColor"))
+                return materialInstance.GetColor("_BaseColor");
+            if (materialInstance.HasProperty("_Color"))
+                return materialInstance.GetColor("_Color");
+            return materialInstance.color;
+        }
+        return originalColor;
+    }
+
+    private void SetTargetColor(Color color)
+    {
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = color;
+            return;
+        }
+
+        if (uiGraphic != null)
+        {
+            uiGraphic.color = color;
+            return;
+        }
+
+        if (materialInstance != null)
+        {
+            if (materialInstance.HasProperty("_BaseColor"))
+                materialInstance.SetColor("_BaseColor", color);
+            if (materialInstance.HasProperty("_Color"))
+                materialInstance.SetColor("_Color", color);
+            materialInstance.color = color;
+        }
     }
     
     private void OnDestroy()
     {
         damageTween?.Kill();
         
-        // Destruir material instance para evitar memory leaks
-        if (materialInstance != null && Application.isPlaying)
+        if (createdMaterialInstance && materialInstance != null && Application.isPlaying)
         {
             Destroy(materialInstance);
         }
