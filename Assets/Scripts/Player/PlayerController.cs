@@ -4,9 +4,9 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float rotationSpeed = 10f;
+    [SerializeField] private Animator animator;
 
     private Rigidbody rb;
-    private Animator animator;
 
     private Vector2 moveInput;
     private Vector3 moveDirection;
@@ -17,7 +17,6 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-        animator = GetComponent<Animator>();
 
         if (GameBalanceConfig.Instance != null)
         {
