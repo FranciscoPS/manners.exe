@@ -4,8 +4,10 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float rotationSpeed = 10f;
-    
+
     private Rigidbody rb;
+    private Animator animator;
+
     private Vector2 moveInput;
     private Vector3 moveDirection;
     private float baseMoveSpeed;
@@ -15,7 +17,8 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-        
+        animator = GetComponent<Animator>();
+
         if (GameBalanceConfig.Instance != null)
         {
             baseMoveSpeed = GameBalanceConfig.Instance.PlayerMoveSpeed;
@@ -60,10 +63,16 @@ public class PlayerController : MonoBehaviour
             
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+
+            if (animator != null)
+                animator.SetBool("isWalking", true);
         }
         else
         {
             rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+
+            if (animator != null)
+                animator.SetBool("isWalking", false);
         }
     }
 }
