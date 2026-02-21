@@ -146,7 +146,7 @@ public class PlayerHealth : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
 
         if (animator != null)
-            animator.SetBool("isDead", true);
+            animator.SetTrigger("isDead");
 
         if (hitAnmationCorrutine != null)
         {
