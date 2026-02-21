@@ -9,7 +9,12 @@ public class MusicManager : MonoBehaviour
     [SerializeField][Range(0f, 1f)] private float musicVolume = 0.5f;
     [SerializeField] private bool playOnAwake = true;
 
+    [Header("SFX Settings")]
+    [SerializeField][Range(0f, 1f)] private float sfxVolume = 0.8f;
+
     private AudioSource musicSource;
+    private AudioSource sfxLoopSource;
+    private AudioSource sfxOneShotSource;
 
     private void Awake()
     {
@@ -39,6 +44,20 @@ public class MusicManager : MonoBehaviour
         musicSource.volume = musicVolume;
         musicSource.spatialBlend = 0f;
         musicSource.priority = 0;
+
+        sfxLoopSource = gameObject.AddComponent<AudioSource>();
+        sfxLoopSource.loop = true;
+        sfxLoopSource.playOnAwake = false;
+        sfxLoopSource.volume = sfxVolume;
+        sfxLoopSource.spatialBlend = 0f;
+        sfxLoopSource.priority = 128;
+
+        sfxOneShotSource = gameObject.AddComponent<AudioSource>();
+        sfxOneShotSource.loop = false;
+        sfxOneShotSource.playOnAwake = false;
+        sfxOneShotSource.volume = sfxVolume;
+        sfxOneShotSource.spatialBlend = 0f;
+        sfxOneShotSource.priority = 128;
     }
 
     public void PlayMusic()
@@ -97,5 +116,41 @@ public class MusicManager : MonoBehaviour
     public bool IsPlaying()
     {
         return musicSource != null && musicSource.isPlaying;
+    }
+
+    public void PlaySFXLoop(AudioClip sfx)
+    {
+        if (sfx == null || sfxLoopSource == null) return;
+
+        sfxLoopSource.clip = sfx;
+        sfxLoopSource.Play();
+    }
+
+    public void StopSFXLoop()
+    {
+        if (sfxLoopSource != null && sfxLoopSource.isPlaying)
+        {
+            sfxLoopSource.Stop();
+        }
+    }
+
+    public void PlaySFXOneShot(AudioClip sfx)
+    {
+        if (sfx == null || sfxOneShotSource == null) return;
+
+        sfxOneShotSource.PlayOneShot(sfx);
+    }
+
+    public void SetSFXVolume(float volume)
+    {
+        sfxVolume = Mathf.Clamp01(volume);
+        if (sfxLoopSource != null)
+        {
+            sfxLoopSource.volume = sfxVolume;
+        }
+        if (sfxOneShotSource != null)
+        {
+            sfxOneShotSource.volume = sfxVolume;
+        }
     }
 }
