@@ -10,10 +10,6 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
     [Header("Hold Settings")]
     [SerializeField] private float holdDuration = 0.5f;
     
-    [Header("Sound Effects")]
-    [SerializeField] private AudioClip holdingSFX;
-    [SerializeField] private AudioClip completeSFX;
-    
     private bool isHolding = false;
     private float holdTimer = 0f;
     private Button button;
@@ -71,9 +67,9 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
             rt.anchorMax = new Vector2(0f, 1f);
         }
 
-        if (holdingSFX != null && MusicManager.Instance != null)
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.holdUpgradeSFX != null)
         {
-            MusicManager.Instance.PlaySFXLoop(holdingSFX);
+            MusicManager.Instance.PlaySFXLoop(SFXDatabase.Instance.holdUpgradeSFX);
         }
     }
     
@@ -94,9 +90,9 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.StopSFXLoop();
-            if (completeSFX != null)
+            if (SFXDatabase.Instance != null && SFXDatabase.Instance.completeUpgradeSFX != null)
             {
-                MusicManager.Instance.PlaySFXOneShot(completeSFX);
+                MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.completeUpgradeSFX);
             }
         }
         

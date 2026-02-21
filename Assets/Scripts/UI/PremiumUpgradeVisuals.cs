@@ -8,22 +8,25 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     [SerializeField] private Image backgroundImage;
     [SerializeField] private Outline outline;
     [SerializeField] private Shadow shadow;
+    [SerializeField] private ParticleSystem particleEffect;
     
     [Header("Premium Colors")]
     [SerializeField] private Color premiumBackgroundTint = new Color(1f, 0.95f, 0.7f, 1f);
-    [SerializeField] private Color premiumOutlineColor = new Color(1f, 0.84f, 0f);
-    [SerializeField] private Color premiumShadowColor = new Color(1f, 1f, 0f, 0.5f);
+    [SerializeField] private bool useRainbowBorder = true;
+    [SerializeField] private float rainbowSpeed = 2f;
     
     [Header("Animation Settings")]
-    [SerializeField] private float pulseScale = 1.05f;
-    [SerializeField] private float pulseDuration = 1.5f;
-    [SerializeField] private float glowPulseMin = 0.3f;
-    [SerializeField] private float glowPulseMax = 0.7f;
+    [SerializeField] private float pulseScale = 1.08f;
+    [SerializeField] private float pulseDuration = 1.2f;
+    [SerializeField] private float glowPulseMin = 0.5f;
+    [SerializeField] private float glowPulseMax = 1f;
+    [SerializeField] private Vector2 outlineDistance = new Vector2(4, -4);
     
     private RectTransform rectTransform;
     private Tween pulseTween;
     private Tween glowTween;
     private bool isPremium = false;
+    private float rainbowHue = 0f;
     
     private void Awake()
     {
@@ -66,8 +69,7 @@ public class PremiumUpgradeVisuals : MonoBehaviour
             outline = gameObject.AddComponent<Outline>();
         }
         
-        outline.effectColor = premiumOutlineColor;
-        outline.effectDistance = new Vector2(3, -3);
+        outline.effectDistance = outlineDistance;
         outline.enabled = true;
         
         if (shadow == null)
@@ -75,13 +77,17 @@ public class PremiumUpgradeVisuals : MonoBehaviour
             shadow = gameObject.AddComponent<Shadow>();
         }
         
-        shadow.effectColor = premiumShadowColor;
         shadow.effectDistance = new Vector2(0, 0);
         shadow.enabled = true;
         
         if (backgroundImage != null)
         {
             backgroundImage.color = premiumBackgroundTint;
+        }
+
+        if (particleEffect != null)
+        {
+            particleEffect.Play();
         }
         
         StartPulseAnimation();
@@ -104,8 +110,32 @@ public class PremiumUpgradeVisuals : MonoBehaviour
         {
             backgroundImage.color = Color.white;
         }
+
+        if (particleEffect != null)
+        {
+            particleEffect.Stop();
+        }
         
         StopAnimations();
+    }
+
+    private void Update()
+    {
+        if (isPremium && useRainbowBorder && outline != null)
+        {
+            rainbowHue += Time.unscaledDeltaTime * rainbowSpeed * 0.1f;
+            if (rainbowHue > 1f) rainbowHue -= 1f;
+            
+            outline.effectColor = Color.HSVToRGB(rainbowHue, 1f, 1f);
+        }
+
+        if (isPremium && shadow != null && useRainbowBorder)
+        {
+            float shadowHue = rainbowHue + 0.5f;
+            if (shadowHue > 1f) shadowHue -= 1f;
+            Color shadowBase = Color.HSVToRGB(shadowHue, 0.8f, 1f);
+            shadow.effectColor = new Color(shadowBase.r, shadowBase.g, shadowBase.b, shadow.effectColor.a);
+        }
     }
     
     private void StartPulseAnimation()
@@ -124,12 +154,16 @@ public class PremiumUpgradeVisuals : MonoBehaviour
         
         glowTween?.Kill();
         
-        Color startColor = new Color(premiumShadowColor.r, premiumShadowColor.g, premiumShadowColor.b, glowPulseMin);
-        Color endColor = new Color(premiumShadowColor.r, premiumShadowColor.g, premiumShadowColor.b, glowPulseMax);
+        float currentAlpha = glowPulseMin;
         
-        shadow.effectColor = startColor;
-        
-        glowTween = DOTween.To(() => shadow.effectColor, x => shadow.effectColor = x, endColor, pulseDuration / 2f)
+        glowTween = DOTween.To(() => currentAlpha, x => {
+            currentAlpha = x;
+            if (shadow != null)
+            {
+                Color c = shadow.effectColor;
+                shadow.effectColor = new Color(c.r, c.g, c.b, currentAlpha);
+            }
+        }, glowPulseMax, pulseDuration / 2f)
             .SetEase(Ease.InOutSine)
             .SetLoops(-1, LoopType.Yoyo)
             .SetUpdate(true);
