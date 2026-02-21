@@ -31,16 +31,40 @@ public class SpawnWarningIndicator : MonoBehaviour
         
         circleRenderer = circleObject.GetComponent<Renderer>();
         
-        // Usar shader Unlit/Color para garantizar compatibilidad en builds
-        Shader unlitShader = Shader.Find("Unlit/Color");
-        if (unlitShader == null)
+        // Cargar material desde Resources (garantiza inclusión en build)
+        Material templateMaterial = Resources.Load<Material>("SpawnWarningMaterial");
+        if (templateMaterial != null)
         {
-            unlitShader = Shader.Find("Standard");
+            Material mat = new Material(templateMaterial);
+            mat.color = warningColor;
+            circleRenderer.material = mat;
+            Debug.Log("[SpawnWarningIndicator] Material loaded from Resources successfully");
         }
-        
-        Material mat = new Material(unlitShader);
-        mat.color = warningColor;
-        circleRenderer.material = mat;
+        else
+        {
+            // Fallback: intentar con shader URP Unlit
+            Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (unlitShader == null)
+            {
+                unlitShader = Shader.Find("Unlit/Color");
+            }
+            if (unlitShader == null)
+            {
+                unlitShader = Shader.Find("Mobile/Unlit (Supports Lightmap)");
+            }
+            
+            if (unlitShader != null)
+            {
+                Material mat = new Material(unlitShader);
+                mat.color = warningColor;
+                circleRenderer.material = mat;
+            }
+            else
+            {
+                Debug.LogWarning("[SpawnWarningIndicator] No suitable shader found, using default material");
+                circleRenderer.material.color = warningColor;
+            }
+        }
         
         circleRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         circleRenderer.receiveShadows = false;
