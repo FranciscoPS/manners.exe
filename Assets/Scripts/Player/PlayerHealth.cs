@@ -1,11 +1,17 @@
 using System;
 using UnityEngine;
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
+    [SerializeField] private Animator animator;
+    [SerializeField] private float animationHitDelay = 0.3f;
+
     private float maxHealth;
     private float currentHealth;
     private DamageTween damageTween;
+
+    private Coroutine hitAnmationCorrutine; 
 
     public event Action<float, float> OnHealthChanged;
     public event Action OnDamageTaken;
@@ -17,9 +23,11 @@ public class PlayerHealth : MonoBehaviour
     private float lastHitTime = -999f;
     private float consecutiveHitWindow = 1f;
     private bool isInvulnerable = false;
+    private bool isDead = false;
     private float invulnerabilityEndTime;
     private const float invulnerabilityDuration = 0.5f;
     private const int hitsForInvulnerability = 3;
+    private float currentAnimationSpeed; 
 
     private int playerLayer;
     private int enemyLayer;
@@ -69,6 +77,8 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (isDead) return;
+
         if (isInvulnerable)
         {
             return;
@@ -120,22 +130,79 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
-        if (isInvulnerable)
+        if (isDead) return;
+        isDead = true;
+
+        PlayerController controller = GetComponent<PlayerController>();
+        if (controller != null)
+            controller.enabled = false;
+
+        Physics.IgnoreLayerCollision(playerLayer, enemyLayer, true);
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
         {
-            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+
+            rb.useGravity = false;     
+            rb.isKinematic = true;     
         }
+
+        if (animator != null)
+            animator.SetTrigger("isDead");
+
+        if (hitAnmationCorrutine != null)
+        {
+            StopCoroutine(hitAnmationCorrutine);
+            hitAnmationCorrutine = null;
+        }
+
+        animator.speed = 1f;
+        StartCoroutine(WaitForDeathAnimation());
+
+    }
+
+    private IEnumerator WaitForDeathAnimation()
+    {
+        yield return new WaitForSecondsRealtime(4.2f);
         Time.timeScale = 0f;
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (isDead) return;
+
         if (collision.gameObject.CompareTag("Enemy"))
         {
             EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
             if (enemy != null)
             {
                 TakeDamage(enemy.ContactDamage);
+
+                if (!isDead)
+                {
+                    if (hitAnmationCorrutine != null)
+                        StopCoroutine(hitAnmationCorrutine);
+
+                    hitAnmationCorrutine = StartCoroutine(ResetAnimationSpeed());
+                }
             }
         }
+    }
+
+    private IEnumerator ResetAnimationSpeed()
+    {
+        if (isDead) yield break;
+        animator.speed = 0f;
+        currentAnimationSpeed = animator.speed;
+
+        yield return new WaitForSeconds(animationHitDelay);
+
+        if (!isDead)
+            animator.speed = 1f;
+
+        hitAnmationCorrutine = null;
+
     }
 }
