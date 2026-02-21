@@ -14,6 +14,10 @@ public class MainMenuScript : MonoBehaviour
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
 
+    [Header("UI Panels")]
+    [SerializeField] private GameObject mainMenuPanel;
+    [SerializeField] private GameObject optionsPanel;
+
     public void OnPlayButtonPressed()
     {
         CreateFadeOverlayIfNeeded();
@@ -22,6 +26,15 @@ public class MainMenuScript : MonoBehaviour
         fadeOverlay.SetActive(true);
 
         StartCoroutine(LoadNextSceneWithFadeAsync());
+    }
+
+    public void OnOptionsButtonPressed()
+    {
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(false);
+
+        if (optionsPanel != null)
+            optionsPanel.SetActive(true);
     }
 
     public void OnExitButtonPressed()
