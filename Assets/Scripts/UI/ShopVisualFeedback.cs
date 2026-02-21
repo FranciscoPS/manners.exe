@@ -78,16 +78,18 @@ public class ShopVisualFeedback : MonoBehaviour
             if (isOnCooldown)
             {
                 isOnCooldown = false;
-                SetAvailableState();
             }
+            SetAvailableState();
         }
     }
 
     private void BlinkSphere()
     {
-        float emission = Mathf.Lerp(minEmission, maxEmission, (Mathf.Sin(Time.time * blinkSpeed) + 1f) / 2f);
+        float t = (Mathf.Sin(Time.time * blinkSpeed) + 1f) / 2f;
+        float emission = Mathf.Lerp(minEmission, maxEmission, t);
+        
         Color baseColor = new Color(cooldownColor.r, cooldownColor.g, cooldownColor.b, sphereAlpha);
-        Color emissionColor = new Color(cooldownColor.r * emission, cooldownColor.g * emission, cooldownColor.b * emission, 1f);
+        Color emissionColor = new Color(cooldownColor.r, cooldownColor.g, cooldownColor.b, 1f) * emission;
         
         sphereMaterial.SetColor(EmissionColorProperty, emissionColor);
         sphereMaterial.SetColor(BaseColorProperty, baseColor);
@@ -96,7 +98,7 @@ public class ShopVisualFeedback : MonoBehaviour
     private void SetAvailableState()
     {
         Color baseColor = new Color(availableColor.r, availableColor.g, availableColor.b, sphereAlpha);
-        Color emissionColor = new Color(availableColor.r * maxEmission, availableColor.g * maxEmission, availableColor.b * maxEmission, 1f);
+        Color emissionColor = new Color(availableColor.r, availableColor.g, availableColor.b, 1f) * maxEmission;
         
         sphereMaterial.SetColor(EmissionColorProperty, emissionColor);
         sphereMaterial.SetColor(BaseColorProperty, baseColor);
