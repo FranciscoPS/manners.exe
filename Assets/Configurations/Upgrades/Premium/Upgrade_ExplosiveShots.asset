@@ -10,16 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
-  m_Name: Upgrade_MagnetRange
+  m_Name: Upgrade_ExplosiveShots
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
-  upgradeName: Magnet Range
-  description: Increases the range at which orbs are attracted to you
-  upgradeType: 4
-  icon: {fileID: 21300000, guid: 2388c55eeb9cde34cb4d6820c6205484, type: 3}
-  baseValue: 25
-  multiplierPerLevel: 1.1
+  upgradeName: Explosive Rounds
+  description: Each shot has a X% chance to explode on impact, damaging nearby enemies.
+  upgradeType: 6
+  icon: {fileID: 21300000, guid: ae8f5a176df7a044ca461569ebf5c24d, type: 3}
+  baseValue: 10
+  multiplierPerLevel: 1.15
   maxLevel: 999
   isPercentage: 1
-  valueSuffix: 
-  isPremium: 0
-  spawnWeight: 40
+  valueSuffix: (active)
+  isPremium: 1
+  spawnWeight: 10
+  isAvailableInShop: 1
+  shopBaseCost: 50
+  shopCostMultiplier: 1.5
+  shopSpawnWeight: 50

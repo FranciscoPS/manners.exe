@@ -48,6 +48,21 @@ public class UpgradeData : ScriptableObject
     [Range(1, 100)]
     public int spawnWeight = 50;
     
+    [Header("Shop Settings")]
+    [Tooltip("Si está disponible para comprar en la tienda")]
+    public bool isAvailableInShop = true;
+    
+    [Tooltip("Costo base en monedas de oro para el primer nivel")]
+    public int shopBaseCost = 100;
+    
+    [Tooltip("Multiplicador de costo por nivel (ej: 1.5 = +50% por nivel)")]
+    [Range(1f, 3f)]
+    public float shopCostMultiplier = 1.5f;
+    
+    [Tooltip("Peso de aparición en la tienda (mayor = más probable)")]
+    [Range(0f, 100f)]
+    public float shopSpawnWeight = 50f;
+    
     public float CalculateValueAtLevel(int level)
     {
         if (level <= 0) return 0f;
@@ -75,5 +90,11 @@ public class UpgradeData : ScriptableObject
         string current = GetFormattedValue(currentLevel);
         string next = GetFormattedValue(nextLevel);
         return $"{current} → {next}";
+    }
+    
+    public int CalculateShopCostForLevel(int level)
+    {
+        if (level <= 0) return shopBaseCost;
+        return Mathf.RoundToInt(shopBaseCost * Mathf.Pow(shopCostMultiplier, level - 1));
     }
 }
