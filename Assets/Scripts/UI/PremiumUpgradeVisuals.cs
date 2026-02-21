@@ -6,17 +6,19 @@ public class PremiumUpgradeVisuals : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Image backgroundImage;
-    [SerializeField] private ParticleSystem particleEffect;
     
     [Header("Rainbow Overlay Settings")]
     [SerializeField] private bool useRainbowOverlay = true;
-    [SerializeField] private float rainbowSpeed = 1.5f;
-    [SerializeField] private float rainbowBrightness = 1.5f;
-    [SerializeField] private float overlayAlpha = 0.3f;
+    [SerializeField] private float rainbowSpeed = 2f;
+    [SerializeField] private float rainbowBrightness = 1.8f;
+    [SerializeField] private float overlayAlpha = 0.5f;
+    
+    [Header("Particles Settings")]
+    [SerializeField] private bool useParticles = true;
     
     [Header("Animation Settings")]
-    [SerializeField] private float pulseScale = 1.08f;
-    [SerializeField] private float pulseDuration = 1.2f;
+    [SerializeField] private float pulseScale = 1.12f;
+    [SerializeField] private float pulseDuration = 1.0f;
     
     private RectTransform rectTransform;
     private Tween pulseTween;
@@ -24,6 +26,7 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     private Image rainbowOverlayImage;
     private Material rainbowMaterial;
     private float rainbowHue = 0f;
+    private PremiumParticleEffect particleEffect;
     
     private void Awake()
     {
@@ -61,12 +64,34 @@ public class PremiumUpgradeVisuals : MonoBehaviour
             rainbowOverlayImage.gameObject.SetActive(true);
         }
 
+        if (useParticles && particleEffect == null)
+        {
+            CreateParticleEffect();
+        }
+
         if (particleEffect != null)
         {
             particleEffect.Play();
         }
         
         StartPulseAnimation();
+    }
+
+    private void CreateParticleEffect()
+    {
+        GameObject particleObj = new GameObject("PremiumParticles");
+        particleObj.transform.SetParent(transform, false);
+        
+        RectTransform particleRect = particleObj.AddComponent<RectTransform>();
+        particleRect.anchorMin = Vector2.zero;
+        particleRect.anchorMax = Vector2.one;
+        particleRect.offsetMin = Vector2.zero;
+        particleRect.offsetMax = Vector2.zero;
+        particleRect.localPosition = Vector3.zero;
+        particleRect.SetAsLastSibling();
+        
+        particleObj.AddComponent<ParticleSystem>();
+        particleEffect = particleObj.AddComponent<PremiumParticleEffect>();
     }
 
     private void CreateRainbowOverlay()
