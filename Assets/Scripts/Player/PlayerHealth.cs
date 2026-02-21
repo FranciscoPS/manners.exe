@@ -152,7 +152,7 @@ public class PlayerHealth : MonoBehaviour
 
     private IEnumerator WaitForDeathAnimation()
     {
-        yield return new WaitForSeconds(4f);
+        yield return new WaitForSeconds(3.9f);
         Time.timeScale = 0f;
     }
 

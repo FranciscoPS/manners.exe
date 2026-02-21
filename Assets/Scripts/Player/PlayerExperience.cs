@@ -8,8 +8,12 @@ public class PlayerExperience : MonoBehaviour
 
     private int experienceRequiredForNextLevel;
 
+    private PlayerHealth playerHealth;
+
     private void Start()
     {
+        playerHealth = GetComponent<PlayerHealth>();
+
         if (ExperienceManager.Instance != null)
         {
             experienceRequiredForNextLevel = ExperienceManager.Instance.CalculateExperienceForLevel(currentLevel);
@@ -19,6 +23,9 @@ public class PlayerExperience : MonoBehaviour
 
     public void AddExperience(int amount)
     {
+        if (playerHealth != null && playerHealth.CurrentHealth <= 0)
+            return;
+
         currentExperience += amount;
 
         if (ExperienceManager.Instance != null)
