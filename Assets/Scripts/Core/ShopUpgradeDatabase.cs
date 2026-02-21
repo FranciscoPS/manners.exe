@@ -28,6 +28,7 @@ public class ShopUpgradeDatabase : ScriptableObject
     
     [Header("Shop Settings")]
     [SerializeField] private int upgradesPerRefresh = 3;
+    [SerializeField] private float shopGlobalCooldown = 120f;
     
     public List<UpgradeData> GetAvailableUpgrades(Dictionary<UpgradeType, int> currentLevels)
     {
@@ -111,4 +112,6 @@ public class ShopUpgradeDatabase : ScriptableObject
     {
         return shopUpgrades.FirstOrDefault(u => u != null && u.upgradeType == type);
     }
+    
+    public float ShopGlobalCooldown => shopGlobalCooldown;
 }

@@ -20,9 +20,6 @@ public class LevelUpManager : MonoBehaviour
 
     [Header("Rainbow Text Settings")]
     [SerializeField] private float colorSpeed = 1f;
-    
-    [Header("Shop Settings")]
-    [SerializeField] private float shopGlobalCooldown = 120f; // Cooldown global de la tienda en segundos
 
     private bool levelUpActive = false;
     private int currentPlayerLevel = 1;
@@ -102,7 +99,7 @@ public class LevelUpManager : MonoBehaviour
         }
         
         // Verificar si el cooldown terminó
-        if (shopOnCooldown && Time.unscaledTime - lastPurchaseTime >= shopGlobalCooldown)
+        if (shopOnCooldown && ShopUpgradeDatabase.Instance != null && Time.unscaledTime - lastPurchaseTime >= ShopUpgradeDatabase.Instance.ShopGlobalCooldown)
         {
             shopOnCooldown = false;
             
@@ -235,7 +232,8 @@ public class LevelUpManager : MonoBehaviour
         if (cooldownWarningText == null) return;
         
         float timeElapsed = Time.unscaledTime - lastPurchaseTime;
-        float timeRemaining = shopGlobalCooldown - timeElapsed;
+        float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
+        float timeRemaining = cooldown - timeElapsed;
         
         if (timeRemaining > 0)
         {
@@ -283,7 +281,8 @@ public class LevelUpManager : MonoBehaviour
             return 0f;
         
         float timeElapsed = Time.unscaledTime - lastPurchaseTime;
-        return Mathf.Max(0f, shopGlobalCooldown - timeElapsed);
+        float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
+        return Mathf.Max(0f, cooldown - timeElapsed);
     }
     
     public void ShowShop()
