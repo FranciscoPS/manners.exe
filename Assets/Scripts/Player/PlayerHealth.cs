@@ -137,13 +137,17 @@ public class PlayerHealth : MonoBehaviour
         if (controller != null)
             controller.enabled = false;
 
-        Collider col = GetComponent<Collider>();
-        if (col != null)
-            col.enabled = false;
+        Physics.IgnoreLayerCollision(playerLayer, enemyLayer, true);
 
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
+        {
             rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+
+            rb.useGravity = false;     
+            rb.isKinematic = true;     
+        }
 
         if (animator != null)
             animator.SetTrigger("isDead");
@@ -155,14 +159,13 @@ public class PlayerHealth : MonoBehaviour
         }
 
         animator.speed = 1f;
-
         StartCoroutine(WaitForDeathAnimation());
 
     }
 
     private IEnumerator WaitForDeathAnimation()
     {
-        yield return new WaitForSecondsRealtime(4f);
+        yield return new WaitForSecondsRealtime(4.2f);
         Time.timeScale = 0f;
     }
 
