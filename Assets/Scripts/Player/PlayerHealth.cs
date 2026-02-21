@@ -131,8 +131,17 @@ public class PlayerHealth : MonoBehaviour
         {
             Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
+
         if (animator != null)
             animator.SetBool("isDead", true);
+
+        StartCoroutine(WaitForDeathAnimation());
+    
+    }
+
+    private IEnumerator WaitForDeathAnimation()
+    {
+        yield return new WaitForSeconds(4f);
         Time.timeScale = 0f;
     }
 
@@ -145,23 +154,28 @@ public class PlayerHealth : MonoBehaviour
             {
                 currentAnimationSpeed = animator.speed;
                 TakeDamage(enemy.ContactDamage);
+
                 if (hitAnmationCorrutine == null)
                 {
                     hitAnmationCorrutine = ResetAnimationSpeed();
                     StartCoroutine(hitAnmationCorrutine);
                 }
-                else {
-                    StopAllCoroutines();
-                }
-                    animator.speed = 0f; 
+
+                hitAnmationCorrutine = ResetAnimationSpeed();
+                StartCoroutine(hitAnmationCorrutine);
             }
         }
     }
 
     private IEnumerator ResetAnimationSpeed()
     {
+        currentAnimationSpeed = animator.speed;
+        animator.speed = 0f;
+
         yield return new WaitForSeconds(animationHitDelay);
-        animator.speed = currentAnimationSpeed;
+
+        animator.speed = 1f;
         hitAnmationCorrutine = null;
+
     }
 }
