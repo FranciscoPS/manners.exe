@@ -123,6 +123,17 @@ public class MusicManager : MonoBehaviour
         if (sfx == null || sfxLoopSource == null) return;
 
         sfxLoopSource.clip = sfx;
+        sfxLoopSource.pitch = 1f;
+        sfxLoopSource.Play();
+    }
+
+    public void PlaySFXLoop(AudioClip sfx, float volume, float pitch = 1f)
+    {
+        if (sfx == null || sfxLoopSource == null) return;
+
+        sfxLoopSource.clip = sfx;
+        sfxLoopSource.volume = Mathf.Clamp01(volume);
+        sfxLoopSource.pitch = pitch;
         sfxLoopSource.Play();
     }
 
@@ -131,6 +142,7 @@ public class MusicManager : MonoBehaviour
         if (sfxLoopSource != null && sfxLoopSource.isPlaying)
         {
             sfxLoopSource.Stop();
+            sfxLoopSource.pitch = 1f;
         }
     }
 
@@ -138,7 +150,15 @@ public class MusicManager : MonoBehaviour
     {
         if (sfx == null || sfxOneShotSource == null) return;
 
-        sfxOneShotSource.PlayOneShot(sfx);
+        sfxOneShotSource.PlayOneShot(sfx, sfxVolume);
+    }
+
+    public void PlaySFXOneShot(AudioClip sfx, float volume, float pitch = 1f)
+    {
+        if (sfx == null || sfxOneShotSource == null) return;
+
+        sfxOneShotSource.pitch = pitch;
+        sfxOneShotSource.PlayOneShot(sfx, Mathf.Clamp01(volume));
     }
 
     public void SetSFXVolume(float volume)

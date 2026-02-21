@@ -88,6 +88,11 @@ public class AutoAttackSystem : MonoBehaviour
             Debug.LogError("[AutoAttackSystem] projectileConfig is NULL! Assign a ProjectileConfiguration in the Inspector!");
             return;
         }
+
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.shootSFX != null)
+        {
+            MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.shootSFX, SFXDatabase.Instance.shootVolume);
+        }
         
         float multiShotProb = 0f;
         int extraBullets = 0;

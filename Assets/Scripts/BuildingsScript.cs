@@ -10,6 +10,9 @@ public class BuildingsScript : MonoBehaviour
     [SerializeField] private float groundLevel = 0f;
     [SerializeField] private float sinkExtraDistance = 1f;
 
+    [Header("Destruction Feedback")]
+    [SerializeField] private float shakeForce = 0.5f;
+
     [Header("Drop Settings")]
     [SerializeField] private float dropSpawnDelay = 1f;
 
@@ -29,6 +32,16 @@ public class BuildingsScript : MonoBehaviour
 
     private IEnumerator DestroySequence()
     {
+        if (CameraShakeManager.Instance != null)
+        {
+            CameraShakeManager.Instance.Shake(shakeForce);
+        }
+
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.buildingDestroySFX != null)
+        {
+            MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.buildingDestroySFX, SFXDatabase.Instance.buildingDestroyVolume);
+        }
+
         StartCoroutine(SinkAndDestroy());
         
         yield return new WaitForSeconds(dropSpawnDelay);

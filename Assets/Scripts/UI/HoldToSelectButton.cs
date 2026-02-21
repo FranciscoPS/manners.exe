@@ -9,10 +9,14 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
     
     [Header("Hold Settings")]
     [SerializeField] private float holdDuration = 0.5f;
+    [SerializeField] private int holdSFXRepeatCount = 3;
+    [SerializeField] private float holdSFXPitchStart = 1.0f;
+    [SerializeField] private float holdSFXPitchEnd = 1.3f;
     
     private bool isHolding = false;
     private float holdTimer = 0f;
     private Button button;
+    private int currentSFXPlayCount = 0;
     
     public System.Action OnHoldComplete;
     
@@ -44,11 +48,28 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
                 RectTransform rt = fillOverlayImage.rectTransform;
                 rt.anchorMax = new Vector2(fillProgress, 1f);
             }
+
+            int targetPlayCount = Mathf.FloorToInt((holdTimer / holdDuration) * holdSFXRepeatCount);
+            if (targetPlayCount > currentSFXPlayCount && currentSFXPlayCount < holdSFXRepeatCount)
+            {
+                currentSFXPlayCount = targetPlayCount;
+                PlayHoldSFX();
+            }
             
             if (holdTimer >= holdDuration)
             {
                 CompleteHold();
             }
+        }
+    }
+
+    private void PlayHoldSFX()
+    {
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.holdUpgradeSFX != null)
+        {
+            float progress = (float)currentSFXPlayCount / holdSFXRepeatCount;
+            float pitch = Mathf.Lerp(holdSFXPitchStart, holdSFXPitchEnd, progress);
+            MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.holdUpgradeSFX, SFXDatabase.Instance.upgradeVolume, pitch);
         }
     }
     
@@ -59,6 +80,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         
         isHolding = true;
         holdTimer = 0f;
+        currentSFXPlayCount = 0;
         
         if (fillOverlayImage != null)
         {
@@ -67,10 +89,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
             rt.anchorMax = new Vector2(0f, 1f);
         }
 
-        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.holdUpgradeSFX != null)
-        {
-            MusicManager.Instance.PlaySFXLoop(SFXDatabase.Instance.holdUpgradeSFX);
-        }
+        PlayHoldSFX();
     }
     
     public void OnPointerUp(PointerEventData eventData)
@@ -87,13 +106,9 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
     {
         isHolding = false;
 
-        if (MusicManager.Instance != null)
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.completeUpgradeSFX != null)
         {
-            MusicManager.Instance.StopSFXLoop();
-            if (SFXDatabase.Instance != null && SFXDatabase.Instance.completeUpgradeSFX != null)
-            {
-                MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.completeUpgradeSFX);
-            }
+            MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.completeUpgradeSFX, SFXDatabase.Instance.upgradeVolume);
         }
         
         OnHoldComplete?.Invoke();
@@ -113,11 +128,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         
         isHolding = false;
         holdTimer = 0f;
-
-        if (MusicManager.Instance != null)
-        {
-            MusicManager.Instance.StopSFXLoop();
-        }
+        currentSFXPlayCount = 0;
         
         if (fillOverlayImage != null)
         {
