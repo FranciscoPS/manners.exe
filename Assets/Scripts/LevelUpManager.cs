@@ -298,10 +298,10 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
             levelUpText.text = "SHOP";
         
-        // Mostrar instrucciones de cierre
+        // No mostrar instrucciones de cierre (se cierra automáticamente al comprar)
         if (closeInstructionText != null)
         {
-            closeInstructionText.gameObject.SetActive(true);
+            closeInstructionText.gameObject.SetActive(false);
         }
         
         GenerateUpgradeOptions(UpgradeMode.Shop);
@@ -326,17 +326,14 @@ public class LevelUpManager : MonoBehaviour
     
     public void OnUpgradeChosen()
     {
-        // En modo Shop, después de UNA compra, deshabilitar todo y empezar cooldown
+        // En modo Shop, después de UNA compra, cerrar el panel automáticamente
         if (currentMode == UpgradeMode.Shop)
         {
             lastPurchaseTime = Time.unscaledTime;
             shopOnCooldown = true;
             
-            // Deshabilitar todos los botones inmediatamente
-            DisableAllButtons();
-            
-            // Mostrar el contador de cooldown
-            UpdateCooldownDisplay();
+            // Cerrar el panel automáticamente
+            CloseLevelUp();
         }
         else
         {
