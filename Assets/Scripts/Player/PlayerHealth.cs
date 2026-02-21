@@ -11,7 +11,7 @@ public class PlayerHealth : MonoBehaviour
     private float currentHealth;
     private DamageTween damageTween;
 
-    private IEnumerator hitAnmationCorrutine; 
+    private Coroutine hitAnmationCorrutine; 
 
     public event Action<float, float> OnHealthChanged;
     public event Action OnDamageTaken;
@@ -133,11 +133,13 @@ public class PlayerHealth : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
-        Physics.IgnoreLayerCollision(playerLayer, enemyLayer, true);
-
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null)
             controller.enabled = false;
+
+        Collider col = GetComponent<Collider>();
+        if (col != null)
+            col.enabled = false;
 
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
@@ -146,13 +148,21 @@ public class PlayerHealth : MonoBehaviour
         if (animator != null)
             animator.SetBool("isDead", true);
 
+        if (hitAnmationCorrutine != null)
+        {
+            StopCoroutine(hitAnmationCorrutine);
+            hitAnmationCorrutine = null;
+        }
+
+        animator.speed = 1f;
+
         StartCoroutine(WaitForDeathAnimation());
 
     }
 
     private IEnumerator WaitForDeathAnimation()
     {
-        yield return new WaitForSeconds(3.9f);
+        yield return new WaitForSecondsRealtime(4f);
         Time.timeScale = 0f;
     }
 
@@ -165,29 +175,30 @@ public class PlayerHealth : MonoBehaviour
             EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
             if (enemy != null)
             {
-                currentAnimationSpeed = animator.speed;
                 TakeDamage(enemy.ContactDamage);
 
-                if (hitAnmationCorrutine == null)
+                if (!isDead)
                 {
-                    hitAnmationCorrutine = ResetAnimationSpeed();
-                    StartCoroutine(hitAnmationCorrutine);
-                }
+                    if (hitAnmationCorrutine != null)
+                        StopCoroutine(hitAnmationCorrutine);
 
-                hitAnmationCorrutine = ResetAnimationSpeed();
-                StartCoroutine(hitAnmationCorrutine);
+                    hitAnmationCorrutine = StartCoroutine(ResetAnimationSpeed());
+                }
             }
         }
     }
 
     private IEnumerator ResetAnimationSpeed()
     {
-        currentAnimationSpeed = animator.speed;
+        if (isDead) yield break;
         animator.speed = 0f;
+        currentAnimationSpeed = animator.speed;
 
         yield return new WaitForSeconds(animationHitDelay);
 
-        animator.speed = 1f;
+        if (!isDead)
+            animator.speed = 1f;
+
         hitAnmationCorrutine = null;
 
     }
