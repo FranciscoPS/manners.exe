@@ -101,6 +101,12 @@ public class PlayerHealth : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         OnDamageTaken?.Invoke();
         
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.playerDamageSFX != null)
+        {
+            float randomPitch = UnityEngine.Random.Range(SFXDatabase.Instance.playerDamagePitchRange.x, SFXDatabase.Instance.playerDamagePitchRange.y);
+            MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.playerDamageSFX, SFXDatabase.Instance.playerDamageVolume, randomPitch);
+        }
+        
         if (CameraShakeManager.Instance != null)
         {
             CameraShakeManager.Instance.ShakeMedium();
@@ -132,6 +138,11 @@ public class PlayerHealth : MonoBehaviour
     {
         if (isDead) return;
         isDead = true;
+
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.playerDeathSFX != null)
+        {
+            MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.playerDeathSFX, SFXDatabase.Instance.playerDeathVolume);
+        }
 
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null)

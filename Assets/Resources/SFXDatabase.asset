@@ -20,7 +20,19 @@ MonoBehaviour:
   diamondCollectSFX: {fileID: 8300000, guid: 9543a612071c44648935ee262653b3a1, type: 3}
   shootSFX: {fileID: 8300000, guid: d9d6f765843a2cb4c95651338f66229f, type: 3}
   buildingDestroySFX: {fileID: 8300000, guid: f3b44132436bea14a85a3041767e2cac, type: 3}
+  playerMoveSFX: {fileID: 8300000, guid: a17caa0938826914dbcf9ae4da5e67c5, type: 3}
+  playerDamageSFX: {fileID: 8300000, guid: dcb96d03e5348854c8985da7f0aebcff, type: 3}
+  playerDeathSFX: {fileID: 8300000, guid: 36e0ed91663151f4e8fc81d4297c1f10, type: 3}
+  enemyDeathSFX: {fileID: 8300000, guid: 0928e7616eb95c7498015c9afc56ce09, type: 3}
   upgradeVolume: 0.8
   collectibleVolume: 0.6
   shootVolume: 0.3
-  buildingDestroyVolume: 0.15
+  buildingDestroyVolume: 0.1
+  playerMoveVolume: 0.3
+  playerDamageVolume: 0.44
+  playerDeathVolume: 0.8
+  enemyDeathVolume: 0.303
+  playerMovePitchRange: {x: 0.95, y: 1.05}
+  playerDamagePitchRange: {x: 0.9, y: 1.1}
+  enemyDeathPitchRange: {x: 0.85, y: 1.15}
+  moveSoundInterval: 0.75

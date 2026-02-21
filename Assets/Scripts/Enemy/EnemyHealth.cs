@@ -73,6 +73,12 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
+        if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.enemyDeathSFX != null)
+        {
+            float randomPitch = UnityEngine.Random.Range(SFXDatabase.Instance.enemyDeathPitchRange.x, SFXDatabase.Instance.enemyDeathPitchRange.y);
+            MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.enemyDeathSFX, SFXDatabase.Instance.enemyDeathVolume, randomPitch);
+        }
+
         SpawnExperienceOrbs();
         SpawnCollectibles();
         

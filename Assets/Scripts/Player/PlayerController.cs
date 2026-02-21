@@ -11,7 +11,9 @@ public class PlayerController : MonoBehaviour
     private Vector2 moveInput;
     private Vector3 moveDirection;
     private float baseMoveSpeed;
-    private float speedModifier = 0f; // Porcentaje de bonus (+10%, +20%, etc)
+    private float speedModifier = 0f;
+    private bool isPlayingMoveSound = false;
+    private float moveSoundTimer = 0f; // Porcentaje de bonus (+10%, +20%, etc)
 
     private void Awake()
     {
@@ -25,6 +27,40 @@ public class PlayerController : MonoBehaviour
         else
         {
             baseMoveSpeed = 5f;
+        }
+    }
+
+    private void OnDisable()
+    {
+        // Reset timer cuando se desactiva el controller
+        isPlayingMoveSound = false;
+        moveSoundTimer = 0f;
+    }
+
+    private void Update()
+    {
+        // Reset timer si el juego está pausado
+        if (Time.timeScale == 0f)
+        {
+            isPlayingMoveSound = false;
+            moveSoundTimer = 0f;
+        }
+        
+        // Reproducir sonido de movimiento en intervalos
+        if (isPlayingMoveSound && MusicManager.Instance != null && SFXDatabase.Instance != null)
+        {
+            moveSoundTimer -= Time.deltaTime;
+            
+            if (moveSoundTimer <= 0f)
+            {
+                MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.playerMoveSFX, SFXDatabase.Instance.playerMoveVolume);
+                
+                // Ajustar intervalo basado en velocidad (más rápido = menos intervalo)
+                float currentSpeed = GetFinalMoveSpeed();
+                float speedRatio = Mathf.Clamp01((currentSpeed - baseMoveSpeed) / (baseMoveSpeed * 0.5f));
+                float speedMultiplier = 1f + (speedRatio * 0.5f); // 1.0 a 1.5 basado en velocidad
+                moveSoundTimer = SFXDatabase.Instance.moveSoundInterval / speedMultiplier;
+            }
         }
     }
     
@@ -65,6 +101,12 @@ public class PlayerController : MonoBehaviour
 
             if (animator != null)
                 animator.SetBool("isWalking", true);
+
+            if (!isPlayingMoveSound)
+            {
+                isPlayingMoveSound = true;
+                moveSoundTimer = 0f; // Reproducir inmediatamente al empezar a caminar
+            }
         }
         else
         {
@@ -72,6 +114,12 @@ public class PlayerController : MonoBehaviour
 
             if (animator != null)
                 animator.SetBool("isWalking", false);
+
+            if (isPlayingMoveSound)
+            {
+                isPlayingMoveSound = false;
+                moveSoundTimer = 0f;
+            }
         }
     }
 }

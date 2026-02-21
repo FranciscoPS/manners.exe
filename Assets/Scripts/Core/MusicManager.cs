@@ -146,6 +146,14 @@ public class MusicManager : MonoBehaviour
         }
     }
 
+    public void UpdateSFXLoopPitch(float pitch)
+    {
+        if (sfxLoopSource != null && sfxLoopSource.isPlaying)
+        {
+            sfxLoopSource.pitch = pitch;
+        }
+    }
+
     public void PlaySFXOneShot(AudioClip sfx)
     {
         if (sfx == null || sfxOneShotSource == null) return;
