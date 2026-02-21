@@ -10,8 +10,8 @@ public class LevelUpManager : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject levelUpPanel;
     [SerializeField] private TextMeshProUGUI levelUpText;
-    [SerializeField] private TextMeshProUGUI cooldownWarningText; // Texto DENTRO del panel que muestra cooldown
-    [SerializeField] private TextMeshProUGUI closeInstructionText; // "Press P or ESC to close"
+    [SerializeField] private TextMeshProUGUI cooldownWarningText;
+    [SerializeField] private TextMeshProUGUI closeInstructionText;
     
     [Header("Upgrade Buttons")]
     [SerializeField] private UpgradeButton upgradeButton1;
@@ -33,7 +33,6 @@ public class LevelUpManager : MonoBehaviour
     private ShopScript connectedShop;
     
     private InputAction closeShopAction;
-    private InputAction closeShopWithPAction;
 
     private void Awake()
     {
@@ -46,13 +45,6 @@ public class LevelUpManager : MonoBehaviour
             binding: "<Keyboard>/escape"
         );
         closeShopAction.Enable();
-        
-        // Setup P key to also close shop
-        closeShopWithPAction = new InputAction(
-            name: "CloseShopWithP",
-            binding: "<Keyboard>/p"
-        );
-        closeShopWithPAction.Enable();
     }
 
     private void Start()
@@ -82,13 +74,11 @@ public class LevelUpManager : MonoBehaviour
         }
         
         closeShopAction?.Disable();
-        closeShopWithPAction?.Disable();
     }
     
     private void OnDestroy()
     {
         closeShopAction?.Dispose();
-        closeShopWithPAction?.Dispose();
     }
 
     private void Update()
@@ -99,8 +89,8 @@ public class LevelUpManager : MonoBehaviour
             levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
         }
         
-        // ESC or P key to close shop using Input System
-        if (levelUpActive && currentMode == UpgradeMode.Shop && (closeShopAction.triggered || closeShopWithPAction.triggered))
+        // ESC key to close shop using Input System
+        if (levelUpActive && currentMode == UpgradeMode.Shop && closeShopAction.triggered)
         {
             CloseLevelUp();
         }
