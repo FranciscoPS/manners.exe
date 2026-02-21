@@ -2,22 +2,43 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+public enum UpgradeMode
+{
+    LevelUp,
+    Shop
+}
+
 public class UpgradeButton : MonoBehaviour
 {
     private TextMeshProUGUI upgradeNameText;
     private TextMeshProUGUI descriptionText;
     private TextMeshProUGUI labelText;
     private TextMeshProUGUI valuesText;
+    private TextMeshProUGUI costText;
     private Image iconImage;
     private Button button;
+    private CanvasGroup canvasGroup;
+    
+    [Header("Disabled Settings")]
+    [SerializeField] private float disabledAlpha = 0.5f;
     
     private UpgradeData assignedUpgrade;
     private int currentLevel;
     private int nextLevel;
+    private UpgradeMode currentMode = UpgradeMode.LevelUp;
+    private int upgradeCost = 0;
+    private bool canAfford = true;
     
     private void Awake()
     {
         button = GetComponent<Button>();
+        canvasGroup = GetComponent<CanvasGroup>();
+        
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+        
         if (button != null)
         {
             button.onClick.RemoveAllListeners();
@@ -48,12 +69,15 @@ public class UpgradeButton : MonoBehaviour
                 labelText = text;
             else if (name.Contains("Value") || name.Contains("Stats") || name.Contains("Number"))
                 valuesText = text;
+            else if (name.Contains("Cost") || name.Contains("Price"))
+                costText = text;
         }
     }
     
-    public void Setup(UpgradeData upgrade, int currentUpgradeLevel)
+    public void Setup(UpgradeData upgrade, int currentUpgradeLevel, UpgradeMode mode = UpgradeMode.LevelUp)
     {
         assignedUpgrade = upgrade;
+        currentMode = mode;
         
         if (upgrade == null)
         {
@@ -72,12 +96,14 @@ public class UpgradeButton : MonoBehaviour
         
         gameObject.SetActive(true);
         
-        if (button != null)
+        // Calculate cost if in shop mode
+        if (currentMode == UpgradeMode.Shop)
         {
-            button.interactable = true;
+            upgradeCost = upgrade.CalculateShopCostForLevel(nextLevel);
         }
         
         EnsureReferences();
+        CheckAffordability();
         UpdateUI();
     }
     
@@ -114,6 +140,48 @@ public class UpgradeButton : MonoBehaviour
                 labelText = text;
             else if (name.Contains("Value") || name.Contains("Stats") || name.Contains("Number"))
                 valuesText = text;
+            else if (name.Contains("Cost") || name.Contains("Price"))
+                costText = text;
+        }
+    }
+    
+    private void CheckAffordability()
+    {
+        // In LevelUp mode, always affordable
+        if (currentMode == UpgradeMode.LevelUp)
+        {
+            canAfford = true;
+            
+            if (button != null)
+            {
+                button.interactable = true;
+            }
+            
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+            }
+            
+            return;
+        }
+        
+        // In Shop mode, check if player has enough coins
+        if (CurrencyManager.Instance == null)
+        {
+            canAfford = false;
+            return;
+        }
+        
+        canAfford = CurrencyManager.Instance.CurrentCoins >= upgradeCost;
+        
+        if (button != null)
+        {
+            button.interactable = canAfford;
+        }
+        
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = canAfford ? 1f : disabledAlpha;
         }
     }
     
@@ -141,9 +209,32 @@ public class UpgradeButton : MonoBehaviour
             iconImage.gameObject.SetActive(false);
         }
         
+        // Cost text (only in Shop mode)
+        if (costText != null)
+        {
+            if (currentMode == UpgradeMode.Shop)
+            {
+                costText.gameObject.SetActive(true);
+                
+                // Formato: "Cost: X gold coins" o "Cost: X gold coin" si es 1
+                string coinWord = upgradeCost == 1 ? "gold coin" : "gold coins";
+                costText.text = $"Cost: {upgradeCost} {coinWord}";
+                
+                costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
+            }
+            else
+            {
+                costText.gameObject.SetActive(false);
+            }
+        }
+        else if (currentMode == UpgradeMode.Shop)
+        {
+            Debug.LogWarning($"[SHOP UI] Missing cost display for '{assignedUpgrade.upgradeName}'! Add a TextMeshPro child to {gameObject.name} with 'Cost' or 'Price' in its name.");
+        }
+        
         if (labelText != null)
         {
-            labelText.color = new Color(1f, 0.9f, 0.3f, 1f);
+            labelText.color = canAfford ? new Color(1f, 0.9f, 0.3f, 1f) : new Color(0.5f, 0.45f, 0.15f);
             
             string formattedValue = assignedUpgrade.GetFormattedValue(nextLevel);
             
@@ -159,7 +250,7 @@ public class UpgradeButton : MonoBehaviour
         
         if (valuesText != null)
         {
-            valuesText.color = new Color(0.4f, 1f, 0.5f, 1f);
+            valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
             
             if (currentLevel == 0)
             {
@@ -284,6 +375,23 @@ public class UpgradeButton : MonoBehaviour
     {
         if (assignedUpgrade == null) return;
         
+        LevelUpManager levelUpManager = FindFirstObjectByType<LevelUpManager>();
+        
+        // Shop mode: verify and spend coins
+        if (currentMode == UpgradeMode.Shop)
+        {
+            if (!canAfford)
+                return;
+            
+            if (CurrencyManager.Instance != null)
+            {
+                bool success = CurrencyManager.Instance.SpendCoins(upgradeCost);
+                
+                if (!success)
+                    return;
+            }
+        }
+        
         if (button != null)
         {
             button.interactable = false;
@@ -294,10 +402,30 @@ public class UpgradeButton : MonoBehaviour
             PlayerStatsManager.Instance.ApplyUpgrade(assignedUpgrade);
         }
         
-        LevelUpManager levelUpManager = FindFirstObjectByType<LevelUpManager>();
         if (levelUpManager != null)
         {
             levelUpManager.OnUpgradeChosen();
+        }
+    }
+    
+    public void RefreshAffordability()
+    {
+        CheckAffordability();
+        
+        // Update text colors
+        if (costText != null && currentMode == UpgradeMode.Shop)
+        {
+            costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
+        }
+        
+        if (labelText != null)
+        {
+            labelText.color = canAfford ? new Color(1f, 0.9f, 0.3f, 1f) : new Color(0.5f, 0.45f, 0.15f);
+        }
+        
+        if (valuesText != null)
+        {
+            valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
         }
     }
 }

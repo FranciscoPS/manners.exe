@@ -20,6 +20,7 @@ public class MusicManager : MonoBehaviour
         }
 
         Instance = this;
+        transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
 
         SetupAudioSource();
