@@ -9746,6 +9746,7 @@ GameObject:
   - component: {fileID: 997920202}
   - component: {fileID: 997920205}
   - component: {fileID: 997920206}
+  - component: {fileID: 997920207}
   m_Layer: 5
   m_Name: UpgradeButton1
   m_TagString: Untagged
@@ -9888,6 +9889,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoldToSelectButton
   fillOverlayImage: {fileID: 2086180996}
   holdDuration: 1
+--- !u!114 &997920207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 997920200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f97d31a6cf1c2524fbef204aca7bab74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PremiumUpgradeVisuals
+  backgroundImage: {fileID: 0}
+  particleEffect: {fileID: 0}
+  useRainbowOverlay: 1
+  rainbowSpeed: 2
+  rainbowBrightness: 1.5
+  overlayAlpha: 0.3
+  pulseScale: 1.08
+  pulseDuration: 1.2
 --- !u!1001 &1005681360
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10163,7 +10184,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 99.99988, y: -103.3999}
+  m_AnchoredPosition: {x: 100, y: -103.3999}
   m_SizeDelta: {x: 200, y: 86.97}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1019051303
@@ -15998,6 +16019,7 @@ GameObject:
   - component: {fileID: 1635871977}
   - component: {fileID: 1635871980}
   - component: {fileID: 1635871981}
+  - component: {fileID: 1635871982}
   m_Layer: 5
   m_Name: UpgradeButton2
   m_TagString: Untagged
@@ -16140,6 +16162,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoldToSelectButton
   fillOverlayImage: {fileID: 2118528995}
   holdDuration: 1
+--- !u!114 &1635871982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1635871975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f97d31a6cf1c2524fbef204aca7bab74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PremiumUpgradeVisuals
+  backgroundImage: {fileID: 0}
+  particleEffect: {fileID: 0}
+  useRainbowOverlay: 1
+  rainbowSpeed: 2
+  rainbowBrightness: 1.5
+  overlayAlpha: 0.3
+  pulseScale: 1.08
+  pulseDuration: 1.2
 --- !u!1 &1656501648
 GameObject:
   m_ObjectHideFlags: 0
@@ -17876,7 +17918,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -120.00012, y: -80.00006}
+  m_AnchoredPosition: {x: -120, y: -80.00006}
   m_SizeDelta: {x: 300, y: 200}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1780085152
@@ -20874,6 +20916,7 @@ GameObject:
   - component: {fileID: 2109390152}
   - component: {fileID: 2109390155}
   - component: {fileID: 2109390156}
+  - component: {fileID: 2109390157}
   m_Layer: 5
   m_Name: UpgradeButton3
   m_TagString: Untagged
@@ -21016,6 +21059,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoldToSelectButton
   fillOverlayImage: {fileID: 834100491}
   holdDuration: 1
+--- !u!114 &2109390157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2109390150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f97d31a6cf1c2524fbef204aca7bab74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PremiumUpgradeVisuals
+  backgroundImage: {fileID: 0}
+  particleEffect: {fileID: 0}
+  useRainbowOverlay: 1
+  rainbowSpeed: 2
+  rainbowBrightness: 1.5
+  overlayAlpha: 0.3
+  pulseScale: 1.08
+  pulseDuration: 1.2
 --- !u!1001 &2115887562
 PrefabInstance:
   m_ObjectHideFlags: 0
