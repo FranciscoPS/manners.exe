@@ -19,13 +19,8 @@ public class ExperienceUI : MonoBehaviour
     private void Awake()
     {
         Transform expBarPanel = transform.Find("ExpBarPanel");
-        if (expBarPanel == null)
-        {
-            Debug.LogError("[ExperienceUI] No se encontró ExpBarPanel como hijo de Canvas");
-            return;
-        }
+        if (expBarPanel == null) return;
         
-        // Buscar ExpBarFill dentro de ExpBarPanel (debe ser tipo Sliced con nombre ExpBarFill)
         Image[] allImages = expBarPanel.GetComponentsInChildren<Image>(true);
         foreach (var img in allImages)
         {
@@ -35,13 +30,7 @@ public class ExperienceUI : MonoBehaviour
                 break;
             }
         }
-        
-        if (expBarFill == null)
-        {
-            Debug.LogError($"[ExperienceUI] No se encontró ExpBarFill.");
-        }
 
-        // Buscar LevelText dentro de ExpBarPanel
         TextMeshProUGUI[] allTexts = expBarPanel.GetComponentsInChildren<TextMeshProUGUI>(true);
         foreach (var txt in allTexts)
         {
@@ -52,13 +41,7 @@ public class ExperienceUI : MonoBehaviour
                 break;
             }
         }
-        
-        if (levelText == null)
-        {
-            Debug.LogError($"[ExperienceUI] No se encontró levelText en ExpBarPanel.");
-        }
 
-        // Buscar ExpText dentro de ExpBarPanel
         foreach (var txt in allTexts)
         {
             string txtName = txt.gameObject.name.ToLower();
@@ -79,20 +62,12 @@ public class ExperienceUI : MonoBehaviour
             ExperienceManager.Instance.OnExperienceChanged += UpdateExperienceBar;
             ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
         }
-        else
-        {
-            Debug.LogError("[ExperienceUI] ExperienceManager.Instance es NULL!");
-        }
 
         if (playerExperience != null)
         {
             int currentExp = playerExperience.GetCurrentExperience();
             int requiredExp = playerExperience.GetExperienceRequiredForNextLevel();
             UpdateExperienceBar(currentExp, requiredExp);
-        }
-        else
-        {
-            Debug.LogError("[ExperienceUI] PlayerExperience es NULL!");
         }
     }
 
@@ -109,14 +84,11 @@ public class ExperienceUI : MonoBehaviour
     {
         if (expBarFill != null)
         {
-            // Use deltaTime for normal gameplay (respects Time.timeScale = 0 pause)
             float lerpSpeed = Time.timeScale > 0 ? fillSpeed * Time.deltaTime : fillSpeed * Time.unscaledDeltaTime;
             currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, lerpSpeed);
             
-            // Update anchorMax.x for Sliced type Image (horizontal fill left to right)
             RectTransform rt = expBarFill.rectTransform;
             rt.anchorMax = new Vector2(currentFillAmount, 1f);
-            
         }
     }
 

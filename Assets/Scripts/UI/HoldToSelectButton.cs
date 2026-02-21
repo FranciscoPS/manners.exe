@@ -22,10 +22,9 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         
         if (fillOverlayImage != null)
         {
-            // Configurar para fill horizontal tipo Sliced (izquierda a derecha)
             RectTransform rt = fillOverlayImage.rectTransform;
             rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(0f, 1f); // Empieza en 0 (vacío)
+            rt.anchorMax = new Vector2(0f, 1f);
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
             
@@ -65,7 +64,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         {
             fillOverlayImage.gameObject.SetActive(true);
             RectTransform rt = fillOverlayImage.rectTransform;
-            rt.anchorMax = new Vector2(0f, 1f); // Reset a 0
+            rt.anchorMax = new Vector2(0f, 1f);
         }
     }
     

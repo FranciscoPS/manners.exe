@@ -44,16 +44,13 @@ public class UpgradeButton : MonoBehaviour
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
         
-        // Get component references (don't auto-create to avoid breaking existing UI)
         holdToSelectButton = GetComponent<HoldToSelectButton>();
         premiumVisuals = GetComponent<PremiumUpgradeVisuals>();
         purchaseEffect = GetComponent<PurchaseEffectFeedback>();
         
-        // Connect hold to select callback if component exists
         if (holdToSelectButton != null)
         {
             holdToSelectButton.OnHoldComplete = OnUpgradeSelected;
-            // Remove button onClick when using hold system
             if (button != null)
             {
                 button.onClick.RemoveAllListeners();
@@ -61,7 +58,6 @@ public class UpgradeButton : MonoBehaviour
         }
         else
         {
-            // Use standard button onClick if no hold component
             if (button != null)
             {
                 button.onClick.RemoveAllListeners();
@@ -120,7 +116,6 @@ public class UpgradeButton : MonoBehaviour
         
         gameObject.SetActive(true);
         
-        // Calculate cost if in shop mode
         if (currentMode == UpgradeMode.Shop)
         {
             upgradeCost = upgrade.CalculateShopCostForLevel(nextLevel);
@@ -130,7 +125,6 @@ public class UpgradeButton : MonoBehaviour
         CheckAffordability();
         UpdateUI();
         
-        // Apply premium visuals if upgrade is premium
         if (premiumVisuals != null && assignedUpgrade != null)
         {
             premiumVisuals.SetPremium(assignedUpgrade.isPremium);
@@ -200,7 +194,6 @@ public class UpgradeButton : MonoBehaviour
             return;
         }
         
-        // In Shop mode, check if player has enough coins
         if (CurrencyManager.Instance == null)
         {
             canAfford = false;
@@ -249,14 +242,12 @@ public class UpgradeButton : MonoBehaviour
             iconImage.gameObject.SetActive(false);
         }
         
-        // Cost text (only in Shop mode)
         if (costText != null)
         {
             if (currentMode == UpgradeMode.Shop)
             {
                 costText.gameObject.SetActive(true);
                 
-                // Formato: "Cost: X gold coins" o "Cost: X gold coin" si es 1
                 string coinWord = upgradeCost == 1 ? "gold coin" : "gold coins";
                 costText.text = $"Cost: {upgradeCost} {coinWord}";
                 
@@ -266,10 +257,6 @@ public class UpgradeButton : MonoBehaviour
             {
                 costText.gameObject.SetActive(false);
             }
-        }
-        else if (currentMode == UpgradeMode.Shop)
-        {
-            Debug.LogWarning($"[SHOP UI] Missing cost display for '{assignedUpgrade.upgradeName}'! Add a TextMeshPro child to {gameObject.name} with 'Cost' or 'Price' in its name.");
         }
         
         if (labelText != null)
@@ -417,7 +404,6 @@ public class UpgradeButton : MonoBehaviour
         
         LevelUpManager levelUpManager = FindFirstObjectByType<LevelUpManager>();
         
-        // Shop mode: verify and spend coins
         if (currentMode == UpgradeMode.Shop)
         {
             if (!canAfford)
@@ -442,7 +428,6 @@ public class UpgradeButton : MonoBehaviour
             PlayerStatsManager.Instance.ApplyUpgrade(assignedUpgrade);
         }
         
-        // Play purchase effect on successful purchase
         if (purchaseEffect != null)
         {
             purchaseEffect.PlayPurchaseEffect();
@@ -458,7 +443,6 @@ public class UpgradeButton : MonoBehaviour
     {
         CheckAffordability();
         
-        // Update text colors
         if (costText != null && currentMode == UpgradeMode.Shop)
         {
             costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
