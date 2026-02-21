@@ -30,8 +30,17 @@ public class SpawnWarningIndicator : MonoBehaviour
         Destroy(circleObject.GetComponent<Collider>());
         
         circleRenderer = circleObject.GetComponent<Renderer>();
-        Material mat = circleRenderer.material;
+        
+        // Usar shader Unlit/Color para garantizar compatibilidad en builds
+        Shader unlitShader = Shader.Find("Unlit/Color");
+        if (unlitShader == null)
+        {
+            unlitShader = Shader.Find("Standard");
+        }
+        
+        Material mat = new Material(unlitShader);
         mat.color = warningColor;
+        circleRenderer.material = mat;
         
         circleRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         circleRenderer.receiveShadows = false;

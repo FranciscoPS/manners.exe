@@ -109,11 +109,29 @@ public class PremiumUpgradeVisuals : MonoBehaviour
         overlayRect.offsetMax = Vector2.zero;
         overlayRect.SetAsLastSibling();
         
-        Shader rainbowShader = Shader.Find("UI/RainbowOverlay");
-        if (rainbowShader != null)
+        // Intentar cargar material desde Resources primero (garantiza inclusión en build)
+        Material templateMaterial = Resources.Load<Material>("RainbowOverlayMaterial");
+        if (templateMaterial != null)
         {
-            rainbowMaterial = new Material(rainbowShader);
+            rainbowMaterial = new Material(templateMaterial);
             rainbowOverlayImage.material = rainbowMaterial;
+            Debug.Log("[PremiumUpgradeVisuals] Rainbow material loaded from Resources");
+        }
+        else
+        {
+            // Fallback: intentar crear material con shader
+            Shader rainbowShader = Shader.Find("UI/RainbowOverlay");
+            if (rainbowShader != null)
+            {
+                rainbowMaterial = new Material(rainbowShader);
+                rainbowOverlayImage.material = rainbowMaterial;
+                Debug.Log("[PremiumUpgradeVisuals] Rainbow shader found and applied");
+            }
+            else
+            {
+                Debug.LogWarning("[PremiumUpgradeVisuals] Rainbow shader not found! Using default UI shader.");
+                rainbowMaterial = null;
+            }
         }
         
         rainbowOverlayImage.color = new Color(1f, 1f, 1f, overlayAlpha);
