@@ -23,6 +23,7 @@ public class PlayerHealth : MonoBehaviour
     private float lastHitTime = -999f;
     private float consecutiveHitWindow = 1f;
     private bool isInvulnerable = false;
+    private bool isDead = false;
     private float invulnerabilityEndTime;
     private const float invulnerabilityDuration = 0.5f;
     private const int hitsForInvulnerability = 3;
@@ -76,6 +77,8 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (isDead) return;
+
         if (isInvulnerable)
         {
             return;
@@ -127,16 +130,24 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
-        if (isInvulnerable)
-        {
-            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
-        }
+        if (isDead) return;
+        isDead = true;
+
+        Physics.IgnoreLayerCollision(playerLayer, enemyLayer, true);
+
+        PlayerController controller = GetComponent<PlayerController>();
+        if (controller != null)
+            controller.enabled = false;
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+            rb.linearVelocity = Vector3.zero;
 
         if (animator != null)
             animator.SetBool("isDead", true);
 
         StartCoroutine(WaitForDeathAnimation());
-    
+
     }
 
     private IEnumerator WaitForDeathAnimation()
@@ -147,6 +158,8 @@ public class PlayerHealth : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (isDead) return;
+
         if (collision.gameObject.CompareTag("Enemy"))
         {
             EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
