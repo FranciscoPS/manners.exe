@@ -1,7 +1,8 @@
+using DG.Tweening;
 using System.Collections;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using DG.Tweening;
 using UnityEngine.UI;
 
 public class MainMenuScript : MonoBehaviour
@@ -21,6 +22,15 @@ public class MainMenuScript : MonoBehaviour
         fadeOverlay.SetActive(true);
 
         StartCoroutine(LoadNextSceneWithFadeAsync());
+    }
+
+    public void OnExitButtonPressed()
+    {
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     private IEnumerator LoadNextSceneWithFadeAsync()
