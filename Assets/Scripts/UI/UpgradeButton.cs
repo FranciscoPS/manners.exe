@@ -22,6 +22,11 @@ public class UpgradeButton : MonoBehaviour
     [Header("Disabled Settings")]
     [SerializeField] private float disabledAlpha = 0.5f;
     
+    [Header("Component References")]
+    private HoldToSelectButton holdToSelectButton;
+    private PremiumUpgradeVisuals premiumVisuals;
+    private PurchaseEffectFeedback purchaseEffect;
+    
     private UpgradeData assignedUpgrade;
     private int currentLevel;
     private int nextLevel;
@@ -39,10 +44,29 @@ public class UpgradeButton : MonoBehaviour
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
         
-        if (button != null)
+        // Get component references (don't auto-create to avoid breaking existing UI)
+        holdToSelectButton = GetComponent<HoldToSelectButton>();
+        premiumVisuals = GetComponent<PremiumUpgradeVisuals>();
+        purchaseEffect = GetComponent<PurchaseEffectFeedback>();
+        
+        // Connect hold to select callback if component exists
+        if (holdToSelectButton != null)
         {
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(OnUpgradeSelected);
+            holdToSelectButton.OnHoldComplete = OnUpgradeSelected;
+            // Remove button onClick when using hold system
+            if (button != null)
+            {
+                button.onClick.RemoveAllListeners();
+            }
+        }
+        else
+        {
+            // Use standard button onClick if no hold component
+            if (button != null)
+            {
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(OnUpgradeSelected);
+            }
         }
         
         TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
@@ -105,6 +129,12 @@ public class UpgradeButton : MonoBehaviour
         EnsureReferences();
         CheckAffordability();
         UpdateUI();
+        
+        // Apply premium visuals if upgrade is premium
+        if (premiumVisuals != null && assignedUpgrade != null)
+        {
+            premiumVisuals.SetPremium(assignedUpgrade.isPremium);
+        }
     }
     
     private void EnsureReferences()
@@ -162,6 +192,11 @@ public class UpgradeButton : MonoBehaviour
                 canvasGroup.alpha = 1f;
             }
             
+            if (holdToSelectButton != null)
+            {
+                holdToSelectButton.SetInteractable(true);
+            }
+            
             return;
         }
         
@@ -182,6 +217,11 @@ public class UpgradeButton : MonoBehaviour
         if (canvasGroup != null)
         {
             canvasGroup.alpha = canAfford ? 1f : disabledAlpha;
+        }
+        
+        if (holdToSelectButton != null)
+        {
+            holdToSelectButton.SetInteractable(canAfford);
         }
     }
     
@@ -400,6 +440,12 @@ public class UpgradeButton : MonoBehaviour
         if (PlayerStatsManager.Instance != null)
         {
             PlayerStatsManager.Instance.ApplyUpgrade(assignedUpgrade);
+        }
+        
+        // Play purchase effect on successful purchase
+        if (purchaseEffect != null)
+        {
+            purchaseEffect.PlayPurchaseEffect();
         }
         
         if (levelUpManager != null)

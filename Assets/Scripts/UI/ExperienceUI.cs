@@ -18,17 +18,56 @@ public class ExperienceUI : MonoBehaviour
 
     private void Awake()
     {
-        Transform expBarFillTransform = transform.Find("ExpBarPanel/ExpBarBackground/ExpBarFill");
-        if (expBarFillTransform != null)
-            expBarFill = expBarFillTransform.GetComponent<Image>();
+        Transform expBarPanel = transform.Find("ExpBarPanel");
+        if (expBarPanel == null)
+        {
+            Debug.LogError("[ExperienceUI] No se encontró ExpBarPanel como hijo de Canvas");
+            return;
+        }
+        
+        // Buscar ExpBarFill dentro de ExpBarPanel (debe ser tipo Sliced con nombre ExpBarFill)
+        Image[] allImages = expBarPanel.GetComponentsInChildren<Image>(true);
+        foreach (var img in allImages)
+        {
+            if (img.gameObject.name.Contains("ExpBarFill") || img.gameObject.name.Contains("Fill"))
+            {
+                expBarFill = img;
+                break;
+            }
+        }
+        
+        if (expBarFill == null)
+        {
+            Debug.LogError($"[ExperienceUI] No se encontró ExpBarFill.");
+        }
 
-        Transform levelTextTransform = transform.Find("ExpBarPanel/LevelText");
-        if (levelTextTransform != null)
-            levelText = levelTextTransform.GetComponent<TextMeshProUGUI>();
+        // Buscar LevelText dentro de ExpBarPanel
+        TextMeshProUGUI[] allTexts = expBarPanel.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var txt in allTexts)
+        {
+            string txtName = txt.gameObject.name.ToLower();
+            if (txtName.Contains("level") || txtName.Contains("lvl") || txtName.Contains("nivel"))
+            {
+                levelText = txt;
+                break;
+            }
+        }
+        
+        if (levelText == null)
+        {
+            Debug.LogError($"[ExperienceUI] No se encontró levelText en ExpBarPanel.");
+        }
 
-        Transform expTextTransform = transform.Find("ExpBarPanel/ExpText");
-        if (expTextTransform != null)
-            expText = expTextTransform.GetComponent<TextMeshProUGUI>();
+        // Buscar ExpText dentro de ExpBarPanel
+        foreach (var txt in allTexts)
+        {
+            string txtName = txt.gameObject.name.ToLower();
+            if ((txtName.Contains("exp") || txtName.Contains("xp")) && !txtName.Contains("level") && !txtName.Contains("nivel"))
+            {
+                expText = txt;
+                break;
+            }
+        }
     }
 
     private void Start()
@@ -40,12 +79,20 @@ public class ExperienceUI : MonoBehaviour
             ExperienceManager.Instance.OnExperienceChanged += UpdateExperienceBar;
             ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
         }
+        else
+        {
+            Debug.LogError("[ExperienceUI] ExperienceManager.Instance es NULL!");
+        }
 
         if (playerExperience != null)
         {
             int currentExp = playerExperience.GetCurrentExperience();
             int requiredExp = playerExperience.GetExperienceRequiredForNextLevel();
             UpdateExperienceBar(currentExp, requiredExp);
+        }
+        else
+        {
+            Debug.LogError("[ExperienceUI] PlayerExperience es NULL!");
         }
     }
 
@@ -62,10 +109,14 @@ public class ExperienceUI : MonoBehaviour
     {
         if (expBarFill != null)
         {
-            currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, fillSpeed * Time.unscaledDeltaTime);
+            // Use deltaTime for normal gameplay (respects Time.timeScale = 0 pause)
+            float lerpSpeed = Time.timeScale > 0 ? fillSpeed * Time.deltaTime : fillSpeed * Time.unscaledDeltaTime;
+            currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, lerpSpeed);
             
+            // Update anchorMax.x for Sliced type Image (horizontal fill left to right)
             RectTransform rt = expBarFill.rectTransform;
             rt.anchorMax = new Vector2(currentFillAmount, 1f);
+            
         }
     }
 
@@ -75,7 +126,8 @@ public class ExperienceUI : MonoBehaviour
 
         if (levelText != null && playerExperience != null)
         {
-            levelText.text = "NIVEL " + playerExperience.GetCurrentLevel();
+            int level = playerExperience.GetCurrentLevel();
+            levelText.text = "NIVEL " + level;
         }
 
         if (expText != null)
@@ -93,6 +145,5 @@ public class ExperienceUI : MonoBehaviour
         {
             levelText.text = "NIVEL " + newLevel;
         }
-
     }
 }
