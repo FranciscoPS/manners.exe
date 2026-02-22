@@ -16,8 +16,10 @@ public class Collectible : MonoBehaviour, IPoolable
     private float lifeTime;
     
     [Header("Warning Settings")]
-    [SerializeField] private float warningTime = 3f;
-    [SerializeField] private float blinkSpeed = 5f;
+    [SerializeField] private float warningTime = 10f; // Comienza a parpadear cuando quedan 6 segundos
+    [SerializeField] private float normalBlinkSpeed = 4f; // 2 parpadeos completos por segundo (4 cambios de estado)
+    [SerializeField] private float criticalTime = 2f; // Cuando quedan 3 segundos, parpadeo se acelera
+    [SerializeField] private float criticalBlinkSpeed = 20f; // Parpadeo crítico muy rápido (10 parpadeos/segundo)
     
     [Header("Performance Settings")]
     [SerializeField] private float updateInterval = 0.1f;
@@ -30,6 +32,9 @@ public class Collectible : MonoBehaviour, IPoolable
     private float lifetimeTimer;
     private Renderer collectibleRenderer;
     private bool isBlinking = false;
+    private bool isCriticalBlink = false; // Para trackear cambio de velocidad
+    private float blinkTimer = 0f; // Timer local para controlar parpadeo
+    private bool isVisible = true; // Estado actual de visibilidad
     private Color originalColor;
     private Material materialInstance;
     
@@ -40,6 +45,12 @@ public class Collectible : MonoBehaviour, IPoolable
     public void SetType(CollectibleType collectibleType)
     {
         type = collectibleType;
+        
+        // Forzar valores correctos de parpadeo
+        warningTime = 10f;
+        normalBlinkSpeed = 4f;
+        criticalTime = 2f;
+        criticalBlinkSpeed = 20f;
         
         UpdateCachedMagnetRange();
         
@@ -253,11 +264,33 @@ public class Collectible : MonoBehaviour, IPoolable
     
     private void HandleBlinking()
     {
-        float blinkValue = Mathf.PingPong(Time.time * blinkSpeed, 1f);
+        // Detectar cambio a parpadeo crítico
+        bool shouldBeCritical = lifetimeTimer <= criticalTime;
         
-        if (collectibleRenderer != null)
+        if (shouldBeCritical && !isCriticalBlink)
         {
-            collectibleRenderer.enabled = blinkValue > 0.5f;
+            isCriticalBlink = true;
+            blinkTimer = 0f; // Reset timer al cambiar a crítico
+        }
+        
+        // Determinar velocidad según tiempo restante
+        float currentBlinkSpeed = shouldBeCritical ? criticalBlinkSpeed : normalBlinkSpeed;
+        
+        // Calcular intervalo de parpadeo (tiempo entre cada cambio on/off)
+        float blinkInterval = 1f / currentBlinkSpeed;
+        
+        blinkTimer += Time.deltaTime;
+        
+        // Alternar visibilidad según el intervalo
+        if (blinkTimer >= blinkInterval)
+        {
+            blinkTimer -= blinkInterval;
+            isVisible = !isVisible;
+            
+            if (collectibleRenderer != null)
+            {
+                collectibleRenderer.enabled = isVisible;
+            }
         }
     }
 
@@ -338,6 +371,9 @@ public class Collectible : MonoBehaviour, IPoolable
         currentSpeed = 0f;
         lifetimeTimer = lifeTime;
         isBlinking = false;
+        isCriticalBlink = false; // Reset flag de parpadeo crítico
+        blinkTimer = 0f; // Reset timer de parpadeo
+        isVisible = true; // Empezar visible
 
         if (player == null)
         {

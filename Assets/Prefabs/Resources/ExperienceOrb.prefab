@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 8052121826005465129}
   - component: {fileID: 4928516279468758432}
   - component: {fileID: 270307339271293878}
-  - component: {fileID: 2388315151668163691}
   - component: {fileID: 217447995894940641}
+  - component: {fileID: -4032945651074385695}
   m_Layer: 0
   m_Name: ExperienceOrb
   m_TagString: Untagged
@@ -114,22 +114,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2388315151668163691
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8253307167162826837}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8be6c53d13750640a98591eadd87157, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ExperienceOrb
-  warningTime: 3
-  blinkSpeed: 5
-  floatSpeed: 2
-  floatAmount: 0.5
 --- !u!54 &217447995894940641
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -157,3 +141,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-4032945651074385695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8253307167162826837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed1b1b54047ddbc4b939990f71ba4523, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Collectible
+  warningTime: 6
+  normalBlinkSpeed: 4
+  criticalTime: 2
+  criticalBlinkSpeed: 10
+  updateInterval: 0.1
+  distantCullDistance: 50
