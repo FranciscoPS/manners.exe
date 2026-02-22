@@ -16,10 +16,10 @@ public class Collectible : MonoBehaviour, IPoolable
     private float lifeTime;
     
     [Header("Warning Settings")]
-    [SerializeField] private float warningTime = 10f; // Comienza a parpadear cuando quedan 6 segundos
+    [SerializeField] private float warningTime = 6f; // Comienza a parpadear cuando quedan 6 segundos
     [SerializeField] private float normalBlinkSpeed = 4f; // 2 parpadeos completos por segundo (4 cambios de estado)
     [SerializeField] private float criticalTime = 2f; // Cuando quedan 3 segundos, parpadeo se acelera
-    [SerializeField] private float criticalBlinkSpeed = 20f; // Parpadeo crítico muy rápido (10 parpadeos/segundo)
+    [SerializeField] private float criticalBlinkSpeed = 10f; // Parpadeo crítico muy rápido (10 parpadeos/segundo)
     
     [Header("Performance Settings")]
     [SerializeField] private float updateInterval = 0.1f;
