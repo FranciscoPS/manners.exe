@@ -57,7 +57,6 @@ public class GameOverUI : MonoBehaviour
         });
     }
 
-    // Fuerza que la colisión entre las capas "Player" y "Enemy" esté habilitada.
     private void ResetPlayerEnemyLayerCollision()
     {
         int playerLayer = LayerMask.NameToLayer("Player");
