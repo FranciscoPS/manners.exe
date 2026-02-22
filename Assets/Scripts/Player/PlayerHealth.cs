@@ -6,6 +6,7 @@ public class PlayerHealth : MonoBehaviour
 {
     [SerializeField] private Animator animator;
     [SerializeField] private float animationHitDelay = 0.3f;
+    [SerializeField] private GameObject gameOverPanel;
 
     private float maxHealth;
     private float currentHealth;
@@ -186,6 +187,10 @@ public class PlayerHealth : MonoBehaviour
     private IEnumerator WaitForDeathAnimation()
     {
         yield return new WaitForSecondsRealtime(4.2f);
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+
         Time.timeScale = 0f;
     }
 
