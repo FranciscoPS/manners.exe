@@ -20,7 +20,6 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject helpPanel;
     [SerializeField] private GameObject audioPanel;
     [SerializeField] private GameObject controlesPanel;
-    [SerializeField] private GameObject accesibilidadPanel;
 
     [Header("Upgrades Subscreens")]
     [SerializeField] private GameObject habilidadesPanel;
@@ -41,9 +40,6 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Controles Subscreens")]
     [SerializeField] private GameObject controlesHelpPanel;
-
-    [Header("Accesibilidad Subscreens")]
-    [SerializeField] private GameObject accesibilidadHelpPanel;
 
     [Header("Help Subscreens")]
     [SerializeField] private GameObject movimientoPanel;
@@ -80,7 +76,6 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Help, helpPanel },
             { MenuScreen.Audio, audioPanel },
             { MenuScreen.Controles, controlesPanel },
-            { MenuScreen.Accesibilidad, accesibilidadPanel },
 
             // Upgrades Subscreens
             { MenuScreen.UpgradesHabilidades, habilidadesPanel },
@@ -101,9 +96,6 @@ public class MainMenuUIManager : MonoBehaviour
 
             // Controles Subscreens
             { MenuScreen.ControlesHelp, controlesHelpPanel },
-
-            // Accesibilidad Subscreens
-            { MenuScreen.AccesibilidadHelp, accesibilidadHelpPanel },
 
             // Help Subscreens
             { MenuScreen.HelpMovimiento, movimientoPanel },
@@ -284,34 +276,30 @@ public enum MenuScreen
     Help,                           // 6
     Audio,                          // 7
     Controles,                      // 8
-    Accesibilidad,                  // 9
 
     // Upgrades Subscreens
-    UpgradesHabilidades,            // 10
-    UpgradesArbolDeHabilidades,     // 11
-    UpgradesDetalles,               // 12
+    UpgradesHabilidades,            // 9
+    UpgradesArbolDeHabilidades,     // 10
+    UpgradesDetalles,               // 11
 
     // Tienda Subscreens
-    TiendaAtuendos,                 // 13
-    TiendaEfectos,                  // 14
-    TiendaMonedas,                  // 15
+    TiendaAtuendos,                 // 12
+    TiendaEfectos,                  // 13
+    TiendaMonedas,                  // 14
 
     // Personalizacion Subscreens
-    PersonalizacionSkins,           // 16
-    PersonalizacionAttackEffects,   // 17
+    PersonalizacionSkins,           // 15
+    PersonalizacionAttackEffects,   // 16
 
     // Audio Subscreens
-    AudioSFXControl,                // 18
+    AudioSFXControl,                // 17
 
     // Controles Subscreens
-    ControlesHelp,                  // 19
-
-    // Accesibilidad Subscreens
-    AccesibilidadHelp,              // 20
+    ControlesHelp,                  // 18
 
     // Help Subscreens
-    HelpMovimiento,                 // 21
-    HelpExperiencia,                // 22
-    HelpEnemigos,                   // 23
-    HelpMejoras                     // 24
+    HelpMovimiento,                 // 19
+    HelpExperiencia,                // 20
+    HelpEnemigos,                   // 21
+    HelpMejoras                     // 22
 }
