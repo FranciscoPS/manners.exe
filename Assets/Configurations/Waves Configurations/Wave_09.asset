@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3829d093f91f37489645fe5ec61b7ef, type: 3}
-  m_Name: Wave_02_Medium
+  m_Name: Wave_09
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
-  waveName: Asalto Medio
-  totalEnemies: 300
+  waveName: Apocalipsis
+  totalEnemies: 220
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
-    percentage: 60
+    percentage: 35
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
-    percentage: 40
-  spawnInterval: 0.8
-  enemiesPerBatch: 4
+    percentage: 65
+  spawnInterval: 0.45
+  enemiesPerBatch: 8

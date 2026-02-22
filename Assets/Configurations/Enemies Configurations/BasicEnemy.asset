@@ -12,24 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c885be7fc80148b29768c11ebb90e90, type: 3}
   m_Name: BasicEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfiguration
+  enemyPoolType: 3
   maxHealth: 45
   moveSpeed: 3.5
   contactDamage: 10
   orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}
-  minOrbs: 2
-  maxOrbs: 4
+  minOrbs: 1
+  maxOrbs: 3
   orbSpawnRadius: 1
-  coinDropChance: 0.6
+  coinDropChance: 0.25
   minCoins: 1
-  maxCoins: 3
-  diamondDropChance: 0.12
+  maxCoins: 2
+  diamondDropChance: 0.1
   minDiamonds: 1
   maxDiamonds: 1
-  mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-  material: {fileID: 2100000, guid: c81feac6c647f4766ac970fd7e40549b, type: 2}
-  color: {r: 1, g: 0.79762995, b: 0, a: 1}
-  scale: {x: 1, y: 1, z: 1}
-  deathEffect: {fileID: 0}
-  hasLight: 0
-  lightColor: {r: 1, g: 0, b: 0, a: 1}
-  lightIntensity: 3
