@@ -26,6 +26,11 @@ public class GameOverUI : MonoBehaviour
 
     public void Retry()
     {
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.ResetSessionCurrency();
+        }
+
         if (isTransitioning) return;
         isTransitioning = true;
 
