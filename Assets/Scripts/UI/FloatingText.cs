@@ -76,7 +76,7 @@ public class FloatingText : MonoBehaviour
             .SetUpdate(true) // Usar unscaled time para que funcione con pausa
             .OnComplete(() => 
             {
-                if (FloatingTextManager.Instance != null)
+                if (this != null && FloatingTextManager.Instance != null)
                 {
                     FloatingTextManager.Instance.ReturnToPool(this);
                 }

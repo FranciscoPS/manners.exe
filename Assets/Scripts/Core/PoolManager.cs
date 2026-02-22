@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using System;
 
@@ -48,6 +49,22 @@ public class PoolManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Limpiar pools cuando se recarga una escena
+        ResetAllPools();
     }
 
     private void InitializePools()
@@ -330,6 +347,25 @@ public class PoolManager : MonoBehaviour
         {
             pool.Clear();
         }
+    }
+    
+    /// <summary>
+    /// Resetea completamente todos los pools (para cuando se recarga una escena)
+    /// </summary>
+    private void ResetAllPools()
+    {
+        // Limpiar objetos activos
+        activeObjects.Clear();
+        
+        // Resetear cada pool
+        foreach (var poolType in pools.Keys)
+        {
+            pools[poolType].Clear();
+        }
+        
+        // Recrear los pools para asegurar estado limpio
+        pools.Clear();
+        InitializePools();
     }
     
     public void CleanupDestroyedObjects()

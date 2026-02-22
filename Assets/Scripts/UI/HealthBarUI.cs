@@ -73,6 +73,12 @@ public class HealthBarUI : MonoBehaviour
         blinkTween = healthBarFill.DOColor(blinkColor, blinkDuration)
             .SetLoops(blinkCount * 2, LoopType.Yoyo)
             .SetEase(Ease.Linear)
-            .OnComplete(() => healthBarFill.color = originalColor);
+            .OnComplete(() => 
+            {
+                if (this != null && healthBarFill != null)
+                {
+                    healthBarFill.color = originalColor;
+                }
+            });
     }
 }

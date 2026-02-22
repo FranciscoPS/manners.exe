@@ -56,11 +56,15 @@ public class PlayerController : MonoBehaviour
                 MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.playerMoveSFX, SFXDatabase.Instance.playerMoveVolume);
                 
                 // Ajustar intervalo basado en velocidad (más rápido = menos intervalo)
-                float currentSpeed = GetFinalMoveSpeed();
-                float speedRatio = Mathf.Clamp01((currentSpeed - baseMoveSpeed) / (baseMoveSpeed * 0.5f));
-                float speedMultiplier = 1f + (speedRatio * 0.5f); // 1.0 a 1.5 basado en velocidad
+                float speedMultiplier = GetSpeedMultiplier();
                 moveSoundTimer = SFXDatabase.Instance.moveSoundInterval / speedMultiplier;
             }
+        }
+        
+        // Ajustar velocidad de animación según speed modifier
+        if (animator != null)
+        {
+            animator.speed = GetSpeedMultiplier();
         }
     }
     
@@ -74,11 +78,19 @@ public class PlayerController : MonoBehaviour
     }
     
     /// <summary>
+    /// Obtiene el multiplicador de velocidad (1.0 = normal, 1.2 = +20%, etc)
+    /// </summary>
+    private float GetSpeedMultiplier()
+    {
+        return 1f + (speedModifier / 100f);
+    }
+    
+    /// <summary>
     /// Calcula la velocidad final con todos los modificadores
     /// </summary>
     private float GetFinalMoveSpeed()
     {
-        return baseMoveSpeed * (1f + speedModifier / 100f);
+        return baseMoveSpeed * GetSpeedMultiplier();
     }
 
     public void OnMove(InputAction.CallbackContext context)

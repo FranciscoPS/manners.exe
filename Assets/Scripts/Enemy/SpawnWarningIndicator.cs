@@ -12,6 +12,7 @@ public class SpawnWarningIndicator : MonoBehaviour
     private GameObject circleObject;
     private Renderer circleRenderer;
     private Sequence blinkSequence;
+    private Tween hideTween;
 
     private void Awake()
     {
@@ -93,7 +94,14 @@ public class SpawnWarningIndicator : MonoBehaviour
         {
             circleObject.SetActive(true);
             StartBlinking();
-            DOVirtual.DelayedCall(warningDuration, () => HideWarning());
+            hideTween?.Kill();
+            hideTween = DOVirtual.DelayedCall(warningDuration, () => 
+            {
+                if (this != null && gameObject != null)
+                {
+                    HideWarning();
+                }
+            });
         }
     }
 
@@ -114,17 +122,23 @@ public class SpawnWarningIndicator : MonoBehaviour
     public void HideWarning()
     {
         blinkSequence?.Kill();
+        hideTween?.Kill();
         
         if (circleObject != null)
         {
             circleObject.SetActive(false);
         }
-        gameObject.SetActive(false);
+        
+        if (gameObject != null)
+        {
+            gameObject.SetActive(false);
+        }
     }
 
     private void OnDestroy()
     {
         blinkSequence?.Kill();
+        hideTween?.Kill();
         
         if (circleObject != null)
         {

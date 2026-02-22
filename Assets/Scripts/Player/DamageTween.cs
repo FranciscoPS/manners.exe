@@ -112,7 +112,10 @@ public class DamageTween : MonoBehaviour
         .SetLoops(tweenLoops, LoopType.Yoyo)
         .OnComplete(() => 
         {
-            SetTargetColor(originalColor);
+            if (this != null)
+            {
+                SetTargetColor(originalColor);
+            }
         });
     }
     
