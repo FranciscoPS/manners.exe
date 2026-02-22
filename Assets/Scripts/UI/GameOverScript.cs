@@ -38,6 +38,7 @@ public class GameOverUI : MonoBehaviour
 
         fadeImage.DOFade(1f, fadeDuration).OnComplete(() =>
         {
+            ResetPlayerEnemyLayerCollision();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         });
     }
@@ -51,7 +52,20 @@ public class GameOverUI : MonoBehaviour
 
         fadeImage.DOFade(1f, fadeDuration).OnComplete(() =>
         {
+            ResetPlayerEnemyLayerCollision();
             SceneManager.LoadScene(mainMenuSceneName);
         });
+    }
+
+    // Fuerza que la colisión entre las capas "Player" y "Enemy" esté habilitada.
+    private void ResetPlayerEnemyLayerCollision()
+    {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int enemyLayer = LayerMask.NameToLayer("Enemy");
+
+        if (playerLayer >= 0 && enemyLayer >= 0)
+        {
+            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+        }
     }
 }
