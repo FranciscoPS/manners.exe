@@ -22,6 +22,29 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject controlesPanel;
     [SerializeField] private GameObject accesibilidadPanel;
 
+    [Header("Upgrades Subscreens")]
+    [SerializeField] private GameObject habilidadesPanel;
+    [SerializeField] private GameObject arbolDeHabilidesPanel;
+    [SerializeField] private GameObject detallesPanel;
+
+    [Header("Tienda Subscreens")]
+    [SerializeField] private GameObject atuendosPanel;
+    [SerializeField] private GameObject efectosPanel;
+    [SerializeField] private GameObject monedasPanel;
+
+    [Header("Personalizacion Subscreens")]
+    [SerializeField] private GameObject skinsPanel;
+    [SerializeField] private GameObject attackEffectsPanel;
+
+    [Header("Audio Subscreens")]
+    [SerializeField] private GameObject sfxControlPanel;
+
+    [Header("Controles Subscreens")]
+    [SerializeField] private GameObject controlesHelpPanel;
+
+    [Header("Accesibilidad Subscreens")]
+    [SerializeField] private GameObject accesibilidadHelpPanel;
+
     [Header("Help Subscreens")]
     [SerializeField] private GameObject movimientoPanel;
     [SerializeField] private GameObject experienciaPanel;
@@ -58,6 +81,29 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Audio, audioPanel },
             { MenuScreen.Controles, controlesPanel },
             { MenuScreen.Accesibilidad, accesibilidadPanel },
+
+            // Upgrades Subscreens
+            { MenuScreen.UpgradesHabilidades, habilidadesPanel },
+            { MenuScreen.UpgradesArbolDeHabilidades, arbolDeHabilidesPanel },
+            { MenuScreen.UpgradesDetalles, detallesPanel },
+
+            // Tienda Subscreens
+            { MenuScreen.TiendaAtuendos, atuendosPanel },
+            { MenuScreen.TiendaEfectos, efectosPanel },
+            { MenuScreen.TiendaMonedas, monedasPanel },
+
+            // Personalizacion Subscreens
+            { MenuScreen.PersonalizacionSkins, skinsPanel },
+            { MenuScreen.PersonalizacionAttackEffects, attackEffectsPanel },
+
+            // Audio Subscreens
+            { MenuScreen.AudioSFXControl, sfxControlPanel },
+
+            // Controles Subscreens
+            { MenuScreen.ControlesHelp, controlesHelpPanel },
+
+            // Accesibilidad Subscreens
+            { MenuScreen.AccesibilidadHelp, accesibilidadHelpPanel },
 
             // Help Subscreens
             { MenuScreen.HelpMovimiento, movimientoPanel },
@@ -227,22 +273,45 @@ public class MainMenuUIManager : MonoBehaviour
 public enum MenuScreen
 {
     // Main Screens
-    Main,
-    Options,
-    Upgrades,
-    Tienda,
-    Personalizacion,
-    Creditos,
+    Main,                           // 0
+    Options,                        // 1
+    Upgrades,                       // 2
+    Tienda,                         // 3
+    Personalizacion,                // 4
+    Creditos,                       // 5
 
     // Options Screens
-    Help,
-    Audio,
-    Controles,
-    Accesibilidad,
+    Help,                           // 6
+    Audio,                          // 7
+    Controles,                      // 8
+    Accesibilidad,                  // 9
+
+    // Upgrades Subscreens
+    UpgradesHabilidades,            // 10
+    UpgradesArbolDeHabilidades,     // 11
+    UpgradesDetalles,               // 12
+
+    // Tienda Subscreens
+    TiendaAtuendos,                 // 13
+    TiendaEfectos,                  // 14
+    TiendaMonedas,                  // 15
+
+    // Personalizacion Subscreens
+    PersonalizacionSkins,           // 16
+    PersonalizacionAttackEffects,   // 17
+
+    // Audio Subscreens
+    AudioSFXControl,                // 18
+
+    // Controles Subscreens
+    ControlesHelp,                  // 19
+
+    // Accesibilidad Subscreens
+    AccesibilidadHelp,              // 20
 
     // Help Subscreens
-    HelpMovimiento,
-    HelpExperiencia,
-    HelpEnemigos,
-    HelpMejoras
+    HelpMovimiento,                 // 21
+    HelpExperiencia,                // 22
+    HelpEnemigos,                   // 23
+    HelpMejoras                     // 24
 }
