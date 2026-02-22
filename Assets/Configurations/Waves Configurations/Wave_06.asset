@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Wave_06
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Batalla Brutal
-  totalEnemies: 450
+  totalEnemies: 650
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
     percentage: 50
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
     percentage: 50
-  spawnInterval: 0.35
-  enemiesPerBatch: 7
+  spawnInterval: 0.2
+  enemiesPerBatch: 10
