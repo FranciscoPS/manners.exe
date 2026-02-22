@@ -1,10 +1,16 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
+    [SerializeField] private GameObject helpPanel;
+
+    [Header("Opciones de escena")]
+    [Tooltip("Índice de la escena del menú principal en Build Settings (por defecto 0)")]
+    [SerializeField] private int mainMenuSceneIndex = 0;
 
     private bool isPaused = false;
 
@@ -12,6 +18,9 @@ public class PauseMenu : MonoBehaviour
     {
         if (pausePanel != null)
             pausePanel.SetActive(false);
+
+        if (helpPanel != null)
+            helpPanel.SetActive(false);
     }
 
     void Update()
@@ -44,5 +53,34 @@ public class PauseMenu : MonoBehaviour
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
+    }
+
+    public void OnRestartButtonPressed()
+    {
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.ResetSessionCurrency();
+        }
+
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
+    }
+
+    public void OnReturnToMainMenuButtonPressed()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(mainMenuSceneIndex, LoadSceneMode.Single);
+    }
+
+    public void OnHelpButtonPressed()
+    {
+        isPaused = true;
+        Time.timeScale = 0f;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
+        if (helpPanel != null)
+            helpPanel.SetActive(true);
     }
 }
