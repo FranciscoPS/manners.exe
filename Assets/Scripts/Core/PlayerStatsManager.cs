@@ -260,7 +260,7 @@ public class PlayerStatsManager : MonoBehaviour
         int multiShotLevel = GetUpgradeLevel(UpgradeType.MultiShot);
         if (multiShotLevel <= 0) return 0;
         
-        return 3 + ((multiShotLevel - 1) / 4) * 3;
+        return multiShotLevel * 3;
     }
     
     public float GetExplosiveShotProbability()
