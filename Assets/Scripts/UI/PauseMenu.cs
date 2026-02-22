@@ -15,12 +15,12 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private GameObject mejorasHelpPanel;
 
     [Header("Opciones de escena")]
-    [Tooltip("Índice de la escena del menú principal en Build Settings (por defecto 0)")]
+    [Tooltip("ï¿½ndice de la escena del menï¿½ principal en Build Settings (por defecto 0)")]
     [SerializeField] private int mainMenuSceneIndex = 0;
 
     private bool isPaused = false;
-
     private GameObject currentHelpSubPanel;
+    private LevelUpManager levelUpManager;
 
     void Start()
     {
@@ -31,12 +31,21 @@ public class PauseMenu : MonoBehaviour
             helpPanel.SetActive(false);
 
         DeactivateAllHelpSubPanels();
+        
+        // Buscar LevelUpManager para verificar si la tienda/level up estÃ¡n activos
+        levelUpManager = FindFirstObjectByType<LevelUpManager>();
     }
 
     void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
+            // No permitir abrir el menÃº de pausa si la tienda o level up estÃ¡n activos
+            if (levelUpManager != null && levelUpManager.IsLevelUpActive())
+            {
+                return;
+            }
+            
             TogglePause();
         }
     }

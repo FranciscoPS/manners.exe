@@ -32,20 +32,11 @@ public class LevelUpManager : MonoBehaviour
     // Variables para pausar el cooldown cuando la tienda está abierta
     private bool cooldownPaused = false;
     private float pausedCooldownTimeRemaining = 0f;
-    
-    private InputAction closeShopAction;
 
     private void Awake()
     {
         if (levelUpPanel != null)
             levelUpPanel.SetActive(false);
-        
-        // Setup ESC key input
-        closeShopAction = new InputAction(
-            name: "CloseShop",
-            binding: "<Keyboard>/escape"
-        );
-        closeShopAction.Enable();
     }
 
     private void Start()
@@ -73,13 +64,6 @@ public class LevelUpManager : MonoBehaviour
         {
             CurrencyManager.Instance.OnCoinsChanged -= OnCurrencyChanged;
         }
-        
-        closeShopAction?.Disable();
-    }
-    
-    private void OnDestroy()
-    {
-        closeShopAction?.Dispose();
     }
 
     private void Update()
@@ -88,12 +72,6 @@ public class LevelUpManager : MonoBehaviour
         {
             float hue = Mathf.PingPong(Time.unscaledTime * colorSpeed, 1f);
             levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
-        }
-        
-        // ESC key to close shop using Input System
-        if (levelUpActive && currentMode == UpgradeMode.Shop && closeShopAction.triggered)
-        {
-            CloseLevelUp();
         }
         
         // Actualizar cooldown DENTRO del panel si está abierto en modo Shop (mostrar tiempo pausado)
@@ -315,10 +293,10 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
             levelUpText.text = "SHOP";
         
-        // No mostrar instrucciones de cierre (se cierra automáticamente al comprar)
+        // Mostrar instrucciones de cierre con P
         if (closeInstructionText != null)
         {
-            closeInstructionText.gameObject.SetActive(false);
+            closeInstructionText.gameObject.SetActive(true);
         }
         
         // Si hay cooldown activo, pausarlo

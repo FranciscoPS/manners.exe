@@ -56,18 +56,23 @@ public class ShopScript : MonoBehaviour
 
     private void Update()
     {
-        // Solo permitir abrir si:
-        // 1. NO está ya abierto
-        // 2. El panel no está activo
-        // 3. Ha pasado el cooldown desde el último cierre
-        if (playerInRange && !shopOpen && openShopAction.triggered)
+        if (openShopAction.triggered)
         {
-            // Verificar que el LevelUpManager no esté activo y que haya pasado el cooldown
-            if (levelUpManager != null && 
-                !levelUpManager.IsLevelUpActive() && 
-                Time.unscaledTime - lastCloseTime >= REOPEN_COOLDOWN)
+            // Si la tienda está abierta, cerrarla
+            if (shopOpen)
             {
-                OpenShop();
+                CloseShop();
+            }
+            // Si no está abierta y el jugador está en rango, abrirla
+            else if (playerInRange)
+            {
+                // Verificar que el LevelUpManager no esté activo y que haya pasado el cooldown
+                if (levelUpManager != null && 
+                    !levelUpManager.IsLevelUpActive() && 
+                    Time.unscaledTime - lastCloseTime >= REOPEN_COOLDOWN)
+                {
+                    OpenShop();
+                }
             }
         }
     }
