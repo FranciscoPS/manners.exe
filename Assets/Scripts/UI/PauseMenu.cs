@@ -8,11 +8,19 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private GameObject helpPanel;
 
+    [Header("Help Sub-Panels")]
+    [SerializeField] private GameObject movimientoHelpPanel;
+    [SerializeField] private GameObject experienciaHelpPanel;
+    [SerializeField] private GameObject enemigosHelpPanel;
+    [SerializeField] private GameObject mejorasHelpPanel;
+
     [Header("Opciones de escena")]
     [Tooltip("Índice de la escena del menú principal en Build Settings (por defecto 0)")]
     [SerializeField] private int mainMenuSceneIndex = 0;
 
     private bool isPaused = false;
+
+    private GameObject currentHelpSubPanel;
 
     void Start()
     {
@@ -21,6 +29,8 @@ public class PauseMenu : MonoBehaviour
 
         if (helpPanel != null)
             helpPanel.SetActive(false);
+
+        DeactivateAllHelpSubPanels();
     }
 
     void Update()
@@ -82,6 +92,9 @@ public class PauseMenu : MonoBehaviour
 
         if (helpPanel != null)
             helpPanel.SetActive(true);
+
+        DeactivateAllHelpSubPanels();
+        currentHelpSubPanel = null;
     }
 
     public void OnHelpReturnButtonPressed()
@@ -89,10 +102,57 @@ public class PauseMenu : MonoBehaviour
         if (helpPanel != null)
             helpPanel.SetActive(false);
 
+        DeactivateAllHelpSubPanels();
+        currentHelpSubPanel = null;
+
         if (pausePanel != null)
             pausePanel.SetActive(true);
 
         isPaused = true;
         Time.timeScale = 0f;
+    }
+
+    public void OnMovimientoHelpButtonPressed()
+    {
+        ShowHelpSubPanel(movimientoHelpPanel);
+    }
+
+    public void OnExperienciaHelpButtonPressed()
+    {
+        ShowHelpSubPanel(experienciaHelpPanel);
+    }
+
+    public void OnEnemigosHelpButtonPressed()
+    {
+        ShowHelpSubPanel(enemigosHelpPanel);
+    }
+
+    public void OnMejorasHelpButtonPressed()
+    {
+        ShowHelpSubPanel(mejorasHelpPanel);
+    }
+
+    private void ShowHelpSubPanel(GameObject subPanel)
+    {
+        if (subPanel == null) return;
+
+        if (currentHelpSubPanel == subPanel) return;
+
+        if (currentHelpSubPanel != null)
+        {
+            currentHelpSubPanel.SetActive(false);
+            currentHelpSubPanel = null;
+        }
+
+        subPanel.SetActive(true);
+        currentHelpSubPanel = subPanel;
+    }
+
+    private void DeactivateAllHelpSubPanels()
+    {
+        if (movimientoHelpPanel != null) movimientoHelpPanel.SetActive(false);
+        if (experienciaHelpPanel != null) experienciaHelpPanel.SetActive(false);
+        if (enemigosHelpPanel != null) enemigosHelpPanel.SetActive(false);
+        if (mejorasHelpPanel != null) mejorasHelpPanel.SetActive(false);
     }
 }
