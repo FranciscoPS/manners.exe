@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Wave_09
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Apocalipsis
-  totalEnemies: 220
+  totalEnemies: 600
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
     percentage: 35
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
     percentage: 65
-  spawnInterval: 0.45
-  enemiesPerBatch: 8
+  spawnInterval: 0.35
+  enemiesPerBatch: 10

@@ -40,7 +40,10 @@ public class EnemyConfiguration : ScriptableObject
         EnemyHealth health = enemyObject.GetComponent<EnemyHealth>();
         if (health != null)
         {
-            health.SetConfiguration(maxHealth, orbConfig, minOrbs, maxOrbs, orbSpawnRadius,
+            // Pasar el poolType y valores fallback al EnemyHealth
+            // EnemyHealth ahora consulta GameBalanceConfig dinámicamente usando estos como fallback
+            health.SetConfiguration(maxHealth, enemyPoolType,
+                                   orbConfig, minOrbs, maxOrbs, orbSpawnRadius,
                                    coinDropChance, minCoins, maxCoins,
                                    diamondDropChance, minDiamonds, maxDiamonds);
         }

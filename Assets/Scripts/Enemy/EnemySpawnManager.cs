@@ -22,6 +22,10 @@ public class EnemySpawnManager : MonoBehaviour
     private int currentWaveIndex = 0;
     private bool isSpawningWave = false;
     private float continuousSpawnTimer = 0f;
+    
+    // Propiedad pública para que otros sistemas consulten la wave actual
+    public int CurrentWaveIndex => currentWaveIndex;
+    public int CurrentWaveNumber => currentWaveIndex + 1; // 1-based para UI/balance
 
     private void Awake()
     {

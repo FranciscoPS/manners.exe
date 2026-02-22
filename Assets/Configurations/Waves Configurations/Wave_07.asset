@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3829d093f91f37489645fe5ec61b7ef, type: 3}
   m_Name: Wave_07
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
-  waveName: Caos Creciente
-  totalEnemies: 180
+  waveName: Caos Total
+  totalEnemies: 420
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
-    percentage: 50
+    percentage: 45
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
-    percentage: 50
-  spawnInterval: 0.6
-  enemiesPerBatch: 5
+    percentage: 45
+  spawnInterval: 0.45
+  enemiesPerBatch: 7

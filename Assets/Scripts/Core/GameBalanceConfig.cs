@@ -1,8 +1,38 @@
 using UnityEngine;
+using System;
 
 [CreateAssetMenu(fileName = "GameBalanceConfig", menuName = "Game/Game Balance Configuration")]
 public class GameBalanceConfig : ScriptableObject
 {
+    // Configuración de drops por tipo de enemigo y wave
+    [System.Serializable]
+    public class EnemyDropConfig
+    {
+        [Header("Wave Range")]
+        [Tooltip("Desde qué wave se aplica esta config (1-based)")]
+        public int fromWave = 1;
+        [Tooltip("Hasta qué wave se aplica (999 = infinito)")]
+        public int toWave = 999;
+        
+        [Header("Enemy Type")]
+        [Tooltip("Tipo de pool del enemigo (BasicEnemy, FastEnemy, etc.)")]
+        public PoolManager.PoolType enemyType = PoolManager.PoolType.BasicEnemy;
+        
+        [Header("Experience Orbs")]
+        public OrbConfiguration orbConfig;
+        public int minOrbs = 1;
+        public int maxOrbs = 3;
+        
+        [Header("Coins")]
+        [Range(0f, 1f)] public float coinDropChance = 0.5f;
+        public int minCoins = 1;
+        public int maxCoins = 3;
+        
+        [Header("Diamonds")]
+        [Range(0f, 1f)] public float diamondDropChance = 0.1f;
+        public int minDiamonds = 1;
+        public int maxDiamonds = 1;
+    }
     private static GameBalanceConfig instance;
     public static GameBalanceConfig Instance
     {
@@ -57,6 +87,10 @@ public class GameBalanceConfig : ScriptableObject
     [SerializeField] private float coinLifetime = 30f;
     [SerializeField] private float diamondLifetime = 30f;
     [SerializeField] private float orbLifetime = 30f;
+    
+    [Header("=== ENEMY DROPS BY WAVE ===")]
+    [Tooltip("Configuraciones de drops por tipo de enemigo y wave. Se busca la primera que matchee el wave actual.")]
+    [SerializeField] private EnemyDropConfig[] enemyDropConfigs = new EnemyDropConfig[0];
 
     public float PlayerMaxHealth => playerMaxHealth;
     public float PlayerBaseDamage => playerBaseDamage;
@@ -90,5 +124,34 @@ public class GameBalanceConfig : ScriptableObject
     public int CalculateExperienceForLevel(int level)
     {
         return Mathf.RoundToInt(baseExperienceRequired * Mathf.Pow(experienceMultiplier, level - 1));
+    }
+    
+    /// <summary>
+    /// Obtiene la configuración de drops para un enemigo en una wave específica
+    /// </summary>
+    public EnemyDropConfig GetEnemyDropConfig(PoolManager.PoolType enemyType, int currentWave)
+    {
+        // Buscar la primera configuración que matchee el tipo y wave
+        foreach (var config in enemyDropConfigs)
+        {
+            if (config.enemyType == enemyType && 
+                currentWave >= config.fromWave && 
+                currentWave <= config.toWave)
+            {
+                return config;
+            }
+        }
+        
+        // Si no encuentra nada, retornar config por defecto
+        Debug.LogWarning($"No drop config found for {enemyType} in wave {currentWave}. Using defaults.");
+        return null;
+    }
+    
+    /// <summary>
+    /// Verifica si hay configuraciones de drops definidas
+    /// </summary>
+    public bool HasDropConfigs()
+    {
+        return enemyDropConfigs != null && enemyDropConfigs.Length > 0;
     }
 }
