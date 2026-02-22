@@ -318,6 +318,13 @@ public class ExperienceOrb : MonoBehaviour, IPoolable
             playerExp.AddExperience(experienceValue);
         }
         
+        // Mostrar número de experiencia flotante
+        if (FloatingTextManager.Instance != null)
+        {
+            Vector3 textPosition = transform.position + Vector3.up * 0.5f;
+            FloatingTextManager.Instance.ShowExperience(experienceValue, textPosition);
+        }
+        
         if (PickupAudioManager.Instance != null)
         {
             PickupAudioManager.Instance.PlayExperienceOrbSound(experienceValue);

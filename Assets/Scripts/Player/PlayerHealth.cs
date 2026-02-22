@@ -100,6 +100,13 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
         
+        // Mostrar número de daño flotante
+        if (FloatingTextManager.Instance != null)
+        {
+            Vector3 textPosition = transform.position + Vector3.up * 2f;
+            FloatingTextManager.Instance.ShowDamage(damage, textPosition);
+        }
+        
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         OnDamageTaken?.Invoke();
         

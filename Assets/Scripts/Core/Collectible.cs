@@ -291,6 +291,13 @@ public class Collectible : MonoBehaviour, IPoolable
             {
                 CurrencyManager.Instance.AddCoins(value);
                 
+                // Mostrar número de monedas flotante
+                if (FloatingTextManager.Instance != null)
+                {
+                    Vector3 textPosition = transform.position + Vector3.up * 0.5f;
+                    FloatingTextManager.Instance.ShowCoins(value, textPosition);
+                }
+                
                 if (PickupAudioManager.Instance != null)
                 {
                     PickupAudioManager.Instance.PlayCoinSound();
@@ -299,6 +306,13 @@ public class Collectible : MonoBehaviour, IPoolable
             else if (type == CollectibleType.Diamond)
             {
                 CurrencyManager.Instance.AddDiamonds(value);
+                
+                // Mostrar número de diamantes flotante
+                if (FloatingTextManager.Instance != null)
+                {
+                    Vector3 textPosition = transform.position + Vector3.up * 0.5f;
+                    FloatingTextManager.Instance.ShowDiamonds(value, textPosition);
+                }
                 
                 if (PickupAudioManager.Instance != null)
                 {

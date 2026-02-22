@@ -63,6 +63,13 @@ public class EnemyHealth : MonoBehaviour
             damageTween.TweenFx();
         }
         
+        // Mostrar número de daño flotante
+        if (FloatingTextManager.Instance != null)
+        {
+            Vector3 textPosition = transform.position + Vector3.up * 1.5f;
+            FloatingTextManager.Instance.ShowDamage(damage, textPosition);
+        }
+        
         currentHealth -= damage;
 
         if (currentHealth <= 0)
