@@ -13,11 +13,18 @@ public class PlayerExperience : MonoBehaviour
     private void Awake()
     {
         playerHealth = GetComponent<PlayerHealth>();
-
+    }
+    
+    private void Start()
+    {
         if (ExperienceManager.Instance != null)
         {
             experienceRequiredForNextLevel = ExperienceManager.Instance.CalculateExperienceForLevel(currentLevel);
             ExperienceManager.Instance.NotifyExperienceChanged(currentExperience, experienceRequiredForNextLevel);
+        }
+        else
+        {
+            Debug.LogError("[PlayerExperience] ExperienceManager.Instance is null in Start()!");
         }
     }
 

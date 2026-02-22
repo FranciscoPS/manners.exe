@@ -6,13 +6,11 @@ public class FloatingText : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private float lifetime = 1f;
-    [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float fadeStartTime = 0.5f;
     
     private TextMeshProUGUI textMesh;
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
-    private float timer;
     private Tween moveTween;
     private Tween fadeTween;
     
@@ -83,8 +81,6 @@ public class FloatingText : MonoBehaviour
                     FloatingTextManager.Instance.ReturnToPool(this);
                 }
             });
-        
-        timer = 0f;
     }
     
     private void OnDestroy()
