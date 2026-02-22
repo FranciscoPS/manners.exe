@@ -83,4 +83,16 @@ public class PauseMenu : MonoBehaviour
         if (helpPanel != null)
             helpPanel.SetActive(true);
     }
+
+    public void OnHelpReturnButtonPressed()
+    {
+        if (helpPanel != null)
+            helpPanel.SetActive(false);
+
+        if (pausePanel != null)
+            pausePanel.SetActive(true);
+
+        isPaused = true;
+        Time.timeScale = 0f;
+    }
 }
