@@ -29,6 +29,10 @@ public class LevelUpManager : MonoBehaviour
     private bool shopOnCooldown = false;
     private ShopScript connectedShop;
     
+    // Variables para pausar el cooldown cuando la tienda está abierta
+    private bool cooldownPaused = false;
+    private float pausedCooldownTimeRemaining = 0f;
+    
     private InputAction closeShopAction;
 
     private void Awake()
@@ -92,14 +96,14 @@ public class LevelUpManager : MonoBehaviour
             CloseLevelUp();
         }
         
-        // Actualizar cooldown DENTRO del panel si está abierto en modo Shop (TIEMPO REAL)
+        // Actualizar cooldown DENTRO del panel si está abierto en modo Shop (mostrar tiempo pausado)
         if (levelUpActive && currentMode == UpgradeMode.Shop && shopOnCooldown)
         {
             UpdateCooldownDisplay();
         }
         
-        // Verificar si el cooldown terminó
-        if (shopOnCooldown && ShopUpgradeDatabase.Instance != null && Time.unscaledTime - lastPurchaseTime >= ShopUpgradeDatabase.Instance.ShopGlobalCooldown)
+        // Verificar si el cooldown terminó (SOLO si NO está pausado)
+        if (shopOnCooldown && !cooldownPaused && ShopUpgradeDatabase.Instance != null && Time.unscaledTime - lastPurchaseTime >= ShopUpgradeDatabase.Instance.ShopGlobalCooldown)
         {
             shopOnCooldown = false;
             
@@ -231,9 +235,18 @@ public class LevelUpManager : MonoBehaviour
     {
         if (cooldownWarningText == null) return;
         
-        float timeElapsed = Time.unscaledTime - lastPurchaseTime;
-        float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
-        float timeRemaining = cooldown - timeElapsed;
+        // Si el cooldown está pausado, mostrar el tiempo pausado
+        float timeRemaining;
+        if (cooldownPaused)
+        {
+            timeRemaining = pausedCooldownTimeRemaining;
+        }
+        else
+        {
+            float timeElapsed = Time.unscaledTime - lastPurchaseTime;
+            float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
+            timeRemaining = cooldown - timeElapsed;
+        }
         
         if (timeRemaining > 0)
         {
@@ -280,6 +293,10 @@ public class LevelUpManager : MonoBehaviour
         if (!shopOnCooldown)
             return 0f;
         
+        // Si el cooldown está pausado, retornar el tiempo pausado
+        if (cooldownPaused)
+            return pausedCooldownTimeRemaining;
+        
         float timeElapsed = Time.unscaledTime - lastPurchaseTime;
         float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
         return Mathf.Max(0f, cooldown - timeElapsed);
@@ -302,6 +319,15 @@ public class LevelUpManager : MonoBehaviour
         if (closeInstructionText != null)
         {
             closeInstructionText.gameObject.SetActive(false);
+        }
+        
+        // Si hay cooldown activo, pausarlo
+        if (shopOnCooldown)
+        {
+            float timeElapsed = Time.unscaledTime - lastPurchaseTime;
+            float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
+            pausedCooldownTimeRemaining = Mathf.Max(0f, cooldown - timeElapsed);
+            cooldownPaused = true;
         }
         
         GenerateUpgradeOptions(UpgradeMode.Shop);
@@ -396,6 +422,15 @@ public class LevelUpManager : MonoBehaviour
             levelUpPanel.SetActive(false);
 
         Time.timeScale = 1f;
+        
+        // Si el cooldown estaba pausado, reanudarlo desde donde quedó
+        if (cooldownPaused)
+        {
+            cooldownPaused = false;
+            // Calcular el nuevo lastPurchaseTime basado en el tiempo restante
+            float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
+            lastPurchaseTime = Time.unscaledTime - (cooldown - pausedCooldownTimeRemaining);
+        }
         
         // Notificar al ShopScript que se cerró
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
