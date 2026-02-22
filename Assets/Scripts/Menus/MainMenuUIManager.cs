@@ -35,6 +35,7 @@ public class MainMenuUIManager : MonoBehaviour
     private Dictionary<MenuScreen, GameObject> screenDictionary;
 
     private GameObject currentScreen;
+    private GameObject currentHelpSubPanel;
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
 
@@ -71,15 +72,88 @@ public class MainMenuUIManager : MonoBehaviour
                 screen.SetActive(false);
         }
 
+        currentHelpSubPanel = null;
         ShowScreen(MenuScreen.Main);
+    }
+
+    private bool IsHelpSubscreen(MenuScreen screen)
+    {
+        return screen == MenuScreen.HelpMovimiento
+            || screen == MenuScreen.HelpExperiencia
+            || screen == MenuScreen.HelpEnemigos
+            || screen == MenuScreen.HelpMejoras;
     }
 
     public void ShowScreen(MenuScreen screen)
     {
-        if (currentScreen != null)
-            currentScreen.SetActive(false);
+        if (IsHelpSubscreen(screen))
+        {
+            if (!screenDictionary.TryGetValue(screen, out GameObject subPanel) || subPanel == null)
+                return;
 
-        if (screenDictionary.TryGetValue(screen, out GameObject screenToShow))
+            if (helpPanel != null && !helpPanel.activeSelf)
+            {
+                if (currentScreen != null && currentScreen != helpPanel)
+                {
+                    currentScreen.SetActive(false);
+                }
+                helpPanel.SetActive(true);
+                currentScreen = helpPanel;
+            }
+
+            if (currentHelpSubPanel != null && currentHelpSubPanel != subPanel)
+            {
+                currentHelpSubPanel.SetActive(false);
+                currentHelpSubPanel = null;
+            }
+
+            subPanel.SetActive(true);
+            currentHelpSubPanel = subPanel;
+            return;
+        }
+
+        if (screen == MenuScreen.Help)
+        {
+            if (currentScreen != null && currentScreen != helpPanel)
+            {
+                currentScreen.SetActive(false);
+            }
+
+            if (currentHelpSubPanel != null)
+            {
+                currentHelpSubPanel.SetActive(false);
+                currentHelpSubPanel = null;
+            }
+
+            if (helpPanel != null)
+            {
+                helpPanel.SetActive(true);
+                currentScreen = helpPanel;
+            }
+            return;
+        }
+
+        if (currentScreen == helpPanel)
+        {
+            if (currentHelpSubPanel != null)
+            {
+                currentHelpSubPanel.SetActive(false);
+                currentHelpSubPanel = null;
+            }
+
+            if (helpPanel != null)
+            {
+                helpPanel.SetActive(false);
+            }
+        }
+
+        if (currentScreen != null)
+        {
+            currentScreen.SetActive(false);
+            currentScreen = null;
+        }
+
+        if (screenDictionary.TryGetValue(screen, out GameObject screenToShow) && screenToShow != null)
         {
             screenToShow.SetActive(true);
             currentScreen = screenToShow;
@@ -97,7 +171,6 @@ public class MainMenuUIManager : MonoBehaviour
             .SetUpdate(true)
             .OnComplete(() =>
             {
-                // Cargar la siguiente escena; el overlay se destruirá en el evento sceneLoaded
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
             });
     }
