@@ -18,6 +18,7 @@ public class PlayerHealth : MonoBehaviour
 
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
+    public bool IsDead => isDead;
 
     private int consecutiveHits = 0;
     private float lastHitTime = -999f;
@@ -148,6 +149,14 @@ public class PlayerHealth : MonoBehaviour
         if (controller != null)
             controller.enabled = false;
 
+        PlayerExperience exp = GetComponent<PlayerExperience>();
+        if (exp != null)
+            exp.enabled = false;
+
+        AutoAttackSystem autoAttack = GetComponent<AutoAttackSystem>();
+        if (autoAttack != null)
+            autoAttack.enabled = false;
+
         Physics.IgnoreLayerCollision(playerLayer, enemyLayer, true);
 
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -161,7 +170,7 @@ public class PlayerHealth : MonoBehaviour
         }
 
         if (animator != null)
-            animator.SetTrigger("isDead");
+            animator.SetTrigger("isPlayerDead");
 
         if (hitAnmationCorrutine != null)
         {

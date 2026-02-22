@@ -10,7 +10,7 @@ public class PlayerExperience : MonoBehaviour
 
     private PlayerHealth playerHealth;
 
-    private void Start()
+    private void Awake()
     {
         playerHealth = GetComponent<PlayerHealth>();
 
@@ -23,7 +23,10 @@ public class PlayerExperience : MonoBehaviour
 
     public void AddExperience(int amount)
     {
-        if (playerHealth != null && playerHealth.CurrentHealth <= 0)
+        if (playerHealth == null)
+            return;
+
+        if (playerHealth.IsDead)
             return;
 
         currentExperience += amount;
@@ -38,6 +41,9 @@ public class PlayerExperience : MonoBehaviour
 
     private void CheckLevelUp()
     {
+        if (playerHealth != null && playerHealth.IsDead)
+            return;
+
         while (currentExperience >= experienceRequiredForNextLevel)
         {
             currentExperience -= experienceRequiredForNextLevel;
