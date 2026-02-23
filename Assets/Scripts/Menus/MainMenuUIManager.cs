@@ -21,18 +21,18 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject audioPanel;
     [SerializeField] private GameObject controlesPanel;
 
-    //[Header("Upgrades Subscreens")]
-    //[SerializeField] private GameObject habilidadesPanel;
+    [Header("Upgrades Subscreens")]
+    [SerializeField] private GameObject habilidadesPanel;
     //[SerializeField] private GameObject arbolDeHabilidesPanel;
     //[SerializeField] private GameObject detallesPanel;
 
-    //[Header("Tienda Subscreens")]
-    //[SerializeField] private GameObject atuendosPanel;
+    [Header("Tienda Subscreens")]
+    [SerializeField] private GameObject atuendosPanel;
     //[SerializeField] private GameObject efectosPanel;
     //[SerializeField] private GameObject monedasPanel;
 
-    //[Header("Personalizacion Subscreens")]
-    //[SerializeField] private GameObject skinsPanel;
+    [Header("Personalizacion Subscreens")]
+    [SerializeField] private GameObject skinsPanel;
     //[SerializeField] private GameObject attackEffectsPanel;
 
     [Header("Help Subscreens")]
@@ -50,6 +50,9 @@ public class MainMenuUIManager : MonoBehaviour
     private GameObject currentScreen;
     private GameObject currentOptionsSubPanel;
     private GameObject currentHelpSubPanel;
+    private GameObject currentUpgradesSubPanel;
+    private GameObject currentTiendaSubPanel;
+    private GameObject currentPersonalizacionSubPanel;
 
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
@@ -73,18 +76,18 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Audio, audioPanel },
             { MenuScreen.Controles, controlesPanel },
 
-            //// Upgrades
-            //{ MenuScreen.UpgradesHabilidades, habilidadesPanel },
+            // Upgrades
+            { MenuScreen.UpgradesHabilidades, habilidadesPanel },
             //{ MenuScreen.UpgradesArbolDeHabilidades, arbolDeHabilidesPanel },
             //{ MenuScreen.UpgradesDetalles, detallesPanel },
 
-            //// Tienda
-            //{ MenuScreen.TiendaAtuendos, atuendosPanel },
+            // Tienda
+            { MenuScreen.TiendaAtuendos, atuendosPanel },
             //{ MenuScreen.TiendaEfectos, efectosPanel },
             //{ MenuScreen.TiendaMonedas, monedasPanel },
 
-            //// Personalizacion
-            //{ MenuScreen.PersonalizacionSkins, skinsPanel },
+            // Personalizacion
+            { MenuScreen.PersonalizacionSkins, skinsPanel },
             //{ MenuScreen.PersonalizacionAttackEffects, attackEffectsPanel },
 
             // Help Subscreens
@@ -100,9 +103,16 @@ public class MainMenuUIManager : MonoBehaviour
                 screen.SetActive(false);
         }
 
+        currentHelpSubPanel = null;
+        currentOptionsSubPanel = null;
+        currentUpgradesSubPanel = null;
+        currentTiendaSubPanel = null;
+        currentPersonalizacionSubPanel = null;
+
         ShowScreen(MenuScreen.Main);
     }
 
+    // Helpers para identificar grupos de subscreens
     private bool IsOptionsSubscreen(MenuScreen screen)
     {
         return screen == MenuScreen.Help
@@ -118,66 +128,76 @@ public class MainMenuUIManager : MonoBehaviour
             || screen == MenuScreen.HelpMejoras;
     }
 
+    private bool IsUpgradesSubscreen(MenuScreen screen)
+    {
+        return screen == MenuScreen.UpgradesHabilidades
+            || screen == MenuScreen.UpgradesArbolDeHabilidades
+            || screen == MenuScreen.UpgradesDetalles;
+    }
+
+    private bool IsTiendaSubscreen(MenuScreen screen)
+    {
+        return screen == MenuScreen.TiendaAtuendos
+            || screen == MenuScreen.TiendaEfectos
+            || screen == MenuScreen.TiendaMonedas;
+    }
+
+    private bool IsPersonalizacionSubscreen(MenuScreen screen)
+    {
+        return screen == MenuScreen.PersonalizacionSkins
+            || screen == MenuScreen.PersonalizacionAttackEffects;
+    }
+
     public void ShowScreen(MenuScreen screen)
     {
-        // Manejo de subpantallas de Help (HelpMovimiento, HelpExperiencia, ...)
+        // --- HELP subscreens (open inside helpPanel, keep helpPanel active) ---
         if (IsHelpSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject helpSub) || helpSub == null)
                 return;
 
-            // Apagar optionsPanel si estaba visible
+            // Ensure options container hidden
             if (optionsPanel != null && optionsPanel.activeSelf)
                 optionsPanel.SetActive(false);
 
-            // Si había otra pantalla activa y no es helpPanel, apagarla
+            // Deactivate other top-level if it's not help container
             if (currentScreen != null && currentScreen != helpPanel)
-            {
                 currentScreen.SetActive(false);
-            }
 
-            // Activar helpPanel (contenedor)
+            // Activate help container
             if (helpPanel != null && !helpPanel.activeSelf)
-            {
                 helpPanel.SetActive(true);
-            }
 
             currentScreen = helpPanel;
             currentOptionsSubPanel = helpPanel;
 
-            // Apagar subhelp anterior
+            // Deactivate previous help subpanel
             if (currentHelpSubPanel != null && currentHelpSubPanel != helpSub)
-            {
                 currentHelpSubPanel.SetActive(false);
-            }
 
             helpSub.SetActive(true);
             currentHelpSubPanel = helpSub;
             return;
         }
 
-        // Manejo de subpantallas de Options (Audio, Controles, Help)
+        // --- OPTIONS subscreens (Audio/Controles/Help as panel children or separate panels) ---
         if (IsOptionsSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject subPanel) || subPanel == null)
                 return;
 
-            // Apagar optionsPanel si estaba visible
+            // If options root visible, hide it (we'll show the selected subpanel)
             if (optionsPanel != null && optionsPanel.activeSelf)
                 optionsPanel.SetActive(false);
 
-            // Si había otra pantalla activa distinta del subpanel, apagarla
             if (currentScreen != null && currentScreen != subPanel)
-            {
                 currentScreen.SetActive(false);
-            }
 
-            // Activar el subpanel seleccionado (Audio o Controles o Help)
             subPanel.SetActive(true);
             currentScreen = subPanel;
             currentOptionsSubPanel = subPanel;
 
-            // Si abrimos 'Help' como subpanel, resetear currentHelpSubPanel (se gestionará si se abre un sub-sub)
+            // If opening Help as an options subpanel, clear help substate
             if (screen == MenuScreen.Help)
             {
                 if (currentHelpSubPanel != null)
@@ -190,27 +210,108 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // Mostrar la pantalla Options (raíz): apagar subscreens y mostrar optionsPanel
+        // --- UPGRADES subscreens ---
+        if (IsUpgradesSubscreen(screen))
+        {
+            if (!screenDictionary.TryGetValue(screen, out GameObject upgradesSub) || upgradesSub == null)
+                return;
+
+            // Hide other root panels if needed
+            if (currentScreen != null && currentScreen != upgradesPanel)
+                currentScreen.SetActive(false);
+
+            // Activate upgrades container
+            if (upgradesPanel != null && !upgradesPanel.activeSelf)
+                upgradesPanel.SetActive(true);
+
+            currentScreen = upgradesPanel;
+
+            // Deactivate previous upgrades subpanel
+            if (currentUpgradesSubPanel != null && currentUpgradesSubPanel != upgradesSub)
+                currentUpgradesSubPanel.SetActive(false);
+
+            upgradesSub.SetActive(true);
+            currentUpgradesSubPanel = upgradesSub;
+
+            // Ensure other groups' subpanels hidden
+            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
+            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
+            if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
+            if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel.SetActive(false); currentPersonalizacionSubPanel = null; }
+
+            return;
+        }
+
+        // --- TIENDA subscreens ---
+        if (IsTiendaSubscreen(screen))
+        {
+            if (!screenDictionary.TryGetValue(screen, out GameObject tiendaSub) || tiendaSub == null)
+                return;
+
+            if (currentScreen != null && currentScreen != tiendaPanel)
+                currentScreen.SetActive(false);
+
+            if (tiendaPanel != null && !tiendaPanel.activeSelf)
+                tiendaPanel.SetActive(true);
+
+            currentScreen = tiendaPanel;
+
+            if (currentTiendaSubPanel != null && currentTiendaSubPanel != tiendaSub)
+                currentTiendaSubPanel.SetActive(false);
+
+            tiendaSub.SetActive(true);
+            currentTiendaSubPanel = tiendaSub;
+
+            // Hide other groups' subpanels
+            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
+            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
+            if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
+            if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel.SetActive(false); currentPersonalizacionSubPanel = null; }
+
+            return;
+        }
+
+        // --- PERSONALIZACION subscreens ---
+        if (IsPersonalizacionSubscreen(screen))
+        {
+            if (!screenDictionary.TryGetValue(screen, out GameObject persSub) || persSub == null)
+                return;
+
+            if (currentScreen != null && currentScreen != personalizacionPanel)
+                currentScreen.SetActive(false);
+
+            if (personalizacionPanel != null && !personalizacionPanel.activeSelf)
+                personalizacionPanel.SetActive(true);
+
+            currentScreen = personalizacionPanel;
+
+            if (currentPersonalizacionSubPanel != null && currentPersonalizacionSubPanel != persSub)
+                currentPersonalizacionSubPanel.SetActive(false);
+
+            persSub.SetActive(true);
+            currentPersonalizacionSubPanel = persSub;
+
+            // Hide other groups' subpanels
+            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
+            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
+            if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
+            if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
+
+            return;
+        }
+
+        // --- Top-level: show Options root ---
         if (screen == MenuScreen.Options)
         {
-            // Apagar cualquier pantalla activa
             if (currentScreen != null)
-            {
                 currentScreen.SetActive(false);
-            }
 
-            // Apagar subscreens de options y help
-            if (currentOptionsSubPanel != null)
-            {
-                currentOptionsSubPanel.SetActive(false);
-                currentOptionsSubPanel = null;
-            }
-
-            if (currentHelpSubPanel != null)
-            {
-                currentHelpSubPanel.SetActive(false);
-                currentHelpSubPanel = null;
-            }
+            // Hide any open subs
+            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
+            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
+            if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
+            if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
+            if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel.SetActive(false); currentPersonalizacionSubPanel = null; }
 
             if (optionsPanel != null)
             {
@@ -220,7 +321,7 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // Caso general: apagar todo el diccionario y mostrar la pantalla solicitada
+        // --- Default: deactivate all dictionary panels and show requested top-level screen ---
         foreach (var panel in screenDictionary.Values)
         {
             if (panel != null)
@@ -233,8 +334,12 @@ public class MainMenuUIManager : MonoBehaviour
             currentScreen = screenToShow;
         }
 
+        // reset subs
         currentOptionsSubPanel = null;
         currentHelpSubPanel = null;
+        currentUpgradesSubPanel = null;
+        currentTiendaSubPanel = null;
+        currentPersonalizacionSubPanel = null;
     }
 
     public void BackToOptions()
