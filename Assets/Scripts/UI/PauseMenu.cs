@@ -81,6 +81,12 @@ public class PauseMenu : MonoBehaviour
             CurrencyManager.Instance.ResetSessionCurrency();
         }
 
+        // Resetear el timer de partida
+        if (GameTimeManager.Instance != null)
+        {
+            GameTimeManager.Instance.ResetGame();
+        }
+
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }

@@ -31,6 +31,12 @@ public class GameOverUI : MonoBehaviour
             CurrencyManager.Instance.ResetSessionCurrency();
         }
 
+        // Resetear el timer de partida
+        if (GameTimeManager.Instance != null)
+        {
+            GameTimeManager.Instance.ResetGame();
+        }
+
         if (isTransitioning) return;
         isTransitioning = true;
 
