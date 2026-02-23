@@ -301,6 +301,9 @@ public class MainMenuUIManager : MonoBehaviour
         Image img = imgObj.AddComponent<Image>();
         img.color = Color.black;
 
+        // Asegurar que el overlay se destruya al cargar la siguiente escena
+        fadeOverlay.AddComponent<FadeOverlayController>();
+
         fadeOverlay.SetActive(false);
     }
 }

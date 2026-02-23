@@ -2942,13 +2942,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 28
-  m_fontSizeBase: 28
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 17
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -3238,10 +3238,10 @@ RectTransform:
   - {fileID: 1360469450}
   m_Father: {fileID: 1996401473}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 170, y: -20}
+  m_SizeDelta: {x: 300, y: 111.25}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &332660733
 MonoBehaviour:
@@ -9138,10 +9138,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "La experiencia se consigue al matar enemigos y destruir edificios. \n\n\n\nAl
-    subir un nivel de experiencia se otorgar\xE1 una mejora de estad\xEDsticas aleatoria.
-    \n\n\n\nAl subir de nivel, el siguiente necesitara mas experiencia para subir
-    . "
+  m_text: "- La experiencia se consigue al matar enemigos y destruir edificios. \n\n\n-
+    Al subir un nivel de experiencia se otorgar\xE1 una mejora de estad\xEDsticas
+    aleatoria. \n\n\n- Al subir de nivel, el siguiente necesitara mas experiencia
+    para subir . "
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9168,8 +9168,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -9853,7 +9853,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1141013227
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11057,9 +11057,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Los enemigos aparecer\xE1n de manera autom\xE1tica a lo largo de mapa.
-    \n\n\nEstos avanzaran directamente hacia el jugador y le har\xE1n da\xF1o al
-    colisionar con el. \n\n\nConforme avance el tiempo, y el jugador suba mas de
+  m_text: "- Los enemigos aparecer\xE1n de manera autom\xE1tica a lo largo de mapa.
+    \n\n\n- Estos avanzaran directamente hacia el jugador y le har\xE1n da\xF1o al
+    colisionar con el. \n\n\n- Conforme avance el tiempo, y el jugador suba mas de
     nivel, las estad\xEDsticas de los enemigos ir\xE1n subiendo de manera progresiva  "
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -11087,8 +11087,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -11444,10 +11444,10 @@ RectTransform:
   - {fileID: 283125809}
   m_Father: {fileID: 1996401473}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 170, y: -443.75}
+  m_SizeDelta: {x: 300, y: 111.25}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1287397463
 MonoBehaviour:
@@ -12208,13 +12208,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 28
-  m_fontSizeBase: 28
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 17
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -12770,10 +12770,10 @@ RectTransform:
   - {fileID: 2076514985}
   m_Father: {fileID: 1996401473}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 170, y: -176.25}
+  m_SizeDelta: {x: 300, y: 111.25}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1456874255
 MonoBehaviour:
@@ -14607,10 +14607,10 @@ RectTransform:
   - {fileID: 1497587132}
   m_Father: {fileID: 1996401473}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 170, y: -600}
+  m_SizeDelta: {x: 300, y: 111.25}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1654717494
 MonoBehaviour:
@@ -15348,7 +15348,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1762062416
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15857,13 +15857,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 17
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -17093,9 +17093,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Las mejoras de las estad\xEDsticas se conseguir\xE1n en el momento que
+  m_text: "- Las mejoras de las estad\xEDsticas se conseguir\xE1n en el momento que
     el jugador suba de nivel. Las mejoras que se le dan a escoger al jugador son
-    aleatorias. \n\n\n\nLas mejoras de las armas se hacen a trav\xE9s de la tienda
+    aleatorias. \n\n\n- Las mejoras de las armas se hacen a trav\xE9s de la tienda
     de mejoras, el precio de estas ira subiendo conforme el jugador las vaya comprando.  "
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17123,8 +17123,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -17260,13 +17260,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 28
-  m_fontSizeBase: 28
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 17
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -17608,13 +17608,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 28
-  m_fontSizeBase: 28
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 17
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -18332,7 +18332,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2042277213
 RectTransform:
   m_ObjectHideFlags: 0
