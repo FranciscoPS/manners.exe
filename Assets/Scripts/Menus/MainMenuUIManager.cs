@@ -16,30 +16,24 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject personalizacionPanel;
     [SerializeField] private GameObject creditosPanel;
 
-    [Header("Options Screens")]
+    [Header("Options Subscreens")]
     [SerializeField] private GameObject helpPanel;
     [SerializeField] private GameObject audioPanel;
     [SerializeField] private GameObject controlesPanel;
 
-    [Header("Upgrades Subscreens")]
-    [SerializeField] private GameObject habilidadesPanel;
-    [SerializeField] private GameObject arbolDeHabilidesPanel;
-    [SerializeField] private GameObject detallesPanel;
+    //[Header("Upgrades Subscreens")]
+    //[SerializeField] private GameObject habilidadesPanel;
+    //[SerializeField] private GameObject arbolDeHabilidesPanel;
+    //[SerializeField] private GameObject detallesPanel;
 
-    [Header("Tienda Subscreens")]
-    [SerializeField] private GameObject atuendosPanel;
-    [SerializeField] private GameObject efectosPanel;
-    [SerializeField] private GameObject monedasPanel;
+    //[Header("Tienda Subscreens")]
+    //[SerializeField] private GameObject atuendosPanel;
+    //[SerializeField] private GameObject efectosPanel;
+    //[SerializeField] private GameObject monedasPanel;
 
-    [Header("Personalizacion Subscreens")]
-    [SerializeField] private GameObject skinsPanel;
-    [SerializeField] private GameObject attackEffectsPanel;
-
-    [Header("Audio Subscreens")]
-    [SerializeField] private GameObject sfxControlPanel;
-
-    [Header("Controles Subscreens")]
-    [SerializeField] private GameObject controlesHelpPanel;
+    //[Header("Personalizacion Subscreens")]
+    //[SerializeField] private GameObject skinsPanel;
+    //[SerializeField] private GameObject attackEffectsPanel;
 
     [Header("Help Subscreens")]
     [SerializeField] private GameObject movimientoPanel;
@@ -54,7 +48,9 @@ public class MainMenuUIManager : MonoBehaviour
     private Dictionary<MenuScreen, GameObject> screenDictionary;
 
     private GameObject currentScreen;
+    private GameObject currentOptionsSubPanel;
     private GameObject currentHelpSubPanel;
+
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
 
@@ -72,30 +68,24 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Personalizacion, personalizacionPanel },
             { MenuScreen.Creditos, creditosPanel },
 
-            // Options
+            // Options Subscreens
             { MenuScreen.Help, helpPanel },
             { MenuScreen.Audio, audioPanel },
             { MenuScreen.Controles, controlesPanel },
 
-            // Upgrades Subscreens
-            { MenuScreen.UpgradesHabilidades, habilidadesPanel },
-            { MenuScreen.UpgradesArbolDeHabilidades, arbolDeHabilidesPanel },
-            { MenuScreen.UpgradesDetalles, detallesPanel },
+            //// Upgrades
+            //{ MenuScreen.UpgradesHabilidades, habilidadesPanel },
+            //{ MenuScreen.UpgradesArbolDeHabilidades, arbolDeHabilidesPanel },
+            //{ MenuScreen.UpgradesDetalles, detallesPanel },
 
-            // Tienda Subscreens
-            { MenuScreen.TiendaAtuendos, atuendosPanel },
-            { MenuScreen.TiendaEfectos, efectosPanel },
-            { MenuScreen.TiendaMonedas, monedasPanel },
+            //// Tienda
+            //{ MenuScreen.TiendaAtuendos, atuendosPanel },
+            //{ MenuScreen.TiendaEfectos, efectosPanel },
+            //{ MenuScreen.TiendaMonedas, monedasPanel },
 
-            // Personalizacion Subscreens
-            { MenuScreen.PersonalizacionSkins, skinsPanel },
-            { MenuScreen.PersonalizacionAttackEffects, attackEffectsPanel },
-
-            // Audio Subscreens
-            { MenuScreen.AudioSFXControl, sfxControlPanel },
-
-            // Controles Subscreens
-            { MenuScreen.ControlesHelp, controlesHelpPanel },
+            //// Personalizacion
+            //{ MenuScreen.PersonalizacionSkins, skinsPanel },
+            //{ MenuScreen.PersonalizacionAttackEffects, attackEffectsPanel },
 
             // Help Subscreens
             { MenuScreen.HelpMovimiento, movimientoPanel },
@@ -110,8 +100,14 @@ public class MainMenuUIManager : MonoBehaviour
                 screen.SetActive(false);
         }
 
-        currentHelpSubPanel = null;
         ShowScreen(MenuScreen.Main);
+    }
+
+    private bool IsOptionsSubscreen(MenuScreen screen)
+    {
+        return screen == MenuScreen.Help
+            || screen == MenuScreen.Audio
+            || screen == MenuScreen.Controles;
     }
 
     private bool IsHelpSubscreen(MenuScreen screen)
@@ -124,71 +120,111 @@ public class MainMenuUIManager : MonoBehaviour
 
     public void ShowScreen(MenuScreen screen)
     {
+        // Manejo de subpantallas de Help (HelpMovimiento, HelpExperiencia, ...)
         if (IsHelpSubscreen(screen))
         {
-            if (!screenDictionary.TryGetValue(screen, out GameObject subPanel) || subPanel == null)
+            if (!screenDictionary.TryGetValue(screen, out GameObject helpSub) || helpSub == null)
                 return;
 
-            if (helpPanel != null && !helpPanel.activeSelf)
-            {
-                if (currentScreen != null && currentScreen != helpPanel)
-                {
-                    currentScreen.SetActive(false);
-                }
-                helpPanel.SetActive(true);
-                currentScreen = helpPanel;
-            }
+            // Apagar optionsPanel si estaba visible
+            if (optionsPanel != null && optionsPanel.activeSelf)
+                optionsPanel.SetActive(false);
 
-            if (currentHelpSubPanel != null && currentHelpSubPanel != subPanel)
-            {
-                currentHelpSubPanel.SetActive(false);
-                currentHelpSubPanel = null;
-            }
-
-            subPanel.SetActive(true);
-            currentHelpSubPanel = subPanel;
-            return;
-        }
-
-        if (screen == MenuScreen.Help)
-        {
+            // Si había otra pantalla activa y no es helpPanel, apagarla
             if (currentScreen != null && currentScreen != helpPanel)
             {
                 currentScreen.SetActive(false);
             }
 
+            // Activar helpPanel (contenedor)
+            if (helpPanel != null && !helpPanel.activeSelf)
+            {
+                helpPanel.SetActive(true);
+            }
+
+            currentScreen = helpPanel;
+            currentOptionsSubPanel = helpPanel;
+
+            // Apagar subhelp anterior
+            if (currentHelpSubPanel != null && currentHelpSubPanel != helpSub)
+            {
+                currentHelpSubPanel.SetActive(false);
+            }
+
+            helpSub.SetActive(true);
+            currentHelpSubPanel = helpSub;
+            return;
+        }
+
+        // Manejo de subpantallas de Options (Audio, Controles, Help)
+        if (IsOptionsSubscreen(screen))
+        {
+            if (!screenDictionary.TryGetValue(screen, out GameObject subPanel) || subPanel == null)
+                return;
+
+            // Apagar optionsPanel si estaba visible
+            if (optionsPanel != null && optionsPanel.activeSelf)
+                optionsPanel.SetActive(false);
+
+            // Si había otra pantalla activa distinta del subpanel, apagarla
+            if (currentScreen != null && currentScreen != subPanel)
+            {
+                currentScreen.SetActive(false);
+            }
+
+            // Activar el subpanel seleccionado (Audio o Controles o Help)
+            subPanel.SetActive(true);
+            currentScreen = subPanel;
+            currentOptionsSubPanel = subPanel;
+
+            // Si abrimos 'Help' como subpanel, resetear currentHelpSubPanel (se gestionará si se abre un sub-sub)
+            if (screen == MenuScreen.Help)
+            {
+                if (currentHelpSubPanel != null)
+                {
+                    currentHelpSubPanel.SetActive(false);
+                    currentHelpSubPanel = null;
+                }
+            }
+
+            return;
+        }
+
+        // Mostrar la pantalla Options (raíz): apagar subscreens y mostrar optionsPanel
+        if (screen == MenuScreen.Options)
+        {
+            // Apagar cualquier pantalla activa
+            if (currentScreen != null)
+            {
+                currentScreen.SetActive(false);
+            }
+
+            // Apagar subscreens de options y help
+            if (currentOptionsSubPanel != null)
+            {
+                currentOptionsSubPanel.SetActive(false);
+                currentOptionsSubPanel = null;
+            }
+
             if (currentHelpSubPanel != null)
             {
                 currentHelpSubPanel.SetActive(false);
                 currentHelpSubPanel = null;
             }
 
-            if (helpPanel != null)
+            if (optionsPanel != null)
             {
-                helpPanel.SetActive(true);
-                currentScreen = helpPanel;
+                optionsPanel.SetActive(true);
+                currentScreen = optionsPanel;
             }
             return;
         }
 
-        if (currentScreen == helpPanel)
+        // Caso general: apagar todo el diccionario y mostrar la pantalla solicitada
+        foreach (var panel in screenDictionary.Values)
         {
-            if (currentHelpSubPanel != null)
-            {
-                currentHelpSubPanel.SetActive(false);
-                currentHelpSubPanel = null;
-            }
-
-            if (helpPanel != null)
-            {
-                helpPanel.SetActive(false);
-            }
-        }
-
-        if (currentScreen != null)
-        {
-            currentScreen.SetActive(false);
-            currentScreen = null;
+            if (panel != null)
+                panel.SetActive(false);
         }
 
         if (screenDictionary.TryGetValue(screen, out GameObject screenToShow) && screenToShow != null)
@@ -196,6 +232,19 @@ public class MainMenuUIManager : MonoBehaviour
             screenToShow.SetActive(true);
             currentScreen = screenToShow;
         }
+
+        currentOptionsSubPanel = null;
+        currentHelpSubPanel = null;
+    }
+
+    public void BackToOptions()
+    {
+        ShowScreen(MenuScreen.Options);
+    }
+
+    public void ShowScreenByIndex(int index)
+    {
+        ShowScreen((MenuScreen)index);
     }
 
     public void OnPlayPressed()
@@ -205,7 +254,8 @@ public class MainMenuUIManager : MonoBehaviour
         fadeCanvasGroup.alpha = 0f;
         fadeOverlay.SetActive(true);
 
-        fadeCanvasGroup.DOFade(1f, fadeDuration)
+        fadeCanvasGroup
+            .DOFade(1f, fadeDuration)
             .SetUpdate(true)
             .OnComplete(() =>
             {
@@ -222,12 +272,6 @@ public class MainMenuUIManager : MonoBehaviour
 #endif
     }
 
-    public void ShowScreenByIndex(int screenIndex)
-    {
-        MenuScreen screen = (MenuScreen)screenIndex;
-        ShowScreen(screen);
-    }
-
     private void CreateFadeOverlayIfNeeded()
     {
         if (fadeCanvasGroup != null) return;
@@ -238,6 +282,7 @@ public class MainMenuUIManager : MonoBehaviour
         Canvas canvas = fadeOverlay.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = overlaySortingOrder;
+
         fadeOverlay.AddComponent<CanvasScaler>();
         fadeOverlay.AddComponent<GraphicRaycaster>();
 
@@ -256,8 +301,6 @@ public class MainMenuUIManager : MonoBehaviour
         Image img = imgObj.AddComponent<Image>();
         img.color = Color.black;
 
-        fadeOverlay.AddComponent<FadeOverlayController>();
-
         fadeOverlay.SetActive(false);
     }
 }
@@ -265,41 +308,35 @@ public class MainMenuUIManager : MonoBehaviour
 public enum MenuScreen
 {
     // Main Screens
-    Main,                           // 0
-    Options,                        // 1
-    Upgrades,                       // 2
-    Tienda,                         // 3
-    Personalizacion,                // 4
-    Creditos,                       // 5
+    Main,                       // 0
+    Options,                    // 1
+    Upgrades,                   // 2
+    Tienda,                     // 3
+    Personalizacion,            // 4
+    Creditos,                   // 5
 
-    // Options Screens
-    Help,                           // 6
-    Audio,                          // 7
-    Controles,                      // 8
+    // Options Subscreens
+    Help,                       // 6
+    Audio,                      // 7
+    Controles,                  // 8
 
-    // Upgrades Subscreens
-    UpgradesHabilidades,            // 9
-    UpgradesArbolDeHabilidades,     // 10
-    UpgradesDetalles,               // 11
+    // Upgrades
+    UpgradesHabilidades,        // 9
+    UpgradesArbolDeHabilidades, // 10
+    UpgradesDetalles,           // 11
 
-    // Tienda Subscreens
-    TiendaAtuendos,                 // 12
-    TiendaEfectos,                  // 13
-    TiendaMonedas,                  // 14
+    // Tienda
+    TiendaAtuendos,             // 12
+    TiendaEfectos,              // 13
+    TiendaMonedas,              // 14
 
-    // Personalizacion Subscreens
-    PersonalizacionSkins,           // 15
-    PersonalizacionAttackEffects,   // 16
-
-    // Audio Subscreens
-    AudioSFXControl,                // 17
-
-    // Controles Subscreens
-    ControlesHelp,                  // 18
+    // Personalizacion
+    PersonalizacionSkins,       // 15
+    PersonalizacionAttackEffects, // 16
 
     // Help Subscreens
-    HelpMovimiento,                 // 19
-    HelpExperiencia,                // 20
-    HelpEnemigos,                   // 21
-    HelpMejoras                     // 22
+    HelpMovimiento,             // 17
+    HelpExperiencia,            // 18
+    HelpEnemigos,               // 19
+    HelpMejoras                 // 20
 }
