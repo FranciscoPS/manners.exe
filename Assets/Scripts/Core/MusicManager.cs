@@ -68,11 +68,14 @@ public class MusicManager : MonoBehaviour
             return;
         }
 
-        if (!musicSource.isPlaying)
+        // Siempre detener y reiniciar para asegurar que la música suene
+        if (musicSource.isPlaying)
         {
-            musicSource.clip = gameplayMusic;
-            musicSource.Play();
+            musicSource.Stop();
         }
+        
+        musicSource.clip = gameplayMusic;
+        musicSource.Play();
     }
 
     public void StopMusic()

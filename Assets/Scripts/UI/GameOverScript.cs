@@ -56,6 +56,12 @@ public class GameOverUI : MonoBehaviour
 
         Time.timeScale = 1f;
 
+        // Detener la música del juego antes de volver al menú
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.StopMusic();
+        }
+
         fadeImage.DOFade(1f, fadeDuration).OnComplete(() =>
         {
             ResetPlayerEnemyLayerCollision();

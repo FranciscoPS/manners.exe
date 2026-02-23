@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Maneja el tiempo total de la partida actual
@@ -29,11 +30,29 @@ public class GameTimeManager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else if (instance != this)
         {
             Destroy(gameObject);
             return;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Si cargamos una escena que NO es el menú principal, iniciar música y timer
+        if (!scene.name.Contains("Menu") && !scene.name.Contains("MainMenu"))
+        {
+            StartGame();
         }
     }
 
@@ -49,6 +68,12 @@ public class GameTimeManager : MonoBehaviour
     {
         gameStartTime = Time.time;
         isGameActive = true;
+        
+        // Iniciar la música del juego
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.PlayMusic();
+        }
     }
 
     /// <summary>
@@ -66,6 +91,12 @@ public class GameTimeManager : MonoBehaviour
     {
         gameStartTime = Time.time;
         isGameActive = true;
+        
+        // Reiniciar la música del juego
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.PlayMusic();
+        }
     }
 
     /// <summary>

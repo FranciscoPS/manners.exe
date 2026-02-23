@@ -94,6 +94,13 @@ public class PauseMenu : MonoBehaviour
     public void OnReturnToMainMenuButtonPressed()
     {
         Time.timeScale = 1f;
+        
+        // Detener la música del juego antes de volver al menú
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.StopMusic();
+        }
+        
         SceneManager.LoadScene(mainMenuSceneIndex, LoadSceneMode.Single);
     }
 
