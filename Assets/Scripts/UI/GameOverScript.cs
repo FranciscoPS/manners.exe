@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class GameOverUI : MonoBehaviour
 {
     [Header("Fade Settings")]
-    [SerializeField] private Image fadeImage;
     [SerializeField] private float fadeDuration = 1f;
 
     [Header("Scenes")]
@@ -14,15 +13,8 @@ public class GameOverUI : MonoBehaviour
 
     private bool isTransitioning = false;
 
-    private void Awake()
-    {
-        if (fadeImage != null)
-        {
-            Color c = fadeImage.color;
-            c.a = 0f;
-            fadeImage.color = c;
-        }
-    }
+    private GameObject fadeOverlay;
+    private CanvasGroup fadeCanvasGroup;
 
     public void Retry()
     {
@@ -31,7 +23,6 @@ public class GameOverUI : MonoBehaviour
             CurrencyManager.Instance.ResetSessionCurrency();
         }
 
-        // Resetear el timer de partida
         if (GameTimeManager.Instance != null)
         {
             GameTimeManager.Instance.ResetGame();
@@ -42,7 +33,12 @@ public class GameOverUI : MonoBehaviour
 
         Time.timeScale = 1f;
 
-        fadeImage.DOFade(1f, fadeDuration).OnComplete(() =>
+        CreateFadeOverlayIfNeeded();
+
+        fadeCanvasGroup.alpha = 0f;
+        fadeOverlay.SetActive(true);
+
+        fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
         {
             ResetPlayerEnemyLayerCollision();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -56,13 +52,17 @@ public class GameOverUI : MonoBehaviour
 
         Time.timeScale = 1f;
 
-        // Detener la música del juego antes de volver al menú
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.StopMusic();
         }
 
-        fadeImage.DOFade(1f, fadeDuration).OnComplete(() =>
+        CreateFadeOverlayIfNeeded();
+
+        fadeCanvasGroup.alpha = 0f;
+        fadeOverlay.SetActive(true);
+
+        fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
         {
             ResetPlayerEnemyLayerCollision();
             SceneManager.LoadScene(mainMenuSceneName);
@@ -78,5 +78,39 @@ public class GameOverUI : MonoBehaviour
         {
             Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
+    }
+
+    private void CreateFadeOverlayIfNeeded()
+    {
+        if (fadeCanvasGroup != null && fadeOverlay != null) return;
+
+        fadeOverlay = new GameObject("GameOver_FadeOverlay");
+        DontDestroyOnLoad(fadeOverlay);
+
+        Canvas canvas = fadeOverlay.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 1000;
+
+        fadeOverlay.AddComponent<CanvasScaler>();
+        fadeOverlay.AddComponent<GraphicRaycaster>();
+
+        fadeCanvasGroup = fadeOverlay.AddComponent<CanvasGroup>();
+        fadeCanvasGroup.alpha = 0f;
+
+        GameObject imgObj = new GameObject("FadeImage");
+        imgObj.transform.SetParent(fadeOverlay.transform, false);
+
+        RectTransform rt = imgObj.AddComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        Image img = imgObj.AddComponent<Image>();
+        img.color = Color.black;
+
+        fadeOverlay.AddComponent<FadeOverlayController>();
+
+        fadeOverlay.SetActive(false);
     }
 }
