@@ -23,6 +23,10 @@ public class MusicManager : MonoBehaviour
     private float savedMusicVolume; // Para guardar el volumen original
     private bool isVolumeReduced = false;
 
+    private const string MUSIC_VOLUME_KEY = "MusicVolume";
+    private const string SFX_VOLUME_KEY = "SFXVolume";
+    private const string MASTER_VOLUME_KEY = "MasterVolume";
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -36,6 +40,7 @@ public class MusicManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         SetupAudioSource();
+        LoadVolumeSettings();
 
         if (playOnAwake && gameplayMusic != null)
         {
@@ -65,6 +70,33 @@ public class MusicManager : MonoBehaviour
         sfxOneShotSource.volume = sfxVolume;
         sfxOneShotSource.spatialBlend = 0f;
         sfxOneShotSource.priority = 128;
+    }
+
+    private void LoadVolumeSettings()
+    {
+        // Cargar volumen maestro
+        float masterVolume = PlayerPrefs.GetFloat(MASTER_VOLUME_KEY, 1f);
+        AudioListener.volume = masterVolume;
+
+        // Cargar volumen guardado desde PlayerPrefs
+        musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, musicVolume);
+        sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_KEY, sfxVolume);
+
+        // Aplicar volumen cargado a los AudioSources
+        if (musicSource != null)
+        {
+            musicSource.volume = musicVolume;
+        }
+
+        if (sfxLoopSource != null)
+        {
+            sfxLoopSource.volume = sfxVolume;
+        }
+
+        if (sfxOneShotSource != null)
+        {
+            sfxOneShotSource.volume = sfxVolume;
+        }
     }
 
     public void PlayMusic()
@@ -121,6 +153,11 @@ public class MusicManager : MonoBehaviour
     public float GetVolume()
     {
         return musicVolume;
+    }
+
+    public float GetSFXVolume()
+    {
+        return sfxVolume;
     }
 
     public bool IsPlaying()

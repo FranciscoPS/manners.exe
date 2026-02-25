@@ -7773,6 +7773,7 @@ GameObject:
   - component: {fileID: 784891942}
   - component: {fileID: 784891944}
   - component: {fileID: 784891943}
+  - component: {fileID: 784891945}
   m_Layer: 5
   m_Name: AudioPanel
   m_TagString: Untagged
@@ -7840,6 +7841,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 784891941}
   m_CullTransparentMesh: 1
+--- !u!114 &784891945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 784891941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cce09ddf75923e4c90484c6ebb79fcf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioSettingsMenu
+  masterSlider: {fileID: 1381657355}
+  musicSlider: {fileID: 908744082}
+  sfxSlider: {fileID: 168760553}
 --- !u!1 &801954065
 GameObject:
   m_ObjectHideFlags: 0
