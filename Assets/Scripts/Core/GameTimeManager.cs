@@ -69,6 +69,12 @@ public class GameTimeManager : MonoBehaviour
         gameStartTime = Time.time;
         isGameActive = true;
         
+        // Iniciar sesión de estadísticas
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.StartSession();
+        }
+        
         // Iniciar la música del juego
         if (MusicManager.Instance != null)
         {
@@ -91,6 +97,12 @@ public class GameTimeManager : MonoBehaviour
     {
         gameStartTime = Time.time;
         isGameActive = true;
+        
+        // Reiniciar sesión de estadísticas
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.StartSession();
+        }
         
         // Reiniciar la música del juego
         if (MusicManager.Instance != null)

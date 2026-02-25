@@ -56,6 +56,12 @@ public class PlayerExperience : MonoBehaviour
             currentExperience -= experienceRequiredForNextLevel;
             currentLevel++;
             
+            // Registrar nivel en estadísticas
+            if (GameSessionStats.Instance != null)
+            {
+                GameSessionStats.Instance.UpdateMaxLevel(currentLevel);
+            }
+            
             if (ExperienceManager.Instance != null)
             {
                 experienceRequiredForNextLevel = ExperienceManager.Instance.CalculateExperienceForLevel(currentLevel);

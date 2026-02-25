@@ -3263,6 +3263,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOverUI
   fadeDuration: 1
   mainMenuSceneName: MainMenu
+  gameOverPanel: {fileID: 803575742}
+  survivalTimeText: {fileID: 809262128}
+  levelReachedText: {fileID: 1361455936}
+  enemiesKilledText: {fileID: 615913268}
+  buildingsDestroyedText: {fileID: 1041108445}
+  coinsCollectedText: {fileID: 984507742}
+  diamondsCollectedText: {fileID: 215934752}
+  damageUpgradeLevelText: {fileID: 1301964642}
+  attackSpeedUpgradeLevelText: {fileID: 1929154334}
+  attackRangeUpgradeLevelText: {fileID: 989619057}
+  moveSpeedUpgradeLevelText: {fileID: 1855249297}
+  magnetRangeUpgradeLevelText: {fileID: 593551273}
+  multiShotUpgradeLevelText: {fileID: 239892131}
+  explosiveShotUpgradeLevelText: {fileID: 1124606293}
+  knockbackUpgradeLevelText: {fileID: 133119229}
 --- !u!114 &238261087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10852,7 +10867,7 @@ GameObject:
   - component: {fileID: 809262129}
   - component: {fileID: 809262128}
   m_Layer: 5
-  m_Name: tIME
+  m_Name: Time
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -32,6 +32,12 @@ public class BuildingsScript : MonoBehaviour
 
     private IEnumerator DestroySequence()
     {
+        // Registrar edificio destruido en estadísticas
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.RegisterBuildingDestroyed();
+        }
+        
         if (CameraShakeManager.Instance != null)
         {
             CameraShakeManager.Instance.Shake(shakeForce);

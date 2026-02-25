@@ -33,6 +33,12 @@ public class CurrencyManager : MonoBehaviour
     {
         currentCoins += amount;
         OnCoinsChanged?.Invoke(currentCoins);
+        
+        // Registrar en estadísticas de sesión
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.RegisterCoinsCollected(amount);
+        }
     }
 
     public bool SpendCoins(int amount)
@@ -50,6 +56,12 @@ public class CurrencyManager : MonoBehaviour
     {
         currentDiamonds += amount;
         OnDiamondsChanged?.Invoke(currentDiamonds);
+        
+        // Registrar en estadísticas de sesión
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.RegisterDiamondsCollected(amount);
+        }
     }
 
     public bool SpendDiamonds(int amount)

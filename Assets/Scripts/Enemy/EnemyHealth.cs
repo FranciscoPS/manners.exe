@@ -83,6 +83,12 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
+        // Registrar eliminación en estadísticas
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.RegisterEnemyKill();
+        }
+        
         SpawnExperienceOrbs();
         SpawnCollectibles();
         
