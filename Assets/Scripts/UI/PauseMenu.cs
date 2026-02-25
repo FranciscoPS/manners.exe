@@ -63,6 +63,12 @@ public class PauseMenu : MonoBehaviour
 
         if (pausePanel != null)
             pausePanel.SetActive(true);
+
+        // Bajar el volumen de la música
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.ReduceVolume();
+        }
     }
 
     public void Resume()
@@ -72,6 +78,12 @@ public class PauseMenu : MonoBehaviour
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
+
+        // Restaurar el volumen de la música
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.RestoreVolume();
+        }
     }
 
     public void OnRestartButtonPressed()
@@ -88,6 +100,13 @@ public class PauseMenu : MonoBehaviour
         }
 
         Time.timeScale = 1f;
+        
+        // Restaurar volumen antes de reiniciar
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.RestoreVolume();
+        }
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }
 
@@ -95,9 +114,10 @@ public class PauseMenu : MonoBehaviour
     {
         Time.timeScale = 1f;
         
-        // Detener la música del juego antes de volver al menú
+        // Restaurar y detener la música del juego antes de volver al menú
         if (MusicManager.Instance != null)
         {
+            MusicManager.Instance.RestoreVolume();
             MusicManager.Instance.StopMusic();
         }
         

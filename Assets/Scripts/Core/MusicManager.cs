@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 
 public class MusicManager : MonoBehaviour
 {
@@ -12,9 +13,15 @@ public class MusicManager : MonoBehaviour
     [Header("SFX Settings")]
     [SerializeField][Range(0f, 1f)] private float sfxVolume = 0.8f;
 
+    [Header("Volume Reduction Settings")]
+    [SerializeField][Range(0f, 1f)] private float reducedVolumeMultiplier = 0.3f; // 30% del volumen original
+    [SerializeField] private float volumeFadeDuration = 0.5f;
+
     private AudioSource musicSource;
     private AudioSource sfxLoopSource;
     private AudioSource sfxOneShotSource;
+    private float savedMusicVolume; // Para guardar el volumen original
+    private bool isVolumeReduced = false;
 
     private void Awake()
     {
@@ -183,5 +190,27 @@ public class MusicManager : MonoBehaviour
         {
             sfxOneShotSource.volume = sfxVolume;
         }
+    }
+
+    public void ReduceVolume()
+    {
+        if (musicSource == null || isVolumeReduced) return;
+
+        isVolumeReduced = true;
+        savedMusicVolume = musicSource.volume;
+        float targetVolume = savedMusicVolume * reducedVolumeMultiplier;
+
+        musicSource.DOKill(); // Cancelar cualquier fade previo
+        musicSource.DOFade(targetVolume, volumeFadeDuration).SetUpdate(true); // SetUpdate(true) para que funcione con Time.timeScale = 0
+    }
+
+    public void RestoreVolume()
+    {
+        if (musicSource == null || !isVolumeReduced) return;
+
+        isVolumeReduced = false;
+        
+        musicSource.DOKill(); // Cancelar cualquier fade previo
+        musicSource.DOFade(savedMusicVolume, volumeFadeDuration).SetUpdate(true); // SetUpdate(true) para que funcione con Time.timeScale = 0
     }
 }

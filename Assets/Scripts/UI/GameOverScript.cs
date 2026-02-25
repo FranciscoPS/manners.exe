@@ -50,6 +50,12 @@ public class GameOverUI : MonoBehaviour
             {
                 statsUpdated = true;
                 
+                // Bajar el volumen de la música
+                if (MusicManager.Instance != null)
+                {
+                    MusicManager.Instance.ReduceVolume();
+                }
+                
                 // Mostrar estadísticas reales de la partida
                 UpdateGameOverStats();
                 
@@ -178,6 +184,12 @@ public class GameOverUI : MonoBehaviour
 
         Time.timeScale = 1f;
 
+        // Restaurar volumen antes de reiniciar
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.RestoreVolume();
+        }
+
         CreateFadeOverlayIfNeeded();
 
         fadeCanvasGroup.alpha = 0f;
@@ -199,6 +211,7 @@ public class GameOverUI : MonoBehaviour
 
         if (MusicManager.Instance != null)
         {
+            MusicManager.Instance.RestoreVolume();
             MusicManager.Instance.StopMusic();
         }
 
