@@ -9072,7 +9072,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Vovler al Menu
+  m_text: "Volver al men\xFA"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9432,6 +9432,8 @@ MonoBehaviour:
   musicVolume: 0.2
   playOnAwake: 1
   sfxVolume: 0.8
+  reducedVolumeMultiplier: 0.3
+  volumeFadeDuration: 0.5
 --- !u!1001 &635795290
 PrefabInstance:
   m_ObjectHideFlags: 0

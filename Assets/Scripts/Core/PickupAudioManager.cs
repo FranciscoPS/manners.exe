@@ -68,7 +68,12 @@ public class PickupAudioManager : MonoBehaviour
         if (coinSound != null && coinAudioSource != null)
         {
             coinAudioSource.pitch = Random.Range(coinPitchMin, coinPitchMax);
-            coinAudioSource.PlayOneShot(coinSound, coinVolume);
+            float finalVolume = coinVolume;
+            if (MusicManager.Instance != null)
+            {
+                finalVolume *= MusicManager.Instance.GetSFXVolume();
+            }
+            coinAudioSource.PlayOneShot(coinSound, finalVolume);
         }
     }
 
@@ -82,7 +87,12 @@ public class PickupAudioManager : MonoBehaviour
             }
             
             lastDiamondSoundTime = Time.time;
-            diamondAudioSource.PlayOneShot(diamondSound, diamondVolume);
+            float finalVolume = diamondVolume;
+            if (MusicManager.Instance != null)
+            {
+                finalVolume *= MusicManager.Instance.GetSFXVolume();
+            }
+            diamondAudioSource.PlayOneShot(diamondSound, finalVolume);
         }
     }
 
@@ -92,7 +102,12 @@ public class PickupAudioManager : MonoBehaviour
         {
             float pitch = CalculateOrbPitch(experienceValue);
             orbAudioSource.pitch = pitch;
-            orbAudioSource.PlayOneShot(experienceOrbSound, orbVolume);
+            float finalVolume = orbVolume;
+            if (MusicManager.Instance != null)
+            {
+                finalVolume *= MusicManager.Instance.GetSFXVolume();
+            }
+            orbAudioSource.PlayOneShot(experienceOrbSound, finalVolume);
         }
     }
 
