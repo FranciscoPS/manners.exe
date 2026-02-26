@@ -2,9 +2,16 @@ using UnityEngine;
 
 public class DustBurst : MonoBehaviour
 {
+    [Header("Timing")]
     [SerializeField] private float lifetime = 2f;
+
+    [Header("Scale")]
+    [SerializeField] private Vector3 baseSize = new Vector3(3f, 1f, 3f);
     [SerializeField] private float finalScaleMultiplier = 1.5f;
+
+    [Header("Rotation")]
     [SerializeField] private float rotationSpeed = 30f;
+
     private float randomOffset;
 
     private Material mat;
@@ -17,22 +24,17 @@ public class DustBurst : MonoBehaviour
     private void Awake()
     {
         mat = GetComponentInChildren<Renderer>().material;
-        startScale = transform.localScale;
     }
 
-    public void Play(float sizeMultiplier, float duration)
+    public void Play(float duration)
     {
         lifetime = duration;
         timer = 0f;
+
         randomOffset = Random.Range(-rotationSpeed, rotationSpeed);
 
-        startScale = new Vector3(
-            sizeMultiplier * 1.8f,
-            sizeMultiplier * 0.6f,
-            sizeMultiplier * 1.8f
-        );
-
-        targetScale = startScale * finalScaleMultiplier;
+        startScale = baseSize;
+        targetScale = baseSize * finalScaleMultiplier;
 
         transform.localScale = startScale;
 
@@ -50,7 +52,10 @@ public class DustBurst : MonoBehaviour
         transform.Rotate(0f, (rotationSpeed + randomOffset) * Time.deltaTime, 0f);
 
         float fadeStart = 0.7f;
-        float opacity = (t < fadeStart) ? 1f : 1f - ((t - fadeStart) / (1f - fadeStart));
+        float opacity = (t < fadeStart)
+            ? 1f
+            : 1f - ((t - fadeStart) / (1f - fadeStart));
+
         mat.SetFloat(OpacityID, opacity);
 
         if (t >= 1f)

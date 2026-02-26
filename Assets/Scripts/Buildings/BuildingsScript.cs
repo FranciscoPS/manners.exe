@@ -88,7 +88,7 @@ public class BuildingsScript : MonoBehaviour
                 size = r.bounds.size.x;
             }
             float fallDuration = 2.5f;
-            dust.Play(size, fallDuration);
+            dust.Play(fallDuration);
         }
 
         StartCoroutine(SinkAndDestroy());
