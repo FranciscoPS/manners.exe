@@ -12,6 +12,7 @@ public class BuildingsScript : MonoBehaviour
 
     [Header("Shader Destruction")]
     [SerializeField] private float shaderDestructionSpeed = 1f;
+    [SerializeField] private DustBurst dustPrefab;
 
     [Header("Shake Settings")]
     [SerializeField] private float shakeIntensity = 0.25f;
@@ -74,6 +75,20 @@ public class BuildingsScript : MonoBehaviour
                 SFXDatabase.Instance.buildingDestroySFX,
                 SFXDatabase.Instance.buildingDestroyVolume
             );
+        }
+
+        if (dustPrefab != null)
+        {
+            DustBurst dust = Instantiate(dustPrefab, GetSpawnCenter(), Quaternion.identity);
+            Renderer r = visual.GetComponent<Renderer>();
+            float size = 3f;
+
+            if (r != null)
+            {
+                size = r.bounds.size.x;
+            }
+            float fallDuration = 2.5f;
+            dust.Play(size, fallDuration);
         }
 
         StartCoroutine(SinkAndDestroy());
