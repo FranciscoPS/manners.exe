@@ -3,6 +3,9 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour
 {
+    [SerializeField] private Transform visual;
+    [SerializeField] private float rotationSpeed = 10f;
+
     private float moveSpeed = 3f;
     private float contactDamage = 10f;
 
@@ -83,7 +86,24 @@ public class EnemyController : MonoBehaviour
     private void Update()
     {
         if (player == null) return;
-        
+
+        if (visual != null)
+        {
+            Vector3 direction = player.position - transform.position;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+                visual.rotation = Quaternion.Slerp(
+                    visual.rotation,
+                    targetRotation,
+                    rotationSpeed * Time.deltaTime
+                );
+            }
+        }
+
         // Si está en knockback, reducir el timer
         if (isKnockedBack)
         {
