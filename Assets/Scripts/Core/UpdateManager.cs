@@ -39,7 +39,7 @@ public class UpdateManager : MonoBehaviour
     {
         get
         {
-            if (instance == null)
+            if (instance == null && !isQuitting)
             {
                 GameObject go = new GameObject("[UpdateManager]");
                 instance = go.AddComponent<UpdateManager>();
@@ -66,6 +66,17 @@ public class UpdateManager : MonoBehaviour
     private bool isLateUpdating = false;
     private static bool isQuitting = false; // Flag para evitar warnings durante shutdown
     
+    /// <summary>
+    /// Resetea el estado estático cuando Unity reinicia el dominio de scripting (común en el editor)
+    /// Esto resuelve el warning: "Some objects were not cleaned up when closing the scene"
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+        isQuitting = false;
+    }
+    
     private void Awake()
     {
         if (instance == null)
@@ -81,9 +92,8 @@ public class UpdateManager : MonoBehaviour
     
     private void OnDestroy()
     {
-        // Solo limpiar si NO estamos cerrando la aplicación
-        // Esto evita warnings de Unity sobre "objects not cleaned up"
-        if (instance == this && !isQuitting)
+        // Limpiar la instancia si somos el singleton actual
+        if (instance == this)
         {
             ClearAll();
             instance = null;
@@ -92,11 +102,11 @@ public class UpdateManager : MonoBehaviour
     
     private void OnApplicationQuit()
     {
-        // Marcar que estamos cerrando para evitar cleanup innecesario
+        // Marcar que estamos cerrando para evitar recreación del singleton
         isQuitting = true;
         
-        // No hacer ClearAll aquí - Unity ya está limpiando todo
-        // Esto previene el warning: "objects were not cleaned up when closing the scene"
+        // Limpiar listas para evitar referencias colgantes
+        ClearAll();
     }
     
     // ===== REGISTRATION =====

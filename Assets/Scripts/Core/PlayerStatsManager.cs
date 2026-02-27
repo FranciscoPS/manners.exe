@@ -5,11 +5,13 @@ using UnityEngine.SceneManagement;
 public class PlayerStatsManager : MonoBehaviour
 {
     private static PlayerStatsManager instance;
+    private static bool isQuitting = false;
+    
     public static PlayerStatsManager Instance
     {
         get
         {
-            if (instance == null)
+            if (instance == null && !isQuitting)
             {
                 instance = FindFirstObjectByType<PlayerStatsManager>();
                 if (instance == null)
@@ -25,6 +27,16 @@ public class PlayerStatsManager : MonoBehaviour
     private Dictionary<UpgradeType, int> upgradeLevels = new Dictionary<UpgradeType, int>();
     
     public event System.Action<UpgradeType, int> OnUpgradeApplied;
+    
+    /// <summary>
+    /// Resetea el estado estático cuando Unity reinicia el dominio de scripting
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+        isQuitting = false;
+    }
     
     private void Awake()
     {
@@ -57,6 +69,11 @@ public class PlayerStatsManager : MonoBehaviour
 #endif
             instance = null;
         }
+    }
+    
+    private void OnApplicationQuit()
+    {
+        isQuitting = true;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)

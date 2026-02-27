@@ -7,11 +7,13 @@ using System.Collections.Generic;
 public class GameSessionStats : MonoBehaviour
 {
     private static GameSessionStats instance;
+    private static bool isQuitting = false;
+    
     public static GameSessionStats Instance
     {
         get
         {
-            if (instance == null)
+            if (instance == null && !isQuitting)
             {
                 GameObject go = new GameObject("GameSessionStats");
                 instance = go.AddComponent<GameSessionStats>();
@@ -37,6 +39,16 @@ public class GameSessionStats : MonoBehaviour
     public int DiamondsCollected => diamondsCollectedThisSession;
     public int MaxLevelReached => maxLevelReached;
     public float SurvivalTime => survivalTime;
+    
+    /// <summary>
+    /// Resetea el estado estático cuando Unity reinicia el dominio de scripting
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+        isQuitting = false;
+    }
 
     private void Awake()
     {
@@ -49,6 +61,19 @@ public class GameSessionStats : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+    
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            instance = null;
+        }
+    }
+    
+    private void OnApplicationQuit()
+    {
+        isQuitting = true;
     }
 
     /// <summary>

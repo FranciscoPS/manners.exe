@@ -8,11 +8,13 @@ using UnityEngine.SceneManagement;
 public class GameTimeManager : MonoBehaviour, IUpdateable
 {
     private static GameTimeManager instance;
+    private static bool isQuitting = false;
+    
     public static GameTimeManager Instance
     {
         get
         {
-            if (instance == null)
+            if (instance == null && !isQuitting)
             {
                 GameObject go = new GameObject("GameTimeManager");
                 instance = go.AddComponent<GameTimeManager>();
@@ -29,6 +31,16 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
 
     // IUpdateable implementation
     public bool IsActive => isGameActive && this != null && enabled;
+    
+    /// <summary>
+    /// Resetea el estado estático cuando Unity reinicia el dominio de scripting
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+        isQuitting = false;
+    }
 
     private void Awake()
     {
@@ -62,7 +74,14 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
             {
                 UpdateManager.Instance.Unregister(this);
             }
+            
+            instance = null;
         }
+    }
+    
+    private void OnApplicationQuit()
+    {
+        isQuitting = true;
     }
 
     // IUpdateable implementation
