@@ -112,9 +112,9 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         lifetimeTimer -= deltaTime;
         if (lifetimeTimer <= 0f)
         {
-            if (PoolManager.Instance != null)
+            if (SpawnFactory.Instance != null)
             {
-                PoolManager.Instance.Despawn(gameObject);
+                SpawnFactory.Instance.DestroyObject(gameObject);
             }
             else
             {
@@ -144,9 +144,9 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
                 DealDamageToEnemy(other.gameObject, other.transform.position);
             }
             
-            if (PoolManager.Instance != null)
+            if (SpawnFactory.Instance != null)
             {
-                PoolManager.Instance.Despawn(gameObject);
+                SpawnFactory.Instance.DestroyObject(gameObject);
             }
             else
             {

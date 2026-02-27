@@ -104,9 +104,9 @@ public class SpawnPoint : MonoBehaviour
 
     private void SpawnSingleEnemy(Vector3 position, EnemyConfiguration config)
     {
-        if (PoolManager.Instance != null)
+        if (SpawnFactory.Instance != null)
         {
-            PoolManager.Instance.SpawnEnemy(position, config);
+            SpawnFactory.Instance.CreateEnemy(position, config);
         }
     }
 

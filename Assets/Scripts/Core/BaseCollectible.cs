@@ -212,9 +212,9 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     
     protected virtual void Despawn()
     {
-        if (PoolManager.Instance != null)
+        if (SpawnFactory.Instance != null)
         {
-            PoolManager.Instance.Despawn(gameObject);
+            SpawnFactory.Instance.DestroyObject(gameObject);
         }
         else
         {

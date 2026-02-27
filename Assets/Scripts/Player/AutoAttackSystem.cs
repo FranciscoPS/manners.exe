@@ -147,7 +147,7 @@ public class AutoAttackSystem : MonoBehaviour, IUpdateable
         
         for (int i = 0; i < totalBullets; i++)
         {
-            Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
+            Projectile projectile = SpawnFactory.Instance.CreateProjectile(firePoint.position, Quaternion.identity, projectileConfig);
             
             if (projectile != null)
             {
