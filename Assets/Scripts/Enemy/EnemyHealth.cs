@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
+    [Header("Death VFX")]
+    [SerializeField] private GameObject explosionPrefab;
+    
     private float maxHealth = 30f;
     private float currentHealth;
     private DamageTween damageTween;
@@ -87,6 +90,12 @@ public class EnemyHealth : MonoBehaviour
         if (GameSessionStats.Instance != null)
         {
             GameSessionStats.Instance.RegisterEnemyKill();
+        }
+        
+        // Reproducir efecto de explosión
+        if (explosionPrefab != null)
+        {
+            Instantiate(explosionPrefab, transform.position, Quaternion.identity);
         }
         
         SpawnExperienceOrbs();
