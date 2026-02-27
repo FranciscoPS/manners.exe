@@ -3,8 +3,14 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour
 {
-    [SerializeField] private Transform visual;
-    [SerializeField] private float rotationSpeed = 10f;
+    [SerializeField] private Transform visual1;
+    [SerializeField] private Transform visual2;
+
+    [Header("Visual Rotation")]
+    [SerializeField] private float rotationSpeed1 = 10f;
+    [SerializeField] private float rotationSpeed2 = 10f;
+    [SerializeField] private bool applyToVisual1 = true;
+    [SerializeField] private bool applyToVisual2 = true;
 
     private float moveSpeed = 3f;
     private float contactDamage = 10f;
@@ -60,22 +66,18 @@ public class EnemyController : MonoBehaviour
 
     private void OnEnable()
     {
-        // Buscar player cada vez que se activa (importante para pooling)
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
         
-        // Limpiar estado de knockback cuando se reactiva desde el pool
         isKnockedBack = false;
         knockbackTimer = 0f;
         knockbackVelocity = Vector3.zero;
         
-        // Re-configurar velocidad si tenemos NavMeshAgent
         if (agent != null && agent.isOnNavMesh)
         {
             agent.enabled = true;
             agent.speed = moveSpeed;
         }
         
-        // Asegurar que el Rigidbody esté en el estado correcto
         if (rb != null)
         {
             rb.isKinematic = useNavMesh;
@@ -87,7 +89,7 @@ public class EnemyController : MonoBehaviour
     {
         if (player == null) return;
 
-        if (visual != null)
+        if ((visual1 != null && applyToVisual1) || (visual2 != null && applyToVisual2))
         {
             Vector3 direction = player.position - transform.position;
             direction.y = 0f;
@@ -96,15 +98,26 @@ public class EnemyController : MonoBehaviour
             {
                 Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-                visual.rotation = Quaternion.Slerp(
-                    visual.rotation,
-                    targetRotation,
-                    rotationSpeed * Time.deltaTime
-                );
+                if (visual1 != null && applyToVisual1)
+                {
+                    visual1.rotation = Quaternion.Slerp(
+                        visual1.rotation,
+                        targetRotation,
+                        rotationSpeed1 * Time.deltaTime
+                    );
+                }
+
+                if (visual2 != null && applyToVisual2)
+                {
+                    visual2.rotation = Quaternion.Slerp(
+                        visual2.rotation,
+                        targetRotation,
+                        rotationSpeed2 * Time.deltaTime
+                    );
+                }
             }
         }
 
-        // Si está en knockback, reducir el timer
         if (isKnockedBack)
         {
             knockbackTimer -= Time.deltaTime;
@@ -112,7 +125,7 @@ public class EnemyController : MonoBehaviour
             {
                 EndKnockback();
             }
-            return; // No seguir al player mientras está en knockback
+            return;
         }
 
         if (useNavMesh && agent != null && agent.isOnNavMesh)
@@ -123,7 +136,6 @@ public class EnemyController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Aplicar velocidad de knockback si está activo
         if (isKnockedBack && rb != null)
         {
             rb.linearVelocity = knockbackVelocity;
@@ -144,19 +156,16 @@ public class EnemyController : MonoBehaviour
     {
         if (force <= 0f) return;
         
-        // Desactivar NavMeshAgent temporalmente
         if (agent != null && agent.enabled)
         {
             agent.enabled = false;
         }
         
-        // Si usamos Rigidbody directo, hacerlo no-kinematic temporalmente
         if (rb != null && rb.isKinematic)
         {
             rb.isKinematic = false;
         }
         
-        // Configurar knockback
         isKnockedBack = true;
         knockbackTimer = duration;
         knockbackVelocity = new Vector3(direction.x * force, 0f, direction.z * force);
@@ -175,7 +184,6 @@ public class EnemyController : MonoBehaviour
         isKnockedBack = false;
         knockbackVelocity = Vector3.zero;
         
-        // Restaurar configuración
         if (useNavMesh && agent != null)
         {
             agent.enabled = true;
