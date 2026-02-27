@@ -207,6 +207,22 @@ public class GameOverUI : MonoBehaviour
         if (isTransitioning) return;
         isTransitioning = true;
 
+        // Resetear currency y stats antes de ir al main menu
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.ResetSessionCurrency();
+        }
+        
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.ResetStats();
+        }
+        
+        if (PlayerStatsManager.Instance != null)
+        {
+            PlayerStatsManager.Instance.ResetUpgrades();
+        }
+
         Time.timeScale = 1f;
 
         if (MusicManager.Instance != null)

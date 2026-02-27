@@ -52,6 +52,12 @@ public class PlayerHealth : MonoBehaviour
         playerLayer = gameObject.layer;
         enemyLayer = LayerMask.NameToLayer("Enemy");
         
+        // CRITICAL: Asegurar que las colisiones entre player y enemy estén habilitadas al inicio
+        // Esto previene el bug donde los enemigos no pueden pegar después de reiniciar
+        isDead = false;
+        isInvulnerable = false;
+        Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+        
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
