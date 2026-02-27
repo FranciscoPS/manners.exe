@@ -27,12 +27,12 @@ public class SpawnPoint : MonoBehaviour
     [SerializeField] private bool showSpawnWarning = true;
     [SerializeField] private float warningDuration = 1f;
 
-    private float cooldownTimer = 0f;
+    private float lastSpawnTime = -999f; // Tiempo del último spawn
     private SpawnWarningIndicator warningIndicator;
 
     public SpawnSector Sector => sector;
     public int MaxEnemiesPerSpawn => maxEnemiesPerSpawn;
-    public bool IsReady => cooldownTimer <= 0f;
+    public bool IsReady => Time.time >= lastSpawnTime + spawnCooldown; // Check sin Update
 
     private void Awake()
     {
@@ -48,14 +48,6 @@ public class SpawnPoint : MonoBehaviour
         warningObj.transform.SetParent(transform);
         warningObj.transform.localPosition = Vector3.zero;
         warningIndicator = warningObj.AddComponent<SpawnWarningIndicator>();
-    }
-
-    private void Update()
-    {
-        if (cooldownTimer > 0f)
-        {
-            cooldownTimer -= Time.deltaTime;
-        }
     }
 
     public void SpawnEnemies(int count, EnemyConfiguration config)
@@ -89,7 +81,7 @@ public class SpawnPoint : MonoBehaviour
             SpawnSingleEnemy(spawnPosition, config);
         }
 
-        cooldownTimer = spawnCooldown;
+        lastSpawnTime = Time.time; // Registrar tiempo de spawn en vez de timer countdown
     }
 
     private Vector3 GetSpawnPosition()
@@ -112,9 +104,9 @@ public class SpawnPoint : MonoBehaviour
 
     private void SpawnSingleEnemy(Vector3 position, EnemyConfiguration config)
     {
-        if (PoolManager.Instance != null)
+        if (SpawnFactory.Instance != null)
         {
-            PoolManager.Instance.SpawnEnemy(position, config);
+            SpawnFactory.Instance.CreateEnemy(position, config);
         }
     }
 

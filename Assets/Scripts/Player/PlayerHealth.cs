@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections;
 
-public class PlayerHealth : MonoBehaviour
+public class PlayerHealth : MonoBehaviour, IUpdateable
 {
     [SerializeField] private Animator animator;
     [SerializeField] private float animationHitDelay = 0.3f;
@@ -34,6 +34,9 @@ public class PlayerHealth : MonoBehaviour
     private int playerLayer;
     private int enemyLayer;
 
+    // IUpdateable implementation
+    public bool IsActive => gameObject.activeInHierarchy && enabled && !isDead;
+
     private void Start()
     {
         if (GameBalanceConfig.Instance != null)
@@ -59,6 +62,12 @@ public class PlayerHealth : MonoBehaviour
         Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        
+        // Registrar con UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this);
+        }
     }
 
     private void OnDestroy()
@@ -67,9 +76,16 @@ public class PlayerHealth : MonoBehaviour
         {
             Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
+        
+        // Unregister del UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this);
+        }
     }
 
-    private void Update()
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
     {
         if (Time.time - lastHitTime > consecutiveHitWindow)
         {

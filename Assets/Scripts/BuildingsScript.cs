@@ -110,7 +110,7 @@ public class BuildingsScript : MonoBehaviour
             Vector2 randomCircle = Random.insideUnitCircle * GameBalanceConfig.Instance.BuildingOrbSpawnRadius;
             Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 2f), randomCircle.y);
             
-            ExperienceOrb orb = PoolManager.Instance.SpawnOrb(spawnPosition, orbConfig);
+            ExperienceOrb orb = SpawnFactory.Instance.CreateExperienceOrb(spawnPosition, orbConfig);
             if (orb != null && orbConfig == null)
             {
                 orb.SetExperienceValue(GameBalanceConfig.Instance.BuildingDefaultExperienceValue);
@@ -120,7 +120,7 @@ public class BuildingsScript : MonoBehaviour
 
     private void SpawnCollectibles()
     {
-        if (PoolManager.Instance == null || GameBalanceConfig.Instance == null) return;
+        if (SpawnFactory.Instance == null || GameBalanceConfig.Instance == null) return;
 
         Vector3 spawnCenter = GetSpawnCenter();
 
@@ -131,7 +131,7 @@ public class BuildingsScript : MonoBehaviour
             {
                 Vector2 randomCircle = Random.insideUnitCircle * GameBalanceConfig.Instance.BuildingOrbSpawnRadius;
                 Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 2f), randomCircle.y);
-                PoolManager.Instance.SpawnCollectible(spawnPosition, Collectible.CollectibleType.Coin, 1);
+                SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Coin, 1);
             }
         }
 
@@ -142,7 +142,7 @@ public class BuildingsScript : MonoBehaviour
             {
                 Vector2 randomCircle = Random.insideUnitCircle * GameBalanceConfig.Instance.BuildingOrbSpawnRadius;
                 Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 2f), randomCircle.y);
-                PoolManager.Instance.SpawnCollectible(spawnPosition, Collectible.CollectibleType.Diamond, 1);
+                SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Diamond, 1);
             }
         }
     }

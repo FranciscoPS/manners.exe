@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AutoAttackSystem : MonoBehaviour
+public class AutoAttackSystem : MonoBehaviour, IUpdateable
 {
     [SerializeField] private Transform firePoint;
     [SerializeField] private LayerMask enemyLayer;
@@ -10,6 +10,14 @@ public class AutoAttackSystem : MonoBehaviour
     private float attackCooldown;
     private float cooldownTimer = 0f;
     private Transform currentTarget;
+    
+    // Target search optimization - reduce Physics.OverlapSphere calls
+    private float targetSearchTimer = 0f;
+    private const float TARGET_SEARCH_INTERVAL = 0.15f; // Only search every 150ms instead of every frame
+    private Collider[] enemyBuffer = new Collider[50]; // Reusable buffer - ZERO allocations
+
+    // IUpdateable implementation
+    public bool IsActive => gameObject.activeInHierarchy && enabled;
 
     private void Awake()
     {
@@ -27,11 +35,43 @@ public class AutoAttackSystem : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        cooldownTimer -= Time.deltaTime;
+        // Registrar con UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this);
+        }
+    }
+    
+    private void OnDisable()
+    {
+        // Unregister del UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this);
+        }
+    }
 
-        FindClosestEnemy();
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
+    {
+        cooldownTimer -= deltaTime;
+        targetSearchTimer -= deltaTime;
+
+        // Solo buscar enemigos cada TARGET_SEARCH_INTERVAL (no cada frame)
+        // Esto reduce llamadas a Physics de 60/s a ~7/s = 88% reducción!
+        if (targetSearchTimer <= 0f)
+        {
+            FindClosestEnemy();
+            targetSearchTimer = TARGET_SEARCH_INTERVAL;
+        }
+
+        // Verificar si el target actual sigue siendo válido
+        if (currentTarget != null && !currentTarget.gameObject.activeInHierarchy)
+        {
+            currentTarget = null;
+        }
 
         // Usar cooldown modificado del PlayerStatsManager
         float currentCooldown = PlayerStatsManager.Instance != null 
@@ -51,9 +91,11 @@ public class AutoAttackSystem : MonoBehaviour
             ? PlayerStatsManager.Instance.GetModifiedAttackRange() 
             : attackRange;
         
-        Collider[] enemies = Physics.OverlapSphere(transform.position, currentRange, enemyLayer);
+        // Usa buffer reutilizable - ZERO allocations (el array ya existe)
+        // Physics.OverlapSphereNonAlloc no asigna memoria nueva
+        int enemyCount = Physics.OverlapSphereNonAlloc(transform.position, currentRange, enemyBuffer, enemyLayer);
         
-        if (enemies.Length == 0)
+        if (enemyCount == 0)
         {
             currentTarget = null;
             return;
@@ -62,8 +104,12 @@ public class AutoAttackSystem : MonoBehaviour
         float closestDistance = Mathf.Infinity;
         Transform closestEnemy = null;
 
-        foreach (Collider enemy in enemies)
+        // Usar for en lugar de foreach (más eficiente, evita iterator allocations)
+        for (int i = 0; i < enemyCount; i++)
         {
+            Collider enemy = enemyBuffer[i];
+            if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
+            
             float distance = Vector3.Distance(transform.position, enemy.transform.position);
             if (distance < closestDistance)
             {
@@ -125,7 +171,7 @@ public class AutoAttackSystem : MonoBehaviour
         
         for (int i = 0; i < totalBullets; i++)
         {
-            Projectile projectile = PoolManager.Instance.SpawnProjectile(firePoint.position, Quaternion.identity, projectileConfig);
+            Projectile projectile = SpawnFactory.Instance.CreateProjectile(firePoint.position, Quaternion.identity, projectileConfig);
             
             if (projectile != null)
             {

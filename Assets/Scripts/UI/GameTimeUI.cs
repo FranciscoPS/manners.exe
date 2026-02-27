@@ -3,6 +3,7 @@ using TMPro;
 
 /// <summary>
 /// Muestra el tiempo total de la partida actual en la UI
+/// Refactorizado para usar eventos en vez de polling cada frame
 /// </summary>
 public class GameTimeUI : MonoBehaviour
 {
@@ -11,7 +12,6 @@ public class GameTimeUI : MonoBehaviour
     
     [Header("Display Settings")]
     [SerializeField] private Color timeColor = Color.white;
-    [SerializeField] private bool showHoursIfNeeded = true;
     
     private void Start()
     {
@@ -24,22 +24,32 @@ public class GameTimeUI : MonoBehaviour
         {
             gameTimeText.color = timeColor;
         }
+        
+        // Forzar inicialización de GameTimeManager y asegurar que esté activo
+        if (GameTimeManager.Instance != null)
+        {
+            // Si el juego no está activo, iniciarlo
+            if (!GameTimeManager.Instance.IsGameActive)
+            {
+                GameTimeManager.Instance.StartGame();
+            }
+        }
+        
+        // Suscribirse al evento de tiempo
+        GameEvents.OnGameTimeUpdated += UpdateTimeDisplay;
     }
     
-    private void Update()
+    private void OnDestroy()
     {
-        if (gameTimeText == null || GameTimeManager.Instance == null)
-            return;
-        
-        UpdateTimeDisplay();
+        // Desuscribirse del evento
+        GameEvents.OnGameTimeUpdated -= UpdateTimeDisplay;
     }
     
-    private void UpdateTimeDisplay()
+    private void UpdateTimeDisplay(string formattedTime)
     {
-        string timeString = showHoursIfNeeded 
-            ? GameTimeManager.Instance.GetFormattedTimeLong()
-            : GameTimeManager.Instance.GetFormattedTime();
-        
-        gameTimeText.text = timeString;
+        if (gameTimeText != null)
+        {
+            gameTimeText.text = formattedTime;
+        }
     }
 }

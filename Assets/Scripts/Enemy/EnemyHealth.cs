@@ -101,9 +101,9 @@ public class EnemyHealth : MonoBehaviour
         SpawnExperienceOrbs();
         SpawnCollectibles();
         
-        if (PoolManager.Instance != null)
+        if (SpawnFactory.Instance != null)
         {
-            PoolManager.Instance.Despawn(gameObject);
+            SpawnFactory.Instance.DestroyObject(gameObject);
         }
         else
         {
@@ -113,7 +113,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void SpawnExperienceOrbs()
     {
-        if (PoolManager.Instance == null)
+        if (SpawnFactory.Instance == null)
         {
             return;
         }
@@ -141,7 +141,7 @@ public class EnemyHealth : MonoBehaviour
             Vector2 randomCircle = Random.insideUnitCircle * orbSpawnRadius;
             Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
             
-            ExperienceOrb orb = PoolManager.Instance.SpawnOrb(spawnPosition, orbConfig);
+            ExperienceOrb orb = SpawnFactory.Instance.CreateExperienceOrb(spawnPosition, orbConfig);
             if (orb != null && orbConfig == null)
             {
                 orb.SetExperienceValue(10); // Fallback XP value
@@ -151,7 +151,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void SpawnCollectibles()
     {
-        if (PoolManager.Instance == null) return;
+        if (SpawnFactory.Instance == null) return;
         
         // Obtener configuración dinámica basada en wave actual
         int currentWave = GetCurrentWave();
@@ -181,7 +181,7 @@ public class EnemyHealth : MonoBehaviour
             {
                 Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
                 Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
-                PoolManager.Instance.SpawnCollectible(spawnPosition, Collectible.CollectibleType.Coin, 1);
+                SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Coin, 1);
             }
         }
 
@@ -193,7 +193,7 @@ public class EnemyHealth : MonoBehaviour
             {
                 Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
                 Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
-                PoolManager.Instance.SpawnCollectible(spawnPosition, Collectible.CollectibleType.Diamond, 1);
+                SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Diamond, 1);
             }
         }
     }

@@ -3,8 +3,9 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Maneja el tiempo total de la partida actual
+/// Refactorizado para usar UpdateManager y eventos
 /// </summary>
-public class GameTimeManager : MonoBehaviour
+public class GameTimeManager : MonoBehaviour, IUpdateable
 {
     private static GameTimeManager instance;
     public static GameTimeManager Instance
@@ -23,6 +24,11 @@ public class GameTimeManager : MonoBehaviour
 
     private float gameStartTime;
     private bool isGameActive = false;
+    private int lastSecond = -1; // Para detectar cambios de segundo
+    private bool showHours = false;
+
+    // IUpdateable implementation
+    public bool IsActive => isGameActive && this != null && enabled;
 
     private void Awake()
     {
@@ -31,6 +37,12 @@ public class GameTimeManager : MonoBehaviour
             instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
+            
+            // Registrar con UpdateManager
+            if (UpdateManager.Instance != null)
+            {
+                UpdateManager.Instance.Register(this);
+            }
         }
         else if (instance != this)
         {
@@ -44,6 +56,27 @@ public class GameTimeManager : MonoBehaviour
         if (instance == this)
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            
+            // Unregister del UpdateManager
+            if (UpdateManager.Instance != null)
+            {
+                UpdateManager.Instance.Unregister(this);
+            }
+        }
+    }
+
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
+    {
+        if (!isGameActive) return;
+        
+        // Solo disparar evento cuando cambia el segundo (reduce de 60 FPS a 1 Hz)
+        int currentSecond = Mathf.FloorToInt(GetGameTime());
+        if (currentSecond != lastSecond)
+        {
+            lastSecond = currentSecond;
+            string formattedTime = showHours ? GetFormattedTimeLong() : GetFormattedTime();
+            GameEvents.TriggerGameTimeUpdated(formattedTime);
         }
     }
 

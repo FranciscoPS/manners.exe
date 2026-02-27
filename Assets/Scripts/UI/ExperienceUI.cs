@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class ExperienceUI : MonoBehaviour
+public class ExperienceUI : MonoBehaviour, IUpdateable
 {
     [Header("Animation Settings")]
     [SerializeField] private float fillSpeed = 5f;
@@ -15,6 +15,14 @@ public class ExperienceUI : MonoBehaviour
 
     private float targetFillAmount = 0f;
     private float currentFillAmount = 0f;
+    
+    // IUpdateable
+    public bool IsActive => gameObject.activeInHierarchy && enabled;
+    
+    // String caching para evitar allocations
+    private string cachedExpText = "";
+    private int lastCurrentExp = -1;
+    private int lastRequiredExp = -1;
 
     private void Awake()
     {
@@ -69,6 +77,12 @@ public class ExperienceUI : MonoBehaviour
             int requiredExp = playerExperience.GetExperienceRequiredForNextLevel();
             UpdateExperienceBar(currentExp, requiredExp);
         }
+        
+        // Registrar en UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this);
+        }
     }
 
     private void OnDestroy()
@@ -78,13 +92,20 @@ public class ExperienceUI : MonoBehaviour
             ExperienceManager.Instance.OnExperienceChanged -= UpdateExperienceBar;
             ExperienceManager.Instance.OnLevelUp -= HandleLevelUp;
         }
+        
+        // Unregister de UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this);
+        }
     }
 
-    private void Update()
+    // IUpdateable implementation - reemplaza Update()
+    public void OnUpdate(float deltaTime)
     {
         if (expBarFill != null)
         {
-            float lerpSpeed = Time.timeScale > 0 ? fillSpeed * Time.deltaTime : fillSpeed * Time.unscaledDeltaTime;
+            float lerpSpeed = Time.timeScale > 0 ? fillSpeed * deltaTime : fillSpeed * Time.unscaledDeltaTime;
             currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, lerpSpeed);
             
             RectTransform rt = expBarFill.rectTransform;
@@ -102,9 +123,13 @@ public class ExperienceUI : MonoBehaviour
             levelText.text = "NIVEL " + level;
         }
 
-        if (expText != null)
+        // Cachear string para evitar allocations repetidas
+        if (expText != null && (currentExp != lastCurrentExp || requiredExp != lastRequiredExp))
         {
-            expText.text = currentExp + " / " + requiredExp;
+            cachedExpText = currentExp + " / " + requiredExp;
+            expText.text = cachedExpText;
+            lastCurrentExp = currentExp;
+            lastRequiredExp = requiredExp;
         }
     }
 

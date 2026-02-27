@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
 {
     [SerializeField] private float rotationSpeed = 10f;
     [SerializeField] private Animator animator;
@@ -14,6 +14,10 @@ public class PlayerController : MonoBehaviour
     private float speedModifier = 0f;
     private bool isPlayingMoveSound = false;
     private float moveSoundTimer = 0f; // Porcentaje de bonus (+10%, +20%, etc)
+    private float lastAnimatorSpeed = 1f; // Cache para evitar setear animator.speed cada frame
+
+    // IUpdateable implementation
+    public bool IsActive => gameObject.activeInHierarchy && enabled;
 
     private void Awake()
     {
@@ -30,14 +34,32 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        // Registrar con UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this as IUpdateable);
+            UpdateManager.Instance.Register(this as IFixedUpdateable);
+        }
+    }
+
     private void OnDisable()
     {
         // Reset timer cuando se desactiva el controller
         isPlayingMoveSound = false;
         moveSoundTimer = 0f;
+        
+        // Unregister del UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this as IUpdateable);
+            UpdateManager.Instance.Unregister(this as IFixedUpdateable);
+        }
     }
 
-    private void Update()
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
     {
         // Reset timer si el juego está pausado
         if (Time.timeScale == 0f)
@@ -49,7 +71,7 @@ public class PlayerController : MonoBehaviour
         // Reproducir sonido de movimiento en intervalos
         if (isPlayingMoveSound && MusicManager.Instance != null && SFXDatabase.Instance != null)
         {
-            moveSoundTimer -= Time.deltaTime;
+            moveSoundTimer -= deltaTime;
             
             if (moveSoundTimer <= 0f)
             {
@@ -61,10 +83,15 @@ public class PlayerController : MonoBehaviour
             }
         }
         
-        // Ajustar velocidad de animación según speed modifier
+        // Ajustar velocidad de animación SOLO si cambió (evitar set innecesarios cada frame)
         if (animator != null)
         {
-            animator.speed = GetSpeedMultiplier();
+            float targetSpeed = GetSpeedMultiplier();
+            if (Mathf.Abs(lastAnimatorSpeed - targetSpeed) > 0.01f)
+            {
+                animator.speed = targetSpeed;
+                lastAnimatorSpeed = targetSpeed;
+            }
         }
     }
     
@@ -74,7 +101,8 @@ public class PlayerController : MonoBehaviour
     public void ApplySpeedModifier(float percentageIncrease)
     {
         speedModifier = percentageIncrease;
-        Debug.Log($"[PlayerController] Speed modifier set to +{percentageIncrease}%");
+        // Forzar actualización de animator speed en el próximo update
+        lastAnimatorSpeed = -1f;
     }
     
     /// <summary>
@@ -98,7 +126,8 @@ public class PlayerController : MonoBehaviour
         moveInput = context.ReadValue<Vector2>();
     }
 
-    private void FixedUpdate()
+    // IFixedUpdateable implementation
+    public void OnFixedUpdate(float fixedDeltaTime)
     {
         moveDirection = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
         
@@ -109,7 +138,7 @@ public class PlayerController : MonoBehaviour
             rb.linearVelocity = new Vector3(moveDirection.x * currentSpeed, rb.linearVelocity.y, moveDirection.z * currentSpeed);
             
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * fixedDeltaTime);
 
             if (animator != null)
                 animator.SetBool("isWalking", true);

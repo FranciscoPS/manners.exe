@@ -50,7 +50,7 @@ public class EnemySpawner : MonoBehaviour
 
     private void SpawnEnemies(int count)
     {
-        if (PoolManager.Instance == null)
+        if (SpawnFactory.Instance == null)
         {
             return;
         }
@@ -59,7 +59,7 @@ public class EnemySpawner : MonoBehaviour
         {
             Vector3 spawnPosition = GetRandomSpawnPosition();
             EnemyConfiguration config = GetRandomEnemyConfig();
-            PoolManager.Instance.SpawnEnemy(spawnPosition, config);
+            SpawnFactory.Instance.CreateEnemy(spawnPosition, config);
         }
     }
     

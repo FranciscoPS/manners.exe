@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class EnemySpawnManager : MonoBehaviour
+public class EnemySpawnManager : MonoBehaviour, IUpdateable
 {
     public static EnemySpawnManager Instance { get; private set; }
 
@@ -27,6 +27,9 @@ public class EnemySpawnManager : MonoBehaviour
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1; // 1-based para UI/balance
 
+    // IUpdateable implementation
+    public bool IsActive => this != null && enabled && gameObject.activeInHierarchy;
+
     private void Awake()
     {
         if (Instance == null)
@@ -36,6 +39,22 @@ public class EnemySpawnManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
+        }
+        
+        // Register con UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unregister del UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this);
         }
     }
 
@@ -54,11 +73,12 @@ public class EnemySpawnManager : MonoBehaviour
         }
     }
 
-    private void Update()
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
     {
         if (enableContinuousSpawn && !isSpawningWave)
         {
-            continuousSpawnTimer -= Time.deltaTime;
+            continuousSpawnTimer -= deltaTime;
             
             if (continuousSpawnTimer <= 0f)
             {
