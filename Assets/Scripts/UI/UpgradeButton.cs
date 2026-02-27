@@ -46,6 +46,13 @@ public class UpgradeButton : MonoBehaviour
         
         holdToSelectButton = GetComponent<HoldToSelectButton>();
         premiumVisuals = GetComponent<PremiumUpgradeVisuals>();
+        
+        // Crear componente PremiumUpgradeVisuals si no existe (necesario para efectos visuales premium en level up)
+        if (premiumVisuals == null)
+        {
+            premiumVisuals = gameObject.AddComponent<PremiumUpgradeVisuals>();
+        }
+        
         purchaseEffect = GetComponent<PurchaseEffectFeedback>();
         
         if (holdToSelectButton != null)
