@@ -64,6 +64,7 @@ public class UpdateManager : MonoBehaviour
     private bool isUpdating = false;
     private bool isFixedUpdating = false;
     private bool isLateUpdating = false;
+    private static bool isQuitting = false; // Flag para evitar warnings durante shutdown
     
     private void Awake()
     {
@@ -80,8 +81,9 @@ public class UpdateManager : MonoBehaviour
     
     private void OnDestroy()
     {
-        // Limpiar todo cuando se destruye
-        if (instance == this)
+        // Solo limpiar si NO estamos cerrando la aplicación
+        // Esto evita warnings de Unity sobre "objects not cleaned up"
+        if (instance == this && !isQuitting)
         {
             ClearAll();
             instance = null;
@@ -90,8 +92,11 @@ public class UpdateManager : MonoBehaviour
     
     private void OnApplicationQuit()
     {
-        // Limpiar al cerrar la aplicación para evitar warnings
-        ClearAll();
+        // Marcar que estamos cerrando para evitar cleanup innecesario
+        isQuitting = true;
+        
+        // No hacer ClearAll aquí - Unity ya está limpiando todo
+        // Esto previene el warning: "objects were not cleaned up when closing the scene"
     }
     
     // ===== REGISTRATION =====
