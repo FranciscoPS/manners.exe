@@ -7,6 +7,7 @@ public class PauseMenu : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private GameObject helpPanel;
+    [SerializeField] private GameObject gameOverPanel; // Para detectar si estamos en game over
 
     [Header("Help Sub-Panels")]
     [SerializeField] private GameObject movimientoHelpPanel;
@@ -21,6 +22,7 @@ public class PauseMenu : MonoBehaviour
     private bool isPaused = false;
     private GameObject currentHelpSubPanel;
     private LevelUpManager levelUpManager;
+    private PlayerHealth playerHealth;
 
     void Start()
     {
@@ -34,6 +36,9 @@ public class PauseMenu : MonoBehaviour
         
         // Buscar LevelUpManager para verificar si la tienda/level up están activos
         levelUpManager = FindFirstObjectByType<LevelUpManager>();
+        
+        // Buscar PlayerHealth para verificar si el jugador está muerto
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
     }
 
     void Update()
@@ -42,6 +47,18 @@ public class PauseMenu : MonoBehaviour
         {
             // No permitir abrir el menú de pausa si la tienda o level up están activos
             if (levelUpManager != null && levelUpManager.IsLevelUpActive())
+            {
+                return;
+            }
+            
+            // No permitir abrir el menú de pausa si el jugador está muerto
+            if (playerHealth != null && playerHealth.IsDead)
+            {
+                return;
+            }
+            
+            // No permitir abrir el menú de pausa si el panel de game over está activo
+            if (gameOverPanel != null && gameOverPanel.activeSelf)
             {
                 return;
             }
@@ -107,11 +124,31 @@ public class PauseMenu : MonoBehaviour
             MusicManager.Instance.RestoreVolume();
         }
         
+        // CRÍTICO: Resetear colisiones Player-Enemy antes de recargar
+        // Esto previene el bug de invulnerabilidad al reiniciar
+        ResetPlayerEnemyLayerCollision();
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }
 
     public void OnReturnToMainMenuButtonPressed()
     {
+        // Resetear currency y stats antes de ir al main menu
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.ResetSessionCurrency();
+        }
+        
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.ResetStats();
+        }
+        
+        if (PlayerStatsManager.Instance != null)
+        {
+            PlayerStatsManager.Instance.ResetUpgrades();
+        }
+        
         Time.timeScale = 1f;
         
         // Restaurar y detener la música del juego antes de volver al menú
@@ -196,5 +233,16 @@ public class PauseMenu : MonoBehaviour
         if (experienciaHelpPanel != null) experienciaHelpPanel.SetActive(false);
         if (enemigosHelpPanel != null) enemigosHelpPanel.SetActive(false);
         if (mejorasHelpPanel != null) mejorasHelpPanel.SetActive(false);
+    }
+
+    private void ResetPlayerEnemyLayerCollision()
+    {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int enemyLayer = LayerMask.NameToLayer("Enemy");
+
+        if (playerLayer >= 0 && enemyLayer >= 0)
+        {
+            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+        }
     }
 }
