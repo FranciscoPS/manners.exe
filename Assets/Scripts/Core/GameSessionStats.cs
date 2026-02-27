@@ -149,8 +149,10 @@ public class GameSessionStats : MonoBehaviour
     /// </summary>
     public string GetFormattedSurvivalTime()
     {
-        int minutes = Mathf.FloorToInt(survivalTime / 60f);
-        int seconds = Mathf.FloorToInt(survivalTime % 60f);
+        // Obtener el tiempo actual (no el cacheado)
+        float currentTime = GetCurrentSurvivalTime();
+        int minutes = Mathf.FloorToInt(currentTime / 60f);
+        int seconds = Mathf.FloorToInt(currentTime % 60f);
         return $"{minutes:00}:{seconds:00}";
     }
 

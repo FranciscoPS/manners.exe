@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
     private float speedModifier = 0f;
     private bool isPlayingMoveSound = false;
     private float moveSoundTimer = 0f; // Porcentaje de bonus (+10%, +20%, etc)
+    private float lastAnimatorSpeed = 1f; // Cache para evitar setear animator.speed cada frame
 
     // IUpdateable implementation
     public bool IsActive => gameObject.activeInHierarchy && enabled;
@@ -82,10 +83,15 @@ public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
             }
         }
         
-        // Ajustar velocidad de animación según speed modifier
+        // Ajustar velocidad de animación SOLO si cambió (evitar set innecesarios cada frame)
         if (animator != null)
         {
-            animator.speed = GetSpeedMultiplier();
+            float targetSpeed = GetSpeedMultiplier();
+            if (Mathf.Abs(lastAnimatorSpeed - targetSpeed) > 0.01f)
+            {
+                animator.speed = targetSpeed;
+                lastAnimatorSpeed = targetSpeed;
+            }
         }
     }
     
@@ -95,7 +101,8 @@ public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
     public void ApplySpeedModifier(float percentageIncrease)
     {
         speedModifier = percentageIncrease;
-        // Speed modifier aplicado
+        // Forzar actualización de animator speed en el próximo update
+        lastAnimatorSpeed = -1f;
     }
     
     /// <summary>
