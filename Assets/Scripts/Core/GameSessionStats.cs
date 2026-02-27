@@ -51,13 +51,20 @@ public class GameSessionStats : MonoBehaviour
         }
     }
 
-    private void Update()
+    /// <summary>
+    /// Obtiene el tiempo de supervivencia actualizado (calculado on-demand, no cada frame)
+    /// </summary>
+    private float GetCurrentSurvivalTime()
     {
         if (isSessionActive && GameTimeManager.Instance != null)
         {
-            survivalTime = GameTimeManager.Instance.GetGameTime();
+            return GameTimeManager.Instance.GetGameTime();
         }
+        return survivalTime;
     }
+    
+    // Propiedad pública actualizada para obtener el tiempo on-demand
+    public float SurvivalTimeUpdated => GetCurrentSurvivalTime();
 
     /// <summary>
     /// Inicia una nueva sesión de estadísticas
@@ -69,10 +76,15 @@ public class GameSessionStats : MonoBehaviour
     }
 
     /// <summary>
-    /// Detiene la sesión actual
+    /// Detiene la sesión actual y captura el tiempo final de supervivencia
     /// </summary>
     public void EndSession()
     {
+        // Capturar el tiempo final antes de detener la sesión
+        if (isSessionActive && GameTimeManager.Instance != null)
+        {
+            survivalTime = GameTimeManager.Instance.GetGameTime();
+        }
         isSessionActive = false;
     }
 

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Projectile : MonoBehaviour, IPoolable
+public class Projectile : MonoBehaviour, IPoolable, IUpdateable
 {
     private float speed = 15f;
     private float damage = 10f;
@@ -17,6 +17,9 @@ public class Projectile : MonoBehaviour, IPoolable
     private GameObject trailInstance;
     private Light projectileLight;
     private Material materialInstance;
+
+    // IUpdateable implementation
+    public bool IsActive => gameObject.activeInHierarchy && lifetimeTimer > 0f;
 
     private void Awake()
     {
@@ -103,9 +106,10 @@ public class Projectile : MonoBehaviour, IPoolable
         }
     }
 
-    private void Update()
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
     {
-        lifetimeTimer -= Time.deltaTime;
+        lifetimeTimer -= deltaTime;
         if (lifetimeTimer <= 0f)
         {
             if (PoolManager.Instance != null)
@@ -210,11 +214,23 @@ public class Projectile : MonoBehaviour, IPoolable
     {
         lifetimeTimer = lifetime;
         rb.linearVelocity = Vector3.zero;
+        
+        // Registrar con UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this);
+        }
     }
 
     public void OnDespawn()
     {
         rb.linearVelocity = Vector3.zero;
         direction = Vector3.zero;
+        
+        // Unregister del UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this);
+        }
     }
 }

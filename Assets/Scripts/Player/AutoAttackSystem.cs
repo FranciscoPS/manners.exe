@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AutoAttackSystem : MonoBehaviour
+public class AutoAttackSystem : MonoBehaviour, IUpdateable
 {
     [SerializeField] private Transform firePoint;
     [SerializeField] private LayerMask enemyLayer;
@@ -10,6 +10,9 @@ public class AutoAttackSystem : MonoBehaviour
     private float attackCooldown;
     private float cooldownTimer = 0f;
     private Transform currentTarget;
+
+    // IUpdateable implementation
+    public bool IsActive => gameObject.activeInHierarchy && enabled;
 
     private void Awake()
     {
@@ -27,9 +30,28 @@ public class AutoAttackSystem : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        cooldownTimer -= Time.deltaTime;
+        // Registrar con UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this);
+        }
+    }
+    
+    private void OnDisable()
+    {
+        // Unregister del UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this);
+        }
+    }
+
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
+    {
+        cooldownTimer -= deltaTime;
 
         FindClosestEnemy();
 
