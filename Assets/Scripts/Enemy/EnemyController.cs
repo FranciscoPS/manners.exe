@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyController : MonoBehaviour
+public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 {
     [SerializeField] private Transform visual1;
     [SerializeField] private Transform visual2;
@@ -26,6 +26,9 @@ public class EnemyController : MonoBehaviour
     private Vector3 knockbackVelocity = Vector3.zero;
 
     public float ContactDamage => contactDamage;
+
+    // IUpdateable implementation
+    public bool IsActive => gameObject.activeInHierarchy && enabled;
 
     public void SetStats(float newMoveSpeed, float newContactDamage)
     {
@@ -83,9 +86,27 @@ public class EnemyController : MonoBehaviour
             rb.isKinematic = useNavMesh;
             rb.linearVelocity = Vector3.zero;
         }
+        
+        // Registrar con UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Register(this as IUpdateable);
+            UpdateManager.Instance.Register(this as IFixedUpdateable);
+        }
+    }
+    
+    private void OnDisable()
+    {
+        // Unregister del UpdateManager
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this as IUpdateable);
+            UpdateManager.Instance.Unregister(this as IFixedUpdateable);
+        }
     }
 
-    private void Update()
+    // IUpdateable implementation
+    public void OnUpdate(float deltaTime)
     {
         if (player == null) return;
 
@@ -120,7 +141,7 @@ public class EnemyController : MonoBehaviour
 
         if (isKnockedBack)
         {
-            knockbackTimer -= Time.deltaTime;
+            knockbackTimer -= deltaTime;
             if (knockbackTimer <= 0f)
             {
                 EndKnockback();
@@ -134,7 +155,8 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
+    // IFixedUpdateable implementation
+    public void OnFixedUpdate(float fixedDeltaTime)
     {
         if (isKnockedBack && rb != null)
         {

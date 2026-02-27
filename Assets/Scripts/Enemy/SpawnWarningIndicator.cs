@@ -39,7 +39,7 @@ public class SpawnWarningIndicator : MonoBehaviour
             Material mat = new Material(templateMaterial);
             mat.color = warningColor;
             circleRenderer.material = mat;
-            Debug.Log("[SpawnWarningIndicator] Material loaded from Resources successfully");
+            // Material cargado exitosamente
         }
         else
         {

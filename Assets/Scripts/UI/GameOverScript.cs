@@ -46,9 +46,12 @@ public class GameOverUI : MonoBehaviour
         if (gameOverPanel != null && gameOverPanel.activeSelf && !statsUpdated)
         {
             // Solo mostrar estadísticas si el jugador realmente jugó
-            if (GameSessionStats.Instance != null && GameSessionStats.Instance.SurvivalTime > 0.1f)
+            if (GameSessionStats.Instance != null && GameSessionStats.Instance.SurvivalTimeUpdated > 0.1f)
             {
                 statsUpdated = true;
+                
+                // Primero capturar stats finales ANTES de mostrarlos
+                GameSessionStats.Instance.EndSession();
                 
                 // Bajar el volumen de la música
                 if (MusicManager.Instance != null)
@@ -58,9 +61,6 @@ public class GameOverUI : MonoBehaviour
                 
                 // Mostrar estadísticas reales de la partida
                 UpdateGameOverStats();
-                
-                // Ahora sí detener la sesión de estadísticas
-                GameSessionStats.Instance.EndSession();
             }
         }
         
