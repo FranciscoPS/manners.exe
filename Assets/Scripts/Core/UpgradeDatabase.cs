@@ -44,27 +44,38 @@ public class UpgradeDatabase : ScriptableObject
         
         bool isMilestoneLevel = (playerLevel % 5 == 0);
         
-        List<UpgradeData> availableUpgrades = allUpgrades.Where(upgrade =>
+        // Reemplazar LINQ con loop manual - ZERO allocations de lambda/iterator
+        List<UpgradeData> availableUpgrades = new List<UpgradeData>(allUpgrades.Count);
+        
+        for (int i = 0; i < allUpgrades.Count; i++)
         {
+            UpgradeData upgrade = allUpgrades[i];
+            
             int currentLevel = currentUpgradeLevels.ContainsKey(upgrade.upgradeType) 
                 ? currentUpgradeLevels[upgrade.upgradeType] 
                 : 0;
             
+            // Skip si ya está al máximo nivel
             if (currentLevel >= upgrade.maxLevel)
-                return false;
+                continue;
             
+            // En niveles milestone (5, 10, 15...) solo premium
             if (isMilestoneLevel)
             {
                 if (!upgrade.isPremium)
                 {
                     Debug.Log($"[Level {playerLevel}] Skipping non-premium: {upgrade.upgradeName}");
+                    continue;
                 }
-                return upgrade.isPremium;
+            }
+            // En niveles normales solo non-premium
+            else if (upgrade.isPremium)
+            {
+                continue;
             }
             
-            return !upgrade.isPremium;
-            
-        }).ToList();
+            availableUpgrades.Add(upgrade);
+        }
         
         if (availableUpgrades.Count == 0)
         {
