@@ -47,11 +47,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc6873d14ba525840a60cc1e7bae6c1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingsScript
-  sinkSpeed: 1.5
   visual: {fileID: 8272095557796569798}
   spawnPoint: {fileID: 3043078021786141712}
-  groundLevel: 0
-  sinkExtraDistance: 1
+  fadeOutDuration: 1
+  destructionVFXPrefab: {fileID: 660828489742140669, guid: 4afce6f0c617d174094cd3b70826a08d, type: 3}
+  vfxScale: 1
   shakeForce: 0.5
   dropSpawnDelay: 1.5
   orbConfig: {fileID: 11400000, guid: fa35d48feb493471b967c331a5029ca5, type: 2}

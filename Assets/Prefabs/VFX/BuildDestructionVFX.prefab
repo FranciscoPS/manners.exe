@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7187229542596578927}
-  - component: {fileID: 2969814394403971459}
+  - component: {fileID: 6527842381692024258}
   m_Layer: 0
-  m_Name: ExplosionVFX
+  m_Name: BuildDestructionVFX
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2969814394403971459
+--- !u!114 &6527842381692024258
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,12 +41,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 660828489742140669}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c72f449767f90249a2ce9b82b9874d0, type: 3}
+  m_Script: {fileID: 11500000, guid: 39f0a089d9a25cd4582bbd42b80f9862, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ExplosionFlipbook
-  explosionTexture: {fileID: 2800000, guid: 45dfc7bb5f3fc7643bf325f24bd8a45f, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingDestructionVFX
+  dustTexture: {fileID: 2800000, guid: 9ecb9e0e152d4694ebf79b9a19021f70, type: 3}
   columns: 5
   rows: 5
-  duration: 0.8
-  size: 8
+  duration: 2
+  size: 5
   tintColor: {r: 1, g: 1, b: 1, a: 1}
