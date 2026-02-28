@@ -3,15 +3,6 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 {
-    [SerializeField] private Transform visual1;
-    [SerializeField] private Transform visual2;
-
-    [Header("Visual Rotation")]
-    [SerializeField] private float rotationSpeed1 = 10f;
-    [SerializeField] private float rotationSpeed2 = 10f;
-    [SerializeField] private bool applyToVisual1 = true;
-    [SerializeField] private bool applyToVisual2 = true;
-
     private float moveSpeed = 3f;
     private float contactDamage = 10f;
 
@@ -69,18 +60,22 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     private void OnEnable()
     {
+        // Buscar player cada vez que se activa (importante para pooling)
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
         
+        // Limpiar estado de knockback cuando se reactiva desde el pool
         isKnockedBack = false;
         knockbackTimer = 0f;
         knockbackVelocity = Vector3.zero;
         
+        // Re-configurar velocidad si tenemos NavMeshAgent
         if (agent != null && agent.isOnNavMesh)
         {
             agent.enabled = true;
             agent.speed = moveSpeed;
         }
         
+        // Asegurar que el Rigidbody esté en el estado correcto
         if (rb != null)
         {
             rb.isKinematic = useNavMesh;
@@ -109,36 +104,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     public void OnUpdate(float deltaTime)
     {
         if (player == null) return;
-
-        if ((visual1 != null && applyToVisual1) || (visual2 != null && applyToVisual2))
-        {
-            Vector3 direction = player.position - transform.position;
-            direction.y = 0f;
-
-            if (direction.sqrMagnitude > 0.01f)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-                if (visual1 != null && applyToVisual1)
-                {
-                    visual1.rotation = Quaternion.Slerp(
-                        visual1.rotation,
-                        targetRotation,
-                        rotationSpeed1 * Time.deltaTime
-                    );
-                }
-
-                if (visual2 != null && applyToVisual2)
-                {
-                    visual2.rotation = Quaternion.Slerp(
-                        visual2.rotation,
-                        targetRotation,
-                        rotationSpeed2 * Time.deltaTime
-                    );
-                }
-            }
-        }
-
+        
+        // Si está en knockback, reducir el timer
         if (isKnockedBack)
         {
             knockbackTimer -= deltaTime;
@@ -146,7 +113,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             {
                 EndKnockback();
             }
-            return;
+            return; // No seguir al player mientras está en knockback
         }
 
         if (useNavMesh && agent != null && agent.isOnNavMesh)
@@ -158,6 +125,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     // IFixedUpdateable implementation
     public void OnFixedUpdate(float fixedDeltaTime)
     {
+        // Aplicar velocidad de knockback si está activo
         if (isKnockedBack && rb != null)
         {
             rb.linearVelocity = knockbackVelocity;
@@ -178,16 +146,19 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     {
         if (force <= 0f) return;
         
+        // Desactivar NavMeshAgent temporalmente
         if (agent != null && agent.enabled)
         {
             agent.enabled = false;
         }
         
+        // Si usamos Rigidbody directo, hacerlo no-kinematic temporalmente
         if (rb != null && rb.isKinematic)
         {
             rb.isKinematic = false;
         }
         
+        // Configurar knockback
         isKnockedBack = true;
         knockbackTimer = duration;
         knockbackVelocity = new Vector3(direction.x * force, 0f, direction.z * force);
@@ -206,6 +177,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         isKnockedBack = false;
         knockbackVelocity = Vector3.zero;
         
+        // Restaurar configuración
         if (useNavMesh && agent != null)
         {
             agent.enabled = true;
