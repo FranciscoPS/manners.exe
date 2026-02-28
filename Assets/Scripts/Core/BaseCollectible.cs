@@ -15,6 +15,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     [Header("Warning Settings")]
     [SerializeField] protected float warningTime = 3f;
     [SerializeField] protected float blinkSpeed = 5f;
+    [SerializeField] protected float finalWarningTime = 1f;
+    [SerializeField] protected float blinkSpeedFast = 20f;
     
     [Header("Performance Settings")]
     [SerializeField] protected float updateInterval = 0.1f;
@@ -182,17 +184,10 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     
     protected virtual void HandleBlinking(float deltaTime)
     {
-        if (materialInstance != null)
+        if (objectRenderer != null)
         {
-            float alpha = Mathf.PingPong(Time.time * blinkSpeed, 1.0f);
-            Color blinkColor = originalColor;
-            blinkColor.a = alpha;
-            materialInstance.color = blinkColor;
-            
-            if (materialInstance.HasProperty("_BaseColor"))
-                materialInstance.SetColor("_BaseColor", blinkColor);
-            if (materialInstance.HasProperty("_Color"))
-                materialInstance.SetColor("_Color", blinkColor);
+            float speed = lifetimeTimer <= finalWarningTime ? blinkSpeedFast : blinkSpeed;
+            objectRenderer.enabled = Mathf.PingPong(Time.time * speed, 1.0f) > 0.5f;
         }
     }
     
