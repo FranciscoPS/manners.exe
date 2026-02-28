@@ -45,6 +45,9 @@ public static class GameEvents
     // === TIME EVENTS ===
     public static event Action<string> OnGameTimeUpdated; // Formatted time string
     
+    // === SHOP EVENTS ===
+    public static event Action<int> OnShopLocationChanged;
+    
     // ===== TRIGGER METHODS =====
     
     // Player
@@ -85,6 +88,9 @@ public static class GameEvents
     // Time
     public static void TriggerGameTimeUpdated(string formattedTime) => OnGameTimeUpdated?.Invoke(formattedTime);
     
+    // Shop
+    public static void TriggerShopLocationChanged(int newShopIndex) => OnShopLocationChanged?.Invoke(newShopIndex);
+    
     /// <summary>
     /// Limpia todos los subscribers (útil para scene transitions)
     /// </summary>
@@ -109,6 +115,7 @@ public static class GameEvents
         OnGamePaused = null;
         OnGameResumed = null;
         OnGameOver = null;
+        OnShopLocationChanged = null;
         OnWaveStarted = null;
         OnWaveCompleted = null;
         OnGameTimeUpdated = null;
