@@ -8,6 +8,7 @@ public class BuildingDestructionVFX : MonoBehaviour
 {
     [Header("Flipbook Settings")]
     [SerializeField] private Texture2D dustTexture;
+    [SerializeField] private Material particleMaterial; // Material pre-configurado (REQUERIDO para builds)
     [SerializeField] private int columns = 8;
     [SerializeField] private int rows = 8;
     [SerializeField] private float duration = 2f;
@@ -64,7 +65,7 @@ public class BuildingDestructionVFX : MonoBehaviour
         // Renderer
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         renderer.renderMode = ParticleSystemRenderMode.Billboard;
-        renderer.material = CreateMaterial();
+        renderer.material = GetOrCreateMaterial();
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
         
@@ -72,9 +73,23 @@ public class BuildingDestructionVFX : MonoBehaviour
         ps.Play();
     }
     
-    private Material CreateMaterial()
+    private Material GetOrCreateMaterial()
     {
-        // Buscar shader URP para partículas
+        // Usar material serializado si existe (requerido para builds)
+        if (particleMaterial != null)
+        {
+            // Crear instancia para no modificar el asset original
+            Material matInstance = new Material(particleMaterial);
+            if (dustTexture != null)
+            {
+                matInstance.mainTexture = dustTexture;
+            }
+            return matInstance;
+        }
+        
+        // Fallback: crear material en runtime (solo funciona en Editor)
+        Debug.LogWarning("BuildingDestructionVFX: No hay material asignado. Esto NO funcionará en builds.");
+        
         Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
         if (shader == null)
         {
