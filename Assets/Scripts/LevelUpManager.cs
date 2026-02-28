@@ -7,6 +7,19 @@ using System.Collections.Generic;
 
 public class LevelUpManager : MonoBehaviour
 {
+    private static LevelUpManager instance;
+    public static LevelUpManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindFirstObjectByType<LevelUpManager>();
+            }
+            return instance;
+        }
+    }
+
     [Header("UI")]
     [SerializeField] private GameObject levelUpPanel;
     [SerializeField] private TextMeshProUGUI levelUpText;
@@ -35,6 +48,13 @@ public class LevelUpManager : MonoBehaviour
 
     private void Awake()
     {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        instance = this;
+        
         if (levelUpPanel != null)
             levelUpPanel.SetActive(false);
     }
@@ -330,13 +350,16 @@ public class LevelUpManager : MonoBehaviour
     
     public void OnUpgradeChosen()
     {
-        // En modo Shop, después de UNA compra, cerrar el panel automáticamente
         if (currentMode == UpgradeMode.Shop)
         {
             lastPurchaseTime = Time.unscaledTime;
             shopOnCooldown = true;
             
-            // Cerrar el panel automáticamente
+            if (ShopManager.Instance != null)
+            {
+                ShopManager.Instance.OnShopPurchaseMade();
+            }
+            
             CloseLevelUp();
         }
         else

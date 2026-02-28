@@ -1,21 +1,20 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TMPro;
-using System.Collections;
 
 public class ShopScript : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject interactionText;
     [SerializeField] private GameObject shopPanel;
-    
+
     [Header("Managers")]
     [SerializeField] private LevelUpManager levelUpManager;
 
     private bool playerInRange = false;
     private bool shopOpen = false;
     private float lastCloseTime = -999f;
-    private const float REOPEN_COOLDOWN = 0.2f; // Cooldown para evitar reabrir inmediatamente
+    private const float REOPEN_COOLDOWN = 0.2f;
+    private int shopIndex = -1;
 
     private InputAction openShopAction;
 
@@ -25,54 +24,68 @@ public class ShopScript : MonoBehaviour
             name: "OpenShop",
             binding: "<Keyboard>/p"
         );
-    }
 
-    private void OnEnable()
-    {
-        openShopAction.Enable();
-    }
-
-    private void OnDisable()
-    {
-        openShopAction.Disable();
-    }
-
-    private void Start()
-    {
-        interactionText.SetActive(false);
-        shopPanel.SetActive(false);
-        
         if (levelUpManager == null)
         {
             levelUpManager = FindFirstObjectByType<LevelUpManager>();
         }
-        
-        // Registrar este shop con el LevelUpManager
+
         if (levelUpManager != null)
         {
             levelUpManager.RegisterShop(this);
+        }
+
+        if (ShopManager.Instance != null)
+        {
+            ShopManager.Instance.RegisterShop(this);
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (openShopAction != null)
+        {
+            openShopAction.Enable();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (openShopAction != null)
+        {
+            openShopAction.Disable();
+        }
+    }
+
+    private void Start()
+    {
+        if (interactionText != null)
+        {
+            interactionText.SetActive(false);
+        }
+
+        if (shopPanel != null)
+        {
+            shopPanel.SetActive(false);
         }
     }
 
     private void Update()
     {
-        if (openShopAction.triggered)
+        if (openShopAction == null || !openShopAction.triggered)
+            return;
+
+        if (shopOpen)
         {
-            // Si la tienda está abierta, cerrarla
-            if (shopOpen)
+            CloseShop();
+        }
+        else if (playerInRange)
+        {
+            if (levelUpManager != null &&
+                !levelUpManager.IsLevelUpActive() &&
+                Time.unscaledTime - lastCloseTime >= REOPEN_COOLDOWN)
             {
-                CloseShop();
-            }
-            // Si no está abierta y el jugador está en rango, abrirla
-            else if (playerInRange)
-            {
-                // Verificar que el LevelUpManager no esté activo y que haya pasado el cooldown
-                if (levelUpManager != null && 
-                    !levelUpManager.IsLevelUpActive() && 
-                    Time.unscaledTime - lastCloseTime >= REOPEN_COOLDOWN)
-                {
-                    OpenShop();
-                }
+                OpenShop();
             }
         }
     }
@@ -82,7 +95,10 @@ public class ShopScript : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerInRange = true;
-            interactionText.SetActive(true);
+            if (interactionText != null)
+            {
+                interactionText.SetActive(true);
+            }
         }
     }
 
@@ -91,16 +107,21 @@ public class ShopScript : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerInRange = false;
-            interactionText.SetActive(false);
+            if (interactionText != null)
+            {
+                interactionText.SetActive(false);
+            }
         }
     }
-    
+
     private void OpenShop()
     {
         shopOpen = true;
-        interactionText.SetActive(false);
-        
-        // Use LevelUpManager in Shop mode
+        if (interactionText != null)
+        {
+            interactionText.SetActive(false);
+        }
+
         if (levelUpManager != null)
         {
             levelUpManager.ShowShop();
@@ -111,19 +132,46 @@ public class ShopScript : MonoBehaviour
     {
         shopOpen = false;
         lastCloseTime = Time.unscaledTime;
+        playerInRange = false;
 
         if (levelUpManager != null)
         {
             levelUpManager.CloseLevelUp();
         }
     }
-    
-    /// <summary>
-    /// Llamado por LevelUpManager cuando la tienda se cierra
-    /// </summary>
+
     public void OnShopClosed()
     {
         shopOpen = false;
         lastCloseTime = Time.unscaledTime;
+    }
+
+    public void SetActive(bool active)
+    {
+        if (!active && shopOpen)
+        {
+            shopOpen = false;
+            if (levelUpManager != null)
+            {
+                levelUpManager.CloseLevelUp();
+            }
+        }
+
+        gameObject.SetActive(active);
+    }
+
+    public void SetShopIndex(int index)
+    {
+        shopIndex = index;
+    }
+
+    public int GetShopIndex()
+    {
+        return shopIndex;
+    }
+
+    public bool IsActive()
+    {
+        return gameObject.activeSelf;
     }
 }
