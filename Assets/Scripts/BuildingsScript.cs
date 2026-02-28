@@ -57,13 +57,25 @@ public class BuildingsScript : MonoBehaviour
         // Spawn VFX de polvo/destrucción
         SpawnDestructionVFX();
 
-        // Iniciar fade del edificio (sin mover geometría - compatible con occlusion culling)
+        // Iniciar fade del edificio (sin desactivar al final)
         StartCoroutine(FadeAndDestroy());
         
         yield return new WaitForSeconds(dropSpawnDelay);
         
         SpawnExperienceOrbs();
         SpawnCollectibles();
+        
+        // Esperar a que termine el fade antes de desactivar
+        float totalFadeTime = shakeDuration + fadeOutDuration;
+        float remainingTime = totalFadeTime - dropSpawnDelay;
+        
+        if (remainingTime > 0)
+        {
+            yield return new WaitForSeconds(remainingTime);
+        }
+        
+        gameObject.SetActive(false);
+        Destroy(gameObject, 1f);
     }
 
     private void SpawnDestructionVFX()
@@ -211,11 +223,7 @@ public class BuildingsScript : MonoBehaviour
             }
         }
 
-        // Desactivar el GameObject (NO destruir para permitir pooling futuro)
-        gameObject.SetActive(false);
-        
-        // Opcional: destruir después de un delay para liberar memoria
-        Destroy(gameObject, 1f);
+        // NO desactivar aquí - DestroySequence lo hará después de spawnear drops
     }
 
     private void SetupTransparentMaterial(Material mat)
