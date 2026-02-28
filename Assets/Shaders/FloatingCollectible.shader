@@ -2,8 +2,12 @@ Shader "Custom/FloatingCollectible"
 {
     Properties
     {
-        [MainTexture] _BaseMap("Texture", 2D) = "white" {}
+        [MainTexture] _BaseMap("Albedo", 2D) = "white" {}
         [MainColor] _BaseColor("Color", Color) = (1,1,1,1)
+        [Normal] _BumpMap("Normal Map", 2D) = "bump" {}
+        _BumpScale("Normal Strength", Range(0,2)) = 1.0
+        _Smoothness("Smoothness", Range(0,1)) = 0.3
+        _Metallic("Metallic", Range(0,1)) = 0.0
         _FloatSpeed ("Float Speed", Float) = 1.5
         _FloatAmount ("Float Amount", Float) = 0.3
         _RandomOffset ("Random Offset", Float) = 0.0
@@ -39,31 +43,50 @@ Shader "Custom/FloatingCollectible"
             struct Attributes
             {
                 float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
-                float2 uv : TEXCOORD0;
+                float3 normalOS   : NORMAL;
+                float4 tangentOS  : TANGENT;
+                float2 uv         : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct Varyings
             {
-                float4 positionCS : SV_POSITION;
-                float2 uv : TEXCOORD0;
-                float3 normalWS : TEXCOORD1;
-                float3 positionWS : TEXCOORD2;
-                half fogFactor : TEXCOORD3;
+                float4 positionCS  : SV_POSITION;
+                float2 uv          : TEXCOORD0;
+                float3 normalWS    : TEXCOORD1;
+                float3 tangentWS   : TEXCOORD2;
+                float3 bitangentWS : TEXCOORD3;
+                float3 positionWS  : TEXCOORD4;
+                half   fogFactor   : TEXCOORD5;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            TEXTURE2D(_BaseMap);
-            SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_BaseMap);   SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_BumpMap);   SAMPLER(sampler_BumpMap);
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
-                half4 _BaseColor;
-                float _FloatSpeed;
-                float _FloatAmount;
-                float _RandomOffset;
+                float4 _BumpMap_ST;
+                half4  _BaseColor;
+                half   _BumpScale;
+                half   _Smoothness;
+                half   _Metallic;
+                float  _FloatSpeed;
+                float  _FloatAmount;
+                float  _RandomOffset;
             CBUFFER_END
+
+            float3 ComputeFloatOffset(float time, float randomOffset, float amount)
+            {
+                float3 offset;
+                offset.x  = sin(time * 0.7 + randomOffset) * amount;
+                offset.y  = sin(time * 0.9 + 1.5 + randomOffset * 0.5) * amount * 1.2;
+                offset.z  = cos(time * 0.6 + 3.0 + randomOffset * 0.3) * amount;
+                offset.x += cos(time * 0.4 + 2.1 + randomOffset * 0.7) * amount * 0.5;
+                offset.y += cos(time * 0.5 + 2.5 + randomOffset * 0.4) * amount * 0.6;
+                offset.z += sin(time * 0.3 + 4.0 + randomOffset * 0.6) * amount * 0.5;
+                return offset;
+            }
 
             Varyings vert(Attributes input)
             {
@@ -72,26 +95,18 @@ Shader "Custom/FloatingCollectible"
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
 
                 float time = _Time.y * _FloatSpeed + _RandomOffset;
-                
-                float3 offset;
-                offset.x = sin(time * 0.7 + _RandomOffset) * _FloatAmount;
-                offset.y = sin(time * 0.9 + 1.5 + _RandomOffset * 0.5) * _FloatAmount * 1.2;
-                offset.z = cos(time * 0.6 + 3.0 + _RandomOffset * 0.3) * _FloatAmount;
-                
-                offset.x += cos(time * 0.4 + 2.1 + _RandomOffset * 0.7) * _FloatAmount * 0.5;
-                offset.y += cos(time * 0.5 + 2.5 + _RandomOffset * 0.4) * _FloatAmount * 0.6;
-                offset.z += sin(time * 0.3 + 4.0 + _RandomOffset * 0.6) * _FloatAmount * 0.5;
-                
-                float3 positionOS = input.positionOS.xyz + offset;
+                float3 positionOS = input.positionOS.xyz + ComputeFloatOffset(time, _RandomOffset, _FloatAmount);
 
                 VertexPositionInputs vertexInput = GetVertexPositionInputs(positionOS);
-                VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS);
+                VertexNormalInputs   normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
-                output.positionCS = vertexInput.positionCS;
-                output.positionWS = vertexInput.positionWS;
-                output.normalWS = normalInput.normalWS;
-                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
-                output.fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
+                output.positionCS  = vertexInput.positionCS;
+                output.positionWS  = vertexInput.positionWS;
+                output.normalWS    = normalInput.normalWS;
+                output.tangentWS   = normalInput.tangentWS;
+                output.bitangentWS = normalInput.bitangentWS;
+                output.uv          = TRANSFORM_TEX(input.uv, _BaseMap);
+                output.fogFactor   = ComputeFogFactor(vertexInput.positionCS.z);
 
                 return output;
             }
@@ -100,23 +115,34 @@ Shader "Custom/FloatingCollectible"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
 
-                half4 texColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
-                half3 albedo = texColor.rgb * _BaseColor.rgb;
+                half4 albedoAlpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
+                half3 albedo = albedoAlpha.rgb * _BaseColor.rgb;
+
+                half3 normalTS = UnpackNormalScale(
+                    SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv), _BumpScale);
+                float3x3 TBN = float3x3(
+                    normalize(input.tangentWS),
+                    normalize(input.bitangentWS),
+                    normalize(input.normalWS));
+                half3 normalWS = normalize(mul(normalTS, TBN));
 
                 Light mainLight = GetMainLight();
-                half3 normalWS = normalize(input.normalWS);
-                
+
                 half NdotL = saturate(dot(normalWS, mainLight.direction));
-                NdotL = NdotL * 0.4 + 0.6;
-                
-                half3 lighting = mainLight.color * NdotL;
-                
-                lighting += half3(0.4, 0.4, 0.4);
-                
-                half3 color = albedo * lighting;
-                
+                NdotL = NdotL * 0.5 + 0.5;
+                half3 diffuse = albedo * mainLight.color * NdotL;
+
+                half3 viewDirWS = normalize(GetWorldSpaceViewDir(input.positionWS));
+                half3 halfVec   = normalize(mainLight.direction + viewDirWS);
+                half  NdotH     = saturate(dot(normalWS, halfVec));
+                half  specPow   = exp2(_Smoothness * 10.0 + 1.0);
+                half3 specular  = mainLight.color * pow(NdotH, specPow) * _Smoothness * lerp(0.04, albedo, _Metallic);
+
+                half3 ambient = half3(0.35, 0.35, 0.35) * albedo;
+                half3 color = diffuse + specular + ambient;
+
                 color = MixFog(color, input.fogFactor);
-                
+
                 return half4(color, _BaseColor.a);
             }
             ENDHLSL
@@ -153,9 +179,15 @@ Shader "Custom/FloatingCollectible"
             };
 
             CBUFFER_START(UnityPerMaterial)
-                float _FloatSpeed;
-                float _FloatAmount;
-                float _RandomOffset;
+                float4 _BaseMap_ST;
+                float4 _BumpMap_ST;
+                half4  _BaseColor;
+                half   _BumpScale;
+                half   _Smoothness;
+                half   _Metallic;
+                float  _FloatSpeed;
+                float  _FloatAmount;
+                float  _RandomOffset;
             CBUFFER_END
 
             float3 _LightDirection;
@@ -220,9 +252,15 @@ Shader "Custom/FloatingCollectible"
             };
 
             CBUFFER_START(UnityPerMaterial)
-                float _FloatSpeed;
-                float _FloatAmount;
-                float _RandomOffset;
+                float4 _BaseMap_ST;
+                float4 _BumpMap_ST;
+                half4  _BaseColor;
+                half   _BumpScale;
+                half   _Smoothness;
+                half   _Metallic;
+                float  _FloatSpeed;
+                float  _FloatAmount;
+                float  _RandomOffset;
             CBUFFER_END
 
             Varyings DepthOnlyVertex(Attributes input)

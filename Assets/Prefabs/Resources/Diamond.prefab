@@ -153,9 +153,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed1b1b54047ddbc4b939990f71ba4523, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Collectible
+  attractionRange: 5
+  moveSpeed: 8
+  acceleration: 15
+  lifeTime: 30
   warningTime: 6
-  normalBlinkSpeed: 4
-  criticalTime: 2
-  criticalBlinkSpeed: 10
+  blinkSpeed: 5
+  finalWarningTime: 1
+  blinkSpeedFast: 20
   updateInterval: 0.1
   distantCullDistance: 50
