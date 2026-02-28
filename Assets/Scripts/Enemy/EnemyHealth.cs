@@ -95,7 +95,9 @@ public class EnemyHealth : MonoBehaviour
         // Reproducir efecto de explosión
         if (explosionPrefab != null)
         {
-            Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+            // Elevar la explosión para que no quede cortada por el piso
+            Vector3 explosionPos = transform.position + Vector3.up * 2f;
+            Instantiate(explosionPrefab, explosionPos, Quaternion.identity);
         }
         
         SpawnExperienceOrbs();
