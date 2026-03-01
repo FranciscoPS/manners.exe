@@ -1,12 +1,19 @@
-name: Build WebGL
+name: Build Windows and Mac
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build for WebGL
+    name: Build for ${{ matrix.targetPlatform }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - StandaloneWindows64
+          - StandaloneOSX
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,9 +24,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-WebGL-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
-            Library-WebGL-
+            Library-${{ matrix.targetPlatform }}-
             Library-
 
       - name: Build project
@@ -29,12 +36,12 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          targetPlatform: WebGL
+          targetPlatform: ${{ matrix.targetPlatform }}
           buildName: manners
 
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
-          name: WebGL-Build
-          path: build/WebGL
+          name: manners-${{ matrix.targetPlatform }}
+          path: build/${{ matrix.targetPlatform }}
           retention-days: 30
