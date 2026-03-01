@@ -7,6 +7,7 @@ public class PauseMenu : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private GameObject helpPanel;
+    [SerializeField] private GameObject audioPanel; 
     [SerializeField] private GameObject gameOverPanel; // Para detectar si estamos en game over
 
     [Header("Help Sub-Panels")]
@@ -31,6 +32,9 @@ public class PauseMenu : MonoBehaviour
 
         if (helpPanel != null)
             helpPanel.SetActive(false);
+
+        if (audioPanel != null)
+            audioPanel.SetActive(false);
 
         DeactivateAllHelpSubPanels();
         
@@ -182,6 +186,21 @@ public class PauseMenu : MonoBehaviour
         currentHelpSubPanel = null;
     }
 
+    public void OnAudioButtonPressed()
+    {
+        isPaused = true;
+        Time.timeScale = 0f;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
+        if (audioPanel != null)
+            audioPanel.SetActive(true);
+
+        DeactivateAllHelpSubPanels();
+        currentHelpSubPanel = null;
+    }
+
     public void OnHelpReturnButtonPressed()
     {
         if (helpPanel != null)
@@ -189,6 +208,18 @@ public class PauseMenu : MonoBehaviour
 
         DeactivateAllHelpSubPanels();
         currentHelpSubPanel = null;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(true);
+
+        isPaused = true;
+        Time.timeScale = 0f;
+    }
+
+    public void OnAudioReturnButtonPressed()
+    {
+        if (audioPanel != null)
+            audioPanel.SetActive(false);
 
         if (pausePanel != null)
             pausePanel.SetActive(true);
