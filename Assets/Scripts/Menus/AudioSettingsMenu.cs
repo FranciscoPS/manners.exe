@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class AudioSettingsMenu : MonoBehaviour
 {
@@ -7,6 +8,16 @@ public class AudioSettingsMenu : MonoBehaviour
     [SerializeField] private Slider masterSlider;
     [SerializeField] private Slider musicSlider;
     [SerializeField] private Slider sfxSlider;
+
+    [Header("Value Displays (TextMeshPro)")]
+    [SerializeField] private TextMeshProUGUI masterValueText;
+    [SerializeField] private TextMeshProUGUI musicValueText;
+    [SerializeField] private TextMeshProUGUI sfxValueText;
+
+    [Header("Titles (shown before percentage)")]
+    [SerializeField] private string masterTitle = "Master control";
+    [SerializeField] private string musicTitle = "Music control";
+    [SerializeField] private string sfxTitle = "SFX control";
 
     private const string MASTER_VOLUME_KEY = "MasterVolume";
     private const string MUSIC_VOLUME_KEY = "MusicVolume";
@@ -68,6 +79,7 @@ public class AudioSettingsMenu : MonoBehaviour
             masterSlider.SetValueWithoutNotify(masterVolume);
         }
         AudioListener.volume = masterVolume;
+        UpdateMasterText(masterVolume);
 
         // Cargar volumen de música
         float musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, 0.5f);
@@ -75,6 +87,7 @@ public class AudioSettingsMenu : MonoBehaviour
         {
             musicSlider.SetValueWithoutNotify(musicVolume);
         }
+        UpdateMusicText(musicVolume);
 
         // Cargar volumen de SFX
         float sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_KEY, 0.8f);
@@ -82,6 +95,7 @@ public class AudioSettingsMenu : MonoBehaviour
         {
             sfxSlider.SetValueWithoutNotify(sfxVolume);
         }
+        UpdateSFXText(sfxVolume);
     }
 
     private void OnMasterVolumeChanged(float value)
@@ -91,6 +105,8 @@ public class AudioSettingsMenu : MonoBehaviour
         
         PlayerPrefs.SetFloat(MASTER_VOLUME_KEY, value);
         PlayerPrefs.Save();
+
+        UpdateMasterText(value);
     }
 
     private void OnMusicVolumeChanged(float value)
@@ -103,6 +119,8 @@ public class AudioSettingsMenu : MonoBehaviour
         
         PlayerPrefs.SetFloat(MUSIC_VOLUME_KEY, value);
         PlayerPrefs.Save();
+
+        UpdateMusicText(value);
     }
 
     private void OnSFXVolumeChanged(float value)
@@ -115,5 +133,31 @@ public class AudioSettingsMenu : MonoBehaviour
         
         PlayerPrefs.SetFloat(SFX_VOLUME_KEY, value);
         PlayerPrefs.Save();
+
+        UpdateSFXText(value);
+    }
+
+    private void UpdateMasterText(float value)
+    {
+        if (masterValueText != null)
+        {
+            masterValueText.text = masterTitle + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
+        }
+    }
+
+    private void UpdateMusicText(float value)
+    {
+        if (musicValueText != null)
+        {
+            musicValueText.text = musicTitle + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
+        }
+    }
+
+    private void UpdateSFXText(float value)
+    {
+        if (sfxValueText != null)
+        {
+            sfxValueText.text = sfxTitle + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
+        }
     }
 }
