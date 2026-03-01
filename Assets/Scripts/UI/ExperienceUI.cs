@@ -120,7 +120,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
         if (levelText != null && playerExperience != null)
         {
             int level = playerExperience.GetCurrentLevel();
-            levelText.text = "NIVEL " + level;
+            levelText.text = "Level " + level;
         }
 
         // Cachear string para evitar allocations repetidas
@@ -140,7 +140,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
 
         if (levelText != null)
         {
-            levelText.text = "NIVEL " + newLevel;
+            levelText.text = "Level " + newLevel;
         }
     }
 }
