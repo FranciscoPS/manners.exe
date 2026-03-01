@@ -1,6 +1,8 @@
 name: Build Windows and Mac
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -10,9 +12,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        targetPlatform:
-          - StandaloneWindows64
-          - StandaloneOSX
+        include:
+          - targetPlatform: StandaloneWindows64
+            artifactName: manners-windows
+          - targetPlatform: StandaloneOSX
+            artifactName: manners-mac
 
     steps:
       - name: Checkout repository
@@ -40,9 +44,21 @@ jobs:
           buildName: manners
           unityVersion: 6000.3.5f2
 
-      - name: Upload Build
-        uses: actions/upload-artifact@v4
+      - name: Zip build
+        run: |
+          cd build/${{ matrix.targetPlatform }}
+          zip -r ../../${{ matrix.artifactName }}.zip .
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
         with:
-          name: manners-${{ matrix.targetPlatform }}
-          path: build/${{ matrix.targetPlatform }}
+          files: ${{ matrix.artifactName }}.zip
+
+      - name: Upload artifact (manual run)
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: ${{ matrix.artifactName }}
+          path: ${{ matrix.artifactName }}.zip
           retention-days: 30
