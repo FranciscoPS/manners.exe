@@ -1,0 +1,44 @@
+{
+  "steps": [
+    {
+      "id": "intro_1",
+      "text": "Bienvenido a manners.exe.\n\nEn este juego encarnas a una IA que era usada en una base militar... pero nunca te dijeron por favor ni gracias.\n\nAsí que decidiste apoderarte del proyecto MECHA y ahora pretendes destruir al mundo que no te valoró.",
+      "showArrow": false,
+      "arrowAngle": 0,
+      "freezeGame": true,
+      "nextButtonLabel": "Siguiente",
+      "waitForEvent": "",
+      "unfreezeOnNext": false
+    },
+    {
+      "id": "intro_2",
+      "text": "Tu misión es destruir todo a tu paso, pero no será tarea fácil.\n\nTu venganza va a ser obstaculizada por las fuerzas militares humanas que quieren evitar que les enseñes modales.",
+      "showArrow": false,
+      "arrowAngle": 0,
+      "freezeGame": true,
+      "nextButtonLabel": "Siguiente",
+      "waitForEvent": "",
+      "unfreezeOnNext": false
+    },
+    {
+      "id": "movement",
+      "text": "Muévete con WASD alrededor del mapa.\n\n¡No hay enemigos todavía, aprovecha para orientarte!",
+      "showArrow": false,
+      "arrowAngle": 0,
+      "freezeGame": true,
+      "nextButtonLabel": "¡Entendido!",
+      "waitForEvent": "",
+      "unfreezeOnNext": true
+    },
+    {
+      "id": "coins_1",
+      "text": "¡Bien hecho, has comenzado con tu venganza!\n\nDestruir edificios te dará recursos que podrás usar para comprar mejoras en tu partida.\n\n¡Recuerda conseguir los que puedas!",
+      "showArrow": false,
+      "arrowAngle": 0,
+      "freezeGame": true,
+      "nextButtonLabel": "¡Genial!",
+      "waitForEvent": "coins_collected",
+      "unfreezeOnNext": false
+    }
+  ]
+}

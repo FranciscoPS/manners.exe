@@ -62,6 +62,12 @@ public class PauseMenu : MonoBehaviour
             {
                 return;
             }
+
+            // No permitir abrir el menú de pausa mientras el panel del tutorial está visible
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialPanelActive)
+            {
+                return;
+            }
             
             TogglePause();
         }

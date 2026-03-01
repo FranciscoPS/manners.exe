@@ -48,6 +48,12 @@ public static class GameEvents
     // === SHOP EVENTS ===
     public static event Action<int> OnShopLocationChanged;
     
+    // === TUTORIAL EVENTS ===
+    /// <summary>Se dispara cada vez que se muestra un paso del tutorial. Parámetro: id del paso.</summary>
+    public static event Action<string> OnTutorialStepShown;
+    /// <summary>Se dispara cuando el jugador completa el tutorial por completo.</summary>
+    public static event Action OnTutorialCompleted;
+    
     // ===== TRIGGER METHODS =====
     
     // Player
@@ -91,6 +97,10 @@ public static class GameEvents
     // Shop
     public static void TriggerShopLocationChanged(int newShopIndex) => OnShopLocationChanged?.Invoke(newShopIndex);
     
+    // Tutorial
+    public static void TriggerTutorialStepShown(string stepId) => OnTutorialStepShown?.Invoke(stepId);
+    public static void TriggerTutorialCompleted()              => OnTutorialCompleted?.Invoke();
+    
     /// <summary>
     /// Limpia todos los subscribers (útil para scene transitions)
     /// </summary>
@@ -119,5 +129,7 @@ public static class GameEvents
         OnWaveStarted = null;
         OnWaveCompleted = null;
         OnGameTimeUpdated = null;
+        OnTutorialStepShown = null;
+        OnTutorialCompleted = null;
     }
 }
