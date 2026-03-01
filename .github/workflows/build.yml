@@ -36,6 +36,12 @@ jobs:
             Library-${{ matrix.targetPlatform }}-
             Library-
 
+      - name: Check secrets
+        run: |
+          echo "UNITY_SERIAL set: ${{ secrets.UNITY_SERIAL != '' }}"
+          echo "UNITY_EMAIL set: ${{ secrets.UNITY_EMAIL != '' }}"
+          echo "UNITY_PASSWORD set: ${{ secrets.UNITY_PASSWORD != '' }}"
+
       - name: Build project
         uses: game-ci/unity-builder@v4
         env:
