@@ -15,6 +15,9 @@ public class MinimapSystem : MonoBehaviour
     [SerializeField] private RectTransform playerIcon;
     [SerializeField] private RectTransform shopIcon;
 
+    [Header("Icon Settings")]
+    [SerializeField] private float iconEdgePadding = 0.08f;
+
     private Transform playerTransform;
 
     private void Awake()
@@ -76,11 +79,16 @@ public class MinimapSystem : MonoBehaviour
         float orthoSize = minimapCamera.orthographicSize;
         float halfSize = orthoSize * 2f;
 
-        float u = Mathf.Clamp01(0.5f + offset.x / halfSize);
-        float v = Mathf.Clamp01(0.5f + offset.z / halfSize);
+        float u = 0.5f + offset.x / halfSize;
+        float v = 0.5f + offset.z / halfSize;
 
-        icon.anchorMin = new Vector2(u, v);
-        icon.anchorMax = new Vector2(u, v);
+        Vector2 dir = new Vector2(u - 0.5f, v - 0.5f);
+        float maxRadius = 0.5f - iconEdgePadding;
+        if (dir.magnitude > maxRadius)
+            dir = dir.normalized * maxRadius;
+
+        icon.anchorMin = new Vector2(0.5f + dir.x, 0.5f + dir.y);
+        icon.anchorMax = new Vector2(0.5f + dir.x, 0.5f + dir.y);
         icon.anchoredPosition = Vector2.zero;
     }
 
