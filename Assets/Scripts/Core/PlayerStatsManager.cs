@@ -44,14 +44,11 @@ public class PlayerStatsManager : MonoBehaviour
         {
             instance = this;
             InitializeUpgrades();
-            
-#if !UNITY_EDITOR
+
+            // Hacer persistente y escuchar cambios de escena en todas las plataformas (incluido Editor)
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
-#else
-            gameObject.hideFlags = HideFlags.DontSave;
-#endif
         }
         else if (instance != this)
         {
@@ -64,9 +61,8 @@ public class PlayerStatsManager : MonoBehaviour
     {
         if (instance == this)
         {
-#if !UNITY_EDITOR
+            // Asegurar desuscripción siempre para evitar subscribers colgantes
             SceneManager.sceneLoaded -= OnSceneLoaded;
-#endif
             instance = null;
         }
     }

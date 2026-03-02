@@ -3,6 +3,22 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 {
+    [Header("Visuals")]
+    [SerializeField] private Transform visual1;
+    [SerializeField] private Transform visual2;
+
+    [Header("Rotation Speeds")]
+    [Tooltip("Velocidad de rotación para el primer visual")]
+    [SerializeField] private float rotationSpeed1 = 10f;
+    [Tooltip("Velocidad de rotación para el segundo visual")]
+    [SerializeField] private float rotationSpeed2 = 10f;
+
+    [Header("Apply To Visuals")]
+    [Tooltip("Si está activado, se aplicará la rotación al primer visual si está asignado")]
+    [SerializeField] private bool applyToVisual1 = true;
+    [Tooltip("Si está activado, se aplicará la rotación al segundo visual si está asignado")]
+    [SerializeField] private bool applyToVisual2 = false;
+
     private float moveSpeed = 3f;
     private float contactDamage = 10f;
 
@@ -60,7 +76,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     private void OnEnable()
     {
-        // Buscar player cada vez que se activa (importante para pooling)
+        // Intentar obtener player (puede que no exista aún; también buscamos en OnUpdate)
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
         
         // Limpiar estado de knockback cuando se reactiva desde el pool
@@ -103,7 +119,12 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     // IUpdateable implementation
     public void OnUpdate(float deltaTime)
     {
-        if (player == null) return;
+        // Si no tenemos player buscarlo (robusto frente al orden de inicialización)
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+            if (player == null) return; // sigue sin existir el player en esta frame
+        }
         
         // Si está en knockback, reducir el timer
         if (isKnockedBack)
@@ -119,6 +140,33 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         if (useNavMesh && agent != null && agent.isOnNavMesh)
         {
             agent.SetDestination(player.position);
+        }
+
+        // Rotación independiente para cada visual (solo si están asignados y marcados desde el inspector)
+        Vector3 direction = player.position - transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+            if (applyToVisual1 && visual1 != null)
+            {
+                visual1.rotation = Quaternion.Slerp(
+                    visual1.rotation,
+                    targetRotation,
+                    rotationSpeed1 * deltaTime
+                );
+            }
+
+            if (applyToVisual2 && visual2 != null)
+            {
+                visual2.rotation = Quaternion.Slerp(
+                    visual2.rotation,
+                    targetRotation,
+                    rotationSpeed2 * deltaTime
+                );
+            }
         }
     }
 

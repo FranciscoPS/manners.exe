@@ -17,13 +17,17 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private GameObject mejorasHelpPanel;
 
     [Header("Opciones de escena")]
-    [Tooltip("�ndice de la escena del men� principal en Build Settings (por defecto 0)")]
+    [Tooltip("Índice de la escena del menú principal en Build Settings (por defecto 0)")]
     [SerializeField] private int mainMenuSceneIndex = 0;
 
     private bool isPaused = false;
     private GameObject currentHelpSubPanel;
     private LevelUpManager levelUpManager;
     private PlayerHealth playerHealth;
+
+    // Estado para manejar la reducción/restauración de volumen sin sobrescribir cambios del usuario
+    private bool reducedVolumeApplied = false;
+    private bool audioSettingsChangedWhilePaused = false;
 
     void Start()
     {
@@ -43,6 +47,20 @@ public class PauseMenu : MonoBehaviour
         
         // Buscar PlayerHealth para verificar si el jugador está muerto
         playerHealth = FindFirstObjectByType<PlayerHealth>();
+
+        // Suscribirse al evento de cambios de audio
+        AudioSettingsMenu.AudioSettingsChanged += OnAudioSettingsChanged;
+    }
+
+    private void OnDestroy()
+    {
+        AudioSettingsMenu.AudioSettingsChanged -= OnAudioSettingsChanged;
+    }
+
+    private void OnAudioSettingsChanged()
+    {
+        // Marcar que el usuario modificó los sliders mientras estaba pausado
+        audioSettingsChangedWhilePaused = true;
     }
 
     void Update()
@@ -95,6 +113,9 @@ public class PauseMenu : MonoBehaviour
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.ReduceVolume();
+            reducedVolumeApplied = true;
+            // reset flag cada vez que abrimos pausa
+            audioSettingsChangedWhilePaused = false;
         }
     }
 
@@ -103,13 +124,17 @@ public class PauseMenu : MonoBehaviour
         isPaused = false;
         Time.timeScale = 1f;
 
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
+        CloseAllPauseUI();
 
-        // Restaurar el volumen de la música
-        if (MusicManager.Instance != null)
+        // Restaurar el volumen de la música sólo si no se cambiaron los ajustes
+        if (MusicManager.Instance != null && reducedVolumeApplied)
         {
-            MusicManager.Instance.RestoreVolume();
+            if (!audioSettingsChangedWhilePaused)
+            {
+                MusicManager.Instance.RestoreVolume();
+            }
+            reducedVolumeApplied = false;
+            audioSettingsChangedWhilePaused = false;
         }
     }
 
@@ -128,8 +153,8 @@ public class PauseMenu : MonoBehaviour
 
         Time.timeScale = 1f;
         
-        // Restaurar volumen antes de reiniciar
-        if (MusicManager.Instance != null)
+        // Restaurar volumen antes de reiniciar (si no hubo cambios)
+        if (MusicManager.Instance != null && reducedVolumeApplied && !audioSettingsChangedWhilePaused)
         {
             MusicManager.Instance.RestoreVolume();
         }
@@ -161,10 +186,13 @@ public class PauseMenu : MonoBehaviour
         
         Time.timeScale = 1f;
         
-        // Restaurar y detener la música del juego antes de volver al menú
+        // Restaurar y detener la música del juego antes de volver al menú (si no hubo cambios)
         if (MusicManager.Instance != null)
         {
-            MusicManager.Instance.RestoreVolume();
+            if (reducedVolumeApplied && !audioSettingsChangedWhilePaused)
+                MusicManager.Instance.RestoreVolume();
+
+            MusicManager.Instance.RestoreVolume(); // asegurar estado consistente al salir a main menu
             MusicManager.Instance.StopMusic();
         }
         TutorialManager.ClearSession(); // desde el menú principal siempre se empieza de cero
@@ -281,5 +309,14 @@ public class PauseMenu : MonoBehaviour
         {
             Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
+    }
+    private void CloseAllPauseUI()
+    {
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (helpPanel != null) helpPanel.SetActive(false);
+        if (audioPanel != null) audioPanel.SetActive(false);
+
+        DeactivateAllHelpSubPanels();
+        currentHelpSubPanel = null;
     }
 }

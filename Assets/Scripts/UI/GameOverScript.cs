@@ -209,7 +209,7 @@ public class GameOverUI : MonoBehaviour
         {
             ResetPlayerEnemyLayerCollision();
             TutorialManager.MarkSessionRestart(); // preservar progreso del tutorial al reiniciar
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
         });
     }
 
