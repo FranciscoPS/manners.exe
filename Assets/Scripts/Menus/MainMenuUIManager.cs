@@ -354,7 +354,12 @@ public class MainMenuUIManager : MonoBehaviour
         ShowScreen((MenuScreen)index);
     }
 
-    public void OnPlayPressed()
+    /// <summary>
+    /// Carga la escena cuyo índice se pasa desde el botón.
+    /// Incluye el fade overlay ya existente para mantener la transición visual.
+    /// </summary>
+    /// <param name="sceneIndex">Índice de la escena a cargar (Build Settings)</param>
+    public void LevelSelection(int sceneIndex)
     {
         CreateFadeOverlayIfNeeded();
 
@@ -366,7 +371,7 @@ public class MainMenuUIManager : MonoBehaviour
             .SetUpdate(true)
             .OnComplete(() =>
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+                SceneManager.LoadScene(sceneIndex, LoadSceneMode.Single);
             });
     }
 
