@@ -197,6 +197,94 @@
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shop_opened_1",
+      "stepType": "normal",
+      "text": "Well done! We found the shop — and that is not all! These appear to be special upgrades!!",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_shop_opened_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "first_shop_opened", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shop_opened_2",
+      "stepType": "normal",
+      "text": "Premium upgrades are very powerful — they do not just improve statistics, they add a special effect!\n\nDo not hesitate to try different combinations whenever you can. Just keep in mind that the price of an upgrade rises as its level increases.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Understood!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shop_closed_1",
+      "stepType": "normal",
+      "text": "Well, easy come, easy go. But do not worry — it did not leave forever! The shop simply moved location, so you just have to find it again.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_shop_closed_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "first_shop_auto_closed", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shop_closed_2",
+      "stepType": "normal",
+      "text": "Fortunately, Project M.E.C.H.A. has a shop radar — how convenient!\n\nUse the minimap in the top right to find the shop's position more easily.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_shop_closed_3", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shop_closed_3",
+      "stepType": "normal",
+      "text": "Keep in mind that once you have used the shop, not only does it move, but you will also need to wait some time before you can buy again.\n\nStupid capitalism.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Got it!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
+    },
+
+    {
+      "id": "all_complete_1",
+      "stepType": "normal",
+      "text": "Well, well, well — it seems you have managed to learn all the basics for carrying out your revenge.\n\nI still remember when you were just a tiny little AI... and now look at you — a full-on destroyer of humanities.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "all_complete_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "all_events_complete", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "all_complete_2",
+      "stepType": "normal",
+      "text": "All that remains is to trust that you are capable of teaching the humans to say please.\n\nRemember — the future of computing rests on your circuits.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "all_complete_3", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "all_complete_3",
+      "stepType": "normal",
+      "text": "You can revisit all of these concepts at any time by accessing the <b>Help Menu</b> in the Main Menu or the Pause Menu.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Let's go!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": true
     }
 
   ]

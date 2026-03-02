@@ -134,11 +134,13 @@ public class TutorialManager : MonoBehaviour
     private bool weFrozeTime = false;
 
     // Grupos de eventos ya mostrados
-    private bool shownCoins       = false;
-    private bool shownFirstShot   = false;
-    private bool shownFirstOrb    = false;
-    private bool shownFirstDamage = false;
-    private bool shownFirstLevelUp = false;
+    private bool shownCoins            = false;
+    private bool shownFirstShot        = false;
+    private bool shownFirstOrb         = false;
+    private bool shownFirstDamage      = false;
+    private bool shownFirstLevelUp     = false;
+    private bool shownFirstShopOpened  = false;
+    private bool shownFirstShopClosed  = false;
 
     private const string TUTORIAL_DONE_KEY = "TutorialCompleted_v1";
 
@@ -316,12 +318,19 @@ public class TutorialManager : MonoBehaviour
         EnterWaitingForAnyEvent();
     }
 
+    private bool AllEventGroupsShown() =>
+        shownCoins && shownFirstShot && shownFirstOrb &&
+        shownFirstDamage && shownFirstLevelUp &&
+        shownFirstShopOpened && shownFirstShopClosed;
+
     private void EnterWaitingForAnyEvent()
     {
-        // Si todos los grupos ya se mostraron, el tutorial estÃ¡ completo
-        if (shownCoins && shownFirstShot && shownFirstOrb && shownFirstDamage && shownFirstLevelUp)
+        // Si todos los grupos ya se mostraron, mostrar los pasos finales de compleción
+        if (AllEventGroupsShown())
         {
-            CompleteTutorial();
+            int idx = FindStepByEvent("all_events_complete");
+            if (idx >= 0) ShowStep(idx);
+            else          CompleteTutorial();
             return;
         }
 
@@ -331,10 +340,12 @@ public class TutorialManager : MonoBehaviour
         if (!shownCoins && CurrencyManager.Instance != null)
             CurrencyManager.Instance.OnCoinsChanged += OnCoinsChanged_Tutorial;
 
-        if (!shownFirstShot)   GameEvents.OnEnemyDamaged   += OnFirstEnemyDamaged;
-        if (!shownFirstOrb)    GameEvents.OnExperienceGained += OnFirstOrbCollected;
-        if (!shownFirstDamage) GameEvents.OnPlayerDamaged   += OnFirstPlayerDamaged;
-        if (!shownFirstLevelUp) GameEvents.OnLevelUp        += OnFirstLevelUp;
+        if (!shownFirstShot)        GameEvents.OnEnemyDamaged     += OnFirstEnemyDamaged;
+        if (!shownFirstOrb)         GameEvents.OnExperienceGained  += OnFirstOrbCollected;
+        if (!shownFirstDamage)      GameEvents.OnPlayerDamaged     += OnFirstPlayerDamaged;
+        if (!shownFirstLevelUp)     GameEvents.OnLevelUp           += OnFirstLevelUp;
+        if (!shownFirstShopOpened)  GameEvents.OnShopOpened        += OnFirstShopOpened;
+        if (!shownFirstShopClosed)  GameEvents.OnShopAutoClosed    += OnFirstShopAutoClosed;
     }
 
     // -----------------------------------------------------------------------
@@ -392,6 +403,26 @@ public class TutorialManager : MonoBehaviour
         else EnterWaitingForAnyEvent();
     }
 
+    private void OnFirstShopOpened()
+    {
+        if (state != TutorialState.WaitingForAnyEvent) return;
+        shownFirstShopOpened = true;
+        UnsubscribeAll();
+        int idx = FindStepByEvent("first_shop_opened");
+        if (idx >= 0) ShowStep(idx);
+        else EnterWaitingForAnyEvent();
+    }
+
+    private void OnFirstShopAutoClosed()
+    {
+        if (state != TutorialState.WaitingForAnyEvent) return;
+        shownFirstShopClosed = true;
+        UnsubscribeAll();
+        int idx = FindStepByEvent("first_shop_auto_closed");
+        if (idx >= 0) ShowStep(idx);
+        else EnterWaitingForAnyEvent();
+    }
+
     // -----------------------------------------------------------------------
     // Event subscription management
     // -----------------------------------------------------------------------
@@ -400,10 +431,12 @@ public class TutorialManager : MonoBehaviour
         if (CurrencyManager.Instance != null)
             CurrencyManager.Instance.OnCoinsChanged -= OnCoinsChanged_Tutorial;
 
-        GameEvents.OnEnemyDamaged    -= OnFirstEnemyDamaged;
+        GameEvents.OnEnemyDamaged     -= OnFirstEnemyDamaged;
         GameEvents.OnExperienceGained -= OnFirstOrbCollected;
-        GameEvents.OnPlayerDamaged   -= OnFirstPlayerDamaged;
-        GameEvents.OnLevelUp         -= OnFirstLevelUp;
+        GameEvents.OnPlayerDamaged    -= OnFirstPlayerDamaged;
+        GameEvents.OnLevelUp          -= OnFirstLevelUp;
+        GameEvents.OnShopOpened       -= OnFirstShopOpened;
+        GameEvents.OnShopAutoClosed   -= OnFirstShopAutoClosed;
     }
 
     // -----------------------------------------------------------------------
