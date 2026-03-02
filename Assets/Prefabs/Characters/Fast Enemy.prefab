@@ -49,8 +49,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b12228cb2015430b8a5ae2843b73a0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  visual: {fileID: 1417645153519282896}
-  rotationSpeed: 10
+  visual1: {fileID: 1417645153519282896}
+  visual2: {fileID: 0}
+  rotationSpeed1: 10
+  rotationSpeed2: 10
+  applyToVisual1: 1
+  applyToVisual2: 0
 --- !u!114 &6190908423056691718
 MonoBehaviour:
   m_ObjectHideFlags: 0

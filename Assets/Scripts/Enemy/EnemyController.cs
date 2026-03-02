@@ -3,8 +3,21 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 {
-    [SerializeField] private Transform visual;
-    [SerializeField] private float rotationSpeed = 10f;
+    [Header("Visuals")]
+    [SerializeField] private Transform visual1;
+    [SerializeField] private Transform visual2;
+
+    [Header("Rotation Speeds")]
+    [Tooltip("Velocidad de rotación para el primer visual")]
+    [SerializeField] private float rotationSpeed1 = 10f;
+    [Tooltip("Velocidad de rotación para el segundo visual")]
+    [SerializeField] private float rotationSpeed2 = 10f;
+
+    [Header("Apply To Visuals")]
+    [Tooltip("Si está activado, se aplicará la rotación al primer visual si está asignado")]
+    [SerializeField] private bool applyToVisual1 = true;
+    [Tooltip("Si está activado, se aplicará la rotación al segundo visual si está asignado")]
+    [SerializeField] private bool applyToVisual2 = false;
 
     private float moveSpeed = 3f;
     private float contactDamage = 10f;
@@ -124,18 +137,29 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             agent.SetDestination(player.position);
         }
 
-        if (visual != null)
-        {
-            Vector3 direction = player.position - transform.position;
-            direction.y = 0f;
+        // Rotación independiente para cada visual (solo si están asignados y marcados desde el inspector)
+        Vector3 direction = player.position - transform.position;
+        direction.y = 0f;
 
-            if (direction.sqrMagnitude > 0.001f)
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+            if (applyToVisual1 && visual1 != null)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                visual.rotation = Quaternion.Slerp(
-                    visual.rotation,
+                visual1.rotation = Quaternion.Slerp(
+                    visual1.rotation,
                     targetRotation,
-                    rotationSpeed * deltaTime
+                    rotationSpeed1 * deltaTime
+                );
+            }
+
+            if (applyToVisual2 && visual2 != null)
+            {
+                visual2.rotation = Quaternion.Slerp(
+                    visual2.rotation,
+                    targetRotation,
+                    rotationSpeed2 * deltaTime
                 );
             }
         }
