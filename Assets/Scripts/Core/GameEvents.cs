@@ -47,6 +47,10 @@ public static class GameEvents
     
     // === SHOP EVENTS ===
     public static event Action<int> OnShopLocationChanged;
+    /// <summary>Se dispara cada vez que la tienda se abre.</summary>
+    public static event Action OnShopOpened;
+    /// <summary>Se dispara cuando la tienda se cierra automáticamente después de una compra.</summary>
+    public static event Action OnShopAutoClosed;
     
     // === TUTORIAL EVENTS ===
     /// <summary>Se dispara cada vez que se muestra un paso del tutorial. Parámetro: id del paso.</summary>
@@ -96,6 +100,8 @@ public static class GameEvents
     
     // Shop
     public static void TriggerShopLocationChanged(int newShopIndex) => OnShopLocationChanged?.Invoke(newShopIndex);
+    public static void TriggerShopOpened()      => OnShopOpened?.Invoke();
+    public static void TriggerShopAutoClosed()  => OnShopAutoClosed?.Invoke();
     
     // Tutorial
     public static void TriggerTutorialStepShown(string stepId) => OnTutorialStepShown?.Invoke(stepId);
@@ -126,6 +132,8 @@ public static class GameEvents
         OnGameResumed = null;
         OnGameOver = null;
         OnShopLocationChanged = null;
+        OnShopOpened = null;
+        OnShopAutoClosed = null;
         OnWaveStarted = null;
         OnWaveCompleted = null;
         OnGameTimeUpdated = null;

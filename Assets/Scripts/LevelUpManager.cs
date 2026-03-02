@@ -346,6 +346,8 @@ public class LevelUpManager : MonoBehaviour
         
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
+
+        GameEvents.TriggerShopOpened();
     }
     
     public void OnUpgradeChosen()
@@ -361,6 +363,7 @@ public class LevelUpManager : MonoBehaviour
             }
             
             CloseLevelUp();
+            GameEvents.TriggerShopAutoClosed();
         }
         else
         {
