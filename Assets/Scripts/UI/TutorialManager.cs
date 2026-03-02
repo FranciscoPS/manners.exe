@@ -61,6 +61,13 @@ public class TutorialStep
 
     /// <summary>Al pulsar Next: el tutorial termina completamente.</summary>
     public bool endsAfterNext = false;
+
+    /// <summary>
+    /// Nombre del objetivo HUD al que debe apuntar la flecha.
+    /// Valores válidos: "currency" | "expbar" | "health" | "hud" | "timer"
+    /// Si está vacío, la flecha usa showArrow + arrowAngle normalmente.
+    /// </summary>
+    public string highlightTarget = "";
 }
 
 [Serializable]
@@ -120,6 +127,22 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] [Range(0f, 1f)]   private float typingVolume = 0.4f;
     [SerializeField] [Range(0.75f, 1.25f)] private float typingPitch = 1.0f;
 
+    [Header("HUD Highlight Targets")]
+    [Tooltip("Arrastra aquí: CurrencyPanel")]
+    [SerializeField] private RectTransform targetCurrencyPanel;
+    [Tooltip("Arrastra aquí: ExpBarPanel")]
+    [SerializeField] private RectTransform targetExpBar;
+    [Tooltip("Arrastra aquí: HealthBarContainer")]
+    [SerializeField] private RectTransform targetHealthBar;
+    [Tooltip("Arrastra aquí: HUD")]
+    [SerializeField] private RectTransform targetHUD;
+    [Tooltip("Arrastra aquí: Timer")]
+    [SerializeField] private RectTransform targetTimer;
+
+    [Header("Highlight Pulse")]
+    [SerializeField] private float highlightPulseScale    = 1.12f;  // tamaño máximo del pulso
+    [SerializeField] private float highlightPulseDuration = 0.55f;  // segundos por ciclo completo
+
     // -----------------------------------------------------------------------
     // State
     // -----------------------------------------------------------------------
@@ -154,7 +177,14 @@ public class TutorialManager : MonoBehaviour
     // Typewriter state
     private Coroutine   typewriterCoroutine;
     private bool        isTyping = false;
-    private AudioSource typingSource; // creado por código, sin campo en Inspector
+    private AudioSource typingSource;
+
+    // Highlight state
+    private Coroutine     pulseCoroutine;
+    private RectTransform currentHighlightTarget;
+    private Vector3       highlightOriginalScale;
+    private Canvas        tempHighlightCanvas;
+    private bool          addedTempCanvas;
 
     // -----------------------------------------------------------------------
     // Unity lifecycle
@@ -298,19 +328,28 @@ public class TutorialManager : MonoBehaviour
             if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.nextButtonLabel) ? "Next" : currentStep.nextButtonLabel;
         }
 
-        if (arrowObject != null)
-        {
-            arrowObject.SetActive(currentStep.showArrow);
-            if (currentStep.showArrow && arrowTransform != null)
-                arrowTransform.localEulerAngles = new Vector3(0f, 0f, currentStep.arrowAngle);
-        }
-
         if (currentStep.freezeGame) FreezeGame();
 
+        // Activar panel PRIMERO antes de cualquier cálculo de canvas
         if (tutorialPanel != null) tutorialPanel.SetActive(true);
 
         // Atenuar música de fondo mientras el panel está visible
         if (MusicManager.Instance != null) MusicManager.Instance.ReduceVolume();
+
+        // Flecha normal (solo si no hay highlightTarget)
+        if (arrowObject != null)
+        {
+            bool useHighlight = !string.IsNullOrEmpty(currentStep.highlightTarget);
+            arrowObject.SetActive(!useHighlight && currentStep.showArrow);
+            if (!useHighlight && currentStep.showArrow && arrowTransform != null)
+                arrowTransform.localEulerAngles = new Vector3(0f, 0f, currentStep.arrowAngle);
+        }
+
+        // Highlight: poner elemento HUD en primer plano con pulso
+        if (!string.IsNullOrEmpty(currentStep.highlightTarget))
+            ApplyHighlight(currentStep.highlightTarget);
+        else
+            StopHighlight();
 
         // Start typewriter (stops any previous one)
         if (typewriterCoroutine != null) StopCoroutine(typewriterCoroutine);
@@ -318,6 +357,97 @@ public class TutorialManager : MonoBehaviour
             typewriterCoroutine = StartCoroutine(TypewriterRoutine(currentStep.text));
 
         GameEvents.TriggerTutorialStepShown(currentStep.id);
+    }
+
+    // -----------------------------------------------------------------------
+    // Highlight (pulse + canvas override)
+    // -----------------------------------------------------------------------
+    private void ApplyHighlight(string targetName)
+    {
+        RectTransform target = targetName.ToLower() switch
+        {
+            "currency" => targetCurrencyPanel,
+            "expbar"   => targetExpBar,
+            "health"   => targetHealthBar,
+            "hud"      => targetHUD,
+            "timer"    => targetTimer,
+            _          => null
+        };
+
+        if (target == null)
+        {
+            Debug.LogWarning($"[TutorialManager] highlightTarget '{targetName}' sin RectTransform asignado.");
+            return;
+        }
+
+        StopHighlight(); // limpiar highlight previo si lo hay
+
+        currentHighlightTarget  = target;
+        highlightOriginalScale  = target.localScale;
+
+        // Añadir Canvas override para ponerlo por encima de todo (sortingOrder muy alto)
+        tempHighlightCanvas = target.GetComponent<Canvas>();
+        if (tempHighlightCanvas == null)
+        {
+            tempHighlightCanvas = target.gameObject.AddComponent<Canvas>();
+            addedTempCanvas = true;
+        }
+        else
+        {
+            addedTempCanvas = false;
+        }
+        tempHighlightCanvas.overrideSorting = true;
+        tempHighlightCanvas.sortingOrder    = 9999;
+
+        pulseCoroutine = StartCoroutine(PulseRoutine(target));
+    }
+
+    private void StopHighlight()
+    {
+        if (pulseCoroutine != null) { StopCoroutine(pulseCoroutine); pulseCoroutine = null; }
+
+        if (currentHighlightTarget != null)
+        {
+            currentHighlightTarget.localScale = highlightOriginalScale;
+
+            if (tempHighlightCanvas != null)
+            {
+                if (addedTempCanvas)
+                    Destroy(tempHighlightCanvas);
+                else
+                    tempHighlightCanvas.overrideSorting = false;
+                tempHighlightCanvas = null;
+            }
+
+            currentHighlightTarget = null;
+        }
+    }
+
+    private IEnumerator PulseRoutine(RectTransform target)
+    {
+        Vector3 baseScale = highlightOriginalScale;
+        Vector3 bigScale  = baseScale * highlightPulseScale;
+        float   half      = highlightPulseDuration * 0.5f;
+
+        while (true)
+        {
+            // Crecer
+            float t = 0f;
+            while (t < half)
+            {
+                t += Time.unscaledDeltaTime;
+                target.localScale = Vector3.Lerp(baseScale, bigScale, Mathf.SmoothStep(0f, 1f, t / half));
+                yield return null;
+            }
+            // Encoger
+            t = 0f;
+            while (t < half)
+            {
+                t += Time.unscaledDeltaTime;
+                target.localScale = Vector3.Lerp(bigScale, baseScale, Mathf.SmoothStep(0f, 1f, t / half));
+                yield return null;
+            }
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -537,6 +667,7 @@ public class TutorialManager : MonoBehaviour
     private void HidePanel()
     {
         SkipTypewriter();
+        StopHighlight();
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
         // Restaurar volumen de música al cerrar el panel
         if (MusicManager.Instance != null) MusicManager.Instance.RestoreVolume();
