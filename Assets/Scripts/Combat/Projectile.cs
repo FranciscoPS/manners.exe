@@ -19,7 +19,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     private Material materialInstance;
 
     // IUpdateable implementation
-    public bool IsActive => gameObject.activeInHierarchy && lifetimeTimer > 0f;
+    public bool IsActive => this != null && gameObject != null && gameObject.activeInHierarchy && lifetimeTimer > 0f;
 
     private void Awake()
     {

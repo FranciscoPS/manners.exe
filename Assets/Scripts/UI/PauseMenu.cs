@@ -162,7 +162,7 @@ public class PauseMenu : MonoBehaviour
         // CRÍTICO: Resetear colisiones Player-Enemy antes de recargar
         // Esto previene el bug de invulnerabilidad al reiniciar
         ResetPlayerEnemyLayerCollision();
-        
+        TutorialManager.MarkSessionRestart(); // preservar progreso del tutorial al reiniciar
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }
 
@@ -195,7 +195,7 @@ public class PauseMenu : MonoBehaviour
             MusicManager.Instance.RestoreVolume(); // asegurar estado consistente al salir a main menu
             MusicManager.Instance.StopMusic();
         }
-        
+        TutorialManager.ClearSession(); // desde el menú principal siempre se empieza de cero
         SceneManager.LoadScene(mainMenuSceneIndex, LoadSceneMode.Single);
     }
 

@@ -138,6 +138,8 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private RectTransform targetHUD;
     [Tooltip("Arrastra aquí: Timer")]
     [SerializeField] private RectTransform targetTimer;
+    [Tooltip("Arrastra aquí: Minimap")]
+    [SerializeField] private RectTransform targetMinimap;
 
     [Header("Highlight Pulse")]
     [SerializeField] private float highlightPulseScale    = 1.12f;  // tamaño máximo del pulso
@@ -174,6 +176,19 @@ public class TutorialManager : MonoBehaviour
 
     private const string TUTORIAL_DONE_KEY = "TutorialCompleted_v1";
 
+    // ── Estado de sesión estático ─────────────────────────────────────────
+    // Persiste entre recargas de escena dentro de la misma sesión.
+    // Permite que reiniciar desde Pausa o desde muerte preserve el progreso.
+    private static bool s_isSessionRestart     = false;
+    private static bool s_seqDone              = false; // intro secuencial completada
+    private static bool s_shownCoins           = false;
+    private static bool s_shownFirstShot       = false;
+    private static bool s_shownFirstOrb        = false;
+    private static bool s_shownFirstDamage     = false;
+    private static bool s_shownFirstLevelUp    = false;
+    private static bool s_shownFirstShopOpened = false;
+    private static bool s_shownFirstShopClosed = false;
+
     // Typewriter state
     private Coroutine   typewriterCoroutine;
     private bool        isTyping = false;
@@ -209,25 +224,74 @@ public class TutorialManager : MonoBehaviour
         if (TutorialConfig.Instance == null || !TutorialConfig.Instance.TutorialEnabled)
         { state = TutorialState.Complete; return; }
 
+        // ── REINICIO DESDE PAUSA O MUERTE ────────────────────────────────────
+        // Solo muestra tutoriales pendientes; si el tutorial ya estaba completo, no muestra nada.
+        if (s_isSessionRestart)
+        {
+            s_isSessionRestart = false;
+
+            // Solo saltar si el tutorial está hecho Y no estamos forzando mostrarlo siempre
+            if (PlayerPrefs.GetInt(TUTORIAL_DONE_KEY, 0) == 1 && !TutorialConfig.Instance.ForceShowEveryRun)
+            { state = TutorialState.Complete; return; }
+
+            if (!LoadDataAndValidate()) return;
+
+            // Restaurar el progreso de esta sesión
+            shownCoins           = s_shownCoins;
+            shownFirstShot       = s_shownFirstShot;
+            shownFirstOrb        = s_shownFirstOrb;
+            shownFirstDamage     = s_shownFirstDamage;
+            shownFirstLevelUp    = s_shownFirstLevelUp;
+            shownFirstShopOpened = s_shownFirstShopOpened;
+            shownFirstShopClosed = s_shownFirstShopClosed;
+
+            // Si la intro secuencial ya terminó, ir directo a los eventos pendientes
+            if (s_seqDone)
+            {
+                // Si las monedas aún no se recogieron, bloquear enemigos igual que haría EnterWaitingForCoins
+                if (!shownCoins && EnemySpawnManager.Instance != null)
+                    EnemySpawnManager.Instance.SetSpawnBlocked(true);
+                EnterWaitingForAnyEvent();
+            }
+            else
+            {
+                int first = FindNextSequentialStepAfter(-1);
+                if (first >= 0) ShowStep(first);
+                else            EnterWaitingForAnyEvent();
+            }
+            return;
+        }
+
+        // ── INICIO DESDE MENÚ PRINCIPAL ───────────────────────────────────────
         bool alreadyDone = PlayerPrefs.GetInt(TUTORIAL_DONE_KEY, 0) == 1;
         if (alreadyDone && !TutorialConfig.Instance.ForceShowEveryRun)
         { state = TutorialState.Complete; return; }
 
+        if (!LoadDataAndValidate()) return;
+
+        int firstStep = FindNextSequentialStepAfter(-1);
+        if (firstStep >= 0) ShowStep(firstStep);
+        else                EnterWaitingForAnyEvent();
+    }
+
+    /// <summary>Carga TutorialData.json, valida referencias UI y registra listeners de botones.
+    /// Devuelve false si algo falla (y pone state = Complete).</summary>
+    private bool LoadDataAndValidate()
+    {
         TextAsset jsonAsset = Resources.Load<TextAsset>("TutorialData");
         if (jsonAsset == null)
         {
             Debug.LogError("[TutorialManager] Resources/TutorialData.json no encontrado.");
-            state = TutorialState.Complete; return;
+            state = TutorialState.Complete; return false;
         }
 
         data = JsonUtility.FromJson<TutorialStepList>(jsonAsset.text);
         if (data == null || data.steps == null || data.steps.Length == 0)
         {
-            Debug.LogError("[TutorialManager] TutorialData.json vacÃ­o o mal formado.");
-            state = TutorialState.Complete; return;
+            Debug.LogError("[TutorialManager] TutorialData.json vacío o mal formado.");
+            state = TutorialState.Complete; return false;
         }
 
-        // Validar referencias
         bool ok = true;
         if (tutorialPanel  == null) { Debug.LogError("[TutorialManager] tutorialPanel sin asignar!");  ok = false; }
         if (messageText    == null) { Debug.LogError("[TutorialManager] messageText sin asignar!");    ok = false; }
@@ -238,7 +302,7 @@ public class TutorialManager : MonoBehaviour
         if (hasChoice && choiceNoButton == null)
         { Debug.LogError("[TutorialManager] Hay pasos 'choice' pero choiceNoButton sin asignar!"); ok = false; }
 
-        if (!ok) { state = TutorialState.Complete; return; }
+        if (!ok) { state = TutorialState.Complete; return false; }
 
         nextButton.onClick.AddListener(OnNextClicked);
         if (choiceNoButton != null)
@@ -246,10 +310,7 @@ public class TutorialManager : MonoBehaviour
             choiceNoButton.onClick.AddListener(OnNoClicked);
             choiceNoButton.gameObject.SetActive(false);
         }
-
-        int first = FindNextSequentialStepAfter(-1);
-        if (first >= 0) ShowStep(first);
-        else            EnterWaitingForAnyEvent();
+        return true;
     }
 
     private void OnDestroy()
@@ -371,6 +432,7 @@ public class TutorialManager : MonoBehaviour
             "health"   => targetHealthBar,
             "hud"      => targetHUD,
             "timer"    => targetTimer,
+            "minimap"  => targetMinimap,
             _          => null
         };
 
@@ -509,6 +571,10 @@ public class TutorialManager : MonoBehaviour
     {
         UnfreezeGame();
         HidePanel();
+        s_seqDone = true; // La intro secuencial terminó; los reinicios de sesión saltarán directo a eventos
+        // Bloquear enemigos hasta que el jugador recoja la primera moneda
+        if (EnemySpawnManager.Instance != null)
+            EnemySpawnManager.Instance.SetSpawnBlocked(true);
         EnterWaitingForAnyEvent();
     }
 
@@ -561,7 +627,10 @@ public class TutorialManager : MonoBehaviour
         if (state != TutorialState.WaitingForAnyEvent) return;
         if (coins <= 0) return;
 
-        shownCoins = true;
+        shownCoins = true;  s_shownCoins = true;
+        // Desbloquear enemigos ahora que el jugador ya recogió monedas
+        if (EnemySpawnManager.Instance != null)
+            EnemySpawnManager.Instance.SetSpawnBlocked(false);
         UnsubscribeAll();
         int idx = FindStepByEvent("coins_collected");
         if (idx >= 0) ShowStep(idx);
@@ -571,7 +640,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstEnemyDamaged(float damage)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstShot = true;
+        shownFirstShot = true;  s_shownFirstShot = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_enemy_damaged");
         if (idx >= 0) ShowStep(idx);
@@ -581,7 +650,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstOrbCollected(int amount)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstOrb = true;
+        shownFirstOrb = true;  s_shownFirstOrb = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_orb_collected");
         if (idx >= 0) ShowStep(idx);
@@ -591,7 +660,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstPlayerDamaged(float damage)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstDamage = true;
+        shownFirstDamage = true;  s_shownFirstDamage = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_player_damaged");
         if (idx >= 0) ShowStep(idx);
@@ -601,7 +670,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstLevelUp(int level)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstLevelUp = true;
+        shownFirstLevelUp = true;  s_shownFirstLevelUp = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_level_up");
         if (idx >= 0) ShowStep(idx);
@@ -611,7 +680,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstShopOpened()
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstShopOpened = true;
+        shownFirstShopOpened = true;  s_shownFirstShopOpened = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_shop_opened");
         if (idx >= 0) ShowStep(idx);
@@ -621,7 +690,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstShopAutoClosed()
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstShopClosed = true;
+        shownFirstShopClosed = true;  s_shownFirstShopClosed = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_shop_auto_closed");
         if (idx >= 0) ShowStep(idx);
@@ -682,10 +751,38 @@ public class TutorialManager : MonoBehaviour
         UnfreezeGame();
         HidePanel();
         UnsubscribeAll();
+        // Seguridad: desbloquear spawn si por algún motivo quedó bloqueado
+        if (EnemySpawnManager.Instance != null)
+            EnemySpawnManager.Instance.SetSpawnBlocked(false);
         PlayerPrefs.SetInt(TUTORIAL_DONE_KEY, 1);
         PlayerPrefs.Save();
+        ClearSession(); // limpiar estado estático ya que el tutorial terminó definitivamente
         GameEvents.TriggerTutorialCompleted();
         Debug.Log("[TutorialManager] Tutorial completed.");
+    }
+
+    // ── Métodos estáticos para gestión de sesión ──────────────────────────
+
+    /// <summary>Llamado desde Pausa o Game Over ANTES de recargar la escena.
+    /// Preserva el progreso del tutorial para el reinicio.</summary>
+    public static void MarkSessionRestart()
+    {
+        s_isSessionRestart = true;
+    }
+
+    /// <summary>Llamado cuando se regresa al Menú Principal.
+    /// Limpia el estado de sesión para que el próximo inicio sea desde cero.</summary>
+    public static void ClearSession()
+    {
+        s_isSessionRestart     = false;
+        s_seqDone              = false;
+        s_shownCoins           = false;
+        s_shownFirstShot       = false;
+        s_shownFirstOrb        = false;
+        s_shownFirstDamage     = false;
+        s_shownFirstLevelUp    = false;
+        s_shownFirstShopOpened = false;
+        s_shownFirstShopClosed = false;
     }
 
     // -----------------------------------------------------------------------

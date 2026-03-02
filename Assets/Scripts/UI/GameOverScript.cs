@@ -179,6 +179,16 @@ public class GameOverUI : MonoBehaviour
             GameTimeManager.Instance.ResetGame();
         }
 
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.ResetStats();
+        }
+
+        if (PlayerStatsManager.Instance != null)
+        {
+            PlayerStatsManager.Instance.ResetUpgrades();
+        }
+
         if (isTransitioning) return;
         isTransitioning = true;
 
@@ -198,6 +208,7 @@ public class GameOverUI : MonoBehaviour
         fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
         {
             ResetPlayerEnemyLayerCollision();
+            TutorialManager.MarkSessionRestart(); // preservar progreso del tutorial al reiniciar
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         });
     }
@@ -239,6 +250,7 @@ public class GameOverUI : MonoBehaviour
         fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
         {
             ResetPlayerEnemyLayerCollision();
+            TutorialManager.ClearSession(); // desde el menú principal siempre se empieza de cero
             SceneManager.LoadScene(mainMenuSceneName);
         });
     }
