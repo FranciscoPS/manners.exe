@@ -22,6 +22,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private int currentWaveIndex = 0;
     private bool isSpawningWave = false;
     private float continuousSpawnTimer = 0f;
+    private bool spawnBlocked = false;
     
     // Propiedad pública para que otros sistemas consulten la wave actual
     public int CurrentWaveIndex => currentWaveIndex;
@@ -76,6 +77,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     // IUpdateable implementation
     public void OnUpdate(float deltaTime)
     {
+        if (spawnBlocked) return;
+
         if (enableContinuousSpawn && !isSpawningWave)
         {
             continuousSpawnTimer -= deltaTime;
@@ -134,6 +137,9 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         while (true)
         {
+            // Esperar si el spawn está bloqueado (ej: tutorial)
+            while (spawnBlocked) yield return null;
+
             if (waveQueue == null || waveQueue.Length == 0)
                 yield break;
 
@@ -246,6 +252,14 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             currentWaveIndex = waveIndex;
             StartCoroutine(WaveSequence());
         }
+    }
+
+    /// <summary>
+    /// Bloquea o desbloquea el spawn de enemigos (usado por el tutorial).
+    /// </summary>
+    public void SetSpawnBlocked(bool blocked)
+    {
+        spawnBlocked = blocked;
     }
 
     public void SetWaveMultiplier(float multiplier)
