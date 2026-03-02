@@ -179,6 +179,16 @@ public class GameOverUI : MonoBehaviour
             GameTimeManager.Instance.ResetGame();
         }
 
+        if (GameSessionStats.Instance != null)
+        {
+            GameSessionStats.Instance.ResetStats();
+        }
+
+        if (PlayerStatsManager.Instance != null)
+        {
+            PlayerStatsManager.Instance.ResetUpgrades();
+        }
+
         if (isTransitioning) return;
         isTransitioning = true;
 

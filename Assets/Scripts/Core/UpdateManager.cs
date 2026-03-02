@@ -180,7 +180,7 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = updateables.Count - 1; i >= 0; i--)
         {
-            if (i < updateables.Count && updateables[i] != null && updateables[i].IsActive)
+            if (i < updateables.Count && (updateables[i] as UnityEngine.Object) != null && updateables[i].IsActive)
             {
                 updateables[i].OnUpdate(deltaTime);
             }
@@ -197,7 +197,7 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = fixedUpdateables.Count - 1; i >= 0; i--)
         {
-            if (i < fixedUpdateables.Count && fixedUpdateables[i] != null && fixedUpdateables[i].IsActive)
+            if (i < fixedUpdateables.Count && (fixedUpdateables[i] as UnityEngine.Object) != null && fixedUpdateables[i].IsActive)
             {
                 fixedUpdateables[i].OnFixedUpdate(fixedDeltaTime);
             }
@@ -214,7 +214,7 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = lateUpdateables.Count - 1; i >= 0; i--)
         {
-            if (i < lateUpdateables.Count && lateUpdateables[i] != null && lateUpdateables[i].IsActive)
+            if (i < lateUpdateables.Count && (lateUpdateables[i] as UnityEngine.Object) != null && lateUpdateables[i].IsActive)
             {
                 lateUpdateables[i].OnLateUpdate(deltaTime);
             }
