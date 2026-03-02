@@ -76,7 +76,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     private void OnEnable()
     {
-        // Buscar player cada vez que se activa (importante para pooling)
+        // Intentar obtener player (puede que no exista aún; también buscamos en OnUpdate)
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
         
         // Limpiar estado de knockback cuando se reactiva desde el pool
@@ -119,7 +119,12 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     // IUpdateable implementation
     public void OnUpdate(float deltaTime)
     {
-        if (player == null) return;
+        // Si no tenemos player buscarlo (robusto frente al orden de inicialización)
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+            if (player == null) return; // sigue sin existir el player en esta frame
+        }
         
         // Si está en knockback, reducir el timer
         if (isKnockedBack)

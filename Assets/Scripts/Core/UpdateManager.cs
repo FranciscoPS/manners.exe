@@ -180,9 +180,43 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = updateables.Count - 1; i >= 0; i--)
         {
-            if (i < updateables.Count && updateables[i] != null && updateables[i].IsActive)
+            var item = updateables[i];
+            
+            // Si la referencia del UnityEngine.Object fue destruida, eliminarla de la lista
+            if (item == null)
             {
-                updateables[i].OnUpdate(deltaTime);
+                updateables.RemoveAt(i);
+                continue;
+            }
+            
+            bool isActive = false;
+            try
+            {
+                // Algunas implementaciones pueden lanzar MissingReferenceException si el objeto fue destruido.
+                isActive = item.IsActive;
+            }
+            catch (System.Exception)
+            {
+                // Si hay cualquier excepción al consultar IsActive, asumimos referencia inválida y eliminamos.
+                updateables.RemoveAt(i);
+                continue;
+            }
+            
+            if (isActive)
+            {
+                try
+                {
+                    item.OnUpdate(deltaTime);
+                }
+                catch (MissingReferenceException)
+                {
+                    // Intentaron acceder a un UnityEngine.Object ya destruido -> eliminar referencia
+                    updateables.RemoveAt(i);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
         }
         
@@ -197,9 +231,39 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = fixedUpdateables.Count - 1; i >= 0; i--)
         {
-            if (i < fixedUpdateables.Count && fixedUpdateables[i] != null && fixedUpdateables[i].IsActive)
+            var item = fixedUpdateables[i];
+            
+            if (item == null)
             {
-                fixedUpdateables[i].OnFixedUpdate(fixedDeltaTime);
+                fixedUpdateables.RemoveAt(i);
+                continue;
+            }
+            
+            bool isActive = false;
+            try
+            {
+                isActive = item.IsActive;
+            }
+            catch (System.Exception)
+            {
+                fixedUpdateables.RemoveAt(i);
+                continue;
+            }
+            
+            if (isActive)
+            {
+                try
+                {
+                    item.OnFixedUpdate(fixedDeltaTime);
+                }
+                catch (MissingReferenceException)
+                {
+                    fixedUpdateables.RemoveAt(i);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
         }
         
@@ -214,9 +278,39 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = lateUpdateables.Count - 1; i >= 0; i--)
         {
-            if (i < lateUpdateables.Count && lateUpdateables[i] != null && lateUpdateables[i].IsActive)
+            var item = lateUpdateables[i];
+            
+            if (item == null)
             {
-                lateUpdateables[i].OnLateUpdate(deltaTime);
+                lateUpdateables.RemoveAt(i);
+                continue;
+            }
+            
+            bool isActive = false;
+            try
+            {
+                isActive = item.IsActive;
+            }
+            catch (System.Exception)
+            {
+                lateUpdateables.RemoveAt(i);
+                continue;
+            }
+            
+            if (isActive)
+            {
+                try
+                {
+                    item.OnLateUpdate(deltaTime);
+                }
+                catch (MissingReferenceException)
+                {
+                    lateUpdateables.RemoveAt(i);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
         }
         
@@ -243,6 +337,13 @@ public class UpdateManager : MonoBehaviour
                 list.Remove(item);
             }
             toRemove.Clear();
+        }
+        
+        // Limpieza adicional: eliminar entradas que sean null (Unity destroyed)
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            if (list[i] == null)
+                list.RemoveAt(i);
         }
     }
     

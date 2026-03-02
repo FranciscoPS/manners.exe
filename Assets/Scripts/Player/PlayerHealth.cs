@@ -37,6 +37,18 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     // IUpdateable implementation
     public bool IsActive => gameObject.activeInHierarchy && enabled && !isDead;
 
+    private void Awake()
+    {
+        // Determinar capas y asegurar colisión habilitada lo antes posible
+        playerLayer = gameObject.layer;
+        enemyLayer = LayerMask.NameToLayer("Enemy");
+
+        if (playerLayer >= 0 && enemyLayer >= 0)
+        {
+            Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+        }
+    }
+
     private void Start()
     {
         if (GameBalanceConfig.Instance != null)
@@ -52,14 +64,9 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
         
         damageTween = GetComponentInChildren<DamageTween>();
         
-        playerLayer = gameObject.layer;
-        enemyLayer = LayerMask.NameToLayer("Enemy");
-        
-        // CRITICAL: Asegurar que las colisiones entre player y enemy estén habilitadas al inicio
-        // Esto previene el bug donde los enemigos no pueden pegar después de reiniciar
+        // CRITICAL: Estado inicial saneado
         isDead = false;
         isInvulnerable = false;
-        Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         
