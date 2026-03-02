@@ -84,6 +84,7 @@ public class ExperienceOrb : BaseCollectible
         if (playerExp != null)
         {
             playerExp.AddExperience(experienceValue);
+            GameEvents.TriggerExperienceGained(experienceValue);
         }
         
         // Mostrar floating text

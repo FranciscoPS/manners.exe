@@ -77,6 +77,7 @@ public class EnemyHealth : MonoBehaviour
         }
         
         currentHealth -= damage;
+        GameEvents.TriggerEnemyDamaged(damage);
 
         if (currentHealth <= 0)
         {

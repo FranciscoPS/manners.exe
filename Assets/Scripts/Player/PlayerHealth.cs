@@ -131,6 +131,7 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
         
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         OnDamageTaken?.Invoke();
+        GameEvents.TriggerPlayerDamaged(damage);
         
         if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.playerDamageSFX != null)
         {

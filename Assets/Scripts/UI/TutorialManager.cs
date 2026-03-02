@@ -1,67 +1,64 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 // ---------------------------------------------------------------------------
-// Data classes - usadas internamente por TutorialManager para deserializar JSON
+// Data classes â€” deserializadas desde TutorialData.json
 // ---------------------------------------------------------------------------
 
 [Serializable]
 public class TutorialStep
 {
-    /// <summary>Identificador único del paso (ej: "intro_1").</summary>
+    /// <summary>ID Ãºnico del paso. Usado por nextStepId / yesGoesToStep / noGoesToStep.</summary>
     public string id = "";
 
-    /// <summary>Texto que se mostrará en el panel.</summary>
+    /// <summary>Texto que se mostrarÃ¡ en el panel.</summary>
     public string text = "";
 
-    /// <summary>Mostrar u ocultar la flecha indicadora.</summary>
+    /// <summary>Mostrar la flecha indicadora.</summary>
     public bool showArrow = false;
 
-    /// <summary>Ángulo de rotación Z de la flecha en grados (0 = arriba, 90 = izquierda, etc.).</summary>
+    /// <summary>Ãngulo Z de la flecha en grados (0 = arriba).</summary>
     public float arrowAngle = 0f;
 
-    /// <summary>Si es true, congela Time.timeScale mientras este paso está visible.</summary>
+    /// <summary>Congela Time.timeScale mientras este paso estÃ¡ visible.</summary>
     public bool freezeGame = true;
 
-    /// <summary>Texto del botón Next (pasos normales).</summary>
-    public string nextButtonLabel = "Next";
-
-    /// <summary>
-    /// "normal" = paso estándar con un botón Next.
-    /// "choice" = muestra dos botones Yes/No en lugar de Next.
-    /// </summary>
+    // --- Botones ---
+    /// <summary>"normal" = botÃ³n Next. "choice" = botones Yes + No.</summary>
     public string stepType = "normal";
+    public string nextButtonLabel  = "Next";
+    public string yesButtonLabel   = "Yes";
+    public string noButtonLabel    = "No";
 
-    /// <summary>Label del botón YES cuando stepType=="choice".</summary>
-    public string yesButtonLabel = "Yes";
-
-    /// <summary>Label del botón NO cuando stepType=="choice".</summary>
-    public string noButtonLabel  = "No";
-
-    /// <summary>ID del paso al que se salta cuando el jugador pulsa YES.</summary>
+    // --- NavegaciÃ³n explÃ­cita ---
+    /// <summary>Si estÃ¡ relleno, al pulsar Next se va directamente a este paso por ID.</summary>
+    public string nextStepId     = "";
+    /// <summary>Al pulsar YES (choice), ir a este paso por ID.</summary>
     public string yesGoesToStep  = "";
-
-    /// <summary>ID del paso al que se salta cuando el jugador pulsa NO.</summary>
+    /// <summary>Al pulsar NO (choice), ir a este paso por ID.</summary>
     public string noGoesToStep   = "";
 
+    // --- Disparadores de evento ---
     /// <summary>
-    /// Vacío = paso secuencial (se muestra tras el anterior).
-    /// "coins_collected" = se activa automáticamente cuando el jugador recoge su primera moneda.
+    /// El paso solo se activa cuando se dispara este evento del juego:
+    ///   "coins_collected"       â†’ primera moneda recogida
+    ///   "first_enemy_damaged"   â†’ primer disparo que impacta a un enemigo
+    ///   "first_orb_collected"   â†’ primer orbe de experiencia recogido
+    ///   "first_player_damaged"  â†’ primer daÃ±o recibido por el jugador
+    ///   "first_level_up"        â†’ primer subida de nivel
     /// </summary>
     public string waitForEvent = "";
 
-    /// <summary>
-    /// Cuando el jugador pulsa Next en este paso, se descongela el juego
-    /// y se cierra el panel en lugar de avanzar al siguiente paso.
-    /// El manager entra en modo de espera hasta que un evento de juego dispare el siguiente grupo.
-    /// </summary>
+    // --- Control de flujo especial ---
+    /// <summary>Al pulsar Next: descongela el juego, cierra el panel, y espera al evento "coins_collected".</summary>
     public bool unfreezeOnNext = false;
 
-    /// <summary>
-    /// El tutorial termina completamente después de pulsar Next en este paso.
-    /// </summary>
+    /// <summary>Al pulsar Next: cierra el panel (SIN descongelar) y vuelve a esperar mÃºltiples eventos pendientes.</summary>
+    public bool returnToWaitingOnNext = false;
+
+    /// <summary>Al pulsar Next: el tutorial termina completamente.</summary>
     public bool endsAfterNext = false;
 }
 
@@ -72,31 +69,24 @@ public class TutorialStepList
 }
 
 // ---------------------------------------------------------------------------
-// TutorialManager - Controla el flujo completo del tutorial en partida
+// TutorialManager
 // ---------------------------------------------------------------------------
 
 /// <summary>
-/// Gestor del tutorial en juego.
+/// Controla el flujo completo del tutorial en partida.
 ///
-/// SETUP EN UNITY:
-/// 1. Crea un GameObject "TutorialManager" en la escena del juego.
-/// 2. Añade este componente.
-/// 3. Crea un Canvas hijo llamado "TutorialCanvas" (Sort Order alto, ej. 50).
-/// 4. Dentro, construye el panel con:
-///    - Panel raíz (TutorialPanel): Image con fondo semitransparente
-///    - MessageText: TextMeshProUGUI para el mensaje principal
-///    - NextButton: Button con un TextMeshProUGUI hijo (NextButtonText)
-///    - ArrowObject: GameObject con Image de flecha (hijo del panel, opcional)
-/// 5. Asigna todos los GameObjects/Components a los campos del Inspector.
-/// 6. Crea TutorialConfig.asset en Assets/Resources/ (Assets > Create > Game > Tutorial Configuration).
-/// 7. TutorialData.json ya está en Assets/Resources/ — edita los textos ahí directamente.
+/// FLUJO DE ESTADOS:
+///   Inactive â†’ ShowingStep â†” WaitingForCoins â†’ WaitingForAnyEvent â†’ Complete
 ///
-/// COMPORTAMIENTO:
-/// - Pasos sin waitForEvent se muestran en secuencia al pulsar "Siguiente".
-/// - El paso con unfreezeOnNext=true libera el movimiento al pulsar "Siguiente" y espera un evento.
-/// - El paso con waitForEvent="coins_collected" se activa al recoger la primera moneda.
-/// - Solo restaura timeScale si fue el propio tutorial quien lo congeló (no invasivo).
-/// - Bloquea el menú de pausa mientras el panel está visible (check en PauseMenu).
+/// WaitingForCoins:     espera la primera moneda (tras "unfreezeOnNext")
+/// WaitingForAnyEvent:  espera cualquiera de: first_shot / first_orb / first_damage / first_levelup
+///                      los que ya se mostraron se ignoran; cuando todos se han visto â†’ Complete
+///
+/// CRÃTICO â€” Level Up:
+///   LevelUpManager ya congela Time.timeScale=0 ANTES de que llegue el evento OnLevelUp.
+///   FreezeGame() comprueba si el tiempo ya estÃ¡ a 0 antes de actuar â†’ weFrozeTime=false.
+///   Al cerrar el tutorial tras los pasos de level-up, UnfreezeGame() no hace nada porque
+///   weFrozeTime=false â†’ el panel de level-up sigue congelado y activo. Comportamiento correcto.
 /// </summary>
 public class TutorialManager : MonoBehaviour
 {
@@ -109,46 +99,46 @@ public class TutorialManager : MonoBehaviour
     private static void ResetStatics() => Instance = null;
 
     // -----------------------------------------------------------------------
-    // Inspector fields
+    // Inspector
     // -----------------------------------------------------------------------
     [Header("UI References")]
-    [Tooltip("GameObject raíz del panel del tutorial. Se activa/desactiva según el estado.")]
-    [SerializeField] private GameObject tutorialPanel;
-
-    [Tooltip("TextMeshProUGUI que muestra el mensaje del paso actual.")]
+    [SerializeField] private GameObject     tutorialPanel;
     [SerializeField] private TextMeshProUGUI messageText;
-
-    [Tooltip("Botón para avanzar al siguiente paso.")]
-    [SerializeField] private Button nextButton;
-
-    [Tooltip("TextMeshProUGUI hijo del nextButton para cambiar el label.")]
+    [SerializeField] private Button          nextButton;
     [SerializeField] private TextMeshProUGUI nextButtonText;
+    [SerializeField] private GameObject     arrowObject;
+    [SerializeField] private RectTransform  arrowTransform;
 
-    [Tooltip("GameObject de la flecha indicadora (puede ser null si no se usa).")]
-    [SerializeField] private GameObject arrowObject;
-
-    [Tooltip("RectTransform de la flecha para aplicar rotación (puede ser null).")]
-    [SerializeField] private RectTransform arrowTransform;
-
-    [Header("Choice Step Buttons")]
-    [Tooltip("Botón NO — solo se usa en pasos de tipo 'choice'. Puede dejarse vacío si no hay pasos de elección.")]
-    [SerializeField] private Button choiceNoButton;
-
-    [Tooltip("TextMeshProUGUI hijo del choiceNoButton para cambiar el label.")]
+    [Header("Choice Buttons")]
+    [SerializeField] private Button          choiceNoButton;
     [SerializeField] private TextMeshProUGUI choiceNoButtonText;
 
     // -----------------------------------------------------------------------
-    // Private state
+    // State
     // -----------------------------------------------------------------------
     private TutorialStepList data;
-    private int  currentStepIndex = -1;
+    private int          currentStepIndex = -1;
     private TutorialStep currentStep;
 
-    private enum TutorialState { Inactive, ShowingStep, WaitingForEvent, Complete }
+    private enum TutorialState
+    {
+        Inactive,
+        ShowingStep,
+        WaitingForCoins,       // despuÃ©s de "unfreezeOnNext" â€” solo espera monedas
+        WaitingForAnyEvent,    // espera cualquiera de los 4 eventos restantes
+        Complete
+    }
     private TutorialState state = TutorialState.Inactive;
 
-    // Control no invasivo: solo restauramos timeScale si NOSOTROS lo congelamos
+    // Â¿Fuimos NOSOTROS quienes congelamos el tiempo?
     private bool weFrozeTime = false;
+
+    // Grupos de eventos ya mostrados
+    private bool shownCoins       = false;
+    private bool shownFirstShot   = false;
+    private bool shownFirstOrb    = false;
+    private bool shownFirstDamage = false;
+    private bool shownFirstLevelUp = false;
 
     private const string TUTORIAL_DONE_KEY = "TutorialCompleted_v1";
 
@@ -157,148 +147,109 @@ public class TutorialManager : MonoBehaviour
     // -----------------------------------------------------------------------
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 
     private void Start()
     {
-        // Ocultar panel al inicio — siempre, por si quedó activo en escena
         HidePanel();
 
-        // ¿Tutorial habilitado?
         if (TutorialConfig.Instance == null || !TutorialConfig.Instance.TutorialEnabled)
-        {
-            state = TutorialState.Complete;
-            return;
-        }
+        { state = TutorialState.Complete; return; }
 
-        // ¿Ya se completó? (salvo que ForceShowEveryRun esté activo)
         bool alreadyDone = PlayerPrefs.GetInt(TUTORIAL_DONE_KEY, 0) == 1;
         if (alreadyDone && !TutorialConfig.Instance.ForceShowEveryRun)
-        {
-            state = TutorialState.Complete;
-            return;
-        }
+        { state = TutorialState.Complete; return; }
 
-        // Cargar JSON desde Resources/TutorialData.json
         TextAsset jsonAsset = Resources.Load<TextAsset>("TutorialData");
         if (jsonAsset == null)
         {
-            Debug.LogError("[TutorialManager] No se encontró Resources/TutorialData.json. " +
-                           "Asegúrate de que el archivo esté en Assets/Resources/TutorialData.json.");
-            state = TutorialState.Complete;
-            return;
+            Debug.LogError("[TutorialManager] Resources/TutorialData.json no encontrado.");
+            state = TutorialState.Complete; return;
         }
 
         data = JsonUtility.FromJson<TutorialStepList>(jsonAsset.text);
         if (data == null || data.steps == null || data.steps.Length == 0)
         {
-            Debug.LogError("[TutorialManager] TutorialData.json está vacío o mal formado.");
-            state = TutorialState.Complete;
-            return;
+            Debug.LogError("[TutorialManager] TutorialData.json vacÃ­o o mal formado.");
+            state = TutorialState.Complete; return;
         }
 
-        // Validar referencias obligatorias antes de proceder
-        bool refsOk = true;
-        if (tutorialPanel == null)  { Debug.LogError("[TutorialManager] ¡tutorialPanel no asignado en el Inspector!"); refsOk = false; }
-        if (messageText == null)    { Debug.LogError("[TutorialManager] ¡messageText no asignado en el Inspector!"); refsOk = false; }
-        if (nextButton == null)     { Debug.LogError("[TutorialManager] ¡nextButton no asignado en el Inspector!"); refsOk = false; }
-        if (nextButtonText == null) { Debug.LogError("[TutorialManager] ¡nextButtonText no asignado en el Inspector!"); refsOk = false; }
+        // Validar referencias
+        bool ok = true;
+        if (tutorialPanel  == null) { Debug.LogError("[TutorialManager] tutorialPanel sin asignar!");  ok = false; }
+        if (messageText    == null) { Debug.LogError("[TutorialManager] messageText sin asignar!");    ok = false; }
+        if (nextButton     == null) { Debug.LogError("[TutorialManager] nextButton sin asignar!");     ok = false; }
+        if (nextButtonText == null) { Debug.LogError("[TutorialManager] nextButtonText sin asignar!"); ok = false; }
 
-        // Comprobar si algún paso requiere los botones de elección
-        bool hasChoiceStep = false;
-        foreach (var s in data.steps)
-            if (s.stepType == "choice") { hasChoiceStep = true; break; }
+        bool hasChoice = Array.Exists(data.steps, s => s.stepType == "choice");
+        if (hasChoice && choiceNoButton == null)
+        { Debug.LogError("[TutorialManager] Hay pasos 'choice' pero choiceNoButton sin asignar!"); ok = false; }
 
-        if (hasChoiceStep && choiceNoButton == null)
-        {
-            Debug.LogError("[TutorialManager] Hay pasos de tipo 'choice' pero choiceNoButton no está asignado en el Inspector!");
-            refsOk = false;
-        }
+        if (!ok) { state = TutorialState.Complete; return; }
 
-        if (!refsOk)
-        {
-            Debug.LogError("[TutorialManager] Faltan referencias — el tutorial no puede iniciarse. Asigna todos los campos en el Inspector.");
-            state = TutorialState.Complete;
-            return;
-        }
-
-        // Conectar botones
-        nextButton.onClick.AddListener(OnNextButtonClicked);
+        nextButton.onClick.AddListener(OnNextClicked);
         if (choiceNoButton != null)
         {
-            choiceNoButton.onClick.AddListener(OnNoButtonClicked);
-            choiceNoButton.gameObject.SetActive(false); // oculto por defecto
+            choiceNoButton.onClick.AddListener(OnNoClicked);
+            choiceNoButton.gameObject.SetActive(false);
         }
 
-        // Mostrar primer paso secuencial (sin waitForEvent)
-        int firstStep = FindNextSequentialStepAfter(-1);
-        if (firstStep >= 0)
-            ShowStep(firstStep);
-        else
-            CompleteTutorial(); // No hay pasos secuenciales, nada que hacer
+        int first = FindNextSequentialStepAfter(-1);
+        if (first >= 0) ShowStep(first);
+        else            EnterWaitingForAnyEvent();
     }
 
     private void OnDestroy()
     {
-        if (nextButton != null)
-            nextButton.onClick.RemoveListener(OnNextButtonClicked);
-
-        if (choiceNoButton != null)
-            choiceNoButton.onClick.RemoveListener(OnNoButtonClicked);
-
-        UnsubscribeFromGameEvents();
+        if (nextButton     != null) nextButton.onClick.RemoveListener(OnNextClicked);
+        if (choiceNoButton != null) choiceNoButton.onClick.RemoveListener(OnNoClicked);
+        UnsubscribeAll();
     }
 
     // -----------------------------------------------------------------------
     // Button handlers
     // -----------------------------------------------------------------------
-    private void OnNextButtonClicked()
+    private void OnNextClicked()
     {
         if (currentStep == null || state != TutorialState.ShowingStep) return;
 
         if (currentStep.stepType == "choice")
         {
-            // En pasos de elección el botón Next actúa como YES
-            int targetIndex = FindStepIndexById(currentStep.yesGoesToStep);
-            if (targetIndex >= 0) ShowStep(targetIndex);
-            else CompleteTutorial();
+            NavigateToId(currentStep.yesGoesToStep);
+            return;
         }
-        else if (currentStep.endsAfterNext)
+
+        if (currentStep.endsAfterNext)       { CompleteTutorial(); return; }
+        if (currentStep.returnToWaitingOnNext){ ReturnToWaiting();  return; }
+        if (currentStep.unfreezeOnNext)       { EnterWaitingForCoins(); return; }
+
+        // nextStepId explÃ­cito tiene prioridad sobre bÃºsqueda secuencial
+        if (!string.IsNullOrEmpty(currentStep.nextStepId))
         {
-            // Este paso cierra el tutorial al pulsar Next
-            CompleteTutorial();
+            NavigateToId(currentStep.nextStepId);
+            return;
         }
-        else if (currentStep.unfreezeOnNext)
-        {
-            // Liberar movimiento y esperar a que un evento de juego dispare el siguiente paso
-            UnfreezeGame();
-            HidePanel();
-            state = TutorialState.WaitingForEvent;
-            SubscribeToGameEvents();
-        }
-        else
-        {
-            // Avanzar al siguiente paso secuencial
-            int next = FindNextSequentialStepAfter(currentStepIndex);
-            if (next >= 0) ShowStep(next);
-            else CompleteTutorial();
-        }
+
+        int next = FindNextSequentialStepAfter(currentStepIndex);
+        if (next >= 0) ShowStep(next);
+        else           EnterWaitingForAnyEvent();
     }
 
-    private void OnNoButtonClicked()
+    private void OnNoClicked()
     {
         if (currentStep == null || state != TutorialState.ShowingStep) return;
         if (currentStep.stepType != "choice") return;
+        NavigateToId(currentStep.noGoesToStep);
+    }
 
-        int targetIndex = FindStepIndexById(currentStep.noGoesToStep);
-        if (targetIndex >= 0) ShowStep(targetIndex);
-        else CompleteTutorial();
+    private void NavigateToId(string id)
+    {
+        if (string.IsNullOrEmpty(id)) { CompleteTutorial(); return; }
+        int idx = FindStepIndexById(id);
+        if (idx >= 0) ShowStep(idx);
+        else          CompleteTutorial();
     }
 
     // -----------------------------------------------------------------------
@@ -310,26 +261,21 @@ public class TutorialManager : MonoBehaviour
         currentStep      = data.steps[index];
         state            = TutorialState.ShowingStep;
 
-        // Texto principal
         if (messageText != null)
             messageText.text = currentStep.text;
 
-        // Configurar botones según el tipo de paso
         if (currentStep.stepType == "choice")
         {
-            // Mostrar botón NO y usar el botón Next como YES
-            if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(true);
-            if (nextButtonText    != null) nextButtonText.text    = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? "Yes" : currentStep.yesButtonLabel;
+            if (choiceNoButton     != null) choiceNoButton.gameObject.SetActive(true);
+            if (nextButtonText     != null) nextButtonText.text     = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? "Yes" : currentStep.yesButtonLabel;
             if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel)  ? "No"  : currentStep.noButtonLabel;
         }
         else
         {
-            // Ocultar botón NO y usar label normal
             if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(false);
             if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.nextButtonLabel) ? "Next" : currentStep.nextButtonLabel;
         }
 
-        // Flecha
         if (arrowObject != null)
         {
             arrowObject.SetActive(currentStep.showArrow);
@@ -337,155 +283,211 @@ public class TutorialManager : MonoBehaviour
                 arrowTransform.localEulerAngles = new Vector3(0f, 0f, currentStep.arrowAngle);
         }
 
-        // Congelar tiempo si corresponde
-        if (currentStep.freezeGame)
-            FreezeGame();
+        if (currentStep.freezeGame) FreezeGame();
 
-        if (tutorialPanel != null)
-            tutorialPanel.SetActive(true);
+        if (tutorialPanel != null) tutorialPanel.SetActive(true);
 
-        // Notificar al resto del juego que se está mostrando este paso
         GameEvents.TriggerTutorialStepShown(currentStep.id);
     }
 
     // -----------------------------------------------------------------------
-    // Step search helpers
+    // Waiting states
     // -----------------------------------------------------------------------
-    /// <summary>Devuelve el índice del siguiente paso secuencial (sin waitForEvent) tras afterIndex.</summary>
-    private int FindNextSequentialStepAfter(int afterIndex)
+
+    /// <summary>Llamado tras unfreezeOnNext: descongela y espera solo la primera moneda.</summary>
+    private void EnterWaitingForCoins()
     {
-        if (data?.steps == null) return -1;
-        for (int i = afterIndex + 1; i < data.steps.Length; i++)
-        {
-            if (string.IsNullOrEmpty(data.steps[i].waitForEvent))
-                return i;
-        }
-        return -1;
+        UnfreezeGame();
+        HidePanel();
+        state = TutorialState.WaitingForCoins;
+
+        if (CurrencyManager.Instance != null)
+            CurrencyManager.Instance.OnCoinsChanged += OnCoinsChanged_Tutorial;
     }
 
-    /// <summary>Devuelve el índice del primer paso cuyo waitForEvent coincida con eventName.</summary>
-    private int FindStepByEvent(string eventName)
+    /// <summary>
+    /// Llamado tras returnToWaitingOnNext (fin de un grupo de evento).
+    /// NO descongela si el tiempo ya fue congelado por otro sistema (ej: level-up panel).
+    /// </summary>
+    private void ReturnToWaiting()
     {
-        if (data?.steps == null) return -1;
-        for (int i = 0; i < data.steps.Length; i++)
-        {
-            if (string.Equals(data.steps[i].waitForEvent, eventName,
-                              StringComparison.OrdinalIgnoreCase))
-                return i;
-        }
-        return -1;
+        HidePanel();
+        UnfreezeGame(); // solo actÃºa si weFrozeTime == true
+        EnterWaitingForAnyEvent();
     }
 
-    /// <summary>Devuelve el índice del paso cuyo id coincida exactamente con el string dado.</summary>
-    private int FindStepIndexById(string id)
+    private void EnterWaitingForAnyEvent()
     {
-        if (data?.steps == null || string.IsNullOrEmpty(id)) return -1;
-        for (int i = 0; i < data.steps.Length; i++)
+        // Si todos los grupos ya se mostraron, el tutorial estÃ¡ completo
+        if (shownCoins && shownFirstShot && shownFirstOrb && shownFirstDamage && shownFirstLevelUp)
         {
-            if (string.Equals(data.steps[i].id, id, StringComparison.OrdinalIgnoreCase))
-                return i;
+            CompleteTutorial();
+            return;
         }
-        Debug.LogError($"[TutorialManager] No se encontró el paso con id '{id}' en TutorialData.json");
-        return -1;
+
+        state = TutorialState.WaitingForAnyEvent;
+        UnsubscribeAll(); // evitar dobles suscripciones
+
+        if (!shownCoins && CurrencyManager.Instance != null)
+            CurrencyManager.Instance.OnCoinsChanged += OnCoinsChanged_Tutorial;
+
+        if (!shownFirstShot)   GameEvents.OnEnemyDamaged   += OnFirstEnemyDamaged;
+        if (!shownFirstOrb)    GameEvents.OnExperienceGained += OnFirstOrbCollected;
+        if (!shownFirstDamage) GameEvents.OnPlayerDamaged   += OnFirstPlayerDamaged;
+        if (!shownFirstLevelUp) GameEvents.OnLevelUp        += OnFirstLevelUp;
     }
 
     // -----------------------------------------------------------------------
-    // Non-invasive time control
+    // Event handlers
+    // -----------------------------------------------------------------------
+    private void OnCoinsChanged_Tutorial(int coins)
+    {
+        if (state != TutorialState.WaitingForCoins && state != TutorialState.WaitingForAnyEvent) return;
+        if (coins <= 0) return;
+
+        shownCoins = true;
+        UnsubscribeAll();
+        int idx = FindStepByEvent("coins_collected");
+        if (idx >= 0) ShowStep(idx);
+        else EnterWaitingForAnyEvent();
+    }
+
+    private void OnFirstEnemyDamaged(float damage)
+    {
+        if (state != TutorialState.WaitingForAnyEvent) return;
+        shownFirstShot = true;
+        UnsubscribeAll();
+        int idx = FindStepByEvent("first_enemy_damaged");
+        if (idx >= 0) ShowStep(idx);
+        else EnterWaitingForAnyEvent();
+    }
+
+    private void OnFirstOrbCollected(int amount)
+    {
+        if (state != TutorialState.WaitingForAnyEvent) return;
+        shownFirstOrb = true;
+        UnsubscribeAll();
+        int idx = FindStepByEvent("first_orb_collected");
+        if (idx >= 0) ShowStep(idx);
+        else EnterWaitingForAnyEvent();
+    }
+
+    private void OnFirstPlayerDamaged(float damage)
+    {
+        if (state != TutorialState.WaitingForAnyEvent) return;
+        shownFirstDamage = true;
+        UnsubscribeAll();
+        int idx = FindStepByEvent("first_player_damaged");
+        if (idx >= 0) ShowStep(idx);
+        else EnterWaitingForAnyEvent();
+    }
+
+    private void OnFirstLevelUp(int level)
+    {
+        if (state != TutorialState.WaitingForAnyEvent) return;
+        shownFirstLevelUp = true;
+        UnsubscribeAll();
+        int idx = FindStepByEvent("first_level_up");
+        if (idx >= 0) ShowStep(idx);
+        else EnterWaitingForAnyEvent();
+    }
+
+    // -----------------------------------------------------------------------
+    // Event subscription management
+    // -----------------------------------------------------------------------
+    private void UnsubscribeAll()
+    {
+        if (CurrencyManager.Instance != null)
+            CurrencyManager.Instance.OnCoinsChanged -= OnCoinsChanged_Tutorial;
+
+        GameEvents.OnEnemyDamaged    -= OnFirstEnemyDamaged;
+        GameEvents.OnExperienceGained -= OnFirstOrbCollected;
+        GameEvents.OnPlayerDamaged   -= OnFirstPlayerDamaged;
+        GameEvents.OnLevelUp         -= OnFirstLevelUp;
+    }
+
+    // -----------------------------------------------------------------------
+    // Time control (non-invasive)
     // -----------------------------------------------------------------------
     private void FreezeGame()
     {
-        // Solo congelar si el tiempo corre (no pisamos una pausa existente)
         if (Time.timeScale != 0f)
         {
             Time.timeScale = 0f;
-            weFrozeTime = true;
+            weFrozeTime    = true;
         }
+        // Si timeScale ya era 0 (ej: LevelUpManager lo congelÃ³), weFrozeTime queda false â†’ no lo restauramos al cerrar
     }
 
     private void UnfreezeGame()
     {
-        // Solo restaurar si NOSOTROS lo congelamos
-        if (weFrozeTime)
-        {
-            Time.timeScale = 1f;
-            weFrozeTime    = false;
-        }
+        if (!weFrozeTime) return;
+        Time.timeScale = 1f;
+        weFrozeTime    = false;
     }
 
     private void HidePanel()
     {
-        if (tutorialPanel != null)
-            tutorialPanel.SetActive(false);
+        if (tutorialPanel != null) tutorialPanel.SetActive(false);
     }
 
     // -----------------------------------------------------------------------
-    // Tutorial completion
+    // Completion
     // -----------------------------------------------------------------------
     private void CompleteTutorial()
     {
         state = TutorialState.Complete;
         UnfreezeGame();
         HidePanel();
-        UnsubscribeFromGameEvents();
+        UnsubscribeAll();
         PlayerPrefs.SetInt(TUTORIAL_DONE_KEY, 1);
         PlayerPrefs.Save();
         GameEvents.TriggerTutorialCompleted();
-        Debug.Log("[TutorialManager] Tutorial completado.");
+        Debug.Log("[TutorialManager] Tutorial completed.");
     }
 
     // -----------------------------------------------------------------------
-    // Game event subscriptions (para pasos disparados por eventos del juego)
+    // Step search helpers
     // -----------------------------------------------------------------------
-    private void SubscribeToGameEvents()
+    private int FindNextSequentialStepAfter(int afterIndex)
     {
-        if (CurrencyManager.Instance != null)
-            CurrencyManager.Instance.OnCoinsChanged += OnCoinsChangedWhileWaiting;
+        if (data?.steps == null) return -1;
+        for (int i = afterIndex + 1; i < data.steps.Length; i++)
+            if (string.IsNullOrEmpty(data.steps[i].waitForEvent)) return i;
+        return -1;
     }
 
-    private void UnsubscribeFromGameEvents()
+    private int FindStepByEvent(string eventName)
     {
-        if (CurrencyManager.Instance != null)
-            CurrencyManager.Instance.OnCoinsChanged -= OnCoinsChangedWhileWaiting;
+        if (data?.steps == null) return -1;
+        for (int i = 0; i < data.steps.Length; i++)
+            if (string.Equals(data.steps[i].waitForEvent, eventName, StringComparison.OrdinalIgnoreCase))
+                return i;
+        return -1;
     }
 
-    private void OnCoinsChangedWhileWaiting(int currentCoins)
+    private int FindStepIndexById(string id)
     {
-        if (state != TutorialState.WaitingForEvent) return;
-        if (currentCoins <= 0) return;
-
-        // Primera moneda recogida → desuscribir y mostrar el paso correspondiente
-        UnsubscribeFromGameEvents();
-
-        int stepIndex = FindStepByEvent("coins_collected");
-        if (stepIndex >= 0)
-            ShowStep(stepIndex);
-        else
-            CompleteTutorial();
+        if (data?.steps == null || string.IsNullOrEmpty(id)) return -1;
+        for (int i = 0; i < data.steps.Length; i++)
+            if (string.Equals(data.steps[i].id, id, StringComparison.OrdinalIgnoreCase))
+                return i;
+        Debug.LogError($"[TutorialManager] Step id '{id}' not found in TutorialData.json");
+        return -1;
     }
 
     // -----------------------------------------------------------------------
     // Public API
     // -----------------------------------------------------------------------
-
-    /// <summary>
-    /// True cuando el panel del tutorial está visible y bloqueando la pantalla.
-    /// Úsalo en PauseMenu para bloquear ESC durante el tutorial.
-    /// </summary>
+    /// <summary>True mientras el panel del tutorial estÃ¡ visible. Usado por PauseMenu para bloquear ESC.</summary>
     public bool IsTutorialPanelActive => state == TutorialState.ShowingStep;
 
-    /// <summary>
-    /// True en cualquier estado activo del tutorial (mostrando panel O esperando evento).
-    /// </summary>
+    /// <summary>True en cualquier estado activo (mostrando O esperando evento).</summary>
     public bool IsTutorialActive => state != TutorialState.Inactive && state != TutorialState.Complete;
 
-    /// <summary>
-    /// Borra el marcador de tutorial completado. El tutorial se mostrará de nuevo la próxima partida.
-    /// Útil para botones de "Repetir tutorial" en menús de ajustes.
-    /// </summary>
     public static void ResetTutorial()
     {
         PlayerPrefs.DeleteKey(TUTORIAL_DONE_KEY);
         PlayerPrefs.Save();
-        Debug.Log("[TutorialManager] Progreso del tutorial reseteado.");
     }
 }

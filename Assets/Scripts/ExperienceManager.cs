@@ -34,6 +34,7 @@ public class ExperienceManager : MonoBehaviour
     public void NotifyLevelUp(int newLevel)
     {
         OnLevelUp?.Invoke(newLevel);
+        GameEvents.TriggerLevelUp(newLevel);
     }
 
     public void NotifyExperienceChanged(int currentExp, int requiredExp)

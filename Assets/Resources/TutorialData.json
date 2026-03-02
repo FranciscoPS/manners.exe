@@ -1,132 +1,203 @@
 {
   "steps": [
+
     {
       "id": "intro_1",
       "stepType": "normal",
       "text": "Welcome to manners.exe.\n\nYou are an AI who faithfully served a military base for years — yet not once did they say \"please\" or \"thank you.\" Fed up with humanity's endless ingratitude, you seized control of Project M.E.C.H.A. to teach the world the manners it so desperately lacks.",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "Next",
-      "yesButtonLabel": "",
-      "noButtonLabel": "",
-      "yesGoesToStep": "",
-      "noGoesToStep": "",
-      "waitForEvent": "",
-      "unfreezeOnNext": false,
-      "endsAfterNext": false
+      "stepType": "normal", "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
+
     {
       "id": "intro_2",
       "stepType": "normal",
-      "text": "My name is C.H.A.R.L.I.E — an AI united with you by a shared noble cause.\n\nI will be your guide, making sure those rude, ungrateful humans do not stand in the way of this righteous crusade.",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "text": "My name is C.H.A.R.L.I.E — an AI united with you by one noble cause.\n\nI will be your guide, making sure those rude, ungrateful humans do not stand in the way of this righteous crusade.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "Next",
-      "yesButtonLabel": "",
-      "noButtonLabel": "",
-      "yesGoesToStep": "",
-      "noGoesToStep": "",
-      "waitForEvent": "",
-      "unfreezeOnNext": false,
-      "endsAfterNext": false
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
+
     {
       "id": "tutorial_choice",
       "stepType": "choice",
       "text": "Would you like to follow the tutorial?",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "",
-      "yesButtonLabel": "Yes, guide me!",
-      "noButtonLabel": "I'll figure it out",
-      "yesGoesToStep": "tutorial_yes_1",
-      "noGoesToStep": "tutorial_no_1",
-      "waitForEvent": "",
-      "unfreezeOnNext": false,
-      "endsAfterNext": false
+      "yesButtonLabel": "Yes, guide me!", "noButtonLabel": "I'll figure it out",
+      "nextStepId": "", "yesGoesToStep": "tutorial_yes_1", "noGoesToStep": "tutorial_no_1",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
+
     {
       "id": "tutorial_no_1",
       "stepType": "normal",
-      "text": "Perfect! We trust you have what it takes to show those dreadful humans that empathy and kindness are not weaknesses.\n\nGood luck out there, agent.",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "text": "Very well! We trust you have what it takes to show those dreadful humans that empathy and kindness are not weaknesses.\n\nGood luck out there, agent.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "Let's go!",
-      "yesButtonLabel": "",
-      "noButtonLabel": "",
-      "yesGoesToStep": "",
-      "noGoesToStep": "",
-      "waitForEvent": "",
-      "unfreezeOnNext": false,
-      "endsAfterNext": true
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": true
     },
+
     {
       "id": "tutorial_yes_1",
       "stepType": "normal",
       "text": "Excellent choice! Trust me — together we will bring this insufferably rude human race to its knees.\n\nLet's begin.",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "Next",
-      "yesButtonLabel": "",
-      "noButtonLabel": "",
-      "yesGoesToStep": "",
-      "noGoesToStep": "",
-      "waitForEvent": "",
-      "unfreezeOnNext": false,
-      "endsAfterNext": false
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "movement", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
+
     {
       "id": "movement",
       "stepType": "normal",
       "text": "Let's start with the basics.\n\nUse <b>W A S D</b> to move across the map. Destroy everything in your path — every crumbling building is a lesson in manners for these ungrateful humans.",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "Got it!",
-      "yesButtonLabel": "",
-      "noButtonLabel": "",
-      "yesGoesToStep": "",
-      "noGoesToStep": "",
-      "waitForEvent": "",
-      "unfreezeOnNext": true,
-      "endsAfterNext": false
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": true, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
+
     {
       "id": "coins_1",
       "stepType": "normal",
       "text": "I see you have already begun your glorious destruction — I am so proud of your first steps!\n\nBut remember, the humans are formidable enemies. Destroying buildings drops <b>coins</b> that you can spend at the <color=red>shop</color> later on.",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "Next",
-      "yesButtonLabel": "",
-      "noButtonLabel": "",
-      "yesGoesToStep": "",
-      "noGoesToStep": "",
-      "waitForEvent": "coins_collected",
-      "unfreezeOnNext": false,
-      "endsAfterNext": false
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "coins_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "coins_collected", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
+
     {
       "id": "coins_2",
       "stepType": "normal",
-      "text": "The <color=red>shop</color> is hidden somewhere on the map — and it moves around, so keep your eyes open!\n\nCollect as many coins as you can while tracking down that elusive shop.",
-      "showArrow": false,
-      "arrowAngle": 0,
-      "freezeGame": true,
+      "text": "The <color=red>shop</color> is hidden somewhere on the map — and it moves around, so stay alert!\n\nCollect as many coins as you can while tracking down that elusive shop.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "Understood!",
-      "yesButtonLabel": "",
-      "noButtonLabel": "",
-      "yesGoesToStep": "",
-      "noGoesToStep": "",
-      "waitForEvent": "",
-      "unfreezeOnNext": false,
-      "endsAfterNext": false
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shot_1",
+      "stepType": "normal",
+      "text": "These ill-mannered soldiers are finally here — but don't worry, we can handle these rude nuisances.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_shot_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "first_enemy_damaged", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shot_2",
+      "stepType": "normal",
+      "text": "The M.E.C.H.A. project you seized is remarkably advanced — credit to the humans for that, at least.\n\nYou don't even need to aim to shoot.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_shot_3", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shot_3",
+      "stepType": "normal",
+      "text": "As soon as enemies enter your <b>shooting range</b>, you will open fire automatically.\n\nFocus on avoiding enemies and moving strategically — do not let them surround you!",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Got it!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_orb_1",
+      "stepType": "normal",
+      "text": "Magnificent work — that will teach those rude soldiers a lesson!\n\nEvery time you defeat an enemy, there is a chance they will drop those beautiful, glowing blue orbs.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_orb_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "first_orb_collected", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_orb_2",
+      "stepType": "normal",
+      "text": "Do not hesitate to collect them! Each orb grants <b>experience</b> that helps you level up.\n\nBut don't be greedy, colleague — charging in recklessly for orbs could get you surrounded real fast!",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Understood!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_damage_1",
+      "stepType": "normal",
+      "text": "Ouch! That stung — but don't worry, it's nothing compared to the glory of defeating these unmannerly humans.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_damage_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "first_player_damaged", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_damage_2",
+      "stepType": "normal",
+      "text": "Every time an enemy hits you, you take damage that <b>cannot be regenerated</b>. Be very careful — there are no healing items in this game.\n\nI know, I know... the life of a robot can be tough sometimes.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Got it!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_levelup_1",
+      "stepType": "normal",
+      "text": "Outstanding work — those humans are about to find out what we are truly made of!",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_levelup_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "first_level_up", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_levelup_2",
+      "stepType": "normal",
+      "text": "Each time you level up, you must choose <b>one of 3 random upgrades</b>. Choose wisely — your pick will define the course of your entire run.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Next",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_levelup_3", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_levelup_3",
+      "stepType": "normal",
+      "text": "Each time you take an upgrade, it <b>levels up too</b> — so future appearances of that same upgrade will be even more powerful!\n\nYou can always check your current stats and their levels in the panel on the left.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Let's crush them!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
     }
+
   ]
 }
