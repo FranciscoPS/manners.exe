@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6190908423056691718}
   - component: {fileID: 7114533053708017834}
   - component: {fileID: 2742775524479765140}
-  - component: {fileID: 8918805286927913994}
+  - component: {fileID: 8998925568946165008}
   m_Layer: 3
   m_Name: Basic Enemy
   m_TagString: Enemy
@@ -107,8 +107,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79b963095cbb44542a92e2a4ce4c70aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolable
---- !u!65 &8918805286927913994
-BoxCollider:
+--- !u!135 &8998925568946165008
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -126,8 +126,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.653579, y: 1.1694301, z: 2.7969499}
-  m_Center: {x: 0.067549944, y: -0.21528502, z: 0.018972158}
+  m_Radius: 1.55
+  m_Center: {x: 0, y: 0.42, z: 0}
 --- !u!1001 &1323017014965813470
 PrefabInstance:
   m_ObjectHideFlags: 0
