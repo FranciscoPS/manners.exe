@@ -180,7 +180,22 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = updateables.Count - 1; i >= 0; i--)
         {
-            if (i < updateables.Count && (updateables[i] as UnityEngine.Object) != null && updateables[i].IsActive)
+            var item = updateables[i];
+            
+            // Si la referencia del UnityEngine.Object fue destruida, eliminarla de la lista
+            if (item == null)
+            {
+                updateables.RemoveAt(i);
+                continue;
+            }
+            
+            bool isActive = false;
+            try
+            {
+                // Algunas implementaciones pueden lanzar MissingReferenceException si el objeto fue destruido.
+                isActive = item.IsActive;
+            }
+            catch (System.Exception)
             {
                 // Si hay cualquier excepción al consultar IsActive, asumimos referencia inválida y eliminamos.
                 updateables.RemoveAt(i);
@@ -216,7 +231,20 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = fixedUpdateables.Count - 1; i >= 0; i--)
         {
-            if (i < fixedUpdateables.Count && (fixedUpdateables[i] as UnityEngine.Object) != null && fixedUpdateables[i].IsActive)
+            var item = fixedUpdateables[i];
+            
+            if (item == null)
+            {
+                fixedUpdateables.RemoveAt(i);
+                continue;
+            }
+            
+            bool isActive = false;
+            try
+            {
+                isActive = item.IsActive;
+            }
+            catch (System.Exception)
             {
                 fixedUpdateables.RemoveAt(i);
                 continue;
@@ -250,7 +278,20 @@ public class UpdateManager : MonoBehaviour
         
         for (int i = lateUpdateables.Count - 1; i >= 0; i--)
         {
-            if (i < lateUpdateables.Count && (lateUpdateables[i] as UnityEngine.Object) != null && lateUpdateables[i].IsActive)
+            var item = lateUpdateables[i];
+            
+            if (item == null)
+            {
+                lateUpdateables.RemoveAt(i);
+                continue;
+            }
+            
+            bool isActive = false;
+            try
+            {
+                isActive = item.IsActive;
+            }
+            catch (System.Exception)
             {
                 lateUpdateables.RemoveAt(i);
                 continue;
