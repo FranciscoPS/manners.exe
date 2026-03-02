@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -113,6 +114,12 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private Button          choiceNoButton;
     [SerializeField] private TextMeshProUGUI choiceNoButtonText;
 
+    [Header("Typewriter Effect")]
+    [SerializeField] private float     charsPerSecond = 38f;
+    [SerializeField] private AudioClip typingSound;
+    [SerializeField] [Range(0f, 1f)]   private float typingVolume = 0.4f;
+    [SerializeField] [Range(0.75f, 1.25f)] private float typingPitch = 1.0f;
+
     // -----------------------------------------------------------------------
     // State
     // -----------------------------------------------------------------------
@@ -144,6 +151,11 @@ public class TutorialManager : MonoBehaviour
 
     private const string TUTORIAL_DONE_KEY = "TutorialCompleted_v1";
 
+    // Typewriter state
+    private Coroutine   typewriterCoroutine;
+    private bool        isTyping = false;
+    private AudioSource typingSource; // creado por código, sin campo en Inspector
+
     // -----------------------------------------------------------------------
     // Unity lifecycle
     // -----------------------------------------------------------------------
@@ -151,6 +163,13 @@ public class TutorialManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        // AudioSource dedicado para el typewriter — pitch independiente por sonido
+        typingSource = gameObject.AddComponent<AudioSource>();
+        typingSource.playOnAwake  = false;
+        typingSource.loop         = false;
+        typingSource.spatialBlend = 0f;
+        typingSource.priority     = 64;
     }
 
     private void Start()
@@ -217,6 +236,9 @@ public class TutorialManager : MonoBehaviour
     {
         if (currentStep == null || state != TutorialState.ShowingStep) return;
 
+        // If still typing, skip to full text and wait for next click
+        if (isTyping) { SkipTypewriter(); return; }
+
         if (currentStep.stepType == "choice")
         {
             NavigateToId(currentStep.yesGoesToStep);
@@ -243,6 +265,7 @@ public class TutorialManager : MonoBehaviour
     {
         if (currentStep == null || state != TutorialState.ShowingStep) return;
         if (currentStep.stepType != "choice") return;
+        if (isTyping) { SkipTypewriter(); return; }
         NavigateToId(currentStep.noGoesToStep);
     }
 
@@ -262,9 +285,6 @@ public class TutorialManager : MonoBehaviour
         currentStepIndex = index;
         currentStep      = data.steps[index];
         state            = TutorialState.ShowingStep;
-
-        if (messageText != null)
-            messageText.text = currentStep.text;
 
         if (currentStep.stepType == "choice")
         {
@@ -289,7 +309,65 @@ public class TutorialManager : MonoBehaviour
 
         if (tutorialPanel != null) tutorialPanel.SetActive(true);
 
+        // Atenuar música de fondo mientras el panel está visible
+        if (MusicManager.Instance != null) MusicManager.Instance.ReduceVolume();
+
+        // Start typewriter (stops any previous one)
+        if (typewriterCoroutine != null) StopCoroutine(typewriterCoroutine);
+        if (messageText != null)
+            typewriterCoroutine = StartCoroutine(TypewriterRoutine(currentStep.text));
+
         GameEvents.TriggerTutorialStepShown(currentStep.id);
+    }
+
+    // -----------------------------------------------------------------------
+    // Typewriter
+    // -----------------------------------------------------------------------
+    private IEnumerator TypewriterRoutine(string fullText)
+    {
+        isTyping = true;
+        messageText.text = fullText;
+        messageText.ForceMeshUpdate();
+        int totalChars = messageText.textInfo.characterCount;
+        messageText.maxVisibleCharacters = 0;
+
+        float charDelay = charsPerSecond > 0f ? 1f / charsPerSecond : 0f;
+
+        // Iniciar sonido en loop mientras escribe
+        if (typingSound != null && typingSource != null)
+        {
+            typingSource.clip   = typingSound;
+            typingSource.loop   = true;
+            typingSource.volume = typingVolume * (MusicManager.Instance != null ? MusicManager.Instance.GetSFXVolume() : 1f);
+            typingSource.pitch  = typingPitch;
+            typingSource.Play();
+        }
+
+        for (int i = 0; i < totalChars; i++)
+        {
+            messageText.maxVisibleCharacters = i + 1;
+            yield return new WaitForSecondsRealtime(charDelay);
+        }
+
+        // Detener sonido al terminar
+        if (typingSource != null) typingSource.Stop();
+
+        messageText.maxVisibleCharacters = int.MaxValue;
+        isTyping = false;
+        typewriterCoroutine = null;
+    }
+
+    /// <summary>Muestra el texto completo al instante y detiene la corutina del typewriter.</summary>
+    private void SkipTypewriter()
+    {
+        if (typewriterCoroutine != null)
+        {
+            StopCoroutine(typewriterCoroutine);
+            typewriterCoroutine = null;
+        }
+        if (typingSource != null) typingSource.Stop();
+        if (messageText != null) messageText.maxVisibleCharacters = int.MaxValue;
+        isTyping = false;
     }
 
     // -----------------------------------------------------------------------
@@ -461,7 +539,10 @@ public class TutorialManager : MonoBehaviour
 
     private void HidePanel()
     {
+        SkipTypewriter();
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
+        // Restaurar volumen de música al cerrar el panel
+        if (MusicManager.Instance != null) MusicManager.Instance.RestoreVolume();
     }
 
     // -----------------------------------------------------------------------
