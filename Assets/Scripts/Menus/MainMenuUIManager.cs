@@ -10,6 +10,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Main Screens")]
     [SerializeField] private GameObject mainPanel;
+    [SerializeField] private GameObject mapSelection; 
     [SerializeField] private GameObject optionsPanel;
     [SerializeField] private GameObject upgradesPanel;
     [SerializeField] private GameObject tiendaPanel;
@@ -70,6 +71,7 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Tienda, tiendaPanel },
             { MenuScreen.Personalizacion, personalizacionPanel },
             { MenuScreen.Creditos, creditosPanel },
+            { MenuScreen.mapSelection, mapSelection },
 
             // Options Subscreens
             { MenuScreen.Help, helpPanel },
@@ -446,5 +448,8 @@ public enum MenuScreen
     HelpMovimiento,             // 17
     HelpExperiencia,            // 18
     HelpEnemigos,               // 19
-    HelpMejoras                 // 20
+    HelpMejoras,                 // 20
+
+    //Level Selection
+    mapSelection,               // 21
 }
