@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 public class MusicManager : MonoBehaviour
 {
@@ -17,10 +18,14 @@ public class MusicManager : MonoBehaviour
     [SerializeField][Range(0f, 1f)] private float reducedVolumeMultiplier = 0.3f; // 30% del volumen original
     [SerializeField] private float volumeFadeDuration = 0.5f;
 
+    [Header("Scene Options")]
+    [Tooltip("Índice de la escena del menú principal. Si la escena activa coincide, la música no se reproducirá automáticamente.")]
+    [SerializeField] private int mainMenuSceneIndex = 0;
+
     private AudioSource musicSource;
     private AudioSource sfxLoopSource;
     private AudioSource sfxOneShotSource;
-    private float savedMusicVolume; // Para guardar el volumen original
+    private float savedMusicVolume; // Para guardar el volumen original (para RestoreVolume)
     private bool isVolumeReduced = false;
 
     private const string MUSIC_VOLUME_KEY = "MusicVolume";
@@ -42,7 +47,34 @@ public class MusicManager : MonoBehaviour
         SetupAudioSource();
         LoadVolumeSettings();
 
-        if (playOnAwake && gameplayMusic != null)
+        // Suscribirse para reaplicar volúmenes en cada carga de escena
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
+        // Solo reproducir automáticamente si la escena actual NO es el main menu (configurable)
+        if (playOnAwake && gameplayMusic != null && SceneManager.GetActiveScene().buildIndex != mainMenuSceneIndex)
+        {
+            PlayMusic();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Desuscribirse del evento para evitar referencias colgantes
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Reaplicar volúmenes guardados cuando se carga una nueva escena
+        LoadVolumeSettings();
+
+        // Si la música no está sonando, reanudarla (asegura que suene tras reload),
+        // pero evitar reproducirla si la escena es el main menu.
+        if (scene.buildIndex != mainMenuSceneIndex && !IsPlaying() && gameplayMusic != null)
         {
             PlayMusic();
         }
@@ -85,6 +117,8 @@ public class MusicManager : MonoBehaviour
         // Aplicar volumen cargado a los AudioSources
         if (musicSource != null)
         {
+            // Cancelar cualquier fade anterior y aplicar el volumen guardado.
+            musicSource.DOKill();
             musicSource.volume = musicVolume;
         }
 
@@ -97,6 +131,10 @@ public class MusicManager : MonoBehaviour
         {
             sfxOneShotSource.volume = sfxVolume;
         }
+
+        // Si cargamos ajustes explícitos, considerarlos como preferencia del usuario:
+        isVolumeReduced = false;
+        savedMusicVolume = musicVolume;
     }
 
     public void PlayMusic()
@@ -106,6 +144,10 @@ public class MusicManager : MonoBehaviour
             Debug.LogWarning("[MusicManager] No music clip assigned!");
             return;
         }
+
+        // Evitar reproducir en el main menu por configuración
+        if (SceneManager.GetActiveScene().buildIndex == mainMenuSceneIndex)
+            return;
 
         // Siempre detener y reiniciar para asegurar que la música suene
         if (musicSource.isPlaying)
@@ -143,11 +185,16 @@ public class MusicManager : MonoBehaviour
 
     public void SetVolume(float volume)
     {
+        // Usuario hizo un set explícito -> cancelar fades y tratarlo como la nueva preferencia.
         musicVolume = Mathf.Clamp01(volume);
         if (musicSource != null)
         {
+            musicSource.DOKill();
             musicSource.volume = musicVolume;
         }
+
+        isVolumeReduced = false;
+        savedMusicVolume = musicVolume;
     }
 
     public float GetVolume()
