@@ -374,15 +374,12 @@ public class TutorialManager : MonoBehaviour
     // Waiting states
     // -----------------------------------------------------------------------
 
-    /// <summary>Llamado tras unfreezeOnNext: descongela y espera solo la primera moneda.</summary>
+    /// <summary>Llamado tras unfreezeOnNext: descongela y entra a esperar cualquier evento (monedas incluidas).</summary>
     private void EnterWaitingForCoins()
     {
         UnfreezeGame();
         HidePanel();
-        state = TutorialState.WaitingForCoins;
-
-        if (CurrencyManager.Instance != null)
-            CurrencyManager.Instance.OnCoinsChanged += OnCoinsChanged_Tutorial;
+        EnterWaitingForAnyEvent();
     }
 
     /// <summary>
@@ -431,7 +428,7 @@ public class TutorialManager : MonoBehaviour
     // -----------------------------------------------------------------------
     private void OnCoinsChanged_Tutorial(int coins)
     {
-        if (state != TutorialState.WaitingForCoins && state != TutorialState.WaitingForAnyEvent) return;
+        if (state != TutorialState.WaitingForAnyEvent) return;
         if (coins <= 0) return;
 
         shownCoins = true;
