@@ -25,22 +25,44 @@ public class TutorialStep
     /// <summary>Si es true, congela Time.timeScale mientras este paso está visible.</summary>
     public bool freezeGame = true;
 
-    /// <summary>Texto del botón de avanzar.</summary>
-    public string nextButtonLabel = "Siguiente";
+    /// <summary>Texto del botón Next (pasos normales).</summary>
+    public string nextButtonLabel = "Next";
+
+    /// <summary>
+    /// "normal" = paso estándar con un botón Next.
+    /// "choice" = muestra dos botones Yes/No en lugar de Next.
+    /// </summary>
+    public string stepType = "normal";
+
+    /// <summary>Label del botón YES cuando stepType=="choice".</summary>
+    public string yesButtonLabel = "Yes";
+
+    /// <summary>Label del botón NO cuando stepType=="choice".</summary>
+    public string noButtonLabel  = "No";
+
+    /// <summary>ID del paso al que se salta cuando el jugador pulsa YES.</summary>
+    public string yesGoesToStep  = "";
+
+    /// <summary>ID del paso al que se salta cuando el jugador pulsa NO.</summary>
+    public string noGoesToStep   = "";
 
     /// <summary>
     /// Vacío = paso secuencial (se muestra tras el anterior).
     /// "coins_collected" = se activa automáticamente cuando el jugador recoge su primera moneda.
-    /// Agregar más valores para futuras fases.
     /// </summary>
     public string waitForEvent = "";
 
     /// <summary>
-    /// Cuando el jugador pulsa "Siguiente" en este paso, se descongela el juego
+    /// Cuando el jugador pulsa Next en este paso, se descongela el juego
     /// y se cierra el panel en lugar de avanzar al siguiente paso.
     /// El manager entra en modo de espera hasta que un evento de juego dispare el siguiente grupo.
     /// </summary>
     public bool unfreezeOnNext = false;
+
+    /// <summary>
+    /// El tutorial termina completamente después de pulsar Next en este paso.
+    /// </summary>
+    public bool endsAfterNext = false;
 }
 
 [Serializable]
@@ -108,6 +130,13 @@ public class TutorialManager : MonoBehaviour
     [Tooltip("RectTransform de la flecha para aplicar rotación (puede ser null).")]
     [SerializeField] private RectTransform arrowTransform;
 
+    [Header("Choice Step Buttons")]
+    [Tooltip("Botón NO — solo se usa en pasos de tipo 'choice'. Puede dejarse vacío si no hay pasos de elección.")]
+    [SerializeField] private Button choiceNoButton;
+
+    [Tooltip("TextMeshProUGUI hijo del choiceNoButton para cambiar el label.")]
+    [SerializeField] private TextMeshProUGUI choiceNoButtonText;
+
     // -----------------------------------------------------------------------
     // Private state
     // -----------------------------------------------------------------------
@@ -174,9 +203,38 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        // Conectar botón
-        if (nextButton != null)
-            nextButton.onClick.AddListener(OnNextButtonClicked);
+        // Validar referencias obligatorias antes de proceder
+        bool refsOk = true;
+        if (tutorialPanel == null)  { Debug.LogError("[TutorialManager] ¡tutorialPanel no asignado en el Inspector!"); refsOk = false; }
+        if (messageText == null)    { Debug.LogError("[TutorialManager] ¡messageText no asignado en el Inspector!"); refsOk = false; }
+        if (nextButton == null)     { Debug.LogError("[TutorialManager] ¡nextButton no asignado en el Inspector!"); refsOk = false; }
+        if (nextButtonText == null) { Debug.LogError("[TutorialManager] ¡nextButtonText no asignado en el Inspector!"); refsOk = false; }
+
+        // Comprobar si algún paso requiere los botones de elección
+        bool hasChoiceStep = false;
+        foreach (var s in data.steps)
+            if (s.stepType == "choice") { hasChoiceStep = true; break; }
+
+        if (hasChoiceStep && choiceNoButton == null)
+        {
+            Debug.LogError("[TutorialManager] Hay pasos de tipo 'choice' pero choiceNoButton no está asignado en el Inspector!");
+            refsOk = false;
+        }
+
+        if (!refsOk)
+        {
+            Debug.LogError("[TutorialManager] Faltan referencias — el tutorial no puede iniciarse. Asigna todos los campos en el Inspector.");
+            state = TutorialState.Complete;
+            return;
+        }
+
+        // Conectar botones
+        nextButton.onClick.AddListener(OnNextButtonClicked);
+        if (choiceNoButton != null)
+        {
+            choiceNoButton.onClick.AddListener(OnNoButtonClicked);
+            choiceNoButton.gameObject.SetActive(false); // oculto por defecto
+        }
 
         // Mostrar primer paso secuencial (sin waitForEvent)
         int firstStep = FindNextSequentialStepAfter(-1);
@@ -191,20 +249,34 @@ public class TutorialManager : MonoBehaviour
         if (nextButton != null)
             nextButton.onClick.RemoveListener(OnNextButtonClicked);
 
+        if (choiceNoButton != null)
+            choiceNoButton.onClick.RemoveListener(OnNoButtonClicked);
+
         UnsubscribeFromGameEvents();
     }
 
     // -----------------------------------------------------------------------
-    // Button handler
+    // Button handlers
     // -----------------------------------------------------------------------
     private void OnNextButtonClicked()
     {
         if (currentStep == null || state != TutorialState.ShowingStep) return;
 
-        if (currentStep.unfreezeOnNext)
+        if (currentStep.stepType == "choice")
         {
-            // Caso especial: este paso libera el movimiento al pulsar Siguiente.
-            // Descongela, cierra panel y espera a que un evento de juego dispare el siguiente grupo.
+            // En pasos de elección el botón Next actúa como YES
+            int targetIndex = FindStepIndexById(currentStep.yesGoesToStep);
+            if (targetIndex >= 0) ShowStep(targetIndex);
+            else CompleteTutorial();
+        }
+        else if (currentStep.endsAfterNext)
+        {
+            // Este paso cierra el tutorial al pulsar Next
+            CompleteTutorial();
+        }
+        else if (currentStep.unfreezeOnNext)
+        {
+            // Liberar movimiento y esperar a que un evento de juego dispare el siguiente paso
             UnfreezeGame();
             HidePanel();
             state = TutorialState.WaitingForEvent;
@@ -212,13 +284,21 @@ public class TutorialManager : MonoBehaviour
         }
         else
         {
-            // Caso normal: avanzar al siguiente paso secuencial
+            // Avanzar al siguiente paso secuencial
             int next = FindNextSequentialStepAfter(currentStepIndex);
-            if (next >= 0)
-                ShowStep(next);
-            else
-                CompleteTutorial();
+            if (next >= 0) ShowStep(next);
+            else CompleteTutorial();
         }
+    }
+
+    private void OnNoButtonClicked()
+    {
+        if (currentStep == null || state != TutorialState.ShowingStep) return;
+        if (currentStep.stepType != "choice") return;
+
+        int targetIndex = FindStepIndexById(currentStep.noGoesToStep);
+        if (targetIndex >= 0) ShowStep(targetIndex);
+        else CompleteTutorial();
     }
 
     // -----------------------------------------------------------------------
@@ -234,11 +314,20 @@ public class TutorialManager : MonoBehaviour
         if (messageText != null)
             messageText.text = currentStep.text;
 
-        // Label del botón
-        if (nextButtonText != null)
-            nextButtonText.text = string.IsNullOrEmpty(currentStep.nextButtonLabel)
-                ? "Siguiente"
-                : currentStep.nextButtonLabel;
+        // Configurar botones según el tipo de paso
+        if (currentStep.stepType == "choice")
+        {
+            // Mostrar botón NO y usar el botón Next como YES
+            if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(true);
+            if (nextButtonText    != null) nextButtonText.text    = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? "Yes" : currentStep.yesButtonLabel;
+            if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel)  ? "No"  : currentStep.noButtonLabel;
+        }
+        else
+        {
+            // Ocultar botón NO y usar label normal
+            if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(false);
+            if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.nextButtonLabel) ? "Next" : currentStep.nextButtonLabel;
+        }
 
         // Flecha
         if (arrowObject != null)
@@ -284,6 +373,19 @@ public class TutorialManager : MonoBehaviour
                               StringComparison.OrdinalIgnoreCase))
                 return i;
         }
+        return -1;
+    }
+
+    /// <summary>Devuelve el índice del paso cuyo id coincida exactamente con el string dado.</summary>
+    private int FindStepIndexById(string id)
+    {
+        if (data?.steps == null || string.IsNullOrEmpty(id)) return -1;
+        for (int i = 0; i < data.steps.Length; i++)
+        {
+            if (string.Equals(data.steps[i].id, id, StringComparison.OrdinalIgnoreCase))
+                return i;
+        }
+        Debug.LogError($"[TutorialManager] No se encontró el paso con id '{id}' en TutorialData.json");
         return -1;
     }
 
