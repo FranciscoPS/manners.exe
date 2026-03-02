@@ -3,6 +3,9 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 {
+    [SerializeField] private Transform visual;
+    [SerializeField] private float rotationSpeed = 10f;
+
     private float moveSpeed = 3f;
     private float contactDamage = 10f;
 
@@ -119,6 +122,22 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         if (useNavMesh && agent != null && agent.isOnNavMesh)
         {
             agent.SetDestination(player.position);
+        }
+
+        if (visual != null)
+        {
+            Vector3 direction = player.position - transform.position;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+                visual.rotation = Quaternion.Slerp(
+                    visual.rotation,
+                    targetRotation,
+                    rotationSpeed * deltaTime
+                );
+            }
         }
     }
 
