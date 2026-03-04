@@ -24,6 +24,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private List<SpawnPoint> allSpawnPoints = new List<SpawnPoint>();
     private int currentWaveIndex = 0;
+    private int waveLoopCount = 0;  // cuántas veces se ha completado el ciclo completo
     private bool isSpawningWave = false;
     private float continuousSpawnTimer = 0f;
     private bool spawnBlocked = false;
@@ -172,7 +173,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 if (autoLoopWaves)
                 {
                     currentWaveIndex = 0;
-                    LogDebug("Looping waves...");
+                    waveLoopCount++;
+                    LogDebug($"Looping waves... (vuelta {waveLoopCount})");
                 }
                 else
                 {
@@ -190,40 +192,43 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         isSpawningWave = true;
         int enemiesSpawned = 0;
         int totalEnemies = wave.totalEnemies;
+        string waveTag = $"{wave.waveName} [vuelta {waveLoopCount + 1}, índice {currentWaveIndex + 1}/{waveQueue.Length}]";
 
-        // Log de inicio de wave con contexto de rendimiento
-        PerformanceMonitor.Instance?.LogEvent($"Wave START: {wave.waveName} | totalEnemies={totalEnemies} | batchSize={wave.enemiesPerBatch}");
+        PerformanceMonitor.Instance?.LogEvent($"Wave START: {waveTag} | totalEnemies={totalEnemies} | batchSize={wave.enemiesPerBatch}");
 
         while (enemiesSpawned < totalEnemies)
         {
+            // Si el cap está lleno, esperar a que mueran enemigos antes del próximo batch
+            while (EnemyHealth.ActiveEnemyCount >= maxConcurrentEnemies)
+                yield return new WaitForSeconds(0.5f);
+
             int remainingEnemies = totalEnemies - enemiesSpawned;
             int enemiesToSpawnThisBatch = Mathf.Min(wave.enemiesPerBatch, remainingEnemies);
 
-            SpawnBatch(enemiesToSpawnThisBatch, wave);
-            enemiesSpawned += enemiesToSpawnThisBatch;
+            // Usar el retorno real de SpawnBatch (puede spawnear menos que lo pedido)
+            int actuallySpawned = SpawnBatch(enemiesToSpawnThisBatch, wave);
+            enemiesSpawned += actuallySpawned;
 
             if (enemiesSpawned < totalEnemies)
-            {
                 yield return new WaitForSeconds(wave.spawnInterval);
-            }
         }
 
         isSpawningWave = false;
-        PerformanceMonitor.Instance?.LogEvent($"Wave END: {wave.waveName} | spawned={enemiesSpawned}");
-        LogDebug($"Wave {wave.waveName} completed: {enemiesSpawned} enemies spawned");
+        PerformanceMonitor.Instance?.LogEvent($"Wave END: {waveTag} | spawned={enemiesSpawned}");
+        LogDebug($"Wave {waveTag} completed: {enemiesSpawned} enemies spawned");
     }
 
-    private void SpawnBatch(int count, WaveData wave)
+    private int SpawnBatch(int count, WaveData wave)
     {
         if (allSpawnPoints.Count == 0)
         {
             LogDebug("No spawn points available!");
-            return;
+            return 0;
         }
 
         // Reducir el batch si acercarse al cap (nunca pasar de maxConcurrentEnemies).
         int slots = maxConcurrentEnemies - EnemyHealth.ActiveEnemyCount;
-        if (slots <= 0) return;
+        if (slots <= 0) return 0;
         count = Mathf.Min(count, slots);
 
         // Shuffle in-place: mismo patrón que SpawnContinuousEnemies — sin new List.
@@ -253,6 +258,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
             pointIndex++;
         }
+
+        return count - enemiesRemaining; // cuántos se spawnearon realmente
     }
 
     private void LogDebug(string message)
