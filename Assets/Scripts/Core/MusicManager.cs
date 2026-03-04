@@ -1,6 +1,16 @@
 using UnityEngine;
 using DG.Tweening;
 using UnityEngine.SceneManagement;
+using System;
+
+[Serializable]
+public class SceneMusicConfig
+{
+    public int sceneIndex;
+    [Tooltip("Opcional. Si se asigna, se reproduce primero y luego pasa al loop.")]
+    public AudioClip introClip;
+    public AudioClip loopClip;
+}
 
 public class MusicManager : MonoBehaviour
 {
@@ -8,8 +18,8 @@ public class MusicManager : MonoBehaviour
 
     [Header("Music Settings")]
     [SerializeField] private AudioClip menuMusic;
-    [SerializeField] private AudioClip introClip;
-    [SerializeField] private AudioClip loopClip;
+    [Tooltip("Un entry por escena de gameplay. Puedes dejar introClip vacío si la escena solo tiene loop.")]
+    [SerializeField] private SceneMusicConfig[] sceneMusicConfigs;
     [SerializeField][Range(0f, 1f)] private float musicVolume = 0.5f;
     [SerializeField] private bool playOnAwake = true;
 
@@ -59,7 +69,7 @@ public class MusicManager : MonoBehaviour
         {
             if (SceneManager.GetActiveScene().buildIndex == mainMenuSceneIndex)
                 PlayMenuMusic();
-            else if (introClip != null)
+            else
                 PlayMusic();
         }
     }
@@ -86,7 +96,7 @@ public class MusicManager : MonoBehaviour
         else
         {
             StopMenuMusic();
-            if (!IsPlaying() && introClip != null)
+            if (!IsPlaying())
                 PlayMusic();
         }
     }
@@ -203,29 +213,47 @@ public class MusicManager : MonoBehaviour
         }
     }
 
+    private SceneMusicConfig GetCurrentSceneConfig()
+    {
+        if (sceneMusicConfigs == null) return null;
+        int index = SceneManager.GetActiveScene().buildIndex;
+        foreach (var config in sceneMusicConfigs)
+            if (config.sceneIndex == index) return config;
+        return null;
+    }
+
     public void PlayMusic()
     {
-        if (introClip == null || loopClip == null)
-        {
-            Debug.LogWarning("[MusicManager] Intro clip or loop clip not assigned!");
-            return;
-        }
-
         // Evitar reproducir en el main menu por configuración
         if (SceneManager.GetActiveScene().buildIndex == mainMenuSceneIndex)
             return;
 
+        SceneMusicConfig config = GetCurrentSceneConfig();
+        if (config == null || config.loopClip == null)
+        {
+            Debug.LogWarning("[MusicManager] No SceneMusicConfig found for scene " + SceneManager.GetActiveScene().buildIndex);
+            return;
+        }
+
         introSource.Stop();
         loopSource.Stop();
 
-        double startTime = AudioSettings.dspTime + 0.1;
-        double loopStartTime = startTime + (double)introClip.samples / introClip.frequency;
+        if (config.introClip != null)
+        {
+            double startTime = AudioSettings.dspTime + 0.1;
+            double loopStartTime = startTime + (double)config.introClip.samples / config.introClip.frequency;
 
-        introSource.clip = introClip;
-        introSource.PlayScheduled(startTime);
+            introSource.clip = config.introClip;
+            introSource.PlayScheduled(startTime);
 
-        loopSource.clip = loopClip;
-        loopSource.PlayScheduled(loopStartTime);
+            loopSource.clip = config.loopClip;
+            loopSource.PlayScheduled(loopStartTime);
+        }
+        else
+        {
+            loopSource.clip = config.loopClip;
+            loopSource.Play();
+        }
     }
 
     public void StopMusic()
