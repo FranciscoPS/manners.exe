@@ -177,7 +177,13 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     {
         // OverlapSphereNonAlloc: rellena el buffer estático, sin heap allocation.
         int hitCount = Physics.OverlapSphereNonAlloc(impactPoint, explosionRadius, _explosionBuffer, EnemyLayerMask);
-        
+
+        // Log cuando una sola explosión mata muchos enemigos — correlaciona con spikes de FPS
+        if (hitCount >= 5)
+        {
+            PerformanceMonitor.Instance?.LogEvent($"EXPLOSION masiva | {hitCount} enemies en radio {explosionRadius:F1}m");
+        }
+
         for (int i = 0; i < hitCount; i++)
         {
             DealDamageToEnemy(_explosionBuffer[i].gameObject, impactPoint);
