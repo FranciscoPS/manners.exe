@@ -27,6 +27,34 @@ public class BuildingsScript : MonoBehaviour
 
     private bool isDestroying = false;
 
+    private void Awake()
+    {
+        if (visual != null) return;
+
+        // Auto-detectar: buscar hijo llamado "Visual" (cualquier capitalización)
+        foreach (Transform child in transform)
+        {
+            if (string.Equals(child.name, "visual", System.StringComparison.OrdinalIgnoreCase))
+            {
+                visual = child.gameObject;
+                return;
+            }
+        }
+
+        // Fallback: primer hijo que tenga algún Renderer
+        foreach (Transform child in transform)
+        {
+            if (child.GetComponentInChildren<Renderer>() != null)
+            {
+                visual = child.gameObject;
+                Debug.Log($"[BuildingsScript] '{name}': visual auto-detectado → '{child.name}'");
+                return;
+            }
+        }
+
+        Debug.LogWarning($"[BuildingsScript] '{name}': no se encontró visual. Asígnalo manualmente.");
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && !isDestroying)
@@ -97,26 +125,13 @@ public class BuildingsScript : MonoBehaviour
     {
         if (visual == null) yield break;
 
-        // ── Optimización: si ningún renderer es visible, no hace falta animar el fade.
-        // El VFX de partículas ya cubre la destrucción visualmente.
         Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
-        bool anyVisible = false;
-        foreach (var r in renderers) { if (r.isVisible) { anyVisible = true; break; } }
-
-        if (!anyVisible)
-        {
-            // Edificio fuera de pantalla: ocultar sin animar (0 draw calls extra)
-            visual.SetActive(false);
-            yield break;
-        }
-
-        // ── Edificio visible: hacer el efecto completo ─────────────────────────
 
         Vector3 originalPosition = visual.transform.localPosition;
         Vector3 originalScale    = visual.transform.localScale;
         Quaternion originalRotation = visual.transform.localRotation;
 
-        // FASE 1: SHAKE
+        // FASE 1: SHAKE — siempre ocurre (feedback de gameplay)
         float shakeElapsed = 0f;
         while (shakeElapsed < shakeDuration)
         {
@@ -130,6 +145,17 @@ public class BuildingsScript : MonoBehaviour
         visual.transform.localPosition = originalPosition;
 
         if (renderers.Length == 0) yield break;
+
+        // ── Optimización: solo crear materiales y animar si el edificio es visible.
+        // El check DESPUÉS del shake es más fiable (el player acaba de chocar con él).
+        bool anyVisible = false;
+        foreach (var r in renderers) { if (r.isVisible) { anyVisible = true; break; } }
+
+        if (!anyVisible)
+        {
+            visual.SetActive(false);
+            yield break;
+        }
 
         // Crear instancias planas (una List<Material>) — elimina el doble foreach cada frame
         var fadeMats = new System.Collections.Generic.List<Material>(renderers.Length * 2);
