@@ -50,7 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b12228cb2015430b8a5ae2843b73a0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  visual1: {fileID: 418811573106559410}
+  visual1: {fileID: 2529608605613396494}
   visual2: {fileID: 0}
   rotationSpeed1: 10
   rotationSpeed2: 10
@@ -166,7 +166,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.141
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalPosition.z
@@ -174,7 +174,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.9961605
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalRotation.x
@@ -182,7 +182,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0.08754583
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalRotation.z
@@ -194,7 +194,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 10.045
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -216,11 +216,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 6716786947223327670}
   m_SourcePrefab: {fileID: 100100000, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
---- !u!4 &418811573106559410 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2404827688283946071, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
-  m_PrefabInstance: {fileID: 2634677124252235237}
-  m_PrefabAsset: {fileID: 0}
 --- !u!23 &1272372230313371031 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3834849373473247346, guid: f9da252e801179749b82d7a8d54fb012, type: 3}
