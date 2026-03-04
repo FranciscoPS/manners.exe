@@ -30,11 +30,14 @@ public class PickupAudioManager : MonoBehaviour
 
     [Header("Sound Limiting")]
     [SerializeField] private float diamondSoundCooldown = 0.05f;
+    [Tooltip("Cooldown mínimo entre sonidos de orbe. Sin esto, 30+ orbes en burst = 30 PlayOneShot en el mismo frame.")]
+    [SerializeField] private float orbSoundCooldown = 0.04f;
     
     private AudioSource coinAudioSource;
     private AudioSource diamondAudioSource;
     private AudioSource orbAudioSource;
     private float lastDiamondSoundTime = -999f;
+    private float lastOrbSoundTime     = -999f;
 
     private void Awake()
     {
@@ -100,6 +103,11 @@ public class PickupAudioManager : MonoBehaviour
     {
         if (experienceOrbSound != null && orbAudioSource != null)
         {
+            // Throttle: evita saturar el AudioMixer cuando el imán recoge muchos orbes a la vez.
+            if (Time.time - lastOrbSoundTime < orbSoundCooldown)
+                return;
+
+            lastOrbSoundTime = Time.time;
             float pitch = CalculateOrbPitch(experienceValue);
             orbAudioSource.pitch = pitch;
             float finalVolume = orbVolume;

@@ -99,21 +99,23 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         if (allSpawnPoints.Count == 0)
             return;
 
-        List<SpawnPoint> shuffledPoints = new List<SpawnPoint>(allSpawnPoints);
-        for (int i = 0; i < shuffledPoints.Count; i++)
+        // Shuffle in-place sobre allSpawnPoints: cero allocations.
+        // Antes se copiaba la lista completa en new List<SpawnPoint>(allSpawnPoints) cada vez.
+        for (int i = allSpawnPoints.Count - 1; i > 0; i--)
         {
-            int randomIndex = Random.Range(i, shuffledPoints.Count);
-            SpawnPoint temp = shuffledPoints[i];
-            shuffledPoints[i] = shuffledPoints[randomIndex];
-            shuffledPoints[randomIndex] = temp;
+            int j = Random.Range(0, i + 1);
+            SpawnPoint temp = allSpawnPoints[i];
+            allSpawnPoints[i] = allSpawnPoints[j];
+            allSpawnPoints[j] = temp;
         }
 
         int enemiesSpawned = 0;
-        foreach (var point in shuffledPoints)
+        for (int i = 0; i < allSpawnPoints.Count; i++)
         {
             if (enemiesSpawned >= continuousEnemiesPerSpawn)
                 break;
 
+            SpawnPoint point = allSpawnPoints[i];
             if (point.IsReady)
             {
                 EnemyConfiguration config = continuousEnemyTypes[Random.Range(0, continuousEnemyTypes.Length)];
