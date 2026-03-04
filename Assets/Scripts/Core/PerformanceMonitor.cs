@@ -209,12 +209,12 @@ public class PerformanceMonitor : MonoBehaviour, IUpdateable
     /// </summary>
     public void LogEvent(string eventName)
     {
-        int wave   = GetCurrentWave();
-        float fps  = fpsSamples > 0 ? fpsAccum / fpsSamples : 0f;
+        int wave  = GetCurrentWave();
+        string fpsStr = fpsSamples > 0 ? $"{fpsAccum / fpsSamples:F1}" : "N/A (inicio)";
         Debug.Log(
             $"[PERF] 📌 EVENTO: {eventName} | " +
             $"Wave: {wave} | " +
-            $"FPS~: {fps:F1} | " +
+            $"FPS~: {fpsStr} | " +
             $"Enemies: {CountActiveEnemies()} | " +
             $"RenderScale: {GetRenderScale():F2}"
         );
