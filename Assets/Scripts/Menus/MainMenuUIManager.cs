@@ -10,6 +10,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Main Screens")]
     [SerializeField] private GameObject mainPanel;
+    [SerializeField] private GameObject mapSelection; 
     [SerializeField] private GameObject optionsPanel;
     [SerializeField] private GameObject upgradesPanel;
     [SerializeField] private GameObject tiendaPanel;
@@ -77,6 +78,7 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Tienda, tiendaPanel },
             { MenuScreen.Personalizacion, personalizacionPanel },
             { MenuScreen.Creditos, creditosPanel },
+            { MenuScreen.mapSelection, mapSelection },
 
             // Options Subscreens
             { MenuScreen.Help, helpPanel },
@@ -373,7 +375,12 @@ public class MainMenuUIManager : MonoBehaviour
         ShowScreen((MenuScreen)index);
     }
 
-    public void OnPlayPressed()
+    /// <summary>
+    /// Carga la escena cuyo índice se pasa desde el botón.
+    /// Incluye el fade overlay ya existente para mantener la transición visual.
+    /// </summary>
+    /// <param name="sceneIndex">Índice de la escena a cargar (Build Settings)</param>
+    public void LevelSelection(int sceneIndex)
     {
         CreateFadeOverlayIfNeeded();
 
@@ -388,7 +395,7 @@ public class MainMenuUIManager : MonoBehaviour
             .SetUpdate(true)
             .OnComplete(() =>
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+                SceneManager.LoadScene(sceneIndex, LoadSceneMode.Single);
             });
     }
 
@@ -470,5 +477,8 @@ public enum MenuScreen
     HelpMovimiento,             // 17
     HelpExperiencia,            // 18
     HelpEnemigos,               // 19
-    HelpMejoras                 // 20
+    HelpMejoras,                 // 20
+
+    //Level Selection
+    mapSelection,               // 21
 }
