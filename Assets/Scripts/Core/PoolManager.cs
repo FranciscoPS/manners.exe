@@ -15,6 +15,8 @@ public class PoolManager : MonoBehaviour
         Enemy,          // Pool genérico (deprecated)
         BasicEnemy,     // Enemy básico
         FastEnemy,      // Enemy rápido
+        L2BasicEnemy,
+        L2FastEnemy,
         Coin,
         Diamond
     }
