@@ -4,7 +4,7 @@ using System;
 [CreateAssetMenu(fileName = "GameBalanceConfig", menuName = "Game/Game Balance Configuration")]
 public class GameBalanceConfig : ScriptableObject
 {
-    // Configuración de drops por tipo de enemigo y wave
+
     [System.Serializable]
     public class EnemyDropConfig
     {
@@ -13,21 +13,21 @@ public class GameBalanceConfig : ScriptableObject
         public int fromWave = 1;
         [Tooltip("Hasta qué wave se aplica (999 = infinito)")]
         public int toWave = 999;
-        
+
         [Header("Enemy Type")]
         [Tooltip("Tipo de pool del enemigo (BasicEnemy, FastEnemy, etc.)")]
         public PoolManager.PoolType enemyType = PoolManager.PoolType.BasicEnemy;
-        
+
         [Header("Experience Orbs")]
         public OrbConfiguration orbConfig;
         public int minOrbs = 1;
         public int maxOrbs = 3;
-        
+
         [Header("Coins")]
         [Range(0f, 1f)] public float coinDropChance = 0.5f;
         public int minCoins = 1;
         public int maxCoins = 3;
-        
+
         [Header("Diamonds")]
         [Range(0f, 1f)] public float diamondDropChance = 0.1f;
         public int minDiamonds = 1;
@@ -43,7 +43,6 @@ public class GameBalanceConfig : ScriptableObject
                 instance = Resources.Load<GameBalanceConfig>("GameBalanceConfig");
                 if (instance == null)
                 {
-                    Debug.LogError("GameBalanceConfig not found in Resources folder! Create it at Assets/Resources/GameBalanceConfig.asset");
                 }
             }
             return instance;
@@ -66,7 +65,7 @@ public class GameBalanceConfig : ScriptableObject
     [SerializeField] private float buildingCoinDropChance = 0.7f;
     [SerializeField] private int buildingMinCoins = 2;
     [SerializeField] private int buildingMaxCoins = 5;
-    
+
     [Tooltip("Chance for buildings to drop diamonds (0-1)")]
     [SerializeField] private float buildingDiamondDropChance = 0.15f;
     [SerializeField] private int buildingMinDiamonds = 1;
@@ -82,12 +81,12 @@ public class GameBalanceConfig : ScriptableObject
     [SerializeField] private float coinAttractionRange = 5f;
     [SerializeField] private float diamondAttractionRange = 5f;
     [SerializeField] private float orbAttractionRange = 5f;
-    
+
     [Header("=== PICKUP LIFETIME ===")]
     [SerializeField] private float coinLifetime = 30f;
     [SerializeField] private float diamondLifetime = 30f;
     [SerializeField] private float orbLifetime = 30f;
-    
+
     [Header("=== ENEMY DROPS BY WAVE ===")]
     [Tooltip("Configuraciones de drops por tipo de enemigo y wave. Se busca la primera que matchee el wave actual.")]
     [SerializeField] private EnemyDropConfig[] enemyDropConfigs = new EnemyDropConfig[0];
@@ -125,31 +124,23 @@ public class GameBalanceConfig : ScriptableObject
     {
         return Mathf.RoundToInt(baseExperienceRequired * Mathf.Pow(experienceMultiplier, level - 1));
     }
-    
-    /// <summary>
-    /// Obtiene la configuración de drops para un enemigo en una wave específica
-    /// </summary>
+
     public EnemyDropConfig GetEnemyDropConfig(PoolManager.PoolType enemyType, int currentWave)
     {
-        // Buscar la primera configuración que matchee el tipo y wave
+
         foreach (var config in enemyDropConfigs)
         {
-            if (config.enemyType == enemyType && 
-                currentWave >= config.fromWave && 
+            if (config.enemyType == enemyType &&
+                currentWave >= config.fromWave &&
                 currentWave <= config.toWave)
             {
                 return config;
             }
         }
-        
-        // Si no encuentra nada, retornar config por defecto
-        Debug.LogWarning($"No drop config found for {enemyType} in wave {currentWave}. Using defaults.");
+
         return null;
     }
-    
-    /// <summary>
-    /// Verifica si hay configuraciones de drops definidas
-    /// </summary>
+
     public bool HasDropConfigs()
     {
         return enemyDropConfigs != null && enemyDropConfigs.Length > 0;

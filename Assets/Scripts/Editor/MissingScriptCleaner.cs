@@ -33,7 +33,7 @@ public class MissingScriptCleaner : EditorWindow
         if (missingCount > 0)
         {
             EditorGUILayout.HelpBox($"Found {missingCount} missing script(s)!", MessageType.Warning);
-            
+
             if (GUILayout.Button("Remove All Missing Scripts", GUILayout.Height(30)))
             {
                 RemoveMissingScripts();
@@ -42,7 +42,7 @@ public class MissingScriptCleaner : EditorWindow
 
         GUILayout.Space(10);
         GUILayout.Label("Report:", EditorStyles.boldLabel);
-        
+
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Height(300));
         EditorGUILayout.TextArea(reportText, GUILayout.ExpandHeight(true));
         EditorGUILayout.EndScrollView();
@@ -52,7 +52,7 @@ public class MissingScriptCleaner : EditorWindow
     {
         missingCount = 0;
         reportText = "";
-        
+
         Scene activeScene = SceneManager.GetActiveScene();
         GameObject[] rootObjects = activeScene.GetRootGameObjects();
 
@@ -79,7 +79,7 @@ public class MissingScriptCleaner : EditorWindow
     private void FindMissingInGameObject(GameObject go)
     {
         Component[] components = go.GetComponents<Component>();
-        
+
         for (int i = 0; i < components.Length; i++)
         {
             if (components[i] == null)
@@ -104,8 +104,8 @@ public class MissingScriptCleaner : EditorWindow
             return;
         }
 
-        if (!EditorUtility.DisplayDialog("Confirm Removal", 
-            $"Are you sure you want to remove {missingCount} missing script(s)?\n\nThis action cannot be undone.", 
+        if (!EditorUtility.DisplayDialog("Confirm Removal",
+            $"Are you sure you want to remove {missingCount} missing script(s)?\n\nThis action cannot be undone.",
             "Yes, Remove", "Cancel"))
         {
             return;
@@ -128,9 +128,9 @@ public class MissingScriptCleaner : EditorWindow
         missingCount = 0;
 
         Repaint();
-        
-        EditorUtility.DisplayDialog("Cleanup Complete", 
-            $"Removed {removedCount} missing script references.\n\nPlease save the scene.", 
+
+        EditorUtility.DisplayDialog("Cleanup Complete",
+            $"Removed {removedCount} missing script references.\n\nPlease save the scene.",
             "OK");
     }
 

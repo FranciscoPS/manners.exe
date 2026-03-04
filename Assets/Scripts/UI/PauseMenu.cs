@@ -7,8 +7,8 @@ public class PauseMenu : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private GameObject helpPanel;
-    [SerializeField] private GameObject audioPanel; 
-    [SerializeField] private GameObject gameOverPanel; // Para detectar si estamos en game over
+    [SerializeField] private GameObject audioPanel;
+    [SerializeField] private GameObject gameOverPanel;
 
     [Header("Help Sub-Panels")]
     [SerializeField] private GameObject movimientoHelpPanel;
@@ -25,7 +25,6 @@ public class PauseMenu : MonoBehaviour
     private LevelUpManager levelUpManager;
     private PlayerHealth playerHealth;
 
-    // Estado para manejar la reducción/restauración de volumen sin sobrescribir cambios del usuario
     private bool reducedVolumeApplied = false;
     private bool audioSettingsChangedWhilePaused = false;
 
@@ -41,14 +40,11 @@ public class PauseMenu : MonoBehaviour
             audioPanel.SetActive(false);
 
         DeactivateAllHelpSubPanels();
-        
-        // Buscar LevelUpManager para verificar si la tienda/level up están activos
+
         levelUpManager = FindFirstObjectByType<LevelUpManager>();
-        
-        // Buscar PlayerHealth para verificar si el jugador está muerto
+
         playerHealth = FindFirstObjectByType<PlayerHealth>();
 
-        // Suscribirse al evento de cambios de audio
         AudioSettingsMenu.AudioSettingsChanged += OnAudioSettingsChanged;
     }
 
@@ -59,7 +55,7 @@ public class PauseMenu : MonoBehaviour
 
     private void OnAudioSettingsChanged()
     {
-        // Marcar que el usuario modificó los sliders mientras estaba pausado
+
         audioSettingsChangedWhilePaused = true;
     }
 
@@ -67,30 +63,27 @@ public class PauseMenu : MonoBehaviour
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            // No permitir abrir el menú de pausa si la tienda o level up están activos
+
             if (levelUpManager != null && levelUpManager.IsLevelUpActive())
             {
                 return;
             }
-            
-            // No permitir abrir el menú de pausa si el jugador está muerto
+
             if (playerHealth != null && playerHealth.IsDead)
             {
                 return;
             }
-            
-            // No permitir abrir el menú de pausa si el panel de game over está activo
+
             if (gameOverPanel != null && gameOverPanel.activeSelf)
             {
                 return;
             }
 
-            // No permitir abrir el menú de pausa mientras el panel del tutorial está visible
             if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialPanelActive)
             {
                 return;
             }
-            
+
             TogglePause();
         }
     }
@@ -109,12 +102,11 @@ public class PauseMenu : MonoBehaviour
         if (pausePanel != null)
             pausePanel.SetActive(true);
 
-        // Bajar el volumen de la música
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.ReduceVolume();
             reducedVolumeApplied = true;
-            // reset flag cada vez que abrimos pausa
+
             audioSettingsChangedWhilePaused = false;
         }
     }
@@ -126,7 +118,6 @@ public class PauseMenu : MonoBehaviour
 
         CloseAllPauseUI();
 
-        // Restaurar el volumen de la música sólo si no se cambiaron los ajustes
         if (MusicManager.Instance != null && reducedVolumeApplied)
         {
             if (!audioSettingsChangedWhilePaused)
@@ -145,57 +136,52 @@ public class PauseMenu : MonoBehaviour
             CurrencyManager.Instance.ResetSessionCurrency();
         }
 
-        // Resetear el timer de partida
         if (GameTimeManager.Instance != null)
         {
             GameTimeManager.Instance.ResetGame();
         }
 
         Time.timeScale = 1f;
-        
-        // Restaurar volumen antes de reiniciar (si no hubo cambios)
+
         if (MusicManager.Instance != null && reducedVolumeApplied && !audioSettingsChangedWhilePaused)
         {
             MusicManager.Instance.RestoreVolume();
         }
-        
-        // CRÍTICO: Resetear colisiones Player-Enemy antes de recargar
-        // Esto previene el bug de invulnerabilidad al reiniciar
+
         ResetPlayerEnemyLayerCollision();
-        TutorialManager.MarkSessionRestart(); // preservar progreso del tutorial al reiniciar
+        TutorialManager.MarkSessionRestart();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }
 
     public void OnReturnToMainMenuButtonPressed()
     {
-        // Resetear currency y stats antes de ir al main menu
+
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.ResetSessionCurrency();
         }
-        
+
         if (GameSessionStats.Instance != null)
         {
             GameSessionStats.Instance.ResetStats();
         }
-        
+
         if (PlayerStatsManager.Instance != null)
         {
             PlayerStatsManager.Instance.ResetUpgrades();
         }
-        
+
         Time.timeScale = 1f;
-        
-        // Restaurar y detener la música del juego antes de volver al menú (si no hubo cambios)
+
         if (MusicManager.Instance != null)
         {
             if (reducedVolumeApplied && !audioSettingsChangedWhilePaused)
                 MusicManager.Instance.RestoreVolume();
 
-            MusicManager.Instance.RestoreVolume(); // asegurar estado consistente al salir a main menu
+            MusicManager.Instance.RestoreVolume();
             MusicManager.Instance.StopMusic();
         }
-        TutorialManager.ClearSession(); // desde el menú principal siempre se empieza de cero
+        TutorialManager.ClearSession();
         SceneManager.LoadScene(mainMenuSceneIndex, LoadSceneMode.Single);
     }
 

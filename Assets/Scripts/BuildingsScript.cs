@@ -31,7 +31,6 @@ public class BuildingsScript : MonoBehaviour
     {
         if (visual != null) return;
 
-        // Auto-detectar: buscar hijo llamado "Visual" (cualquier capitalización)
         foreach (Transform child in transform)
         {
             if (string.Equals(child.name, "visual", System.StringComparison.OrdinalIgnoreCase))
@@ -41,18 +40,15 @@ public class BuildingsScript : MonoBehaviour
             }
         }
 
-        // Fallback: primer hijo que tenga algún Renderer
         foreach (Transform child in transform)
         {
             if (child.GetComponentInChildren<Renderer>() != null)
             {
                 visual = child.gameObject;
-                Debug.Log($"[BuildingsScript] '{name}': visual auto-detectado → '{child.name}'");
                 return;
             }
         }
 
-        Debug.LogWarning($"[BuildingsScript] '{name}': no se encontró visual. Asígnalo manualmente.");
     }
 
     private void OnTriggerEnter(Collider other)
@@ -66,12 +62,12 @@ public class BuildingsScript : MonoBehaviour
 
     private IEnumerator DestroySequence()
     {
-        // Registrar edificio destruido en estadísticas
+
         if (GameSessionStats.Instance != null)
         {
             GameSessionStats.Instance.RegisterBuildingDestroyed();
         }
-        
+
         if (CameraShakeManager.Instance != null)
         {
             CameraShakeManager.Instance.Shake(shakeForce);
@@ -82,26 +78,23 @@ public class BuildingsScript : MonoBehaviour
             MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.buildingDestroySFX, SFXDatabase.Instance.buildingDestroyVolume);
         }
 
-        // Spawn VFX de polvo/destrucción
         SpawnDestructionVFX();
 
-        // Iniciar fade del edificio (sin desactivar al final)
         StartCoroutine(FadeAndDestroy());
-        
+
         yield return new WaitForSeconds(dropSpawnDelay);
-        
+
         SpawnExperienceOrbs();
         SpawnCollectibles();
-        
-        // Esperar a que termine el fade antes de desactivar
+
         float totalFadeTime = shakeDuration + fadeOutDuration;
         float remainingTime = totalFadeTime - dropSpawnDelay;
-        
+
         if (remainingTime > 0)
         {
             yield return new WaitForSeconds(remainingTime);
         }
-        
+
         gameObject.SetActive(false);
         Destroy(gameObject, 1f);
     }
@@ -112,8 +105,7 @@ public class BuildingsScript : MonoBehaviour
 
         Vector3 vfxPosition = GetSpawnCenter() + Vector3.up * 1f;
         GameObject vfxInstance = Instantiate(destructionVFXPrefab, vfxPosition, Quaternion.identity);
-        
-        // Configurar escala si tiene el componente
+
         BuildingDestructionVFX vfxComponent = vfxInstance.GetComponent<BuildingDestructionVFX>();
         if (vfxComponent != null)
         {
@@ -131,7 +123,6 @@ public class BuildingsScript : MonoBehaviour
         Vector3 originalScale    = visual.transform.localScale;
         Quaternion originalRotation = visual.transform.localRotation;
 
-        // FASE 1: SHAKE — siempre ocurre (feedback de gameplay)
         float shakeElapsed = 0f;
         while (shakeElapsed < shakeDuration)
         {
@@ -146,8 +137,6 @@ public class BuildingsScript : MonoBehaviour
 
         if (renderers.Length == 0) yield break;
 
-        // ── Optimización: solo crear materiales y animar si el edificio es visible.
-        // El check DESPUÉS del shake es más fiable (el player acaba de chocar con él).
         bool anyVisible = false;
         foreach (var r in renderers) { if (r.isVisible) { anyVisible = true; break; } }
 
@@ -157,7 +146,6 @@ public class BuildingsScript : MonoBehaviour
             yield break;
         }
 
-        // Crear instancias planas (una List<Material>) — elimina el doble foreach cada frame
         var fadeMats = new System.Collections.Generic.List<Material>(renderers.Length * 2);
         for (int i = 0; i < renderers.Length; i++)
         {
@@ -172,7 +160,6 @@ public class BuildingsScript : MonoBehaviour
             renderers[i].materials = instMats;
         }
 
-        // FASE 2: FADE + COLAPSO
         float fadeElapsed = 0f;
         while (fadeElapsed < fadeOutDuration)
         {
@@ -180,7 +167,6 @@ public class BuildingsScript : MonoBehaviour
             float progress     = fadeElapsed / fadeOutDuration;
             float alpha        = 1f - progress;
 
-            // Iterar lista plana — un solo loop en lugar de nested foreach
             for (int m = 0; m < fadeMats.Count; m++)
                 SetMaterialAlpha(fadeMats[m], alpha);
 
@@ -198,7 +184,6 @@ public class BuildingsScript : MonoBehaviour
                 visual.transform.localPosition = originalPosition
                     + Vector3.down * (originalScale.y * (1f - scaleY) * 0.5f);
 
-                // Rotación aleatoria: calcular solo si rotation amount es notable (> 0.01)
                 float rotAmt = curve * 5f;
                 if (rotAmt > 0.01f)
                 {
@@ -214,17 +199,17 @@ public class BuildingsScript : MonoBehaviour
 
         for (int m = 0; m < fadeMats.Count; m++)
             SetMaterialAlpha(fadeMats[m], 0f);
-        // NO desactivar aquí — DestroySequence lo hará después de spawnear drops
+
     }
 
     private void SetupTransparentMaterial(Material mat)
     {
-        // Intentar configurar material para transparencia (URP/Standard)
+
         if (mat.HasProperty("_Surface"))
         {
-            // URP Lit/Unlit
-            mat.SetFloat("_Surface", 1); // Transparent
-            mat.SetFloat("_Blend", 0); // Alpha
+
+            mat.SetFloat("_Surface", 1);
+            mat.SetFloat("_Blend", 0);
             mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             mat.SetInt("_ZWrite", 0);
@@ -234,8 +219,8 @@ public class BuildingsScript : MonoBehaviour
         }
         else if (mat.HasProperty("_Mode"))
         {
-            // Standard Shader (Built-in)
-            mat.SetFloat("_Mode", 3); // Transparent
+
+            mat.SetFloat("_Mode", 3);
             mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             mat.SetInt("_ZWrite", 0);
@@ -248,17 +233,17 @@ public class BuildingsScript : MonoBehaviour
 
     private void SetMaterialAlpha(Material mat, float alpha)
     {
-        // Intentar setear alpha en diferentes propiedades según el shader
+
         if (mat.HasProperty("_BaseColor"))
         {
-            // URP
+
             Color color = mat.GetColor("_BaseColor");
             color.a = alpha;
             mat.SetColor("_BaseColor", color);
         }
         else if (mat.HasProperty("_Color"))
         {
-            // Standard
+
             Color color = mat.GetColor("_Color");
             color.a = alpha;
             mat.SetColor("_Color", color);
@@ -279,7 +264,7 @@ public class BuildingsScript : MonoBehaviour
         {
             Vector2 randomCircle = Random.insideUnitCircle * GameBalanceConfig.Instance.BuildingOrbSpawnRadius;
             Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 2f), randomCircle.y);
-            
+
             ExperienceOrb orb = SpawnFactory.Instance.CreateExperienceOrb(spawnPosition, orbConfig);
             if (orb != null && orbConfig == null)
             {
@@ -323,7 +308,7 @@ public class BuildingsScript : MonoBehaviour
         {
             return spawnPoint.position;
         }
-        
+
         if (visual != null)
         {
             Renderer visualRenderer = visual.GetComponent<Renderer>();
@@ -336,7 +321,7 @@ public class BuildingsScript : MonoBehaviour
             }
             return visual.transform.position + Vector3.up;
         }
-        
+
         return transform.position + Vector3.up;
     }
 }

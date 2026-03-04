@@ -27,12 +27,12 @@ public class SpawnPoint : MonoBehaviour
     [SerializeField] private bool showSpawnWarning = true;
     [SerializeField] private float warningDuration = 1f;
 
-    private float lastSpawnTime = -999f; // Tiempo del último spawn
+    private float lastSpawnTime = -999f;
     private SpawnWarningIndicator warningIndicator;
 
     public SpawnSector Sector => sector;
     public int MaxEnemiesPerSpawn => maxEnemiesPerSpawn;
-    public bool IsReady => Time.time >= lastSpawnTime + spawnCooldown; // Check sin Update
+    public bool IsReady => Time.time >= lastSpawnTime + spawnCooldown;
 
     private void Awake()
     {
@@ -81,7 +81,7 @@ public class SpawnPoint : MonoBehaviour
             SpawnSingleEnemy(spawnPosition, config);
         }
 
-        lastSpawnTime = Time.time; // Registrar tiempo de spawn en vez de timer countdown
+        lastSpawnTime = Time.time;
     }
 
     private Vector3 GetSpawnPosition()

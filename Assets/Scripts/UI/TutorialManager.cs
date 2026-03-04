@@ -1,72 +1,42 @@
-﻿using System;
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// ---------------------------------------------------------------------------
-// Data classes â€” deserializadas desde TutorialData.json
-// ---------------------------------------------------------------------------
-
 [Serializable]
 public class TutorialStep
 {
-    /// <summary>ID Ãºnico del paso. Usado por nextStepId / yesGoesToStep / noGoesToStep.</summary>
+
     public string id = "";
 
-    /// <summary>Texto que se mostrarÃ¡ en el panel.</summary>
     public string text = "";
 
-    /// <summary>Mostrar la flecha indicadora.</summary>
     public bool showArrow = false;
 
-    /// <summary>Ãngulo Z de la flecha en grados (0 = arriba).</summary>
     public float arrowAngle = 0f;
 
-    /// <summary>Congela Time.timeScale mientras este paso estÃ¡ visible.</summary>
     public bool freezeGame = true;
 
-    // --- Botones ---
-    /// <summary>"normal" = botÃ³n Next. "choice" = botones Yes + No.</summary>
     public string stepType = "normal";
     public string nextButtonLabel  = "Next";
     public string yesButtonLabel   = "Yes";
     public string noButtonLabel    = "No";
 
-    // --- NavegaciÃ³n explÃ­cita ---
-    /// <summary>Si estÃ¡ relleno, al pulsar Next se va directamente a este paso por ID.</summary>
     public string nextStepId     = "";
-    /// <summary>Al pulsar YES (choice), ir a este paso por ID.</summary>
+
     public string yesGoesToStep  = "";
-    /// <summary>Al pulsar NO (choice), ir a este paso por ID.</summary>
+
     public string noGoesToStep   = "";
 
-    // --- Disparadores de evento ---
-    /// <summary>
-    /// El paso solo se activa cuando se dispara este evento del juego:
-    ///   "coins_collected"       â†’ primera moneda recogida
-    ///   "first_enemy_damaged"   â†’ primer disparo que impacta a un enemigo
-    ///   "first_orb_collected"   â†’ primer orbe de experiencia recogido
-    ///   "first_player_damaged"  â†’ primer daÃ±o recibido por el jugador
-    ///   "first_level_up"        â†’ primer subida de nivel
-    /// </summary>
     public string waitForEvent = "";
 
-    // --- Control de flujo especial ---
-    /// <summary>Al pulsar Next: descongela el juego, cierra el panel, y espera al evento "coins_collected".</summary>
     public bool unfreezeOnNext = false;
 
-    /// <summary>Al pulsar Next: cierra el panel (SIN descongelar) y vuelve a esperar mÃºltiples eventos pendientes.</summary>
     public bool returnToWaitingOnNext = false;
 
-    /// <summary>Al pulsar Next: el tutorial termina completamente.</summary>
     public bool endsAfterNext = false;
 
-    /// <summary>
-    /// Nombre del objetivo HUD al que debe apuntar la flecha.
-    /// Valores válidos: "currency" | "expbar" | "health" | "hud" | "timer"
-    /// Si está vacío, la flecha usa showArrow + arrowAngle normalmente.
-    /// </summary>
     public string highlightTarget = "";
 }
 
@@ -76,39 +46,14 @@ public class TutorialStepList
     public TutorialStep[] steps;
 }
 
-// ---------------------------------------------------------------------------
-// TutorialManager
-// ---------------------------------------------------------------------------
-
-/// <summary>
-/// Controla el flujo completo del tutorial en partida.
-///
-/// FLUJO DE ESTADOS:
-///   Inactive â†’ ShowingStep â†” WaitingForCoins â†’ WaitingForAnyEvent â†’ Complete
-///
-/// WaitingForCoins:     espera la primera moneda (tras "unfreezeOnNext")
-/// WaitingForAnyEvent:  espera cualquiera de: first_shot / first_orb / first_damage / first_levelup
-///                      los que ya se mostraron se ignoran; cuando todos se han visto â†’ Complete
-///
-/// CRÃTICO â€” Level Up:
-///   LevelUpManager ya congela Time.timeScale=0 ANTES de que llegue el evento OnLevelUp.
-///   FreezeGame() comprueba si el tiempo ya estÃ¡ a 0 antes de actuar â†’ weFrozeTime=false.
-///   Al cerrar el tutorial tras los pasos de level-up, UnfreezeGame() no hace nada porque
-///   weFrozeTime=false â†’ el panel de level-up sigue congelado y activo. Comportamiento correcto.
-/// </summary>
 public class TutorialManager : MonoBehaviour
 {
-    // -----------------------------------------------------------------------
-    // Singleton
-    // -----------------------------------------------------------------------
+
     public static TutorialManager Instance { get; private set; }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics() => Instance = null;
 
-    // -----------------------------------------------------------------------
-    // Inspector
-    // -----------------------------------------------------------------------
     [Header("UI References")]
     [SerializeField] private GameObject     tutorialPanel;
     [SerializeField] private TextMeshProUGUI messageText;
@@ -146,12 +91,9 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private RectTransform targetMinimap;
 
     [Header("Highlight Pulse")]
-    [SerializeField] private float highlightPulseScale    = 1.12f;  // tamaño máximo del pulso
-    [SerializeField] private float highlightPulseDuration = 0.55f;  // segundos por ciclo completo
+    [SerializeField] private float highlightPulseScale    = 1.12f;
+    [SerializeField] private float highlightPulseDuration = 0.55f;
 
-    // -----------------------------------------------------------------------
-    // State
-    // -----------------------------------------------------------------------
     private TutorialStepList data;
     private int          currentStepIndex = -1;
     private TutorialStep currentStep;
@@ -160,16 +102,14 @@ public class TutorialManager : MonoBehaviour
     {
         Inactive,
         ShowingStep,
-        WaitingForCoins,       // despuÃ©s de "unfreezeOnNext" â€” solo espera monedas
-        WaitingForAnyEvent,    // espera cualquiera de los 4 eventos restantes
+        WaitingForCoins,
+        WaitingForAnyEvent,
         Complete
     }
     private TutorialState state = TutorialState.Inactive;
 
-    // Â¿Fuimos NOSOTROS quienes congelamos el tiempo?
     private bool weFrozeTime = false;
 
-    // Grupos de eventos ya mostrados
     private bool shownCoins            = false;
     private bool shownFirstShot        = false;
     private bool shownFirstOrb         = false;
@@ -180,11 +120,8 @@ public class TutorialManager : MonoBehaviour
 
     private const string TUTORIAL_DONE_KEY = "TutorialCompleted_v1";
 
-    // ── Estado de sesión estático ─────────────────────────────────────────
-    // Persiste entre recargas de escena dentro de la misma sesión.
-    // Permite que reiniciar desde Pausa o desde muerte preserve el progreso.
     private static bool s_isSessionRestart     = false;
-    private static bool s_seqDone              = false; // intro secuencial completada
+    private static bool s_seqDone              = false;
     private static bool s_shownCoins           = false;
     private static bool s_shownFirstShot       = false;
     private static bool s_shownFirstOrb        = false;
@@ -193,27 +130,21 @@ public class TutorialManager : MonoBehaviour
     private static bool s_shownFirstShopOpened = false;
     private static bool s_shownFirstShopClosed = false;
 
-    // Typewriter state
     private Coroutine   typewriterCoroutine;
     private bool        isTyping = false;
     private AudioSource typingSource;
 
-    // Highlight state
     private Coroutine     pulseCoroutine;
     private RectTransform currentHighlightTarget;
     private Vector3       highlightOriginalScale;
     private Canvas        tempHighlightCanvas;
     private bool          addedTempCanvas;
 
-    // -----------------------------------------------------------------------
-    // Unity lifecycle
-    // -----------------------------------------------------------------------
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
 
-        // AudioSource dedicado para el typewriter — pitch independiente por sonido
         typingSource = gameObject.AddComponent<AudioSource>();
         typingSource.playOnAwake  = false;
         typingSource.loop         = false;
@@ -228,19 +159,15 @@ public class TutorialManager : MonoBehaviour
         if (TutorialConfig.Instance == null || !TutorialConfig.Instance.TutorialEnabled)
         { state = TutorialState.Complete; return; }
 
-        // ── REINICIO DESDE PAUSA O MUERTE ────────────────────────────────────
-        // Solo muestra tutoriales pendientes; si el tutorial ya estaba completo, no muestra nada.
         if (s_isSessionRestart)
         {
             s_isSessionRestart = false;
 
-            // Solo saltar si el tutorial está hecho Y no estamos forzando mostrarlo siempre
             if (PlayerPrefs.GetInt(TUTORIAL_DONE_KEY, 0) == 1 && !TutorialConfig.Instance.ForceShowEveryRun)
             { state = TutorialState.Complete; return; }
 
             if (!LoadDataAndValidate()) return;
 
-            // Restaurar el progreso de esta sesión
             shownCoins           = s_shownCoins;
             shownFirstShot       = s_shownFirstShot;
             shownFirstOrb        = s_shownFirstOrb;
@@ -249,10 +176,9 @@ public class TutorialManager : MonoBehaviour
             shownFirstShopOpened = s_shownFirstShopOpened;
             shownFirstShopClosed = s_shownFirstShopClosed;
 
-            // Si la intro secuencial ya terminó, ir directo a los eventos pendientes
             if (s_seqDone)
             {
-                // Si las monedas aún no se recogieron, bloquear enemigos igual que haría EnterWaitingForCoins
+
                 if (!shownCoins && EnemySpawnManager.Instance != null)
                     EnemySpawnManager.Instance.SetSpawnBlocked(true);
                 EnterWaitingForAnyEvent();
@@ -266,7 +192,6 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        // ── INICIO DESDE MENÚ PRINCIPAL ───────────────────────────────────────
         bool alreadyDone = PlayerPrefs.GetInt(TUTORIAL_DONE_KEY, 0) == 1;
         if (alreadyDone && !TutorialConfig.Instance.ForceShowEveryRun)
         { state = TutorialState.Complete; return; }
@@ -278,33 +203,24 @@ public class TutorialManager : MonoBehaviour
         else                EnterWaitingForAnyEvent();
     }
 
-    /// <summary>Carga TutorialData.json, valida referencias UI y registra listeners de botones.
-    /// Devuelve false si algo falla (y pone state = Complete).</summary>
     private bool LoadDataAndValidate()
     {
         TextAsset jsonAsset = Resources.Load<TextAsset>("TutorialData");
         if (jsonAsset == null)
         {
-            Debug.LogError("[TutorialManager] Resources/TutorialData.json no encontrado.");
             state = TutorialState.Complete; return false;
         }
 
         data = JsonUtility.FromJson<TutorialStepList>(jsonAsset.text);
         if (data == null || data.steps == null || data.steps.Length == 0)
         {
-            Debug.LogError("[TutorialManager] TutorialData.json vacío o mal formado.");
             state = TutorialState.Complete; return false;
         }
 
         bool ok = true;
-        if (tutorialPanel  == null) { Debug.LogError("[TutorialManager] tutorialPanel sin asignar!");  ok = false; }
-        if (messageText    == null) { Debug.LogError("[TutorialManager] messageText sin asignar!");    ok = false; }
-        if (nextButton     == null) { Debug.LogError("[TutorialManager] nextButton sin asignar!");     ok = false; }
-        if (nextButtonText == null) { Debug.LogError("[TutorialManager] nextButtonText sin asignar!"); ok = false; }
 
         bool hasChoice = Array.Exists(data.steps, s => s.stepType == "choice");
         if (hasChoice && choiceNoButton == null)
-        { Debug.LogError("[TutorialManager] Hay pasos 'choice' pero choiceNoButton sin asignar!"); ok = false; }
 
         if (!ok) { state = TutorialState.Complete; return false; }
 
@@ -330,14 +246,10 @@ public class TutorialManager : MonoBehaviour
         UnsubscribeAll();
     }
 
-    // -----------------------------------------------------------------------
-    // Button handlers
-    // -----------------------------------------------------------------------
     private void OnNextClicked()
     {
         if (currentStep == null || state != TutorialState.ShowingStep) return;
 
-        // If still typing, skip to full text and wait for next click
         if (isTyping) { SkipTypewriter(); return; }
 
         if (currentStep.stepType == "choice")
@@ -350,7 +262,6 @@ public class TutorialManager : MonoBehaviour
         if (currentStep.returnToWaitingOnNext){ ReturnToWaiting();  return; }
         if (currentStep.unfreezeOnNext)       { EnterWaitingForCoins(); return; }
 
-        // nextStepId explÃ­cito tiene prioridad sobre bÃºsqueda secuencial
         if (!string.IsNullOrEmpty(currentStep.nextStepId))
         {
             NavigateToId(currentStep.nextStepId);
@@ -378,9 +289,6 @@ public class TutorialManager : MonoBehaviour
         else          CompleteTutorial();
     }
 
-    // -----------------------------------------------------------------------
-    // Step display
-    // -----------------------------------------------------------------------
     private void ShowStep(int index)
     {
         currentStepIndex = index;
@@ -401,13 +309,10 @@ public class TutorialManager : MonoBehaviour
 
         if (currentStep.freezeGame) FreezeGame();
 
-        // Activar panel PRIMERO antes de cualquier cálculo de canvas
         if (tutorialPanel != null) tutorialPanel.SetActive(true);
 
-        // Atenuar música de fondo mientras el panel está visible
         if (MusicManager.Instance != null) MusicManager.Instance.ReduceVolume();
 
-        // Flecha normal (solo si no hay highlightTarget)
         if (arrowObject != null)
         {
             bool useHighlight = !string.IsNullOrEmpty(currentStep.highlightTarget);
@@ -416,13 +321,11 @@ public class TutorialManager : MonoBehaviour
                 arrowTransform.localEulerAngles = new Vector3(0f, 0f, currentStep.arrowAngle);
         }
 
-        // Highlight: poner elemento HUD en primer plano con pulso
         if (!string.IsNullOrEmpty(currentStep.highlightTarget))
             ApplyHighlight(currentStep.highlightTarget);
         else
             StopHighlight();
 
-        // Start typewriter (stops any previous one)
         if (typewriterCoroutine != null) StopCoroutine(typewriterCoroutine);
         if (messageText != null)
             typewriterCoroutine = StartCoroutine(TypewriterRoutine(currentStep.text));
@@ -430,9 +333,6 @@ public class TutorialManager : MonoBehaviour
         GameEvents.TriggerTutorialStepShown(currentStep.id);
     }
 
-    // -----------------------------------------------------------------------
-    // Highlight (pulse + canvas override)
-    // -----------------------------------------------------------------------
     private void ApplyHighlight(string targetName)
     {
         RectTransform target = targetName.ToLower() switch
@@ -448,16 +348,14 @@ public class TutorialManager : MonoBehaviour
 
         if (target == null)
         {
-            Debug.LogWarning($"[TutorialManager] highlightTarget '{targetName}' sin RectTransform asignado.");
             return;
         }
 
-        StopHighlight(); // limpiar highlight previo si lo hay
+        StopHighlight();
 
         currentHighlightTarget  = target;
         highlightOriginalScale  = target.localScale;
 
-        // Añadir Canvas override para ponerlo por encima de todo (sortingOrder muy alto)
         tempHighlightCanvas = target.GetComponent<Canvas>();
         if (tempHighlightCanvas == null)
         {
@@ -503,7 +401,7 @@ public class TutorialManager : MonoBehaviour
 
         while (true)
         {
-            // Crecer
+
             float t = 0f;
             while (t < half)
             {
@@ -511,7 +409,7 @@ public class TutorialManager : MonoBehaviour
                 target.localScale = Vector3.Lerp(baseScale, bigScale, Mathf.SmoothStep(0f, 1f, t / half));
                 yield return null;
             }
-            // Encoger
+
             t = 0f;
             while (t < half)
             {
@@ -522,9 +420,6 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Typewriter
-    // -----------------------------------------------------------------------
     private IEnumerator TypewriterRoutine(string fullText)
     {
         isTyping = true;
@@ -535,7 +430,6 @@ public class TutorialManager : MonoBehaviour
 
         float charDelay = charsPerSecond > 0f ? 1f / charsPerSecond : 0f;
 
-        // Iniciar sonido en loop mientras escribe
         if (typingSound != null && typingSource != null)
         {
             typingSource.clip   = typingSound;
@@ -551,7 +445,6 @@ public class TutorialManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(charDelay);
         }
 
-        // Detener sonido al terminar
         if (typingSource != null) typingSource.Stop();
 
         messageText.maxVisibleCharacters = int.MaxValue;
@@ -559,7 +452,6 @@ public class TutorialManager : MonoBehaviour
         typewriterCoroutine = null;
     }
 
-    /// <summary>Muestra el texto completo al instante y detiene la corutina del typewriter.</summary>
     private void SkipTypewriter()
     {
         if (typewriterCoroutine != null)
@@ -572,30 +464,21 @@ public class TutorialManager : MonoBehaviour
         isTyping = false;
     }
 
-    // -----------------------------------------------------------------------
-    // Waiting states
-    // -----------------------------------------------------------------------
-
-    /// <summary>Llamado tras unfreezeOnNext: descongela y entra a esperar cualquier evento (monedas incluidas).</summary>
     private void EnterWaitingForCoins()
     {
         UnfreezeGame();
         HidePanel();
-        s_seqDone = true; // La intro secuencial terminó; los reinicios de sesión saltarán directo a eventos
-        // Bloquear enemigos hasta que el jugador recoja la primera moneda
+        s_seqDone = true;
+
         if (EnemySpawnManager.Instance != null)
             EnemySpawnManager.Instance.SetSpawnBlocked(true);
         EnterWaitingForAnyEvent();
     }
 
-    /// <summary>
-    /// Llamado tras returnToWaitingOnNext (fin de un grupo de evento).
-    /// NO descongela si el tiempo ya fue congelado por otro sistema (ej: level-up panel).
-    /// </summary>
     private void ReturnToWaiting()
     {
         HidePanel();
-        UnfreezeGame(); // solo actÃºa si weFrozeTime == true
+        UnfreezeGame();
         EnterWaitingForAnyEvent();
     }
 
@@ -606,7 +489,7 @@ public class TutorialManager : MonoBehaviour
 
     private void EnterWaitingForAnyEvent()
     {
-        // Si todos los grupos ya se mostraron, mostrar los pasos finales de compleción
+
         if (AllEventGroupsShown())
         {
             int idx = FindStepByEvent("all_events_complete");
@@ -616,7 +499,7 @@ public class TutorialManager : MonoBehaviour
         }
 
         state = TutorialState.WaitingForAnyEvent;
-        UnsubscribeAll(); // evitar dobles suscripciones
+        UnsubscribeAll();
 
         if (!shownCoins && CurrencyManager.Instance != null)
             CurrencyManager.Instance.OnCoinsChanged += OnCoinsChanged_Tutorial;
@@ -629,16 +512,13 @@ public class TutorialManager : MonoBehaviour
         if (!shownFirstShopClosed)  GameEvents.OnShopAutoClosed    += OnFirstShopAutoClosed;
     }
 
-    // -----------------------------------------------------------------------
-    // Event handlers
-    // -----------------------------------------------------------------------
     private void OnCoinsChanged_Tutorial(int coins)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
         if (coins <= 0) return;
 
         shownCoins = true;  s_shownCoins = true;
-        // Desbloquear enemigos ahora que el jugador ya recogió monedas
+
         if (EnemySpawnManager.Instance != null)
             EnemySpawnManager.Instance.SetSpawnBlocked(false);
         UnsubscribeAll();
@@ -707,9 +587,6 @@ public class TutorialManager : MonoBehaviour
         else EnterWaitingForAnyEvent();
     }
 
-    // -----------------------------------------------------------------------
-    // Event subscription management
-    // -----------------------------------------------------------------------
     private void UnsubscribeAll()
     {
         if (CurrencyManager.Instance != null)
@@ -723,9 +600,6 @@ public class TutorialManager : MonoBehaviour
         GameEvents.OnShopAutoClosed   -= OnFirstShopAutoClosed;
     }
 
-    // -----------------------------------------------------------------------
-    // Time control (non-invasive)
-    // -----------------------------------------------------------------------
     private void FreezeGame()
     {
         if (Time.timeScale != 0f)
@@ -733,7 +607,7 @@ public class TutorialManager : MonoBehaviour
             Time.timeScale = 0f;
             weFrozeTime    = true;
         }
-        // Si timeScale ya era 0 (ej: LevelUpManager lo congelÃ³), weFrozeTime queda false â†’ no lo restauramos al cerrar
+
     }
 
     private void UnfreezeGame()
@@ -748,13 +622,10 @@ public class TutorialManager : MonoBehaviour
         SkipTypewriter();
         StopHighlight();
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
-        // Restaurar volumen de música al cerrar el panel
+
         if (MusicManager.Instance != null) MusicManager.Instance.RestoreVolume();
     }
 
-    // -----------------------------------------------------------------------
-    // Completion
-    // -----------------------------------------------------------------------
     private void OnSkipAllClicked()
     {
         CompleteTutorial();
@@ -767,27 +638,20 @@ public class TutorialManager : MonoBehaviour
         HidePanel();
         if (skipAllButton != null) skipAllButton.gameObject.SetActive(false);
         UnsubscribeAll();
-        // Seguridad: desbloquear spawn si por algún motivo quedó bloqueado
+
         if (EnemySpawnManager.Instance != null)
             EnemySpawnManager.Instance.SetSpawnBlocked(false);
         PlayerPrefs.SetInt(TUTORIAL_DONE_KEY, 1);
         PlayerPrefs.Save();
-        ClearSession(); // limpiar estado estático ya que el tutorial terminó definitivamente
+        ClearSession();
         GameEvents.TriggerTutorialCompleted();
-        Debug.Log("[TutorialManager] Tutorial completed.");
     }
 
-    // ── Métodos estáticos para gestión de sesión ──────────────────────────
-
-    /// <summary>Llamado desde Pausa o Game Over ANTES de recargar la escena.
-    /// Preserva el progreso del tutorial para el reinicio.</summary>
     public static void MarkSessionRestart()
     {
         s_isSessionRestart = true;
     }
 
-    /// <summary>Llamado cuando se regresa al Menú Principal.
-    /// Limpia el estado de sesión para que el próximo inicio sea desde cero.</summary>
     public static void ClearSession()
     {
         s_isSessionRestart     = false;
@@ -801,9 +665,6 @@ public class TutorialManager : MonoBehaviour
         s_shownFirstShopClosed = false;
     }
 
-    // -----------------------------------------------------------------------
-    // Step search helpers
-    // -----------------------------------------------------------------------
     private int FindNextSequentialStepAfter(int afterIndex)
     {
         if (data?.steps == null) return -1;
@@ -827,17 +688,11 @@ public class TutorialManager : MonoBehaviour
         for (int i = 0; i < data.steps.Length; i++)
             if (string.Equals(data.steps[i].id, id, StringComparison.OrdinalIgnoreCase))
                 return i;
-        Debug.LogError($"[TutorialManager] Step id '{id}' not found in TutorialData.json");
         return -1;
     }
 
-    // -----------------------------------------------------------------------
-    // Public API
-    // -----------------------------------------------------------------------
-    /// <summary>True mientras el panel del tutorial estÃ¡ visible. Usado por PauseMenu para bloquear ESC.</summary>
     public bool IsTutorialPanelActive => state == TutorialState.ShowingStep;
 
-    /// <summary>True en cualquier estado activo (mostrando O esperando evento).</summary>
     public bool IsTutorialActive => state != TutorialState.Inactive && state != TutorialState.Complete;
 
     public static void ResetTutorial()

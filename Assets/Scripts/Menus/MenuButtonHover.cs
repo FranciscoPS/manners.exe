@@ -19,8 +19,7 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private void OnDisable()
     {
-        // OnPointerExit no se dispara cuando el panel se desactiva mientras el cursor
-        // está encima del botón. Sin esto el botón queda con el scale de hover.
+
         rectTransform.DOKill();
         rectTransform.localScale = originalScale;
     }

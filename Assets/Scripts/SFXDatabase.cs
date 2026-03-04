@@ -41,7 +41,7 @@ public class SFXDatabase : ScriptableObject
     public Vector2 enemyDeathPitchRange = new Vector2(0.85f, 1.15f);
 
     [Header("Movement Sound Settings")]
-    [Range(0.1f, 1f)] public float moveSoundInterval = 0.3f; // Intervalo en segundos entre cada reproducción
+    [Range(0.1f, 1f)] public float moveSoundInterval = 0.3f;
 
     private static SFXDatabase instance;
     public static SFXDatabase Instance

@@ -14,7 +14,7 @@ public class PlayerExperience : MonoBehaviour
     {
         playerHealth = GetComponent<PlayerHealth>();
     }
-    
+
     private void Start()
     {
         if (ExperienceManager.Instance != null)
@@ -24,7 +24,6 @@ public class PlayerExperience : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[PlayerExperience] ExperienceManager.Instance is null in Start()!");
         }
     }
 
@@ -55,13 +54,12 @@ public class PlayerExperience : MonoBehaviour
         {
             currentExperience -= experienceRequiredForNextLevel;
             currentLevel++;
-            
-            // Registrar nivel en estadísticas
+
             if (GameSessionStats.Instance != null)
             {
                 GameSessionStats.Instance.UpdateMaxLevel(currentLevel);
             }
-            
+
             if (ExperienceManager.Instance != null)
             {
                 experienceRequiredForNextLevel = ExperienceManager.Instance.CalculateExperienceForLevel(currentLevel);

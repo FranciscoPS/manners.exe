@@ -18,13 +18,9 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     private Light projectileLight;
     private Material materialInstance;
 
-    // Buffer estático compartido: CERO allocations en explosiones.
-    // Tamaño 64 cubre cualquier escenario realista de radio de explosión.
     private static readonly Collider[] _explosionBuffer    = new Collider[64];
     private static readonly Collider[] _chainKnockbackBuffer = new Collider[32];
-    
-    // LayerMask cacheada: GetMask hace una búsqueda de string cada vez.
-    // Al ser static se inicializa una sola vez para todas las instancias.
+
     private static int _enemyLayerMask = -1;
     private static int EnemyLayerMask
     {
@@ -36,7 +32,6 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         }
     }
 
-    // IUpdateable implementation
     public bool IsActive => this != null && gameObject != null && gameObject.activeInHierarchy && lifetimeTimer > 0f;
 
     private void Awake()
@@ -51,13 +46,13 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         damage = newDamage;
         lifetime = newLifetime;
     }
-    
+
     public void SetExplosive(bool explosive, float radius = 3f)
     {
         isExplosive = explosive;
         explosionRadius = radius;
     }
-    
+
     public void SetKnockback(float force, bool isChain = false)
     {
         knockbackForce = force;
@@ -85,9 +80,9 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
                 materialInstance = new Material(renderer.sharedMaterial);
                 renderer.material = materialInstance;
             }
-            
+
             materialInstance.color = color;
-            
+
             if (materialInstance.HasProperty("_BaseColor"))
                 materialInstance.SetColor("_BaseColor", color);
             if (materialInstance.HasProperty("_Color"))
@@ -124,7 +119,6 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         }
     }
 
-    // IUpdateable implementation
     public void OnUpdate(float deltaTime)
     {
         lifetimeTimer -= deltaTime;
@@ -153,15 +147,15 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         {
             if (isExplosive)
             {
-                // Explosión de área
+
                 Explode(other.transform.position);
             }
             else
             {
-                // Daño directo
+
                 DealDamageToEnemy(other.gameObject, other.transform.position);
             }
-            
+
             if (SpawnFactory.Instance != null)
             {
                 SpawnFactory.Instance.DestroyObject(gameObject);
@@ -172,13 +166,12 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
             }
         }
     }
-    
+
     private void Explode(Vector3 impactPoint)
     {
-        // OverlapSphereNonAlloc: rellena el buffer estático, sin heap allocation.
+
         int hitCount = Physics.OverlapSphereNonAlloc(impactPoint, explosionRadius, _explosionBuffer, EnemyLayerMask);
 
-        // Log cuando una sola explosión mata muchos enemigos — correlaciona con spikes de FPS
         if (hitCount >= 5)
         {
             PerformanceMonitor.Instance?.LogEvent($"EXPLOSION masiva | {hitCount} enemies en radio {explosionRadius:F1}m");
@@ -189,7 +182,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
             DealDamageToEnemy(_explosionBuffer[i].gameObject, impactPoint);
         }
     }
-    
+
     private void DealDamageToEnemy(GameObject enemy, Vector3 impactPoint)
     {
         EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
@@ -197,7 +190,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         {
             enemyHealth.TakeDamage(damage);
         }
-        
+
         if (knockbackForce > 0f)
         {
             EnemyController enemyController = enemy.GetComponent<EnemyController>();
@@ -206,7 +199,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
                 Vector3 knockbackDirection = (enemy.transform.position - impactPoint).normalized;
                 float duration = 0.3f;
                 enemyController.ApplyKnockback(knockbackDirection, knockbackForce, duration);
-                
+
                 if (isChainKnockback)
                 {
                     ApplyChainKnockback(enemy.transform.position, knockbackDirection);
@@ -214,17 +207,17 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
             }
         }
     }
-    
+
     private void ApplyChainKnockback(Vector3 knockedEnemyPosition, Vector3 knockbackDirection)
     {
         int hitCount = Physics.OverlapSphereNonAlloc(knockedEnemyPosition, chainKnockbackRadius, _chainKnockbackBuffer, EnemyLayerMask);
-        
+
         for (int i = 0; i < hitCount; i++)
         {
             Collider enemyCollider = _chainKnockbackBuffer[i];
             if (enemyCollider.transform.position == knockedEnemyPosition)
                 continue;
-            
+
             EnemyController chainEnemy = enemyCollider.GetComponent<EnemyController>();
             if (chainEnemy != null)
             {
@@ -240,8 +233,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     {
         lifetimeTimer = lifetime;
         rb.linearVelocity = Vector3.zero;
-        
-        // Registrar con UpdateManager
+
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Register(this);
@@ -252,8 +244,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     {
         rb.linearVelocity = Vector3.zero;
         direction = Vector3.zero;
-        
-        // Unregister del UpdateManager
+
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Unregister(this);

@@ -12,7 +12,7 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     private float currentHealth;
     private DamageTween damageTween;
 
-    private Coroutine hitAnmationCorrutine; 
+    private Coroutine hitAnmationCorrutine;
 
     public event Action<float, float> OnHealthChanged;
     public event Action OnDamageTaken;
@@ -29,17 +29,16 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     private float invulnerabilityEndTime;
     private const float invulnerabilityDuration = 0.5f;
     private const int hitsForInvulnerability = 3;
-    private float currentAnimationSpeed; 
+    private float currentAnimationSpeed;
 
     private int playerLayer;
     private int enemyLayer;
 
-    // IUpdateable implementation
     public bool IsActive => gameObject.activeInHierarchy && enabled && !isDead;
 
     private void Awake()
     {
-        // Determinar capas y asegurar colisión habilitada lo antes posible
+
         playerLayer = gameObject.layer;
         enemyLayer = LayerMask.NameToLayer("Enemy");
 
@@ -59,18 +58,16 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
         {
             maxHealth = 100f;
         }
-        
+
         currentHealth = maxHealth;
-        
+
         damageTween = GetComponentInChildren<DamageTween>();
-        
-        // CRITICAL: Estado inicial saneado
+
         isDead = false;
         isInvulnerable = false;
-        
+
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        
-        // Registrar con UpdateManager
+
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Register(this);
@@ -83,15 +80,13 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
         {
             Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
-        
-        // Unregister del UpdateManager
+
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Unregister(this);
         }
     }
 
-    // IUpdateable implementation
     public void OnUpdate(float deltaTime)
     {
         if (Time.time - lastHitTime > consecutiveHitWindow)
@@ -128,48 +123,44 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
 
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
-        
-        // Mostrar número de daño flotante
+
         if (FloatingTextManager.Instance != null)
         {
             Vector3 textPosition = transform.position + Vector3.up * 2f;
             FloatingTextManager.Instance.ShowDamage(damage, textPosition);
         }
-        
+
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         OnDamageTaken?.Invoke();
         GameEvents.TriggerPlayerDamaged(damage);
-        
+
         if (MusicManager.Instance != null && SFXDatabase.Instance != null && SFXDatabase.Instance.playerDamageSFX != null)
         {
             float randomPitch = UnityEngine.Random.Range(SFXDatabase.Instance.playerDamagePitchRange.x, SFXDatabase.Instance.playerDamagePitchRange.y);
             MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.playerDamageSFX, SFXDatabase.Instance.playerDamageVolume, randomPitch);
         }
-        
+
         if (CameraShakeManager.Instance != null)
         {
             CameraShakeManager.Instance.ShakeMedium();
         }
-        
+
         if (damageTween != null)
         {
             damageTween.TweenFx();
         }
-        
+
         if (currentHealth <= 0)
         {
             Die();
         }
     }
-    
-    /// <summary>
-    /// Aumenta la vida máxima y cura al jugador por esa cantidad
-    /// </summary>
+
     public void AddMaxHealth(float amount)
     {
         maxHealth += amount;
         currentHealth += amount;
-        
+
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
@@ -203,8 +194,8 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
 
-            rb.useGravity = false;     
-            rb.isKinematic = true;     
+            rb.useGravity = false;
+            rb.isKinematic = true;
         }
 
         if (animator != null)

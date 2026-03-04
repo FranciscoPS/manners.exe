@@ -62,12 +62,12 @@ public class EnemySpawner : MonoBehaviour
             SpawnFactory.Instance.CreateEnemy(spawnPosition, config);
         }
     }
-    
+
     private EnemyConfiguration GetRandomEnemyConfig()
     {
         if (enemyConfigurations == null || enemyConfigurations.Length == 0)
             return null;
-            
+
         return enemyConfigurations[Random.Range(0, enemyConfigurations.Length)];
     }
 

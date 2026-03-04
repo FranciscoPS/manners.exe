@@ -32,7 +32,7 @@ public class PickupAudioManager : MonoBehaviour
     [SerializeField] private float diamondSoundCooldown = 0.05f;
     [Tooltip("Cooldown mínimo entre sonidos de orbe. Sin esto, 30+ orbes en burst = 30 PlayOneShot en el mismo frame.")]
     [SerializeField] private float orbSoundCooldown = 0.04f;
-    
+
     private AudioSource coinAudioSource;
     private AudioSource diamondAudioSource;
     private AudioSource orbAudioSource;
@@ -44,18 +44,18 @@ public class PickupAudioManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            transform.SetParent(null); // Convertir en root antes de DDOL
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
-            
+
             coinAudioSource = gameObject.AddComponent<AudioSource>();
             coinAudioSource.playOnAwake = false;
             coinAudioSource.spatialBlend = 0f;
-            
+
             diamondAudioSource = gameObject.AddComponent<AudioSource>();
             diamondAudioSource.playOnAwake = false;
             diamondAudioSource.spatialBlend = 0f;
             diamondAudioSource.pitch = 1f;
-            
+
             orbAudioSource = gameObject.AddComponent<AudioSource>();
             orbAudioSource.playOnAwake = false;
             orbAudioSource.spatialBlend = 0f;
@@ -65,7 +65,7 @@ public class PickupAudioManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
+
     public void PlayCoinSound()
     {
         if (coinSound != null && coinAudioSource != null)
@@ -88,7 +88,7 @@ public class PickupAudioManager : MonoBehaviour
             {
                 return;
             }
-            
+
             lastDiamondSoundTime = Time.time;
             float finalVolume = diamondVolume;
             if (MusicManager.Instance != null)
@@ -103,7 +103,7 @@ public class PickupAudioManager : MonoBehaviour
     {
         if (experienceOrbSound != null && orbAudioSource != null)
         {
-            // Throttle: evita saturar el AudioMixer cuando el imán recoge muchos orbes a la vez.
+
             if (Time.time - lastOrbSoundTime < orbSoundCooldown)
                 return;
 

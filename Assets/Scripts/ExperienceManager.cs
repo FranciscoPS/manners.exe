@@ -13,7 +13,7 @@ public class ExperienceManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            transform.SetParent(null); // Convertir en root antes de DDOL
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
         }
         else

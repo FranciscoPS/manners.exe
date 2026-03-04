@@ -7,12 +7,12 @@ public class HealthBarUI : MonoBehaviour
     [Header("Health Bar")]
     [SerializeField] private Image healthBarFill;
     [SerializeField] private Image healthBarBackground;
-    
+
     [Header("Blink Settings")]
     [SerializeField] private float blinkDuration = 0.1f;
     [SerializeField] private int blinkCount = 3;
     [SerializeField] private Color blinkColor = Color.red;
-    
+
     private Color originalColor;
     private PlayerHealth playerHealth;
     private Tween blinkTween;
@@ -51,7 +51,7 @@ public class HealthBarUI : MonoBehaviour
             playerHealth.OnHealthChanged -= UpdateHealthBar;
             playerHealth.OnDamageTaken -= PlayBlinkEffect;
         }
-        
+
         blinkTween?.Kill();
     }
 
@@ -73,7 +73,7 @@ public class HealthBarUI : MonoBehaviour
         blinkTween = healthBarFill.DOColor(blinkColor, blinkDuration)
             .SetLoops(blinkCount * 2, LoopType.Yoyo)
             .SetEase(Ease.Linear)
-            .OnComplete(() => 
+            .OnComplete(() =>
             {
                 if (this != null && healthBarFill != null)
                 {
