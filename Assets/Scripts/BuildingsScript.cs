@@ -95,135 +95,100 @@ public class BuildingsScript : MonoBehaviour
 
     private IEnumerator FadeAndDestroy()
     {
-        if (visual == null)
+        if (visual == null) yield break;
+
+        // ── Optimización: si ningún renderer es visible, no hace falta animar el fade.
+        // El VFX de partículas ya cubre la destrucción visualmente.
+        Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
+        bool anyVisible = false;
+        foreach (var r in renderers) { if (r.isVisible) { anyVisible = true; break; } }
+
+        if (!anyVisible)
         {
+            // Edificio fuera de pantalla: ocultar sin animar (0 draw calls extra)
+            visual.SetActive(false);
             yield break;
         }
 
-        // Guardar posición y escala originales del visual
+        // ── Edificio visible: hacer el efecto completo ─────────────────────────
+
         Vector3 originalPosition = visual.transform.localPosition;
-        Vector3 originalScale = visual.transform.localScale;
+        Vector3 originalScale    = visual.transform.localScale;
         Quaternion originalRotation = visual.transform.localRotation;
 
-        // FASE 1: SHAKE - Temblor antes del colapso
+        // FASE 1: SHAKE
         float shakeElapsed = 0f;
         while (shakeElapsed < shakeDuration)
         {
             shakeElapsed += Time.deltaTime;
-            
-            // Temblor en X y Z (horizontal) con frecuencia alta
-            float shakeProgress = shakeElapsed / shakeDuration;
-            float intensity = shakeIntensity * (1f - shakeProgress); // Decrece con el tiempo
-            
-            Vector3 shakeOffset = new Vector3(
-                Random.Range(-intensity, intensity),
-                0f, // No temblor en Y
-                Random.Range(-intensity, intensity)
-            );
-            
-            visual.transform.localPosition = originalPosition + shakeOffset;
-            
+            float intensity = shakeIntensity * (1f - shakeElapsed / shakeDuration);
+            visual.transform.localPosition = originalPosition + new Vector3(
+                Random.Range(-intensity, intensity), 0f,
+                Random.Range(-intensity, intensity));
             yield return null;
         }
-
-        // Restaurar posición después del shake
         visual.transform.localPosition = originalPosition;
 
-        // Obtener todos los renderers del visual
-        Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
-        if (renderers.Length == 0)
-        {
-            yield break;
-        }
+        if (renderers.Length == 0) yield break;
 
-        // Guardar materiales originales y crear copias para fade
-        Material[][] originalMaterials = new Material[renderers.Length][];
-        Material[][] fadeMaterials = new Material[renderers.Length][];
-        
+        // Crear instancias planas (una List<Material>) — elimina el doble foreach cada frame
+        var fadeMats = new System.Collections.Generic.List<Material>(renderers.Length * 2);
         for (int i = 0; i < renderers.Length; i++)
         {
-            originalMaterials[i] = renderers[i].materials;
-            fadeMaterials[i] = new Material[originalMaterials[i].Length];
-            
-            for (int j = 0; j < originalMaterials[i].Length; j++)
+            var origMats = renderers[i].materials;
+            var instMats = new Material[origMats.Length];
+            for (int j = 0; j < origMats.Length; j++)
             {
-                // Crear copia del material para no afectar otros objetos
-                fadeMaterials[i][j] = new Material(originalMaterials[i][j]);
-                
-                // Configurar material para transparencia
-                SetupTransparentMaterial(fadeMaterials[i][j]);
+                instMats[j] = new Material(origMats[j]);
+                SetupTransparentMaterial(instMats[j]);
+                fadeMats.Add(instMats[j]);
             }
-            
-            renderers[i].materials = fadeMaterials[i];
+            renderers[i].materials = instMats;
         }
 
-        // FASE 2: FADE + COLAPSO - Fade out mientras el edificio se derrumba
+        // FASE 2: FADE + COLAPSO
         float fadeElapsed = 0f;
         while (fadeElapsed < fadeOutDuration)
         {
             fadeElapsed += Time.deltaTime;
-            float progress = fadeElapsed / fadeOutDuration;
-            
-            // Alpha fade
-            float alpha = 1f - progress;
-            
-            // Aplicar alpha a todos los materiales
-            foreach (var materialArray in fadeMaterials)
-            {
-                foreach (var mat in materialArray)
-                {
-                    SetMaterialAlpha(mat, alpha);
-                }
-            }
-            
-            // Colapso visual (scale down en Y y uniform shrink)
+            float progress     = fadeElapsed / fadeOutDuration;
+            float alpha        = 1f - progress;
+
+            // Iterar lista plana — un solo loop en lugar de nested foreach
+            for (int m = 0; m < fadeMats.Count; m++)
+                SetMaterialAlpha(fadeMats[m], alpha);
+
             if (collapseDown)
             {
-                // Curva de colapso: empieza lento, acelera al final
-                float collapseCurve = progress * progress; // Ease-in
-                
-                // Scale en Y (colapsa hacia abajo)
-                float scaleY = Mathf.Lerp(1f, collapseAmount, collapseCurve);
-                
-                // Scale uniform (edificio se encoge también)
-                float uniformScale = Mathf.Lerp(1f, 0.8f, collapseCurve);
-                
-                Vector3 newScale = new Vector3(
-                    originalScale.x * uniformScale,
+                float curve      = progress * progress;
+                float scaleY     = Mathf.LerpUnclamped(1f, collapseAmount, curve);
+                float uniformSc  = Mathf.LerpUnclamped(1f, 0.8f, curve);
+
+                visual.transform.localScale = new Vector3(
+                    originalScale.x * uniformSc,
                     originalScale.y * scaleY,
-                    originalScale.z * uniformScale
-                );
-                
-                visual.transform.localScale = newScale;
-                
-                // Bajar posición en Y para compensar el scale (parece que se hunde)
-                float yOffset = originalScale.y * (1f - scaleY) * 0.5f;
-                visual.transform.localPosition = originalPosition + Vector3.down * yOffset;
-                
-                // Rotación ligera aleatoria (efecto de derrumbe)
-                float rotationAmount = collapseCurve * 5f; // Máximo 5 grados
-                Vector3 randomRotation = new Vector3(
-                    Random.Range(-rotationAmount, rotationAmount),
-                    Random.Range(-rotationAmount, rotationAmount),
-                    Random.Range(-rotationAmount, rotationAmount)
-                );
-                
-                visual.transform.localRotation = originalRotation * Quaternion.Euler(randomRotation);
+                    originalScale.z * uniformSc);
+
+                visual.transform.localPosition = originalPosition
+                    + Vector3.down * (originalScale.y * (1f - scaleY) * 0.5f);
+
+                // Rotación aleatoria: calcular solo si rotation amount es notable (> 0.01)
+                float rotAmt = curve * 5f;
+                if (rotAmt > 0.01f)
+                {
+                    visual.transform.localRotation = originalRotation * Quaternion.Euler(
+                        Random.Range(-rotAmt, rotAmt),
+                        Random.Range(-rotAmt, rotAmt),
+                        Random.Range(-rotAmt, rotAmt));
+                }
             }
-            
+
             yield return null;
         }
 
-        // Asegurar alpha 0 y escala final
-        foreach (var materialArray in fadeMaterials)
-        {
-            foreach (var mat in materialArray)
-            {
-                SetMaterialAlpha(mat, 0f);
-            }
-        }
-
-        // NO desactivar aquí - DestroySequence lo hará después de spawnear drops
+        for (int m = 0; m < fadeMats.Count; m++)
+            SetMaterialAlpha(fadeMats[m], 0f);
+        // NO desactivar aquí — DestroySequence lo hará después de spawnear drops
     }
 
     private void SetupTransparentMaterial(Material mat)

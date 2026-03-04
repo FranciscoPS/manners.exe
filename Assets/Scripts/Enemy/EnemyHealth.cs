@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
+    // Contador estático: se incrementa en OnEnable (pool activa el objeto)
+    // y decrementa en OnDisable (pool desactiva al devolver). Cero allocations.
+    public static int ActiveEnemyCount { get; private set; }
+
     [Header("Death VFX")]
     [SerializeField] private GameObject explosionPrefab;
     
@@ -55,6 +59,18 @@ public class EnemyHealth : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
+    }
+
+    private void OnEnable()
+    {
+        // El pool llama SetActive(true) → OnEnable. Registrar enemigo activo.
+        ActiveEnemyCount++;
+    }
+
+    private void OnDisable()
+    {
+        // El pool llama SetActive(false) al despawnear → OnDisable. Desregistrar.
+        ActiveEnemyCount = Mathf.Max(0, ActiveEnemyCount - 1);
     }
 
     public void ResetHealth()

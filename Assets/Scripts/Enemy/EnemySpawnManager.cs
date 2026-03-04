@@ -18,6 +18,10 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private int continuousEnemiesPerSpawn = 2;
     [SerializeField] private EnemyConfiguration[] continuousEnemyTypes;
 
+    [Header("Enemy Cap")]
+    [Tooltip("Máximo de enemigos activos en escena a la vez. Impide los 10M de polígonos.")]
+    [SerializeField] private int maxConcurrentEnemies = 40;
+
     private List<SpawnPoint> allSpawnPoints = new List<SpawnPoint>();
     private int currentWaveIndex = 0;
     private bool isSpawningWave = false;
@@ -98,6 +102,14 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
         if (allSpawnPoints.Count == 0)
             return;
+
+        // Cap duro: no spawnear si ya hay demasiados enemigos activos.
+        int slots = maxConcurrentEnemies - EnemyHealth.ActiveEnemyCount;
+        if (slots <= 0)
+        {
+            PerformanceMonitor.Instance?.LogEvent($"[CAP] Spawn bloqueado — activos: {EnemyHealth.ActiveEnemyCount}/{maxConcurrentEnemies}");
+            return;
+        }
 
         // Shuffle in-place sobre allSpawnPoints: cero allocations.
         // Antes se copiaba la lista completa en new List<SpawnPoint>(allSpawnPoints) cada vez.
@@ -208,6 +220,11 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             LogDebug("No spawn points available!");
             return;
         }
+
+        // Reducir el batch si acercarse al cap (nunca pasar de maxConcurrentEnemies).
+        int slots = maxConcurrentEnemies - EnemyHealth.ActiveEnemyCount;
+        if (slots <= 0) return;
+        count = Mathf.Min(count, slots);
 
         // Shuffle in-place: mismo patrón que SpawnContinuousEnemies — sin new List.
         for (int i = allSpawnPoints.Count - 1; i > 0; i--)
