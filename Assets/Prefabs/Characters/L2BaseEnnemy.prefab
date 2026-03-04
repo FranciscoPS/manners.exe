@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 7114533053708017834}
   - component: {fileID: 2742775524479765140}
   - component: {fileID: 8998925568946165008}
-  - component: {fileID: 55601445570791238}
   m_Layer: 3
   m_Name: L2BaseEnnemy
   m_TagString: Enemy
@@ -129,30 +128,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1.55
   m_Center: {x: 0, y: 0.42, z: 0}
---- !u!205 &55601445570791238
-LODGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7510731991543114636}
-  serializedVersion: 2
-  m_LocalReferencePoint: {x: 0, y: 0, z: 0}
-  m_Size: 1
-  m_FadeMode: 0
-  m_AnimateCrossFading: 0
-  m_LastLODIsBillboard: 0
-  m_LODs:
-  - screenRelativeHeight: 0.6
-    fadeTransitionWidth: 0
-    renderers: []
-  - screenRelativeHeight: 0.3
-    fadeTransitionWidth: 0
-    renderers: []
-  - screenRelativeHeight: 0.1
-    fadeTransitionWidth: 0
-    renderers: []
-  m_Enabled: 1
 --- !u!1001 &3961242235216954230
 PrefabInstance:
   m_ObjectHideFlags: 0
