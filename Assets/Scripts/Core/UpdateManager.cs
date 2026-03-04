@@ -53,6 +53,12 @@ public class UpdateManager : MonoBehaviour
     private List<IFixedUpdateable> fixedUpdateables = new List<IFixedUpdateable>(50);
     private List<ILateUpdateable> lateUpdateables = new List<ILateUpdateable>(20);
     
+    // HashSets para deduplicación O(1) en Register.
+    // List.Contains es O(n) — con 150 objetos registrados y 30 spawns en burst = 4500 comparaciones.
+    private HashSet<IUpdateable>      updateableSet      = new HashSet<IUpdateable>();
+    private HashSet<IFixedUpdateable> fixedUpdateableSet = new HashSet<IFixedUpdateable>();
+    private HashSet<ILateUpdateable>  lateUpdateableSet  = new HashSet<ILateUpdateable>();
+    
     // Listas temporales para añadir/remover sin modificar durante iteración
     private List<IUpdateable> updateablesToAdd = new List<IUpdateable>();
     private List<IUpdateable> updateablesToRemove = new List<IUpdateable>();
@@ -117,7 +123,7 @@ public class UpdateManager : MonoBehaviour
         
         if (isUpdating)
             updateablesToAdd.Add(updateable);
-        else if (!updateables.Contains(updateable))
+        else if (updateableSet.Add(updateable)) // HashSet.Add devuelve false si ya existe: O(1)
             updateables.Add(updateable);
     }
     
@@ -128,7 +134,10 @@ public class UpdateManager : MonoBehaviour
         if (isUpdating)
             updateablesToRemove.Add(updateable);
         else
+        {
+            updateableSet.Remove(updateable);
             updateables.Remove(updateable);
+        }
     }
     
     public void Register(IFixedUpdateable updateable)
@@ -137,7 +146,7 @@ public class UpdateManager : MonoBehaviour
         
         if (isFixedUpdating)
             fixedUpdateablesToAdd.Add(updateable);
-        else if (!fixedUpdateables.Contains(updateable))
+        else if (fixedUpdateableSet.Add(updateable))
             fixedUpdateables.Add(updateable);
     }
     
@@ -148,7 +157,10 @@ public class UpdateManager : MonoBehaviour
         if (isFixedUpdating)
             fixedUpdateablesToRemove.Add(updateable);
         else
+        {
+            fixedUpdateableSet.Remove(updateable);
             fixedUpdateables.Remove(updateable);
+        }
     }
     
     public void Register(ILateUpdateable updateable)
@@ -157,7 +169,7 @@ public class UpdateManager : MonoBehaviour
         
         if (isLateUpdating)
             lateUpdateablesToAdd.Add(updateable);
-        else if (!lateUpdateables.Contains(updateable))
+        else if (lateUpdateableSet.Add(updateable))
             lateUpdateables.Add(updateable);
     }
     
@@ -168,7 +180,10 @@ public class UpdateManager : MonoBehaviour
         if (isLateUpdating)
             lateUpdateablesToRemove.Add(updateable);
         else
+        {
+            lateUpdateableSet.Remove(updateable);
             lateUpdateables.Remove(updateable);
+        }
     }
     
     // ===== UPDATE LOOPS =====
@@ -338,13 +353,8 @@ public class UpdateManager : MonoBehaviour
             }
             toRemove.Clear();
         }
-        
-        // Limpieza adicional: eliminar entradas que sean null (Unity destroyed)
-        for (int i = list.Count - 1; i >= 0; i--)
-        {
-            if (list[i] == null)
-                list.RemoveAt(i);
-        }
+        // La pasada extra de nulos fue eliminada: iteraba TODA la lista cada frame aunque
+        // no hubiera nulos. Los nulos se eliminan inline durante el loop de Update/FixedUpdate/LateUpdate.
     }
     
     /// <summary>
@@ -361,6 +371,10 @@ public class UpdateManager : MonoBehaviour
         fixedUpdateablesToRemove.Clear();
         lateUpdateablesToAdd.Clear();
         lateUpdateablesToRemove.Clear();
+        // Limpiar HashSets de deduplicación también
+        updateableSet.Clear();
+        fixedUpdateableSet.Clear();
+        lateUpdateableSet.Clear();
     }
     
     // Debug info

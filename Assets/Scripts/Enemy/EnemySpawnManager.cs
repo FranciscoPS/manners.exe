@@ -18,8 +18,13 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private int continuousEnemiesPerSpawn = 2;
     [SerializeField] private EnemyConfiguration[] continuousEnemyTypes;
 
+    [Header("Enemy Cap")]
+    [Tooltip("Máximo de enemigos activos en escena a la vez. Impide los 10M de polígonos.")]
+    [SerializeField] private int maxConcurrentEnemies = 40;
+
     private List<SpawnPoint> allSpawnPoints = new List<SpawnPoint>();
     private int currentWaveIndex = 0;
+    private int waveLoopCount = 0;  // cuántas veces se ha completado el ciclo completo
     private bool isSpawningWave = false;
     private float continuousSpawnTimer = 0f;
     private bool spawnBlocked = false;
@@ -99,21 +104,31 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         if (allSpawnPoints.Count == 0)
             return;
 
-        List<SpawnPoint> shuffledPoints = new List<SpawnPoint>(allSpawnPoints);
-        for (int i = 0; i < shuffledPoints.Count; i++)
+        // Cap duro: no spawnear si ya hay demasiados enemigos activos.
+        int slots = maxConcurrentEnemies - EnemyHealth.ActiveEnemyCount;
+        if (slots <= 0)
         {
-            int randomIndex = Random.Range(i, shuffledPoints.Count);
-            SpawnPoint temp = shuffledPoints[i];
-            shuffledPoints[i] = shuffledPoints[randomIndex];
-            shuffledPoints[randomIndex] = temp;
+            PerformanceMonitor.Instance?.LogEvent($"[CAP] Spawn bloqueado — activos: {EnemyHealth.ActiveEnemyCount}/{maxConcurrentEnemies}");
+            return;
+        }
+
+        // Shuffle in-place sobre allSpawnPoints: cero allocations.
+        // Antes se copiaba la lista completa en new List<SpawnPoint>(allSpawnPoints) cada vez.
+        for (int i = allSpawnPoints.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            SpawnPoint temp = allSpawnPoints[i];
+            allSpawnPoints[i] = allSpawnPoints[j];
+            allSpawnPoints[j] = temp;
         }
 
         int enemiesSpawned = 0;
-        foreach (var point in shuffledPoints)
+        for (int i = 0; i < allSpawnPoints.Count; i++)
         {
             if (enemiesSpawned >= continuousEnemiesPerSpawn)
                 break;
 
+            SpawnPoint point = allSpawnPoints[i];
             if (point.IsReady)
             {
                 EnemyConfiguration config = continuousEnemyTypes[Random.Range(0, continuousEnemyTypes.Length)];
@@ -158,7 +173,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 if (autoLoopWaves)
                 {
                     currentWaveIndex = 0;
-                    LogDebug("Looping waves...");
+                    waveLoopCount++;
+                    LogDebug($"Looping waves... (vuelta {waveLoopCount})");
                 }
                 else
                 {
@@ -176,49 +192,61 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         isSpawningWave = true;
         int enemiesSpawned = 0;
         int totalEnemies = wave.totalEnemies;
+        string waveTag = $"{wave.waveName} [vuelta {waveLoopCount + 1}, índice {currentWaveIndex + 1}/{waveQueue.Length}]";
+
+        PerformanceMonitor.Instance?.LogEvent($"Wave START: {waveTag} | totalEnemies={totalEnemies} | batchSize={wave.enemiesPerBatch}");
 
         while (enemiesSpawned < totalEnemies)
         {
+            // Si el cap está lleno, esperar a que mueran enemigos antes del próximo batch
+            while (EnemyHealth.ActiveEnemyCount >= maxConcurrentEnemies)
+                yield return new WaitForSeconds(0.5f);
+
             int remainingEnemies = totalEnemies - enemiesSpawned;
             int enemiesToSpawnThisBatch = Mathf.Min(wave.enemiesPerBatch, remainingEnemies);
 
-            SpawnBatch(enemiesToSpawnThisBatch, wave);
-            enemiesSpawned += enemiesToSpawnThisBatch;
+            // Usar el retorno real de SpawnBatch (puede spawnear menos que lo pedido)
+            int actuallySpawned = SpawnBatch(enemiesToSpawnThisBatch, wave);
+            enemiesSpawned += actuallySpawned;
 
             if (enemiesSpawned < totalEnemies)
-            {
                 yield return new WaitForSeconds(wave.spawnInterval);
-            }
         }
 
         isSpawningWave = false;
-        LogDebug($"Wave {wave.waveName} completed: {enemiesSpawned} enemies spawned");
+        PerformanceMonitor.Instance?.LogEvent($"Wave END: {waveTag} | spawned={enemiesSpawned}");
+        LogDebug($"Wave {waveTag} completed: {enemiesSpawned} enemies spawned");
     }
 
-    private void SpawnBatch(int count, WaveData wave)
+    private int SpawnBatch(int count, WaveData wave)
     {
         if (allSpawnPoints.Count == 0)
         {
             LogDebug("No spawn points available!");
-            return;
+            return 0;
         }
 
-        List<SpawnPoint> availablePoints = new List<SpawnPoint>(allSpawnPoints);
-        
-        for (int i = 0; i < availablePoints.Count; i++)
+        // Reducir el batch si acercarse al cap (nunca pasar de maxConcurrentEnemies).
+        int slots = maxConcurrentEnemies - EnemyHealth.ActiveEnemyCount;
+        if (slots <= 0) return 0;
+        count = Mathf.Min(count, slots);
+
+        // Shuffle in-place: mismo patrón que SpawnContinuousEnemies — sin new List.
+        for (int i = allSpawnPoints.Count - 1; i > 0; i--)
         {
-            int randomIndex = Random.Range(i, availablePoints.Count);
-            SpawnPoint temp = availablePoints[i];
-            availablePoints[i] = availablePoints[randomIndex];
-            availablePoints[randomIndex] = temp;
+            int j = Random.Range(0, i + 1);
+            SpawnPoint tmp = allSpawnPoints[i];
+            allSpawnPoints[i] = allSpawnPoints[j];
+            allSpawnPoints[j] = tmp;
         }
 
         int enemiesRemaining = count;
         int pointIndex = 0;
+        int maxIterations = allSpawnPoints.Count * 2;
 
-        while (enemiesRemaining > 0 && availablePoints.Count > 0)
+        while (enemiesRemaining > 0 && pointIndex < maxIterations)
         {
-            SpawnPoint currentPoint = availablePoints[pointIndex % availablePoints.Count];
+            SpawnPoint currentPoint = allSpawnPoints[pointIndex % allSpawnPoints.Count];
             EnemyConfiguration config = wave.GetRandomEnemyConfig();
 
             if (config != null)
@@ -229,12 +257,9 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             }
 
             pointIndex++;
-
-            if (pointIndex >= availablePoints.Count * 2)
-            {
-                break;
-            }
         }
+
+        return count - enemiesRemaining; // cuántos se spawnearon realmente
     }
 
     private void LogDebug(string message)

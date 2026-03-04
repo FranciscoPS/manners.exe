@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
+    // Contador estático: se incrementa en OnEnable (pool activa el objeto)
+    // y decrementa en OnDisable (pool desactiva al devolver). Cero allocations.
+    public static int ActiveEnemyCount { get; private set; }
+
     [Header("Death VFX")]
     [SerializeField] private GameObject explosionPrefab;
     
@@ -57,6 +61,18 @@ public class EnemyHealth : MonoBehaviour
         currentHealth = maxHealth;
     }
 
+    private void OnEnable()
+    {
+        // El pool llama SetActive(true) → OnEnable. Registrar enemigo activo.
+        ActiveEnemyCount++;
+    }
+
+    private void OnDisable()
+    {
+        // El pool llama SetActive(false) al despawnear → OnDisable. Desregistrar.
+        ActiveEnemyCount = Mathf.Max(0, ActiveEnemyCount - 1);
+    }
+
     public void ResetHealth()
     {
         currentHealth = maxHealth;
@@ -101,8 +117,17 @@ public class EnemyHealth : MonoBehaviour
             Instantiate(explosionPrefab, explosionPos, Quaternion.identity);
         }
         
-        SpawnExperienceOrbs();
-        SpawnCollectibles();
+        // Resolver drop config UNA sola vez y pasarla a ambos métodos.
+        // Antes se llamaba GetEnemyDropConfig() dos veces (búsqueda lineal duplicada).
+        int currentWave = GetCurrentWave();
+        GameBalanceConfig.EnemyDropConfig dropConfig = null;
+        if (GameBalanceConfig.Instance != null && GameBalanceConfig.Instance.HasDropConfigs())
+        {
+            dropConfig = GameBalanceConfig.Instance.GetEnemyDropConfig(enemyPoolType, currentWave);
+        }
+        
+        SpawnExperienceOrbs(dropConfig);
+        SpawnCollectibles(dropConfig);
         
         if (SpawnFactory.Instance != null)
         {
@@ -114,26 +139,17 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
-    private void SpawnExperienceOrbs()
+    private void SpawnExperienceOrbs(GameBalanceConfig.EnemyDropConfig dropConfig)
     {
         if (SpawnFactory.Instance == null)
         {
             return;
         }
         
-        // Obtener configuración dinámica basada en wave actual
-        int currentWave = GetCurrentWave();
-        GameBalanceConfig.EnemyDropConfig dropConfig = null;
-        
-        if (GameBalanceConfig.Instance != null && GameBalanceConfig.Instance.HasDropConfigs())
-        {
-            dropConfig = GameBalanceConfig.Instance.GetEnemyDropConfig(enemyPoolType, currentWave);
-        }
-        
         // Usar valores dinámicos si hay config, sino usar defaults
-        int minOrbs = dropConfig != null ? dropConfig.minOrbs : defaultMinOrbs;
-        int maxOrbs = dropConfig != null ? dropConfig.maxOrbs : defaultMaxOrbs;
-        float orbSpawnRadius = dropConfig != null ? 1f : defaultOrbSpawnRadius;
+        int minOrbs          = dropConfig != null ? dropConfig.minOrbs      : defaultMinOrbs;
+        int maxOrbs          = dropConfig != null ? dropConfig.maxOrbs      : defaultMaxOrbs;
+        float orbSpawnRadius = dropConfig != null ? 1f                      : defaultOrbSpawnRadius;
         OrbConfiguration orbConfig = dropConfig != null ? dropConfig.orbConfig : defaultOrbConfig;
 
         int orbCount = Random.Range(minOrbs, maxOrbs + 1);
@@ -152,26 +168,17 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
-    private void SpawnCollectibles()
+    private void SpawnCollectibles(GameBalanceConfig.EnemyDropConfig dropConfig)
     {
         if (SpawnFactory.Instance == null) return;
         
-        // Obtener configuración dinámica basada en wave actual
-        int currentWave = GetCurrentWave();
-        GameBalanceConfig.EnemyDropConfig dropConfig = null;
-        
-        if (GameBalanceConfig.Instance != null && GameBalanceConfig.Instance.HasDropConfigs())
-        {
-            dropConfig = GameBalanceConfig.Instance.GetEnemyDropConfig(enemyPoolType, currentWave);
-        }
-        
         // Usar valores dinámicos si hay config, sino usar defaults
-        float coinDropChance = dropConfig != null ? dropConfig.coinDropChance : defaultCoinDropChance;
-        int minCoins = dropConfig != null ? dropConfig.minCoins : defaultMinCoins;
-        int maxCoins = dropConfig != null ? dropConfig.maxCoins : defaultMaxCoins;
+        float coinDropChance    = dropConfig != null ? dropConfig.coinDropChance    : defaultCoinDropChance;
+        int minCoins            = dropConfig != null ? dropConfig.minCoins          : defaultMinCoins;
+        int maxCoins            = dropConfig != null ? dropConfig.maxCoins          : defaultMaxCoins;
         float diamondDropChance = dropConfig != null ? dropConfig.diamondDropChance : defaultDiamondDropChance;
-        int minDiamonds = dropConfig != null ? dropConfig.minDiamonds : defaultMinDiamonds;
-        int maxDiamonds = dropConfig != null ? dropConfig.maxDiamonds : defaultMaxDiamonds;
+        int minDiamonds         = dropConfig != null ? dropConfig.minDiamonds       : defaultMinDiamonds;
+        int maxDiamonds         = dropConfig != null ? dropConfig.maxDiamonds       : defaultMaxDiamonds;
 
         Vector3 spawnCenter = transform.position + Vector3.up * 0.5f;
         float spawnRadius = 1f;

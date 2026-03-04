@@ -17,16 +17,29 @@ public class WebGLOptimizer : MonoBehaviour
     [SerializeField] private int targetFrameRate = 60;
     [SerializeField] private bool disableAntiAliasing = true;
     [SerializeField] private bool disableVSync = true;
+
+    [Header("Render Scale (borroso)")]
+    [Tooltip("Fuerza render scale = 1. Desactiva Dynamic Resolution que causa el borroso bajo carga.")]
+    [SerializeField] private bool forceRenderScaleOne = true;
+    [Tooltip("Comprueba cada N segundos que el render scale no haya bajado (watchdog).")]
+    [SerializeField] private float renderScaleCheckInterval = 2f;
     
     [Header("Debug")]
     [SerializeField] private bool showDebugInfo = true;
 
     private void Awake()
     {
-        // Solo aplicar en WebGL build
+        // Aplicar en WebGL build. Para probar en Editor: activa manualmente con clic derecho → "Apply Now".
         if (Application.platform == RuntimePlatform.WebGLPlayer && autoApplyOnStart)
         {
             ApplyWebGLOptimizations();
+        }
+
+        // El watchdog de render scale corre en todas las plataformas si está activado,
+        // porque el borroso puede ocurrir en cualquier build con Dynamic Resolution.
+        if (forceRenderScaleOne)
+        {
+            StartCoroutine(RenderScaleWatchdog());
         }
     }
 
@@ -107,6 +120,17 @@ public class WebGLOptimizer : MonoBehaviour
         QualitySettings.asyncUploadTimeSlice = 1; // Reducir upload time
         QualitySettings.asyncUploadBufferSize = 8; // Reducir buffer
 
+        // 9. RENDER SCALE — fuerza 1.0 para evitar el borroso por Dynamic Resolution
+        if (forceRenderScaleOne)
+        {
+            var urpAsset = QualitySettings.renderPipeline as UniversalRenderPipelineAsset;
+            if (urpAsset != null)
+            {
+                urpAsset.renderScale = 1.0f;
+                if (showDebugInfo) Debug.Log("[WebGLOptimizer] ✓ Render scale forzado a 1.0 (fix borroso)");
+            }
+        }
+
         if (showDebugInfo)
         {
             Debug.Log("[WebGLOptimizer] ====================================");
@@ -159,6 +183,30 @@ public class WebGLOptimizer : MonoBehaviour
     {
         ApplyWebGLOptimizations();
         DisableAllLightShadows();
+    }
+
+    /// <summary>
+    /// Watchdog: comprueba periódicamente que el render scale no haya bajado.
+    /// Dynamic Resolution en URP puede bajarlo bajo carga — eso es lo que causa el borroso.
+    /// </summary>
+    private System.Collections.IEnumerator RenderScaleWatchdog()
+    {
+        var wait = new WaitForSecondsRealtime(renderScaleCheckInterval);
+        while (true)
+        {
+            yield return wait;
+
+            var urpAsset = QualitySettings.renderPipeline as UniversalRenderPipelineAsset;
+            if (urpAsset != null && urpAsset.renderScale < 0.99f)
+            {
+                Debug.LogWarning(
+                    $"[WebGLOptimizer] ⚠️ Render scale detectó caída: {urpAsset.renderScale:F2} → reseteando a 1.0. " +
+                    "CAUSA DEL BORROSO. Desactiva Dynamic Resolution en el URP Asset.");
+                urpAsset.renderScale = 1.0f;
+
+                PerformanceMonitor.Instance?.LogEvent($"RenderScale watchdog reset desde {urpAsset.renderScale:F2}");
+            }
+        }
     }
 
     // Método de diagnóstico

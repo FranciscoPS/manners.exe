@@ -15,6 +15,10 @@ public class BuildingDestructionVFX : MonoBehaviour
     [SerializeField] private float size = 4f;
     [SerializeField] private Color tintColor = new Color(0.8f, 0.7f, 0.6f, 1f);
     
+    // Material cacheado estáticamente: mismo patrón que ExplosionFlipbook.
+    private static Material _cachedMaterial;
+    private static Texture2D _cachedTexture;
+    
     private void Start()
     {
         CreateParticleSystem();
@@ -78,13 +82,14 @@ public class BuildingDestructionVFX : MonoBehaviour
         // Usar material serializado si existe (requerido para builds)
         if (particleMaterial != null)
         {
-            // Crear instancia para no modificar el asset original
-            Material matInstance = new Material(particleMaterial);
-            if (dustTexture != null)
+            if (_cachedMaterial == null || _cachedTexture != dustTexture)
             {
-                matInstance.mainTexture = dustTexture;
+                _cachedMaterial = new Material(particleMaterial);
+                _cachedTexture  = dustTexture;
+                if (dustTexture != null)
+                    _cachedMaterial.mainTexture = dustTexture;
             }
-            return matInstance;
+            return _cachedMaterial;
         }
         
         // Fallback: crear material en runtime (solo funciona en Editor)

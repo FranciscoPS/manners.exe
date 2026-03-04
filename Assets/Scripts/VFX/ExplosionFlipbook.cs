@@ -15,6 +15,11 @@ public class ExplosionFlipbook : MonoBehaviour
     [SerializeField] private float size = 2f;
     [SerializeField] private Color tintColor = Color.white;
     
+    // Material cacheado estáticamente: se crea UNA sola vez para todas las instancias.
+    // Antes se creaba `new Material(particleMaterial)` en CADA explosión → alloc de GPU por muerte de enemigo.
+    private static Material _cachedMaterial;
+    private static Texture2D _cachedTexture;
+    
     private void Start()
     {
         CreateParticleSystem();
@@ -78,13 +83,15 @@ public class ExplosionFlipbook : MonoBehaviour
         // Usar material serializado si existe (requerido para builds)
         if (particleMaterial != null)
         {
-            // Crear instancia para no modificar el asset original
-            Material matInstance = new Material(particleMaterial);
-            if (explosionTexture != null)
+            // Reutilizar caché estática si el material base y la textura no cambiaron.
+            if (_cachedMaterial == null || _cachedTexture != explosionTexture)
             {
-                matInstance.mainTexture = explosionTexture;
+                _cachedMaterial = new Material(particleMaterial);
+                _cachedTexture  = explosionTexture;
+                if (explosionTexture != null)
+                    _cachedMaterial.mainTexture = explosionTexture;
             }
-            return matInstance;
+            return _cachedMaterial;
         }
         
         // Fallback: crear material en runtime (solo funciona en Editor)

@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 7114533053708017834}
   - component: {fileID: 2742775524479765140}
   - component: {fileID: 8349331636263580748}
+  - component: {fileID: -4080394353783653310}
   m_Layer: 3
   m_Name: Basic Enemy
   m_TagString: Enemy
@@ -130,6 +131,26 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!205 &-4080394353783653310
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7510731991543114636}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0, y: 0, z: 0}
+  m_Size: 1
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.04491961
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 1415643505391132439}
+    - renderer: {fileID: 1337217390993472394}
+  m_Enabled: 1
 --- !u!1001 &1323017014965813470
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -229,6 +250,16 @@ MonoBehaviour:
   damageColor: {r: 1, g: 0, b: 0, a: 1}
   tweenTime: 0.3
   tweenLoops: 3
+--- !u!23 &1337217390993472394 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 59264599911185236, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+  m_PrefabInstance: {fileID: 1323017014965813470}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &1415643505391132439 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -9081178023558340663, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+  m_PrefabInstance: {fileID: 1323017014965813470}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1573715094316558133 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}

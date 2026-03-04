@@ -18,6 +18,24 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     private Light projectileLight;
     private Material materialInstance;
 
+    // Buffer estático compartido: CERO allocations en explosiones.
+    // Tamaño 64 cubre cualquier escenario realista de radio de explosión.
+    private static readonly Collider[] _explosionBuffer    = new Collider[64];
+    private static readonly Collider[] _chainKnockbackBuffer = new Collider[32];
+    
+    // LayerMask cacheada: GetMask hace una búsqueda de string cada vez.
+    // Al ser static se inicializa una sola vez para todas las instancias.
+    private static int _enemyLayerMask = -1;
+    private static int EnemyLayerMask
+    {
+        get
+        {
+            if (_enemyLayerMask == -1)
+                _enemyLayerMask = LayerMask.GetMask("Enemy");
+            return _enemyLayerMask;
+        }
+    }
+
     // IUpdateable implementation
     public bool IsActive => this != null && gameObject != null && gameObject.activeInHierarchy && lifetimeTimer > 0f;
 
@@ -157,11 +175,18 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     
     private void Explode(Vector3 impactPoint)
     {
-        Collider[] enemiesInRadius = Physics.OverlapSphere(impactPoint, explosionRadius, LayerMask.GetMask("Enemy"));
-        
-        foreach (Collider enemyCollider in enemiesInRadius)
+        // OverlapSphereNonAlloc: rellena el buffer estático, sin heap allocation.
+        int hitCount = Physics.OverlapSphereNonAlloc(impactPoint, explosionRadius, _explosionBuffer, EnemyLayerMask);
+
+        // Log cuando una sola explosión mata muchos enemigos — correlaciona con spikes de FPS
+        if (hitCount >= 5)
         {
-            DealDamageToEnemy(enemyCollider.gameObject, impactPoint);
+            PerformanceMonitor.Instance?.LogEvent($"EXPLOSION masiva | {hitCount} enemies en radio {explosionRadius:F1}m");
+        }
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            DealDamageToEnemy(_explosionBuffer[i].gameObject, impactPoint);
         }
     }
     
@@ -192,10 +217,11 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     
     private void ApplyChainKnockback(Vector3 knockedEnemyPosition, Vector3 knockbackDirection)
     {
-        Collider[] nearbyEnemies = Physics.OverlapSphere(knockedEnemyPosition, chainKnockbackRadius, LayerMask.GetMask("Enemy"));
+        int hitCount = Physics.OverlapSphereNonAlloc(knockedEnemyPosition, chainKnockbackRadius, _chainKnockbackBuffer, EnemyLayerMask);
         
-        foreach (Collider enemyCollider in nearbyEnemies)
+        for (int i = 0; i < hitCount; i++)
         {
+            Collider enemyCollider = _chainKnockbackBuffer[i];
             if (enemyCollider.transform.position == knockedEnemyPosition)
                 continue;
             

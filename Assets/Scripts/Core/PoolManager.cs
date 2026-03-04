@@ -161,8 +161,9 @@ public class PoolManager : MonoBehaviour
         }
 
         obj.SetActive(true);
-        
-        Physics.SyncTransforms();
+        // Physics.SyncTransforms() eliminado: llamarlo por cada spawn individual es O(n_transforms)
+        // en todo el escenario. Unity sincroniza automáticamente antes de cada query físico.
+        // Llamarlo N veces en un burst de explosión (40+ spawns/frame) era la causa principal del stutter.
 
         activeObjects[obj] = poolType;
 
@@ -222,7 +223,6 @@ public class PoolManager : MonoBehaviour
         }
 
         obj.SetActive(true);
-        Physics.SyncTransforms();
         activeObjects[obj] = PoolType.ExperienceOrb;
 
         return orb;
@@ -249,7 +249,6 @@ public class PoolManager : MonoBehaviour
             }
             
             obj.SetActive(true);
-            Physics.SyncTransforms();
             activeObjects[obj] = poolType;
         }
 
@@ -278,7 +277,6 @@ public class PoolManager : MonoBehaviour
             }
             
             obj.SetActive(true);
-            Physics.SyncTransforms();
             activeObjects[obj] = poolType;
             
             return collectible;
