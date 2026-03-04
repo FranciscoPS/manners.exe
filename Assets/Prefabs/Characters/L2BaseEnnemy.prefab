@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 6190908423056691718}
   - component: {fileID: 7114533053708017834}
   - component: {fileID: 2742775524479765140}
-  - component: {fileID: 8998925568946165008}
   - component: {fileID: 55601445570791238}
+  - component: {fileID: 2689640959409915023}
   m_Layer: 3
   m_Name: L2BaseEnnemy
   m_TagString: Enemy
@@ -108,27 +108,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79b963095cbb44542a92e2a4ce4c70aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolable
---- !u!135 &8998925568946165008
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7510731991543114636}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 1.55
-  m_Center: {x: 0, y: 0.42, z: 0}
 --- !u!205 &55601445570791238
 LODGroup:
   m_ObjectHideFlags: 0
@@ -149,6 +128,29 @@ LODGroup:
     - renderer: {fileID: 0}
     - renderer: {fileID: 0}
   m_Enabled: 1
+--- !u!136 &2689640959409915023
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7510731991543114636}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &6385816257338384033
 PrefabInstance:
   m_ObjectHideFlags: 0
