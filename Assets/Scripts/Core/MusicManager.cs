@@ -26,6 +26,10 @@ public class MusicManager : MonoBehaviour
     [Header("SFX Settings")]
     [SerializeField][Range(0f, 1f)] private float sfxVolume = 0.8f;
 
+    [Header("UI SFX")]
+    public AudioClip hoverSFX;
+    public AudioClip clickSFX;
+
     [Header("Volume Reduction Settings")]
     [SerializeField][Range(0f, 1f)] private float reducedVolumeMultiplier = 0.3f;
     [SerializeField] private float volumeFadeDuration = 0.5f;
@@ -335,6 +339,12 @@ public class MusicManager : MonoBehaviour
         if (sfx == null || sfxOneShotSource == null) return;
 
         sfxOneShotSource.PlayOneShot(sfx, sfxVolume);
+    }
+
+    public void PlayUISound(AudioClip clip)
+    {
+        if (clip == null || sfxOneShotSource == null) return;
+        sfxOneShotSource.PlayOneShot(clip, sfxVolume);
     }
 
     public void PlaySFXOneShot(AudioClip sfx, float volume, float pitch = 1f)

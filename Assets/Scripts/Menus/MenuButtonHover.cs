@@ -28,7 +28,7 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
     {
         rectTransform.DOKill();
         rectTransform.DOScale(originalScale * hoverScale, scaleDuration).SetUpdate(true).SetEase(Ease.OutBack);
-        MainMenuUIManager.Instance?.PlaySFX(MainMenuUIManager.Instance.hoverSFX);
+        MusicManager.Instance?.PlayUISound(MusicManager.Instance.hoverSFX);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -39,6 +39,6 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        MainMenuUIManager.Instance?.PlaySFX(MainMenuUIManager.Instance.clickSFX);
+        MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
     }
 }

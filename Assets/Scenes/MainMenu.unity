@@ -15991,8 +15991,6 @@ MonoBehaviour:
   mejorasPanel: {fileID: 2042277212}
   fadeDuration: 1
   overlaySortingOrder: 1000
-  hoverSFX: {fileID: 8300000, guid: 246c55d771c91f14f996a19a6586c70a, type: 3}
-  clickSFX: {fileID: 8300000, guid: df20acfb2d7949443b4e9b7ab482ec7e, type: 3}
 --- !u!114 &655572747
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49914,6 +49912,8 @@ MonoBehaviour:
   musicVolume: 0.5
   playOnAwake: 1
   sfxVolume: 0.8
+  hoverSFX: {fileID: 8300000, guid: 246c55d771c91f14f996a19a6586c70a, type: 3}
+  clickSFX: {fileID: 8300000, guid: df20acfb2d7949443b4e9b7ab482ec7e, type: 3}
   reducedVolumeMultiplier: 0.3
   volumeFadeDuration: 0.5
   mainMenuSceneIndex: 0
