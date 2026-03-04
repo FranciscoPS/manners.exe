@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 7114533053708017834}
   - component: {fileID: 2742775524479765140}
   - component: {fileID: 7158674287617059928}
+  - component: {fileID: -8571605383930209301}
   m_Layer: 3
   m_Name: Fast Enemy
   m_TagString: Enemy
@@ -130,6 +131,29 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!205 &-8571605383930209301
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7510731991543114636}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0, y: 0, z: 0}
+  m_Size: 1
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.049081028
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 5249426855186789293}
+    - renderer: {fileID: 8988855940372866989}
+    - renderer: {fileID: 7562121181764025305}
+    - renderer: {fileID: 2429374287107111518}
+    - renderer: {fileID: 4922724486964585897}
+  m_Enabled: 1
 --- !u!1001 &1481332592605932076
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -341,6 +365,16 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!23 &2429374287107111518 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3834849373473247346, guid: 97de25de772750344b300ddf01d42d42, type: 3}
+  m_PrefabInstance: {fileID: 1481332592605932076}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &4922724486964585897 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5827596292902621061, guid: 97de25de772750344b300ddf01d42d42, type: 3}
+  m_PrefabInstance: {fileID: 1481332592605932076}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &4993785113738349051 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -3331611219743333417, guid: 97de25de772750344b300ddf01d42d42, type: 3}
@@ -361,3 +395,18 @@ MonoBehaviour:
   damageColor: {r: 1, g: 0, b: 0, a: 1}
   tweenTime: 0.3
   tweenLoops: 3
+--- !u!23 &5249426855186789293 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6653916495672891777, guid: 97de25de772750344b300ddf01d42d42, type: 3}
+  m_PrefabInstance: {fileID: 1481332592605932076}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &7562121181764025305 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -253102065667255819, guid: 97de25de772750344b300ddf01d42d42, type: 3}
+  m_PrefabInstance: {fileID: 1481332592605932076}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &8988855940372866989 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 7507523665608150401, guid: 97de25de772750344b300ddf01d42d42, type: 3}
+  m_PrefabInstance: {fileID: 1481332592605932076}
+  m_PrefabAsset: {fileID: 0}
