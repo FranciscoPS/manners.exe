@@ -359,6 +359,9 @@ public class MainMenuUIManager : MonoBehaviour
         fadeCanvasGroup.alpha = 0f;
         fadeOverlay.SetActive(true);
 
+        if (MusicManager.Instance != null)
+            MusicManager.Instance.FadeOutMenuMusic(fadeDuration);
+
         fadeCanvasGroup
             .DOFade(1f, fadeDuration)
             .SetUpdate(true)

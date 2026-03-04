@@ -7,6 +7,7 @@ public class MusicManager : MonoBehaviour
     public static MusicManager Instance { get; private set; }
 
     [Header("Music Settings")]
+    [SerializeField] private AudioClip menuMusic;
     [SerializeField] private AudioClip introClip;
     [SerializeField] private AudioClip loopClip;
     [SerializeField][Range(0f, 1f)] private float musicVolume = 0.5f;
@@ -25,6 +26,7 @@ public class MusicManager : MonoBehaviour
 
     private AudioSource introSource;
     private AudioSource loopSource;
+    private AudioSource menuSource;
     private AudioSource sfxLoopSource;
     private AudioSource sfxOneShotSource;
     private float savedMusicVolume;
@@ -53,9 +55,12 @@ public class MusicManager : MonoBehaviour
         SceneManager.sceneLoaded += OnSceneLoaded;
 
         // Solo reproducir automáticamente si la escena actual NO es el main menu (configurable)
-        if (playOnAwake && introClip != null && SceneManager.GetActiveScene().buildIndex != mainMenuSceneIndex)
+        if (playOnAwake)
         {
-            PlayMusic();
+            if (SceneManager.GetActiveScene().buildIndex == mainMenuSceneIndex)
+                PlayMenuMusic();
+            else if (introClip != null)
+                PlayMusic();
         }
     }
 
@@ -71,14 +76,18 @@ public class MusicManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Reaplicar volúmenes guardados cuando se carga una nueva escena
         LoadVolumeSettings();
 
-        // Si la música no está sonando, reanudarla (asegura que suene tras reload),
-        // pero evitar reproducirla si la escena es el main menu.
-        if (scene.buildIndex != mainMenuSceneIndex && !IsPlaying() && introClip != null)
+        if (scene.buildIndex == mainMenuSceneIndex)
         {
-            PlayMusic();
+            StopMusic();
+            PlayMenuMusic();
+        }
+        else
+        {
+            StopMenuMusic();
+            if (!IsPlaying() && introClip != null)
+                PlayMusic();
         }
     }
 
@@ -97,6 +106,13 @@ public class MusicManager : MonoBehaviour
         loopSource.volume = musicVolume;
         loopSource.spatialBlend = 0f;
         loopSource.priority = 0;
+
+        menuSource = gameObject.AddComponent<AudioSource>();
+        menuSource.loop = true;
+        menuSource.playOnAwake = false;
+        menuSource.volume = musicVolume;
+        menuSource.spatialBlend = 0f;
+        menuSource.priority = 0;
 
         sfxLoopSource = gameObject.AddComponent<AudioSource>();
         sfxLoopSource.loop = true;
@@ -136,6 +152,12 @@ public class MusicManager : MonoBehaviour
             loopSource.volume = musicVolume;
         }
 
+        if (menuSource != null)
+        {
+            menuSource.DOKill();
+            menuSource.volume = musicVolume;
+        }
+
         if (sfxLoopSource != null)
         {
             sfxLoopSource.volume = sfxVolume;
@@ -149,6 +171,36 @@ public class MusicManager : MonoBehaviour
         // Si cargamos ajustes explícitos, considerarlos como preferencia del usuario:
         isVolumeReduced = false;
         savedMusicVolume = musicVolume;
+    }
+
+    public void PlayMenuMusic()
+    {
+        if (menuMusic == null || menuSource == null) return;
+        if (menuSource.isPlaying) return;
+        menuSource.clip = menuMusic;
+        menuSource.volume = musicVolume;
+        menuSource.Play();
+    }
+
+    public void FadeOutMenuMusic(float duration)
+    {
+        if (menuSource == null || !menuSource.isPlaying) return;
+        menuSource.DOKill();
+        menuSource.DOFade(0f, duration).SetUpdate(true).OnComplete(() =>
+        {
+            menuSource.Stop();
+            menuSource.volume = musicVolume;
+        });
+    }
+
+    private void StopMenuMusic()
+    {
+        if (menuSource != null)
+        {
+            menuSource.DOKill();
+            menuSource.Stop();
+            menuSource.volume = musicVolume;
+        }
     }
 
     public void PlayMusic()
@@ -198,7 +250,8 @@ public class MusicManager : MonoBehaviour
     {
         musicVolume = Mathf.Clamp01(volume);
         if (introSource != null) { introSource.DOKill(); introSource.volume = musicVolume; }
-        if (loopSource != null)  { loopSource.DOKill();  loopSource.volume  = musicVolume; }
+        if (loopSource  != null) { loopSource.DOKill();  loopSource.volume  = musicVolume; }
+        if (menuSource  != null) { menuSource.DOKill();  menuSource.volume   = musicVolume; }
         isVolumeReduced = false;
         savedMusicVolume = musicVolume;
     }
