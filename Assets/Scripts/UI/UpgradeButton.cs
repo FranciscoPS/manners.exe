@@ -18,43 +18,42 @@ public class UpgradeButton : MonoBehaviour
     private Image iconImage;
     private Button button;
     private CanvasGroup canvasGroup;
-    
+
     [Header("Disabled Settings")]
     [SerializeField] private float disabledAlpha = 0.5f;
-    
+
     [Header("Component References")]
     private HoldToSelectButton holdToSelectButton;
     private PremiumUpgradeVisuals premiumVisuals;
     private PurchaseEffectFeedback purchaseEffect;
-    
+
     private UpgradeData assignedUpgrade;
     private int currentLevel;
     private int nextLevel;
     private UpgradeMode currentMode = UpgradeMode.LevelUp;
     private int upgradeCost = 0;
     private bool canAfford = true;
-    
+
     private void Awake()
     {
         button = GetComponent<Button>();
         canvasGroup = GetComponent<CanvasGroup>();
-        
+
         if (canvasGroup == null)
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
-        
+
         holdToSelectButton = GetComponent<HoldToSelectButton>();
         premiumVisuals = GetComponent<PremiumUpgradeVisuals>();
-        
-        // Crear componente PremiumUpgradeVisuals si no existe (necesario para efectos visuales premium en level up)
+
         if (premiumVisuals == null)
         {
             premiumVisuals = gameObject.AddComponent<PremiumUpgradeVisuals>();
         }
-        
+
         purchaseEffect = GetComponent<PurchaseEffectFeedback>();
-        
+
         if (holdToSelectButton != null)
         {
             holdToSelectButton.OnHoldComplete = OnUpgradeSelected;
@@ -71,10 +70,10 @@ public class UpgradeButton : MonoBehaviour
                 button.onClick.AddListener(OnUpgradeSelected);
             }
         }
-        
+
         TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
         Image[] allImages = GetComponentsInChildren<Image>();
-        
+
         foreach (var img in allImages)
         {
             if (img.gameObject.name.Contains("Icon"))
@@ -83,11 +82,11 @@ public class UpgradeButton : MonoBehaviour
                 break;
             }
         }
-        
+
         foreach (var text in allTexts)
         {
             string name = text.gameObject.name;
-            
+
             if (name.Contains("Name") || name.Contains("Title"))
                 upgradeNameText = text;
             else if (name.Contains("Description") || name.Contains("Desc"))
@@ -100,56 +99,56 @@ public class UpgradeButton : MonoBehaviour
                 costText = text;
         }
     }
-    
+
     public void Setup(UpgradeData upgrade, int currentUpgradeLevel, UpgradeMode mode = UpgradeMode.LevelUp)
     {
         assignedUpgrade = upgrade;
         currentMode = mode;
-        
+
         if (upgrade == null)
         {
             gameObject.SetActive(false);
             return;
         }
-        
+
         currentLevel = currentUpgradeLevel;
         nextLevel = currentLevel + 1;
-        
+
         if (currentLevel >= upgrade.maxLevel)
         {
             gameObject.SetActive(false);
             return;
         }
-        
+
         gameObject.SetActive(true);
-        
+
         if (currentMode == UpgradeMode.Shop)
         {
             upgradeCost = upgrade.CalculateShopCostForLevel(nextLevel);
         }
-        
+
         EnsureReferences();
         CheckAffordability();
         UpdateUI();
-        
+
         if (premiumVisuals != null && assignedUpgrade != null)
         {
             premiumVisuals.SetPremium(assignedUpgrade.isPremium);
         }
     }
-    
+
     private void EnsureReferences()
     {
         if (upgradeNameText != null && descriptionText != null) return;
-        
+
         if (button == null)
         {
             button = GetComponent<Button>();
         }
-        
+
         TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
         Image[] allImages = GetComponentsInChildren<Image>();
-        
+
         foreach (var img in allImages)
         {
             if (img.gameObject.name.Contains("Icon"))
@@ -158,11 +157,11 @@ public class UpgradeButton : MonoBehaviour
                 break;
             }
         }
-        
+
         foreach (var text in allTexts)
         {
             string name = text.gameObject.name;
-            
+
             if (name.Contains("Name") || name.Contains("Title"))
                 upgradeNameText = text;
             else if (name.Contains("Description") || name.Contains("Desc"))
@@ -175,70 +174,70 @@ public class UpgradeButton : MonoBehaviour
                 costText = text;
         }
     }
-    
+
     private void CheckAffordability()
     {
-        // In LevelUp mode, always affordable
+
         if (currentMode == UpgradeMode.LevelUp)
         {
             canAfford = true;
-            
+
             if (button != null)
             {
                 button.interactable = true;
             }
-            
+
             if (canvasGroup != null)
             {
                 canvasGroup.alpha = 1f;
             }
-            
+
             if (holdToSelectButton != null)
             {
                 holdToSelectButton.SetInteractable(true);
             }
-            
+
             return;
         }
-        
+
         if (CurrencyManager.Instance == null)
         {
             canAfford = false;
             return;
         }
-        
+
         canAfford = CurrencyManager.Instance.CurrentCoins >= upgradeCost;
-        
+
         if (button != null)
         {
             button.interactable = canAfford;
         }
-        
+
         if (canvasGroup != null)
         {
             canvasGroup.alpha = canAfford ? 1f : disabledAlpha;
         }
-        
+
         if (holdToSelectButton != null)
         {
             holdToSelectButton.SetInteractable(canAfford);
         }
     }
-    
+
     private void UpdateUI()
     {
         if (assignedUpgrade == null) return;
-        
+
         if (upgradeNameText != null)
         {
             upgradeNameText.text = $"{assignedUpgrade.upgradeName} lvl.{nextLevel}";
         }
-        
+
         if (descriptionText != null)
         {
             descriptionText.text = assignedUpgrade.description;
         }
-        
+
         if (iconImage != null && assignedUpgrade.icon != null)
         {
             iconImage.sprite = assignedUpgrade.icon;
@@ -248,16 +247,16 @@ public class UpgradeButton : MonoBehaviour
         {
             iconImage.gameObject.SetActive(false);
         }
-        
+
         if (costText != null)
         {
             if (currentMode == UpgradeMode.Shop)
             {
                 costText.gameObject.SetActive(true);
-                
+
                 string coinWord = upgradeCost == 1 ? "gold coin" : "gold coins";
                 costText.text = $"Cost: {upgradeCost} {coinWord}";
-                
+
                 costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
             }
             else
@@ -265,13 +264,13 @@ public class UpgradeButton : MonoBehaviour
                 costText.gameObject.SetActive(false);
             }
         }
-        
+
         if (labelText != null)
         {
             labelText.color = canAfford ? new Color(1f, 0.9f, 0.3f, 1f) : new Color(0.5f, 0.45f, 0.15f);
-            
+
             string formattedValue = assignedUpgrade.GetFormattedValue(nextLevel);
-            
+
             if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
             {
                 labelText.text = $"{formattedValue}";
@@ -281,11 +280,11 @@ public class UpgradeButton : MonoBehaviour
                 labelText.text = formattedValue;
             }
         }
-        
+
         if (valuesText != null)
         {
             valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
-            
+
             if (currentLevel == 0)
             {
                 float baseValue = 0f;
@@ -293,16 +292,16 @@ public class UpgradeButton : MonoBehaviour
                 {
                     baseValue = PlayerStatsManager.Instance.GetBaseGameValue(assignedUpgrade.upgradeType);
                 }
-                
+
                 float nextValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
-                
+
                 if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
                 {
                     float baseCooldown = baseValue;
                     float baseFireRate = 1f / baseCooldown;
                     float currentFireRate = baseFireRate;
                     float newFireRate = baseFireRate * (1f + nextValue / 100f);
-                    
+
                     valuesText.text = $"{currentFireRate:F2} → {newFireRate:F2}";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot)
@@ -322,7 +321,7 @@ public class UpgradeButton : MonoBehaviour
                 else if (assignedUpgrade.isPercentage)
                 {
                     float finalValue = baseValue * (1f + nextValue / 100f);
-                    
+
                     string format;
                     if (baseValue < 1f)
                         format = "F3";
@@ -330,7 +329,7 @@ public class UpgradeButton : MonoBehaviour
                         format = "F2";
                     else
                         format = "F1";
-                    
+
                     valuesText.text = $"{baseValue.ToString(format)} → {finalValue.ToString(format)}";
                 }
                 else
@@ -346,17 +345,17 @@ public class UpgradeButton : MonoBehaviour
                 {
                     baseValue = PlayerStatsManager.Instance.GetBaseGameValue(assignedUpgrade.upgradeType);
                 }
-                
+
                 float currentUpgradeValue = assignedUpgrade.CalculateValueAtLevel(currentLevel);
                 float nextUpgradeValue = assignedUpgrade.CalculateValueAtLevel(nextLevel);
-                
+
                 if (assignedUpgrade.upgradeType == UpgradeType.AttackSpeed)
                 {
                     float baseCooldown = baseValue;
                     float baseFireRate = 1f / baseCooldown;
                     float currentFireRate = baseFireRate * (1f + currentUpgradeValue / 100f);
                     float nextFireRate = baseFireRate * (1f + nextUpgradeValue / 100f);
-                    
+
                     valuesText.text = $"{currentFireRate:F2} → {nextFireRate:F2}";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot)
@@ -379,7 +378,7 @@ public class UpgradeButton : MonoBehaviour
                 {
                     float currentFinalValue = baseValue * (1f + currentUpgradeValue / 100f);
                     float nextFinalValue = baseValue * (1f + nextUpgradeValue / 100f);
-                    
+
                     string format;
                     if (baseValue < 1f)
                         format = "F3";
@@ -387,7 +386,7 @@ public class UpgradeButton : MonoBehaviour
                         format = "F2";
                     else
                         format = "F1";
-                    
+
                     valuesText.text = $"{currentFinalValue.ToString(format)} → {nextFinalValue.ToString(format)}";
                 }
                 else
@@ -398,68 +397,68 @@ public class UpgradeButton : MonoBehaviour
                 }
             }
         }
-        
+
         if (nextLevel >= assignedUpgrade.maxLevel && upgradeNameText != null)
         {
             upgradeNameText.color = new Color(1f, 0.84f, 0f);
         }
     }
-    
+
     private void OnUpgradeSelected()
     {
         if (assignedUpgrade == null) return;
-        
+
         LevelUpManager levelUpManager = FindFirstObjectByType<LevelUpManager>();
-        
+
         if (currentMode == UpgradeMode.Shop)
         {
             if (!canAfford)
                 return;
-            
+
             if (CurrencyManager.Instance != null)
             {
                 bool success = CurrencyManager.Instance.SpendCoins(upgradeCost);
-                
+
                 if (!success)
                     return;
             }
         }
-        
+
         if (button != null)
         {
             button.interactable = false;
         }
-        
+
         if (PlayerStatsManager.Instance != null)
         {
             PlayerStatsManager.Instance.ApplyUpgrade(assignedUpgrade);
         }
-        
+
         if (purchaseEffect != null)
         {
             purchaseEffect.PlayPurchaseEffect();
         }
-        
+
         if (levelUpManager != null)
         {
             levelUpManager.OnUpgradeChosen();
         }
     }
-    
+
     public void RefreshAffordability()
     {
         CheckAffordability();
-        
+
         if (costText != null && currentMode == UpgradeMode.Shop)
         {
             costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
         }
-        
+
         if (labelText != null)
         {
             labelText.color = canAfford ? new Color(1f, 0.9f, 0.3f, 1f) : new Color(0.5f, 0.45f, 0.15f);
         }
-        
+
         if (valuesText != null)
         {
             valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);

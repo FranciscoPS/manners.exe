@@ -43,7 +43,7 @@ public class PoolManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            transform.SetParent(null); // Convertir en root antes de DDOL
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             InitializePools();
         }
@@ -65,7 +65,7 @@ public class PoolManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Limpiar pools cuando se recarga una escena
+
         ResetAllPools();
     }
 
@@ -75,7 +75,6 @@ public class PoolManager : MonoBehaviour
         {
             if (config.prefab == null)
             {
-                Debug.LogWarning($"Pool '{config.poolType}' has no prefab assigned!");
                 continue;
             }
 
@@ -132,19 +131,13 @@ public class PoolManager : MonoBehaviour
     private GameObject GetFromPool(PoolType poolType, Vector3 position, Quaternion rotation)
     {
         if (!pools.ContainsKey(poolType))
-        {
-            Debug.LogError($"Pool '{poolType}' does not exist!");
             return null;
-        }
 
         GameObject obj = pools[poolType].Get();
-        
+
         if (obj == null)
-        {
-            Debug.LogError($"Pool '{poolType}' returned null object!");
             return null;
-        }
-        
+
         obj.transform.position = position;
         obj.transform.rotation = rotation;
 
@@ -163,9 +156,6 @@ public class PoolManager : MonoBehaviour
         }
 
         obj.SetActive(true);
-        // Physics.SyncTransforms() eliminado: llamarlo por cada spawn individual es O(n_transforms)
-        // en todo el escenario. Unity sincroniza automáticamente antes de cada query físico.
-        // Llamarlo N veces en un burst de explosión (40+ spawns/frame) era la causa principal del stutter.
 
         activeObjects[obj] = poolType;
 
@@ -198,7 +188,6 @@ public class PoolManager : MonoBehaviour
         }
         else if (config == null)
         {
-            Debug.LogWarning($"[PoolManager] ProjectileConfiguration is NULL! Projectile will use default values.");
         }
 
         return projectile;
@@ -216,7 +205,7 @@ public class PoolManager : MonoBehaviour
             {
                 config.ApplyToOrb(orb);
             }
-            
+
             IPoolable poolable = orb as IPoolable;
             if (poolable != null)
             {
@@ -232,10 +221,10 @@ public class PoolManager : MonoBehaviour
 
     public GameObject SpawnEnemy(Vector3 position, EnemyConfiguration config = null)
     {
-        PoolType poolType = config != null && config.enemyPoolType != PoolType.Enemy 
-            ? config.enemyPoolType 
+        PoolType poolType = config != null && config.enemyPoolType != PoolType.Enemy
+            ? config.enemyPoolType
             : PoolType.Enemy;
-        
+
         GameObject obj = GetFromPool(poolType, position, Quaternion.identity);
         if (obj != null)
         {
@@ -243,13 +232,13 @@ public class PoolManager : MonoBehaviour
             {
                 config.ApplyToEnemy(obj);
             }
-            
+
             IPoolable poolable = obj.GetComponent<IPoolable>();
             if (poolable != null)
             {
                 poolable.OnSpawn();
             }
-            
+
             obj.SetActive(true);
             activeObjects[obj] = poolType;
         }
@@ -262,7 +251,7 @@ public class PoolManager : MonoBehaviour
         PoolType poolType = type == Collectible.CollectibleType.Coin ? PoolType.Coin : PoolType.Diamond;
         Quaternion rotation = poolPrefabRotations.ContainsKey(poolType) ? poolPrefabRotations[poolType] : Quaternion.identity;
         GameObject obj = GetFromPool(poolType, position, rotation);
-        
+
         if (obj != null)
         {
             Collectible collectible = obj.GetComponent<Collectible>();
@@ -270,20 +259,20 @@ public class PoolManager : MonoBehaviour
             {
                 collectible.SetType(type);
                 collectible.SetValue(value);
-                
+
                 IPoolable poolable = collectible as IPoolable;
                 if (poolable != null)
                 {
                     poolable.OnSpawn();
                 }
             }
-            
+
             obj.SetActive(true);
             activeObjects[obj] = poolType;
-            
+
             return collectible;
         }
-        
+
         return null;
     }
 
@@ -315,10 +304,7 @@ public class PoolManager : MonoBehaviour
     public void PrewarmPool(PoolType poolType, int count)
     {
         if (!pools.ContainsKey(poolType))
-        {
-            Debug.LogError($"Pool '{poolType}' does not exist!");
             return;
-        }
 
         List<GameObject> temp = new List<GameObject>();
         for (int i = 0; i < count; i++)
@@ -342,36 +328,31 @@ public class PoolManager : MonoBehaviour
     public void ClearAllPools()
     {
         activeObjects.Clear();
-        
+
         foreach (var pool in pools.Values)
         {
             pool.Clear();
         }
     }
-    
-    /// <summary>
-    /// Resetea completamente todos los pools (para cuando se recarga una escena)
-    /// </summary>
+
     private void ResetAllPools()
     {
-        // Limpiar objetos activos
+
         activeObjects.Clear();
-        
-        // Resetear cada pool
+
         foreach (var poolType in pools.Keys)
         {
             pools[poolType].Clear();
         }
-        
-        // Recrear los pools para asegurar estado limpio
+
         pools.Clear();
         InitializePools();
     }
-    
+
     public void CleanupDestroyedObjects()
     {
         List<GameObject> toRemove = new List<GameObject>();
-        
+
         foreach (var kvp in activeObjects)
         {
             if (kvp.Key == null)
@@ -379,7 +360,7 @@ public class PoolManager : MonoBehaviour
                 toRemove.Add(kvp.Key);
             }
         }
-        
+
         foreach (var obj in toRemove)
         {
             activeObjects.Remove(obj);

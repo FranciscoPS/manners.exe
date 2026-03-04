@@ -26,8 +26,12 @@ public class MusicManager : MonoBehaviour
     [Header("SFX Settings")]
     [SerializeField][Range(0f, 1f)] private float sfxVolume = 0.8f;
 
+    [Header("UI SFX")]
+    public AudioClip hoverSFX;
+    public AudioClip clickSFX;
+
     [Header("Volume Reduction Settings")]
-    [SerializeField][Range(0f, 1f)] private float reducedVolumeMultiplier = 0.3f; // 30% del volumen original
+    [SerializeField][Range(0f, 1f)] private float reducedVolumeMultiplier = 0.3f;
     [SerializeField] private float volumeFadeDuration = 0.5f;
 
     [Header("Scene Options")]
@@ -61,10 +65,8 @@ public class MusicManager : MonoBehaviour
         SetupAudioSource();
         LoadVolumeSettings();
 
-        // Suscribirse para reaplicar volúmenes en cada carga de escena
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        // Solo reproducir automáticamente si la escena actual NO es el main menu (configurable)
         if (playOnAwake)
         {
             if (SceneManager.GetActiveScene().buildIndex == mainMenuSceneIndex)
@@ -76,7 +78,7 @@ public class MusicManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Desuscribirse del evento para evitar referencias colgantes
+
         SceneManager.sceneLoaded -= OnSceneLoaded;
         if (Instance == this)
         {
@@ -141,15 +143,13 @@ public class MusicManager : MonoBehaviour
 
     private void LoadVolumeSettings()
     {
-        // Cargar volumen maestro
+
         float masterVolume = PlayerPrefs.GetFloat(MASTER_VOLUME_KEY, 1f);
         AudioListener.volume = masterVolume;
 
-        // Cargar volumen guardado desde PlayerPrefs
         musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, musicVolume);
         sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_KEY, sfxVolume);
 
-        // Aplicar volumen cargado a los AudioSources
         if (introSource != null)
         {
             introSource.DOKill();
@@ -178,7 +178,6 @@ public class MusicManager : MonoBehaviour
             sfxOneShotSource.volume = sfxVolume;
         }
 
-        // Si cargamos ajustes explícitos, considerarlos como preferencia del usuario:
         isVolumeReduced = false;
         savedMusicVolume = musicVolume;
     }
@@ -224,14 +223,13 @@ public class MusicManager : MonoBehaviour
 
     public void PlayMusic()
     {
-        // Evitar reproducir en el main menu por configuración
+
         if (SceneManager.GetActiveScene().buildIndex == mainMenuSceneIndex)
             return;
 
         SceneMusicConfig config = GetCurrentSceneConfig();
         if (config == null || config.loopClip == null)
         {
-            Debug.LogWarning("[MusicManager] No SceneMusicConfig found for scene " + SceneManager.GetActiveScene().buildIndex);
             return;
         }
 
@@ -341,6 +339,12 @@ public class MusicManager : MonoBehaviour
         if (sfx == null || sfxOneShotSource == null) return;
 
         sfxOneShotSource.PlayOneShot(sfx, sfxVolume);
+    }
+
+    public void PlayUISound(AudioClip clip)
+    {
+        if (clip == null || sfxOneShotSource == null) return;
+        sfxOneShotSource.PlayOneShot(clip, sfxVolume);
     }
 
     public void PlaySFXOneShot(AudioClip sfx, float volume, float pitch = 1f)

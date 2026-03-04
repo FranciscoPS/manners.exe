@@ -27,7 +27,7 @@ public class PremiumParticleEffect : MonoBehaviour
     private void SetupParticleSystem()
     {
         ps = GetComponent<ParticleSystem>();
-        
+
         mainModule = ps.main;
         mainModule.loop = true;
         mainModule.startLifetime = particleLifetime;
@@ -36,10 +36,10 @@ public class PremiumParticleEffect : MonoBehaviour
         mainModule.maxParticles = maxParticles;
         mainModule.simulationSpace = ParticleSystemSimulationSpace.Local;
         mainModule.gravityModifier = 0f;
-        
+
         emissionModule = ps.emission;
         emissionModule.rateOverTime = emissionRate;
-        
+
         shapeModule = ps.shape;
         shapeModule.shapeType = ParticleSystemShapeType.Rectangle;
         RectTransform parentRect = transform.parent.GetComponent<RectTransform>();
@@ -52,7 +52,7 @@ public class PremiumParticleEffect : MonoBehaviour
             shapeModule.scale = new Vector3(200, 80, 1);
         }
         shapeModule.randomDirectionAmount = 0.5f;
-        
+
         velocityModule = ps.velocityOverLifetime;
         velocityModule.enabled = true;
         velocityModule.space = ParticleSystemSimulationSpace.Local;
@@ -60,7 +60,7 @@ public class PremiumParticleEffect : MonoBehaviour
         velocityModule.orbitalY = new ParticleSystem.MinMaxCurve(0f, 0f);
         velocityModule.orbitalZ = new ParticleSystem.MinMaxCurve(50f, 100f);
         velocityModule.radial = new ParticleSystem.MinMaxCurve(-20f, 20f);
-        
+
         if (rainbowGradient)
         {
             Gradient gradient = new Gradient();
@@ -82,12 +82,12 @@ public class PremiumParticleEffect : MonoBehaviour
                     new GradientAlphaKey(0f, 1f)
                 }
             );
-            
+
             colorModule = ps.colorOverLifetime;
             colorModule.enabled = true;
             colorModule.color = new ParticleSystem.MinMaxGradient(gradient);
         }
-        
+
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         if (renderer != null)
         {

@@ -8,7 +8,7 @@ public class SpawnWarningIndicator : MonoBehaviour
     [SerializeField] private float blinkInterval = 0.25f;
     [SerializeField] private Color warningColor = new Color(1f, 0f, 0f, 0.8f);
     [SerializeField] private float indicatorRadius = 2f;
-    
+
     private GameObject circleObject;
     private Renderer circleRenderer;
     private Sequence blinkSequence;
@@ -27,23 +27,22 @@ public class SpawnWarningIndicator : MonoBehaviour
         circleObject.transform.localPosition = Vector3.up * 0.05f;
         circleObject.transform.localRotation = Quaternion.identity;
         circleObject.transform.localScale = new Vector3(indicatorRadius * 2f, 0.01f, indicatorRadius * 2f);
-        
+
         Destroy(circleObject.GetComponent<Collider>());
-        
+
         circleRenderer = circleObject.GetComponent<Renderer>();
-        
-        // Cargar material desde Resources (garantiza inclusión en build)
+
         Material templateMaterial = Resources.Load<Material>("SpawnWarningMaterial");
         if (templateMaterial != null)
         {
             Material mat = new Material(templateMaterial);
             mat.color = warningColor;
             circleRenderer.material = mat;
-            // Material cargado exitosamente
+
         }
         else
         {
-            // Fallback: intentar con shader URP Unlit
+
             Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit");
             if (unlitShader == null)
             {
@@ -53,7 +52,7 @@ public class SpawnWarningIndicator : MonoBehaviour
             {
                 unlitShader = Shader.Find("Mobile/Unlit (Supports Lightmap)");
             }
-            
+
             if (unlitShader != null)
             {
                 Material mat = new Material(unlitShader);
@@ -62,11 +61,10 @@ public class SpawnWarningIndicator : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("[SpawnWarningIndicator] No suitable shader found, using default material");
                 circleRenderer.material.color = warningColor;
             }
         }
-        
+
         circleRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         circleRenderer.receiveShadows = false;
     }
@@ -77,7 +75,7 @@ public class SpawnWarningIndicator : MonoBehaviour
         {
             warningDuration = duration;
         }
-        
+
         if (radius > 0)
         {
             indicatorRadius = radius;
@@ -86,16 +84,16 @@ public class SpawnWarningIndicator : MonoBehaviour
                 circleObject.transform.localScale = new Vector3(indicatorRadius * 2f, 0.01f, indicatorRadius * 2f);
             }
         }
-        
+
         transform.position = position;
         gameObject.SetActive(true);
-        
+
         if (circleObject != null && circleRenderer != null)
         {
             circleObject.SetActive(true);
             StartBlinking();
             hideTween?.Kill();
-            hideTween = DOVirtual.DelayedCall(warningDuration, () => 
+            hideTween = DOVirtual.DelayedCall(warningDuration, () =>
             {
                 if (this != null && gameObject != null)
                 {
@@ -108,14 +106,14 @@ public class SpawnWarningIndicator : MonoBehaviour
     private void StartBlinking()
     {
         blinkSequence?.Kill();
-        
+
         blinkSequence = DOTween.Sequence();
-        
+
         blinkSequence.AppendCallback(() => circleObject.SetActive(true));
         blinkSequence.AppendInterval(blinkInterval);
         blinkSequence.AppendCallback(() => circleObject.SetActive(false));
         blinkSequence.AppendInterval(blinkInterval);
-        
+
         blinkSequence.SetLoops(-1);
     }
 
@@ -123,12 +121,12 @@ public class SpawnWarningIndicator : MonoBehaviour
     {
         blinkSequence?.Kill();
         hideTween?.Kill();
-        
+
         if (circleObject != null)
         {
             circleObject.SetActive(false);
         }
-        
+
         if (gameObject != null)
         {
             gameObject.SetActive(false);
@@ -139,7 +137,7 @@ public class SpawnWarningIndicator : MonoBehaviour
     {
         blinkSequence?.Kill();
         hideTween?.Kill();
-        
+
         if (circleObject != null)
         {
             Destroy(circleObject);

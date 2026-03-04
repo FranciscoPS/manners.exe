@@ -2,21 +2,18 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    // Contador estático: se incrementa en OnEnable (pool activa el objeto)
-    // y decrementa en OnDisable (pool desactiva al devolver). Cero allocations.
+
     public static int ActiveEnemyCount { get; private set; }
 
     [Header("Death VFX")]
     [SerializeField] private GameObject explosionPrefab;
-    
+
     private float maxHealth = 30f;
     private float currentHealth;
     private DamageTween damageTween;
-    
-    // Identificador del tipo de enemigo para buscar drops dinámicos
+
     private PoolManager.PoolType enemyPoolType = PoolManager.PoolType.BasicEnemy;
-    
-    // Valores por defecto si no hay config en GameBalanceConfig
+
     private int defaultMinOrbs = 1;
     private int defaultMaxOrbs = 3;
     private float defaultOrbSpawnRadius = 1f;
@@ -36,8 +33,7 @@ public class EnemyHealth : MonoBehaviour
         maxHealth = newMaxHealth;
         currentHealth = maxHealth;
         enemyPoolType = poolType;
-        
-        // Guardar valores fallback por si GameBalanceConfig no tiene config para este enemigo/wave
+
         defaultOrbConfig = fallbackOrbConfig;
         defaultMinOrbs = fallbackMinOrbs;
         defaultMaxOrbs = fallbackMaxOrbs;
@@ -48,8 +44,7 @@ public class EnemyHealth : MonoBehaviour
         defaultDiamondDropChance = fallbackDiamondDropChance;
         defaultMinDiamonds = fallbackMinDiamonds;
         defaultMaxDiamonds = fallbackMaxDiamonds;
-        
-        // Buscar DamageTween en este objeto o en hijos (para pooling)
+
         if (damageTween == null)
         {
             damageTween = GetComponentInChildren<DamageTween>();
@@ -63,13 +58,13 @@ public class EnemyHealth : MonoBehaviour
 
     private void OnEnable()
     {
-        // El pool llama SetActive(true) → OnEnable. Registrar enemigo activo.
+
         ActiveEnemyCount++;
     }
 
     private void OnDisable()
     {
-        // El pool llama SetActive(false) al despawnear → OnDisable. Desregistrar.
+
         ActiveEnemyCount = Mathf.Max(0, ActiveEnemyCount - 1);
     }
 
@@ -84,14 +79,13 @@ public class EnemyHealth : MonoBehaviour
         {
             damageTween.TweenFx();
         }
-        
-        // Mostrar número de daño flotante
+
         if (FloatingTextManager.Instance != null)
         {
             Vector3 textPosition = transform.position + Vector3.up * 1.5f;
             FloatingTextManager.Instance.ShowDamage(damage, textPosition);
         }
-        
+
         currentHealth -= damage;
         GameEvents.TriggerEnemyDamaged(damage);
 
@@ -103,32 +97,29 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
-        // Registrar eliminación en estadísticas
+
         if (GameSessionStats.Instance != null)
         {
             GameSessionStats.Instance.RegisterEnemyKill();
         }
-        
-        // Reproducir efecto de explosión
+
         if (explosionPrefab != null)
         {
-            // Elevar la explosión para que no quede cortada por el piso
+
             Vector3 explosionPos = transform.position + Vector3.up * 2f;
             Instantiate(explosionPrefab, explosionPos, Quaternion.identity);
         }
-        
-        // Resolver drop config UNA sola vez y pasarla a ambos métodos.
-        // Antes se llamaba GetEnemyDropConfig() dos veces (búsqueda lineal duplicada).
+
         int currentWave = GetCurrentWave();
         GameBalanceConfig.EnemyDropConfig dropConfig = null;
         if (GameBalanceConfig.Instance != null && GameBalanceConfig.Instance.HasDropConfigs())
         {
             dropConfig = GameBalanceConfig.Instance.GetEnemyDropConfig(enemyPoolType, currentWave);
         }
-        
+
         SpawnExperienceOrbs(dropConfig);
         SpawnCollectibles(dropConfig);
-        
+
         if (SpawnFactory.Instance != null)
         {
             SpawnFactory.Instance.DestroyObject(gameObject);
@@ -145,8 +136,7 @@ public class EnemyHealth : MonoBehaviour
         {
             return;
         }
-        
-        // Usar valores dinámicos si hay config, sino usar defaults
+
         int minOrbs          = dropConfig != null ? dropConfig.minOrbs      : defaultMinOrbs;
         int maxOrbs          = dropConfig != null ? dropConfig.maxOrbs      : defaultMaxOrbs;
         float orbSpawnRadius = dropConfig != null ? 1f                      : defaultOrbSpawnRadius;
@@ -159,11 +149,11 @@ public class EnemyHealth : MonoBehaviour
         {
             Vector2 randomCircle = Random.insideUnitCircle * orbSpawnRadius;
             Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
-            
+
             ExperienceOrb orb = SpawnFactory.Instance.CreateExperienceOrb(spawnPosition, orbConfig);
             if (orb != null && orbConfig == null)
             {
-                orb.SetExperienceValue(10); // Fallback XP value
+                orb.SetExperienceValue(10);
             }
         }
     }
@@ -171,8 +161,7 @@ public class EnemyHealth : MonoBehaviour
     private void SpawnCollectibles(GameBalanceConfig.EnemyDropConfig dropConfig)
     {
         if (SpawnFactory.Instance == null) return;
-        
-        // Usar valores dinámicos si hay config, sino usar defaults
+
         float coinDropChance    = dropConfig != null ? dropConfig.coinDropChance    : defaultCoinDropChance;
         int minCoins            = dropConfig != null ? dropConfig.minCoins          : defaultMinCoins;
         int maxCoins            = dropConfig != null ? dropConfig.maxCoins          : defaultMaxCoins;
@@ -183,7 +172,6 @@ public class EnemyHealth : MonoBehaviour
         Vector3 spawnCenter = transform.position + Vector3.up * 0.5f;
         float spawnRadius = 1f;
 
-        // Spawn coins based on dynamic configuration
         if (Random.value <= coinDropChance)
         {
             int coinCount = Random.Range(minCoins, maxCoins + 1);
@@ -195,7 +183,6 @@ public class EnemyHealth : MonoBehaviour
             }
         }
 
-        // Spawn diamonds based on dynamic configuration
         if (Random.value <= diamondDropChance)
         {
             int diamondCount = Random.Range(minDiamonds, maxDiamonds + 1);
@@ -207,16 +194,13 @@ public class EnemyHealth : MonoBehaviour
             }
         }
     }
-    
-    /// <summary>
-    /// Obtiene el número de wave actual (1-based)
-    /// </summary>
+
     private int GetCurrentWave()
     {
         if (EnemySpawnManager.Instance != null)
         {
             return EnemySpawnManager.Instance.CurrentWaveNumber;
         }
-        return 1; // Default a wave 1 si no hay spawn manager
+        return 1;
     }
 }

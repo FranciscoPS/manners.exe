@@ -24,7 +24,7 @@ public class RainbowParticleEffect : MonoBehaviour
     private void SetupParticleSystem()
     {
         ps = GetComponent<ParticleSystem>();
-        
+
         mainModule = ps.main;
         mainModule.loop = true;
         mainModule.startLifetime = particleLifetime;
@@ -32,14 +32,14 @@ public class RainbowParticleEffect : MonoBehaviour
         mainModule.startSize = particleSize;
         mainModule.maxParticles = maxParticles;
         mainModule.simulationSpace = ParticleSystemSimulationSpace.Local;
-        
+
         emissionModule = ps.emission;
         emissionModule.rateOverTime = emissionRate;
-        
+
         shapeModule = ps.shape;
         shapeModule.shapeType = ParticleSystemShapeType.Rectangle;
         shapeModule.scale = new Vector3(100, 100, 1);
-        
+
         Gradient gradient = new Gradient();
         gradient.SetKeys(
             new GradientColorKey[] {
@@ -57,11 +57,11 @@ public class RainbowParticleEffect : MonoBehaviour
                 new GradientAlphaKey(0f, 1f)
             }
         );
-        
+
         colorModule = ps.colorOverLifetime;
         colorModule.enabled = true;
         colorModule.color = new ParticleSystem.MinMaxGradient(gradient);
-        
+
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         if (renderer != null)
         {

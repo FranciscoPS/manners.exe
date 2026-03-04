@@ -10,16 +10,14 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
     private Image expBarFill;
     private TextMeshProUGUI levelText;
     private TextMeshProUGUI expText;
-    
+
     private PlayerExperience playerExperience;
 
     private float targetFillAmount = 0f;
     private float currentFillAmount = 0f;
-    
-    // IUpdateable
+
     public bool IsActive => gameObject.activeInHierarchy && enabled;
-    
-    // String caching para evitar allocations
+
     private string cachedExpText = "";
     private int lastCurrentExp = -1;
     private int lastRequiredExp = -1;
@@ -28,7 +26,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
     {
         Transform expBarPanel = transform.Find("ExpBarPanel");
         if (expBarPanel == null) return;
-        
+
         Image[] allImages = expBarPanel.GetComponentsInChildren<Image>(true);
         foreach (var img in allImages)
         {
@@ -77,8 +75,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
             int requiredExp = playerExperience.GetExperienceRequiredForNextLevel();
             UpdateExperienceBar(currentExp, requiredExp);
         }
-        
-        // Registrar en UpdateManager
+
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Register(this);
@@ -92,22 +89,20 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
             ExperienceManager.Instance.OnExperienceChanged -= UpdateExperienceBar;
             ExperienceManager.Instance.OnLevelUp -= HandleLevelUp;
         }
-        
-        // Unregister de UpdateManager
+
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Unregister(this);
         }
     }
 
-    // IUpdateable implementation - reemplaza Update()
     public void OnUpdate(float deltaTime)
     {
         if (expBarFill != null)
         {
             float lerpSpeed = Time.timeScale > 0 ? fillSpeed * deltaTime : fillSpeed * Time.unscaledDeltaTime;
             currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, lerpSpeed);
-            
+
             RectTransform rt = expBarFill.rectTransform;
             rt.anchorMax = new Vector2(currentFillAmount, 1f);
         }
@@ -123,7 +118,6 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
             levelText.text = "Level " + level;
         }
 
-        // Cachear string para evitar allocations repetidas
         if (expText != null && (currentExp != lastCurrentExp || requiredExp != lastRequiredExp))
         {
             cachedExpText = currentExp + " / " + requiredExp;

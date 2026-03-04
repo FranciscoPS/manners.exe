@@ -25,7 +25,7 @@ public class LevelUpManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private TextMeshProUGUI cooldownWarningText;
     [SerializeField] private TextMeshProUGUI closeInstructionText;
-    
+
     [Header("Upgrade Buttons")]
     [SerializeField] private UpgradeButton upgradeButton1;
     [SerializeField] private UpgradeButton upgradeButton2;
@@ -41,8 +41,7 @@ public class LevelUpManager : MonoBehaviour
     private float lastPurchaseTime = -999f;
     private bool shopOnCooldown = false;
     private ShopScript connectedShop;
-    
-    // Variables para pausar el cooldown cuando la tienda está abierta
+
     private bool cooldownPaused = false;
     private float pausedCooldownTimeRemaining = 0f;
 
@@ -54,7 +53,7 @@ public class LevelUpManager : MonoBehaviour
             return;
         }
         instance = this;
-        
+
         if (levelUpPanel != null)
             levelUpPanel.SetActive(false);
     }
@@ -65,10 +64,10 @@ public class LevelUpManager : MonoBehaviour
         if (upgradeButton1 != null) allButtons.Add(upgradeButton1);
         if (upgradeButton2 != null) allButtons.Add(upgradeButton2);
         if (upgradeButton3 != null) allButtons.Add(upgradeButton3);
-        
+
         if (ExperienceManager.Instance != null)
             ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
-        
+
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.OnCoinsChanged += OnCurrencyChanged;
@@ -79,7 +78,7 @@ public class LevelUpManager : MonoBehaviour
     {
         if (ExperienceManager.Instance != null)
             ExperienceManager.Instance.OnLevelUp -= HandleLevelUp;
-        
+
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.OnCoinsChanged -= OnCurrencyChanged;
@@ -93,23 +92,20 @@ public class LevelUpManager : MonoBehaviour
             float hue = Mathf.PingPong(Time.unscaledTime * colorSpeed, 1f);
             levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
         }
-        
-        // Actualizar cooldown DENTRO del panel si está abierto en modo Shop (mostrar tiempo pausado)
+
         if (levelUpActive && currentMode == UpgradeMode.Shop && shopOnCooldown)
         {
             UpdateCooldownDisplay();
         }
-        
-        // Verificar si el cooldown terminó (SOLO si NO está pausado)
+
         if (shopOnCooldown && !cooldownPaused && ShopUpgradeDatabase.Instance != null && Time.unscaledTime - lastPurchaseTime >= ShopUpgradeDatabase.Instance.ShopGlobalCooldown)
         {
             shopOnCooldown = false;
-            
-            // Si la tienda está abierta, habilitar botones
+
             if (levelUpActive && currentMode == UpgradeMode.Shop)
             {
                 EnableAllButtons();
-                
+
                 if (cooldownWarningText != null)
                 {
                     cooldownWarningText.gameObject.SetActive(false);
@@ -131,25 +127,23 @@ public class LevelUpManager : MonoBehaviour
 
         if (levelUpText != null)
             levelUpText.text = $"LEVEL {newLevel}!";
-        
-        // Ocultar textos de Shop en modo LevelUp
+
         if (cooldownWarningText != null)
         {
             cooldownWarningText.gameObject.SetActive(false);
         }
-        
+
         if (closeInstructionText != null)
         {
             closeInstructionText.gameObject.SetActive(false);
         }
 
-        // Generar opciones de upgrade aleatorias
         GenerateUpgradeOptions(UpgradeMode.LevelUp);
 
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
     }
-    
+
     private void GenerateUpgradeOptions(UpgradeMode mode)
     {
         if (UpgradeDatabase.Instance == null)
@@ -157,19 +151,17 @@ public class LevelUpManager : MonoBehaviour
             Debug.LogError("UpgradeDatabase not found! Cannot generate upgrade options.");
             return;
         }
-        
+
         if (PlayerStatsManager.Instance == null)
         {
             Debug.LogError("PlayerStatsManager not found! Cannot generate upgrade options.");
             return;
         }
-        
-        // Obtener niveles actuales de upgrades
+
         Dictionary<UpgradeType, int> currentLevels = PlayerStatsManager.Instance.GetAllUpgradeLevels();
-        
-        // Obtener 3 upgrades aleatorios (usar ShopUpgradeDatabase si es modo Shop)
+
         List<UpgradeData> selectedUpgrades;
-        
+
         if (mode == UpgradeMode.Shop && ShopUpgradeDatabase.Instance != null)
         {
             selectedUpgrades = ShopUpgradeDatabase.Instance.GetRandomShopUpgrades(currentLevels);
@@ -178,14 +170,13 @@ public class LevelUpManager : MonoBehaviour
         {
             selectedUpgrades = UpgradeDatabase.Instance.GetRandomUpgrades(currentLevels, currentPlayerLevel);
         }
-        
-        // Configurar botones
+
         if (upgradeButton1 != null)
         {
             if (selectedUpgrades.Count > 0)
             {
-                int currentLevel = currentLevels.ContainsKey(selectedUpgrades[0].upgradeType) 
-                    ? currentLevels[selectedUpgrades[0].upgradeType] 
+                int currentLevel = currentLevels.ContainsKey(selectedUpgrades[0].upgradeType)
+                    ? currentLevels[selectedUpgrades[0].upgradeType]
                     : 0;
                 upgradeButton1.Setup(selectedUpgrades[0], currentLevel, mode);
             }
@@ -194,13 +185,13 @@ public class LevelUpManager : MonoBehaviour
                 upgradeButton1.gameObject.SetActive(false);
             }
         }
-        
+
         if (upgradeButton2 != null)
         {
             if (selectedUpgrades.Count > 1)
             {
-                int currentLevel = currentLevels.ContainsKey(selectedUpgrades[1].upgradeType) 
-                    ? currentLevels[selectedUpgrades[1].upgradeType] 
+                int currentLevel = currentLevels.ContainsKey(selectedUpgrades[1].upgradeType)
+                    ? currentLevels[selectedUpgrades[1].upgradeType]
                     : 0;
                 upgradeButton2.Setup(selectedUpgrades[1], currentLevel, mode);
             }
@@ -209,13 +200,13 @@ public class LevelUpManager : MonoBehaviour
                 upgradeButton2.gameObject.SetActive(false);
             }
         }
-        
+
         if (upgradeButton3 != null)
         {
             if (selectedUpgrades.Count > 2)
             {
-                int currentLevel = currentLevels.ContainsKey(selectedUpgrades[2].upgradeType) 
-                    ? currentLevels[selectedUpgrades[2].upgradeType] 
+                int currentLevel = currentLevels.ContainsKey(selectedUpgrades[2].upgradeType)
+                    ? currentLevels[selectedUpgrades[2].upgradeType]
                     : 0;
                 upgradeButton3.Setup(selectedUpgrades[2], currentLevel, mode);
             }
@@ -225,15 +216,11 @@ public class LevelUpManager : MonoBehaviour
             }
         }
     }
-    
-    /// <summary>
-    /// Actualiza el display del cooldown en el panel
-    /// </summary>
+
     private void UpdateCooldownDisplay()
     {
         if (cooldownWarningText == null) return;
-        
-        // Si el cooldown está pausado, mostrar el tiempo pausado
+
         float timeRemaining;
         if (cooldownPaused)
         {
@@ -245,7 +232,7 @@ public class LevelUpManager : MonoBehaviour
             float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
             timeRemaining = cooldown - timeElapsed;
         }
-        
+
         if (timeRemaining > 0)
         {
             int minutes = Mathf.FloorToInt(timeRemaining / 60f);
@@ -258,68 +245,53 @@ public class LevelUpManager : MonoBehaviour
             cooldownWarningText.gameObject.SetActive(false);
         }
     }
-    
-    /// <summary>
-    /// Registra el ShopScript que controla esta tienda
-    /// </summary>
+
     public void RegisterShop(ShopScript shop)
     {
         connectedShop = shop;
     }
-    
-    /// <summary>
-    /// Verifica si el panel de level up está activo
-    /// </summary>
+
     public bool IsLevelUpActive()
     {
         return levelUpActive;
     }
-    
-    /// <summary>
-    /// Verifica si la tienda está disponible (no en cooldown)
-    /// </summary>
+
     public bool IsShopAvailable()
     {
         return !shopOnCooldown;
     }
-    
-    /// <summary>
-    /// Obtiene el tiempo restante del cooldown en segundos
-    /// </summary>
+
     public float GetShopCooldownRemaining()
     {
         if (!shopOnCooldown)
             return 0f;
-        
-        // Si el cooldown está pausado, retornar el tiempo pausado
+
         if (cooldownPaused)
             return pausedCooldownTimeRemaining;
-        
+
         float timeElapsed = Time.unscaledTime - lastPurchaseTime;
         float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
         return Mathf.Max(0f, cooldown - timeElapsed);
     }
-    
+
     public void ShowShop()
     {
         if (levelUpActive)
             return;
-        
+
         levelUpActive = true;
         currentMode = UpgradeMode.Shop;
-        
+
         Time.timeScale = 0f;
-        
+
         if (levelUpText != null)
             levelUpText.text = "SHOP";
-        
-        // Mostrar instrucciones de cierre con P
+
         if (closeInstructionText != null)
         {
             closeInstructionText.gameObject.SetActive(true);
         }
-        
-        // Si hay cooldown activo, pausarlo
+
         if (shopOnCooldown)
         {
             float timeElapsed = Time.unscaledTime - lastPurchaseTime;
@@ -327,10 +299,9 @@ public class LevelUpManager : MonoBehaviour
             pausedCooldownTimeRemaining = Mathf.Max(0f, cooldown - timeElapsed);
             cooldownPaused = true;
         }
-        
+
         GenerateUpgradeOptions(UpgradeMode.Shop);
-        
-        // Si está en cooldown, deshabilitar botones y mostrar contador
+
         if (shopOnCooldown)
         {
             DisableAllButtons();
@@ -343,25 +314,25 @@ public class LevelUpManager : MonoBehaviour
                 cooldownWarningText.gameObject.SetActive(false);
             }
         }
-        
+
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
 
         GameEvents.TriggerShopOpened();
     }
-    
+
     public void OnUpgradeChosen()
     {
         if (currentMode == UpgradeMode.Shop)
         {
             lastPurchaseTime = Time.unscaledTime;
             shopOnCooldown = true;
-            
+
             if (ShopManager.Instance != null)
             {
                 ShopManager.Instance.OnShopPurchaseMade();
             }
-            
+
             CloseLevelUp();
             GameEvents.TriggerShopAutoClosed();
         }
@@ -370,7 +341,7 @@ public class LevelUpManager : MonoBehaviour
             CloseLevelUp();
         }
     }
-    
+
     private void DisableAllButtons()
     {
         foreach (var button in allButtons)
@@ -382,7 +353,7 @@ public class LevelUpManager : MonoBehaviour
                 {
                     btn.interactable = false;
                 }
-                
+
                 CanvasGroup cg = button.GetComponent<CanvasGroup>();
                 if (cg != null)
                 {
@@ -391,7 +362,7 @@ public class LevelUpManager : MonoBehaviour
             }
         }
     }
-    
+
     private void EnableAllButtons()
     {
         foreach (var button in allButtons)
@@ -402,10 +373,10 @@ public class LevelUpManager : MonoBehaviour
             }
         }
     }
-    
+
     private void OnCurrencyChanged(int newAmount)
     {
-        // Only refresh affordability if in Shop mode
+
         if (currentMode == UpgradeMode.Shop)
         {
             foreach (var button in allButtons)
@@ -426,21 +397,18 @@ public class LevelUpManager : MonoBehaviour
             levelUpPanel.SetActive(false);
 
         Time.timeScale = 1f;
-        
-        // Si el cooldown estaba pausado, reanudarlo desde donde quedó
+
         if (cooldownPaused)
         {
             cooldownPaused = false;
-            // Calcular el nuevo lastPurchaseTime basado en el tiempo restante
+
             float cooldown = ShopUpgradeDatabase.Instance != null ? ShopUpgradeDatabase.Instance.ShopGlobalCooldown : 120f;
             lastPurchaseTime = Time.unscaledTime - (cooldown - pausedCooldownTimeRemaining);
         }
-        
-        // Notificar al ShopScript que se cerró
+
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
         {
             connectedShop.OnShopClosed();
         }
     }
 }
-

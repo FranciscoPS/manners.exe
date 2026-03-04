@@ -8,13 +8,12 @@ public class DamageTween : MonoBehaviour
     [SerializeField] private Color damageColor = Color.red;
     [SerializeField] private float tweenTime = 0.3f;
     [SerializeField] private int tweenLoops = 3;
-    
 
-    private GameObject targetObject; 
+    private GameObject targetObject;
     private SpriteRenderer spriteRenderer;
     private Graphic uiGraphic;
-    private Renderer meshRenderer; 
-    
+    private Renderer meshRenderer;
+
     private Material materialInstance;
     private bool createdMaterialInstance = false;
 
@@ -26,27 +25,27 @@ public class DamageTween : MonoBehaviour
     {
         InitializeMaterial();
     }
-    
+
     private void OnEnable()
     {
         if (!isInitialized) InitializeMaterial();
         CaptureOriginalColor();
     }
-    
+
     private void OnDisable()
     {
         SetTargetColor(originalColor);
-        
+
         damageTween?.Kill();
     }
-    
+
     public void InitializeMaterial()
     {
         if (targetObject == null)
         {
             targetObject = gameObject;
         }
-        
+
         if (targetObject == null) return;
         if (isInitialized) return;
 
@@ -63,7 +62,7 @@ public class DamageTween : MonoBehaviour
         isInitialized = true;
         CaptureOriginalColor();
     }
-    
+
     private void CaptureOriginalColor()
     {
         if (spriteRenderer != null)
@@ -110,7 +109,7 @@ public class DamageTween : MonoBehaviour
             adjustedTweenTime
         )
         .SetLoops(tweenLoops, LoopType.Yoyo)
-        .OnComplete(() => 
+        .OnComplete(() =>
         {
             if (this != null)
             {
@@ -118,7 +117,7 @@ public class DamageTween : MonoBehaviour
             }
         });
     }
-    
+
     private Color GetCurrentColor()
     {
         if (spriteRenderer != null) return spriteRenderer.color;
@@ -157,11 +156,11 @@ public class DamageTween : MonoBehaviour
             materialInstance.color = color;
         }
     }
-    
+
     private void OnDestroy()
     {
         damageTween?.Kill();
-        
+
         if (createdMaterialInstance && materialInstance != null && Application.isPlaying)
         {
             Destroy(materialInstance);

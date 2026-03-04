@@ -29,18 +29,15 @@ public class MissingScriptDetector
                 if (components[i] == null)
                 {
                     missingCount++;
-                    Debug.LogWarning($"Missing script on GameObject: {GetGameObjectPath(go)}", go);
                 }
             }
         }
 
         if (missingCount > 0)
         {
-            Debug.LogError($"Found {missingCount} missing script(s) in the scene! Use Tools > Missing Script Cleaner to fix them.");
         }
         else
         {
-            Debug.Log("No missing scripts found. Scene is clean!");
         }
     }
 

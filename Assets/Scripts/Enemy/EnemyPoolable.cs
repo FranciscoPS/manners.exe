@@ -19,8 +19,7 @@ public class EnemyPoolable : MonoBehaviour, IPoolable
         {
             enemyHealth.ResetHealth();
         }
-        
-        // Re-inicializar el material del DamageTween al activarse
+
         if (damageTween != null)
         {
             damageTween.InitializeMaterial();
@@ -29,6 +28,6 @@ public class EnemyPoolable : MonoBehaviour, IPoolable
 
     public void OnDespawn()
     {
-        
+
     }
 }

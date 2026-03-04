@@ -14,7 +14,7 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
     [Header("Panel Reference")]
-    [SerializeField] private GameObject gameOverPanel; // El panel hijo que se activa/desactiva
+    [SerializeField] private GameObject gameOverPanel;
 
     [Header("Game Over Stats UI")]
     [SerializeField] private TextMeshProUGUI survivalTimeText;
@@ -23,7 +23,7 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI buildingsDestroyedText;
     [SerializeField] private TextMeshProUGUI coinsCollectedText;
     [SerializeField] private TextMeshProUGUI diamondsCollectedText;
-    
+
     [Header("Upgrade Levels UI")]
     [SerializeField] private TextMeshProUGUI damageUpgradeLevelText;
     [SerializeField] private TextMeshProUGUI attackSpeedUpgradeLevelText;
@@ -35,36 +35,32 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI knockbackUpgradeLevelText;
 
     private bool isTransitioning = false;
-    private bool statsUpdated = false; // Para evitar actualizar múltiples veces
+    private bool statsUpdated = false;
 
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
 
     private void Update()
     {
-        // Detectar cuando el GameOverPanel hijo se activa
+
         if (gameOverPanel != null && gameOverPanel.activeSelf && !statsUpdated)
         {
-            // Solo mostrar estadísticas si el jugador realmente jugó
+
             if (GameSessionStats.Instance != null && GameSessionStats.Instance.SurvivalTimeUpdated > 0.1f)
             {
                 statsUpdated = true;
-                
-                // Primero capturar stats finales ANTES de mostrarlos
+
                 GameSessionStats.Instance.EndSession();
-                
-                // Bajar el volumen de la música
+
                 if (MusicManager.Instance != null)
                 {
                     MusicManager.Instance.ReduceVolume();
                 }
-                
-                // Mostrar estadísticas reales de la partida
+
                 UpdateGameOverStats();
             }
         }
-        
-        // Resetear flag cuando el panel se desactiva
+
         if (gameOverPanel != null && !gameOverPanel.activeSelf && statsUpdated)
         {
             statsUpdated = false;
@@ -78,7 +74,6 @@ public class GameOverUI : MonoBehaviour
             return;
         }
 
-        // Mostrar estadísticas generales
         if (survivalTimeText != null)
         {
             survivalTimeText.text = $"Survival Time: {GameSessionStats.Instance.GetFormattedSurvivalTime()}";
@@ -109,7 +104,6 @@ public class GameOverUI : MonoBehaviour
             diamondsCollectedText.text = $"Gems Collected: {GameSessionStats.Instance.DiamondsCollected}";
         }
 
-        // Mostrar niveles de mejoras
         UpdateUpgradeLevels();
     }
 
@@ -117,7 +111,6 @@ public class GameOverUI : MonoBehaviour
     {
         Dictionary<UpgradeType, int> upgradeLevels = GameSessionStats.Instance.GetUpgradeLevels();
 
-        // Mostrar solo los números de nivel
         if (damageUpgradeLevelText != null)
         {
             int level = upgradeLevels.ContainsKey(UpgradeType.Damage) ? upgradeLevels[UpgradeType.Damage] : 0;
@@ -194,7 +187,6 @@ public class GameOverUI : MonoBehaviour
 
         Time.timeScale = 1f;
 
-        // Restaurar volumen antes de reiniciar
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.RestoreVolume();
@@ -208,7 +200,7 @@ public class GameOverUI : MonoBehaviour
         fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
         {
             ResetPlayerEnemyLayerCollision();
-            TutorialManager.MarkSessionRestart(); // preservar progreso del tutorial al reiniciar
+            TutorialManager.MarkSessionRestart();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
         });
     }
@@ -218,17 +210,16 @@ public class GameOverUI : MonoBehaviour
         if (isTransitioning) return;
         isTransitioning = true;
 
-        // Resetear currency y stats antes de ir al main menu
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.ResetSessionCurrency();
         }
-        
+
         if (GameSessionStats.Instance != null)
         {
             GameSessionStats.Instance.ResetStats();
         }
-        
+
         if (PlayerStatsManager.Instance != null)
         {
             PlayerStatsManager.Instance.ResetUpgrades();
@@ -250,7 +241,7 @@ public class GameOverUI : MonoBehaviour
         fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
         {
             ResetPlayerEnemyLayerCollision();
-            TutorialManager.ClearSession(); // desde el menú principal siempre se empieza de cero
+            TutorialManager.ClearSession();
             SceneManager.LoadScene(mainMenuSceneName);
         });
     }

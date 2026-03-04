@@ -13,7 +13,6 @@ public class ShopManager : MonoBehaviour
                 instance = FindFirstObjectByType<ShopManager>();
                 if (instance == null)
                 {
-                    Debug.LogError("ShopManager not found in scene!");
                 }
             }
             return instance;
@@ -49,14 +48,12 @@ public class ShopManager : MonoBehaviour
     {
         if (allShops.Count == 0)
         {
-            Debug.LogWarning("ShopManager: No shops assigned! Auto-detecting...");
             ShopScript[] foundShops = FindObjectsByType<ShopScript>(FindObjectsSortMode.None);
             allShops = new List<ShopScript>(foundShops);
         }
 
         if (allShops.Count == 0)
         {
-            Debug.LogError("ShopManager: No shops found in scene!");
             return;
         }
 
@@ -124,7 +121,6 @@ public class ShopManager : MonoBehaviour
     {
         if (index < 0 || index >= allShops.Count)
         {
-            Debug.LogError($"ShopManager: Invalid shop index {index}");
             return;
         }
 

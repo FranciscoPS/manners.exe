@@ -19,8 +19,7 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private void OnDisable()
     {
-        // OnPointerExit no se dispara cuando el panel se desactiva mientras el cursor
-        // está encima del botón. Sin esto el botón queda con el scale de hover.
+
         rectTransform.DOKill();
         rectTransform.localScale = originalScale;
     }
@@ -29,7 +28,7 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
     {
         rectTransform.DOKill();
         rectTransform.DOScale(originalScale * hoverScale, scaleDuration).SetUpdate(true).SetEase(Ease.OutBack);
-        MainMenuUIManager.Instance?.PlaySFX(MainMenuUIManager.Instance.hoverSFX);
+        MusicManager.Instance?.PlayUISound(MusicManager.Instance.hoverSFX);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -40,6 +39,6 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        MainMenuUIManager.Instance?.PlaySFX(MainMenuUIManager.Instance.clickSFX);
+        MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
     }
 }

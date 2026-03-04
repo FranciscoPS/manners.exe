@@ -10,7 +10,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Main Screens")]
     [SerializeField] private GameObject mainPanel;
-    [SerializeField] private GameObject mapSelection; 
+    [SerializeField] private GameObject mapSelection;
     [SerializeField] private GameObject optionsPanel;
     [SerializeField] private GameObject upgradesPanel;
     [SerializeField] private GameObject tiendaPanel;
@@ -24,17 +24,12 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Upgrades Subscreens")]
     [SerializeField] private GameObject habilidadesPanel;
-    //[SerializeField] private GameObject arbolDeHabilidesPanel;
-    //[SerializeField] private GameObject detallesPanel;
 
     [Header("Tienda Subscreens")]
     [SerializeField] private GameObject atuendosPanel;
-    //[SerializeField] private GameObject efectosPanel;
-    //[SerializeField] private GameObject monedasPanel;
 
     [Header("Personalizacion Subscreens")]
     [SerializeField] private GameObject skinsPanel;
-    //[SerializeField] private GameObject attackEffectsPanel;
 
     [Header("Help Subscreens")]
     [SerializeField] private GameObject movimientoPanel;
@@ -45,13 +40,6 @@ public class MainMenuUIManager : MonoBehaviour
     [Header("Fade")]
     [SerializeField] private float fadeDuration = 0.8f;
     [SerializeField] private int overlaySortingOrder = 1000;
-
-    [Header("UI SFX")]
-    [SerializeField] public AudioClip hoverSFX;
-    [SerializeField] public AudioClip clickSFX;
-
-    private AudioSource uiSFXSource;
-    private const string SFX_VOLUME_KEY = "SFXVolume";
 
     private Dictionary<MenuScreen, GameObject> screenDictionary;
 
@@ -71,7 +59,7 @@ public class MainMenuUIManager : MonoBehaviour
 
         screenDictionary = new Dictionary<MenuScreen, GameObject>
         {
-            // Main
+
             { MenuScreen.Main, mainPanel },
             { MenuScreen.Options, optionsPanel },
             { MenuScreen.Upgrades, upgradesPanel },
@@ -80,26 +68,16 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Creditos, creditosPanel },
             { MenuScreen.mapSelection, mapSelection },
 
-            // Options Subscreens
             { MenuScreen.Help, helpPanel },
             { MenuScreen.Audio, audioPanel },
             { MenuScreen.Controles, controlesPanel },
 
-            // Upgrades
             { MenuScreen.UpgradesHabilidades, habilidadesPanel },
-            //{ MenuScreen.UpgradesArbolDeHabilidades, arbolDeHabilidesPanel },
-            //{ MenuScreen.UpgradesDetalles, detallesPanel },
 
-            // Tienda
             { MenuScreen.TiendaAtuendos, atuendosPanel },
-            //{ MenuScreen.TiendaEfectos, efectosPanel },
-            //{ MenuScreen.TiendaMonedas, monedasPanel },
 
-            // Personalizacion
             { MenuScreen.PersonalizacionSkins, skinsPanel },
-            //{ MenuScreen.PersonalizacionAttackEffects, attackEffectsPanel },
 
-            // Help Subscreens
             { MenuScreen.HelpMovimiento, movimientoPanel },
             { MenuScreen.HelpExperiencia, experienciaPanel },
             { MenuScreen.HelpEnemigos, enemigosPanel },
@@ -120,22 +98,20 @@ public class MainMenuUIManager : MonoBehaviour
 
         ShowScreen(MenuScreen.Main);
 
-        uiSFXSource = gameObject.AddComponent<AudioSource>();
-        uiSFXSource.playOnAwake = false;
-        uiSFXSource.loop = false;
-        uiSFXSource.spatialBlend = 0f;
     }
 
-    public void PlaySFX(AudioClip clip)
+    private void Start()
     {
-        if (clip == null || uiSFXSource == null) return;
-        float vol = MusicManager.Instance != null
-            ? MusicManager.Instance.GetSFXVolume()
-            : PlayerPrefs.GetFloat(SFX_VOLUME_KEY, 0.8f);
-        uiSFXSource.PlayOneShot(clip, vol);
+        if (mapSelection != null)
+        {
+            foreach (Button btn in mapSelection.GetComponentsInChildren<Button>(true))
+            {
+                if (btn.GetComponent<MenuButtonHover>() == null)
+                    btn.gameObject.AddComponent<MenuButtonHover>();
+            }
+        }
     }
 
-    // Helpers para identificar grupos de subscreens
     private bool IsOptionsSubscreen(MenuScreen screen)
     {
         return screen == MenuScreen.Help
@@ -173,28 +149,24 @@ public class MainMenuUIManager : MonoBehaviour
 
     public void ShowScreen(MenuScreen screen)
     {
-        // --- HELP subscreens (open inside helpPanel, keep helpPanel active) ---
+
         if (IsHelpSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject helpSub) || helpSub == null)
                 return;
 
-            // Ensure options container hidden
             if (optionsPanel != null && optionsPanel.activeSelf)
                 optionsPanel.SetActive(false);
 
-            // Deactivate other top-level if it's not help container
             if (currentScreen != null && currentScreen != helpPanel)
                 currentScreen.SetActive(false);
 
-            // Activate help container
             if (helpPanel != null && !helpPanel.activeSelf)
                 helpPanel.SetActive(true);
 
             currentScreen = helpPanel;
             currentOptionsSubPanel = helpPanel;
 
-            // Deactivate previous help subpanel
             if (currentHelpSubPanel != null && currentHelpSubPanel != helpSub)
                 currentHelpSubPanel.SetActive(false);
 
@@ -203,13 +175,11 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- OPTIONS subscreens (Audio/Controles/Help as panel children or separate panels) ---
         if (IsOptionsSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject subPanel) || subPanel == null)
                 return;
 
-            // If options root visible, hide it (we'll show the selected subpanel)
             if (optionsPanel != null && optionsPanel.activeSelf)
                 optionsPanel.SetActive(false);
 
@@ -220,7 +190,6 @@ public class MainMenuUIManager : MonoBehaviour
             currentScreen = subPanel;
             currentOptionsSubPanel = subPanel;
 
-            // If opening Help as an options subpanel, clear help substate
             if (screen == MenuScreen.Help)
             {
                 if (currentHelpSubPanel != null)
@@ -233,30 +202,25 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- UPGRADES subscreens ---
         if (IsUpgradesSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject upgradesSub) || upgradesSub == null)
                 return;
 
-            // Hide other root panels if needed
             if (currentScreen != null && currentScreen != upgradesPanel)
                 currentScreen.SetActive(false);
 
-            // Activate upgrades container
             if (upgradesPanel != null && !upgradesPanel.activeSelf)
                 upgradesPanel.SetActive(true);
 
             currentScreen = upgradesPanel;
 
-            // Deactivate previous upgrades subpanel
             if (currentUpgradesSubPanel != null && currentUpgradesSubPanel != upgradesSub)
                 currentUpgradesSubPanel.SetActive(false);
 
             upgradesSub.SetActive(true);
             currentUpgradesSubPanel = upgradesSub;
 
-            // Ensure other groups' subpanels hidden
             if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
             if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
@@ -265,7 +229,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- TIENDA subscreens ---
         if (IsTiendaSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject tiendaSub) || tiendaSub == null)
@@ -285,7 +248,6 @@ public class MainMenuUIManager : MonoBehaviour
             tiendaSub.SetActive(true);
             currentTiendaSubPanel = tiendaSub;
 
-            // Hide other groups' subpanels
             if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
             if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
@@ -294,7 +256,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- PERSONALIZACION subscreens ---
         if (IsPersonalizacionSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject persSub) || persSub == null)
@@ -314,7 +275,6 @@ public class MainMenuUIManager : MonoBehaviour
             persSub.SetActive(true);
             currentPersonalizacionSubPanel = persSub;
 
-            // Hide other groups' subpanels
             if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
             if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
@@ -323,13 +283,11 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- Top-level: show Options root ---
         if (screen == MenuScreen.Options)
         {
             if (currentScreen != null)
                 currentScreen.SetActive(false);
 
-            // Hide any open subs
             if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
             if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
@@ -344,7 +302,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- Default: deactivate all dictionary panels and show requested top-level screen ---
         foreach (var panel in screenDictionary.Values)
         {
             if (panel != null)
@@ -357,7 +314,6 @@ public class MainMenuUIManager : MonoBehaviour
             currentScreen = screenToShow;
         }
 
-        // reset subs
         currentOptionsSubPanel = null;
         currentHelpSubPanel = null;
         currentUpgradesSubPanel = null;
@@ -375,13 +331,9 @@ public class MainMenuUIManager : MonoBehaviour
         ShowScreen((MenuScreen)index);
     }
 
-    /// <summary>
-    /// Carga la escena cuyo índice se pasa desde el botón.
-    /// Incluye el fade overlay ya existente para mantener la transición visual.
-    /// </summary>
-    /// <param name="sceneIndex">Índice de la escena a cargar (Build Settings)</param>
     public void LevelSelection(int sceneIndex)
     {
+        MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
         CreateFadeOverlayIfNeeded();
 
         fadeCanvasGroup.alpha = 0f;
@@ -437,7 +389,6 @@ public class MainMenuUIManager : MonoBehaviour
         Image img = imgObj.AddComponent<Image>();
         img.color = Color.black;
 
-        // Asegurar que el overlay se destruya al cargar la siguiente escena
         fadeOverlay.AddComponent<FadeOverlayController>();
 
         fadeOverlay.SetActive(false);
@@ -446,39 +397,33 @@ public class MainMenuUIManager : MonoBehaviour
 
 public enum MenuScreen
 {
-    // Main Screens
-    Main,                       // 0
-    Options,                    // 1
-    Upgrades,                   // 2
-    Tienda,                     // 3
-    Personalizacion,            // 4
-    Creditos,                   // 5
 
-    // Options Subscreens
-    Help,                       // 6
-    Audio,                      // 7
-    Controles,                  // 8
+    Main,
+    Options,
+    Upgrades,
+    Tienda,
+    Personalizacion,
+    Creditos,
 
-    // Upgrades
-    UpgradesHabilidades,        // 9
-    UpgradesArbolDeHabilidades, // 10
-    UpgradesDetalles,           // 11
+    Help,
+    Audio,
+    Controles,
 
-    // Tienda
-    TiendaAtuendos,             // 12
-    TiendaEfectos,              // 13
-    TiendaMonedas,              // 14
+    UpgradesHabilidades,
+    UpgradesArbolDeHabilidades,
+    UpgradesDetalles,
 
-    // Personalizacion
-    PersonalizacionSkins,       // 15
-    PersonalizacionAttackEffects, // 16
+    TiendaAtuendos,
+    TiendaEfectos,
+    TiendaMonedas,
 
-    // Help Subscreens
-    HelpMovimiento,             // 17
-    HelpExperiencia,            // 18
-    HelpEnemigos,               // 19
-    HelpMejoras,                 // 20
+    PersonalizacionSkins,
+    PersonalizacionAttackEffects,
 
-    //Level Selection
-    mapSelection,               // 21
+    HelpMovimiento,
+    HelpExperiencia,
+    HelpEnemigos,
+    HelpMejoras,
+
+    mapSelection,
 }

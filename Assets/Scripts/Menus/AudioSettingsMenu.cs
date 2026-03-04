@@ -29,8 +29,6 @@ public class AudioSettingsMenu : MonoBehaviour
 
     private bool listenersAdded = false;
 
-    // Asegura que al cargar la escena siempre se apliquen los ajustes guardados,
-    // aunque la UI esté desactivada o MusicManager aún no exista.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void ApplySavedAudioSettingsOnLoad()
     {
@@ -40,7 +38,6 @@ public class AudioSettingsMenu : MonoBehaviour
         float musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, 0.5f);
         float sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_KEY, 0.8f);
 
-        // Si el MusicManager ya existe, aplicamos inmediatamente y nos aseguramos de que la música arranque.
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.SetVolume(musicVolume);
@@ -53,21 +50,19 @@ public class AudioSettingsMenu : MonoBehaviour
             return;
         }
 
-        // Si no existe aún, crear un applier temporal que reintente hasta que MusicManager exista
         GameObject applierGo = new GameObject("AudioSettingsApplier");
         DontDestroyOnLoad(applierGo);
         var applier = applierGo.AddComponent<AudioSettingsApplier>();
         applier.Initialize(musicVolume, sfxVolume);
     }
 
-    // Componente temporal que intenta aplicar los volúmenes hasta que MusicManager esté disponible.
     private class AudioSettingsApplier : MonoBehaviour
     {
         private float musicVolume;
         private float sfxVolume;
         private float startTime;
         private bool applied = false;
-        private const float timeout = 5f; // segundos máximo para reintentar
+        private const float timeout = 5f;
 
         public void Initialize(float musicVol, float sfxVol)
         {
@@ -80,7 +75,6 @@ public class AudioSettingsMenu : MonoBehaviour
         {
             if (applied) return;
 
-            // Intentar aplicar si MusicManager ya existe
             if (MusicManager.Instance != null)
             {
                 try
@@ -95,7 +89,7 @@ public class AudioSettingsMenu : MonoBehaviour
                 }
                 catch (System.Exception)
                 {
-                    // Silenciar errores para no romper el flujo; volveremos a intentar.
+
                 }
 
                 applied = true;
@@ -103,7 +97,6 @@ public class AudioSettingsMenu : MonoBehaviour
                 return;
             }
 
-            // Timeout por si nunca aparece MusicManager: destruir el applier tras tiempo para no acumular objetos
             if (Time.realtimeSinceStartup - startTime > timeout)
             {
                 applied = true;
@@ -115,42 +108,41 @@ public class AudioSettingsMenu : MonoBehaviour
     private void OnEnable()
     {
         LoadSettings();
-        
-        // Agregar listeners solo una vez
+
         if (!listenersAdded)
         {
             if (masterSlider != null)
             {
                 masterSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
             }
-            
+
             if (musicSlider != null)
             {
                 musicSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
             }
-            
+
             if (sfxSlider != null)
             {
                 sfxSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
             }
-            
+
             listenersAdded = true;
         }
     }
 
     private void OnDestroy()
     {
-        // Remover listeners
+
         if (masterSlider != null)
         {
             masterSlider.onValueChanged.RemoveListener(OnMasterVolumeChanged);
         }
-        
+
         if (musicSlider != null)
         {
             musicSlider.onValueChanged.RemoveListener(OnMusicVolumeChanged);
         }
-        
+
         if (sfxSlider != null)
         {
             sfxSlider.onValueChanged.RemoveListener(OnSFXVolumeChanged);
@@ -159,7 +151,7 @@ public class AudioSettingsMenu : MonoBehaviour
 
     private void LoadSettings()
     {
-        // Cargar volumen maestro
+
         float masterVolume = PlayerPrefs.GetFloat(MASTER_VOLUME_KEY, 1f);
         if (masterSlider != null)
         {
@@ -168,18 +160,16 @@ public class AudioSettingsMenu : MonoBehaviour
         AudioListener.volume = masterVolume;
         UpdateMasterText(masterVolume);
 
-        // Cargar volumen de música
         float musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, 0.5f);
         if (musicSlider != null)
         {
             musicSlider.SetValueWithoutNotify(musicVolume);
         }
-        // Aplicar al MusicManager para sincronizar estado si ya existe
+
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.SetVolume(musicVolume);
 
-            // Asegurar que la música suene si no está sonando
             if (!MusicManager.Instance.IsPlaying())
             {
                 MusicManager.Instance.PlayMusic();
@@ -187,13 +177,12 @@ public class AudioSettingsMenu : MonoBehaviour
         }
         UpdateMusicText(musicVolume);
 
-        // Cargar volumen de SFX
         float sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_KEY, 0.8f);
         if (sfxSlider != null)
         {
             sfxSlider.SetValueWithoutNotify(sfxVolume);
         }
-        // Aplicar al MusicManager para sincronizar SFX si ya existe
+
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.SetSFXVolume(sfxVolume);
@@ -203,9 +192,9 @@ public class AudioSettingsMenu : MonoBehaviour
 
     private void OnMasterVolumeChanged(float value)
     {
-        // AudioListener.volume controla el volumen global de todo el juego
+
         AudioListener.volume = value;
-        
+
         PlayerPrefs.SetFloat(MASTER_VOLUME_KEY, value);
         PlayerPrefs.Save();
 
@@ -216,19 +205,17 @@ public class AudioSettingsMenu : MonoBehaviour
 
     private void OnMusicVolumeChanged(float value)
     {
-        // Solo aplicar a MusicManager si existe (en la escena de juego)
+
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.SetVolume(value);
 
-            // Si el usuario sube el volumen manualmente desde 0 y la pista está parada,
-            // asegurar que empiece a sonar.
             if (!MusicManager.Instance.IsPlaying())
             {
                 MusicManager.Instance.PlayMusic();
             }
         }
-        
+
         PlayerPrefs.SetFloat(MUSIC_VOLUME_KEY, value);
         PlayerPrefs.Save();
 
@@ -239,12 +226,12 @@ public class AudioSettingsMenu : MonoBehaviour
 
     private void OnSFXVolumeChanged(float value)
     {
-        // Solo aplicar a MusicManager si existe (en la escena de juego)
+
         if (MusicManager.Instance != null)
         {
             MusicManager.Instance.SetSFXVolume(value);
         }
-        
+
         PlayerPrefs.SetFloat(SFX_VOLUME_KEY, value);
         PlayerPrefs.Save();
 

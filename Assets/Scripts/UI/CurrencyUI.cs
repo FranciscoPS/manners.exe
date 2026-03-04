@@ -6,7 +6,7 @@ public class CurrencyUI : MonoBehaviour
 {
     [Header("Coin UI")]
     [SerializeField] private TextMeshProUGUI coinText;
-    
+
     [Header("Diamond UI")]
     [SerializeField] private TextMeshProUGUI diamondText;
 
@@ -16,7 +16,7 @@ public class CurrencyUI : MonoBehaviour
         {
             CurrencyManager.Instance.OnCoinsChanged += UpdateCoinDisplay;
             CurrencyManager.Instance.OnDiamondsChanged += UpdateDiamondDisplay;
-            
+
             UpdateCoinDisplay(CurrencyManager.Instance.CurrentCoins);
             UpdateDiamondDisplay(CurrencyManager.Instance.CurrentDiamonds);
         }
