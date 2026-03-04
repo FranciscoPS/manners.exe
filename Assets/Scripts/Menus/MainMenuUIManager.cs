@@ -46,6 +46,13 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private float fadeDuration = 0.8f;
     [SerializeField] private int overlaySortingOrder = 1000;
 
+    [Header("UI SFX")]
+    [SerializeField] public AudioClip hoverSFX;
+    [SerializeField] public AudioClip clickSFX;
+
+    private AudioSource uiSFXSource;
+    private const string SFX_VOLUME_KEY = "SFXVolume";
+
     private Dictionary<MenuScreen, GameObject> screenDictionary;
 
     private GameObject currentScreen;
@@ -112,6 +119,20 @@ public class MainMenuUIManager : MonoBehaviour
         currentPersonalizacionSubPanel = null;
 
         ShowScreen(MenuScreen.Main);
+
+        uiSFXSource = gameObject.AddComponent<AudioSource>();
+        uiSFXSource.playOnAwake = false;
+        uiSFXSource.loop = false;
+        uiSFXSource.spatialBlend = 0f;
+    }
+
+    public void PlaySFX(AudioClip clip)
+    {
+        if (clip == null || uiSFXSource == null) return;
+        float vol = MusicManager.Instance != null
+            ? MusicManager.Instance.GetSFXVolume()
+            : PlayerPrefs.GetFloat(SFX_VOLUME_KEY, 0.8f);
+        uiSFXSource.PlayOneShot(clip, vol);
     }
 
     // Helpers para identificar grupos de subscreens
@@ -365,6 +386,9 @@ public class MainMenuUIManager : MonoBehaviour
 
         fadeCanvasGroup.alpha = 0f;
         fadeOverlay.SetActive(true);
+
+        if (MusicManager.Instance != null)
+            MusicManager.Instance.FadeOutMenuMusic(fadeDuration);
 
         fadeCanvasGroup
             .DOFade(1f, fadeDuration)
