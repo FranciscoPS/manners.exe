@@ -15990,6 +15990,8 @@ MonoBehaviour:
   mejorasPanel: {fileID: 2042277212}
   fadeDuration: 1
   overlaySortingOrder: 1000
+  hoverSFX: {fileID: 8300000, guid: 246c55d771c91f14f996a19a6586c70a, type: 3}
+  clickSFX: {fileID: 8300000, guid: df20acfb2d7949443b4e9b7ab482ec7e, type: 3}
 --- !u!1 &656454237
 GameObject:
   m_ObjectHideFlags: 0
@@ -16127,8 +16129,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 656454237}
   m_CullTransparentMesh: 1
-  hoverSFX: {fileID: 8300000, guid: 246c55d771c91f14f996a19a6586c70a, type: 3}
-  clickSFX: {fileID: 8300000, guid: df20acfb2d7949443b4e9b7ab482ec7e, type: 3}
 --- !u!1 &670894806
 GameObject:
   m_ObjectHideFlags: 0
@@ -41446,6 +41446,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1609786085}
   m_CullTransparentMesh: 1
+--- !u!114 &1609786090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609786085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8031442d34ea4504fbcafbd19f8c08f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
+  hoverScale: 1.1
+  scaleDuration: 0.15
 --- !u!1 &1612507897
 GameObject:
   m_ObjectHideFlags: 0
@@ -41550,20 +41564,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1612507897}
   m_CullTransparentMesh: 1
---- !u!114 &1609786090
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1609786085}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8031442d34ea4504fbcafbd19f8c08f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
-  hoverScale: 1.1
-  scaleDuration: 0.15
 --- !u!1001 &1616520338
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -42296,6 +42296,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1636431259}
   m_CullTransparentMesh: 1
+--- !u!114 &1636431264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636431259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8031442d34ea4504fbcafbd19f8c08f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
+  hoverScale: 1.1
+  scaleDuration: 0.15
 --- !u!1 &1638874605
 GameObject:
   m_ObjectHideFlags: 0
@@ -42371,20 +42385,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1638874605}
   m_CullTransparentMesh: 1
---- !u!114 &1636431264
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1636431259}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8031442d34ea4504fbcafbd19f8c08f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
-  hoverScale: 1.1
-  scaleDuration: 0.15
 --- !u!1 &1654717492
 GameObject:
   m_ObjectHideFlags: 0

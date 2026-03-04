@@ -14068,7 +14068,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c039ab148b3a62a4ab4b1ae992b7df25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MusicManager
-  gameplayMusic: {fileID: 8300000, guid: 153f1367d2932a744ac4f90b9b4949b9, type: 3}
+  menuMusic: {fileID: 0}
+  sceneMusicConfigs: []
   musicVolume: 0.2
   playOnAwake: 1
   sfxVolume: 0.8
@@ -33534,9 +33535,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnManager
   waveQueue:
-  - {fileID: 11400000, guid: 845a3a166759a834da38af1e69d7d27d, type: 2}
-  - {fileID: 11400000, guid: 9c3ac18648f447446bc426b8c15749c5, type: 2}
-  - {fileID: 11400000, guid: 99219c474bc5a0143be0acae53fddacd, type: 2}
+  - {fileID: 11400000, guid: ae9f5ad993455e94daaffc5ac68e9b84, type: 2}
+  - {fileID: 11400000, guid: 638f1006774cac545abc90c067631b95, type: 2}
+  - {fileID: 11400000, guid: af8446965a77c7a4db939e9467566d20, type: 2}
+  - {fileID: 11400000, guid: cf77d300c6a04d348ba3c38fed114ce1, type: 2}
+  - {fileID: 11400000, guid: 2e7a18eb3174e1244857b622bfb1ffd0, type: 2}
+  - {fileID: 11400000, guid: f88e18c678f25f8449c7f8802103cfb4, type: 2}
+  - {fileID: 11400000, guid: 64aa4b1a1001ac846aebfaae06fb5863, type: 2}
+  - {fileID: 11400000, guid: 73a0b9c30e0561f4d9622522d0af3fa0, type: 2}
+  - {fileID: 11400000, guid: 04c78bc122daeb8449653a2c07433452, type: 2}
+  - {fileID: 11400000, guid: d518c41efa592044ba6a797bda48256d, type: 2}
   timeBetweenWaves: 10
   autoLoopWaves: 1
   enableContinuousSpawn: 1
