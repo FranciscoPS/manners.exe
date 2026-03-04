@@ -23245,20 +23245,20 @@ MonoBehaviour:
     prefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
     defaultCapacity: 10
     maxSize: 20
-  - poolType: 5
+  - poolType: 7
     prefab: {fileID: 8585222995538249419, guid: 7538e81a0145545408dbf54b64a33065, type: 3}
     defaultCapacity: 30
     maxSize: 100
-  - poolType: 6
+  - poolType: 8
     prefab: {fileID: 5155632646051148866, guid: 8a653a602dbbee74e883499f7ff9c6fc, type: 3}
     defaultCapacity: 20
     maxSize: 50
-  - poolType: 3
-    prefab: {fileID: 7510731991543114636, guid: 53983ae7b09330a459c31382c6c0d019, type: 3}
+  - poolType: 5
+    prefab: {fileID: 7510731991543114636, guid: 84d6e8f3fe51ec9428d7ee3d1f6f3137, type: 3}
     defaultCapacity: 20
     maxSize: 50
-  - poolType: 4
-    prefab: {fileID: 7510731991543114636, guid: 77bbd28b56893a64ebcbdee2388feb89, type: 3}
+  - poolType: 6
+    prefab: {fileID: 7510731991543114636, guid: de7621a1b9fec1f4c94c69eda121f00a, type: 3}
     defaultCapacity: 20
     maxSize: 50
 --- !u!1 &1134309285
@@ -27501,16 +27501,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnManager
   waveQueue:
-  - {fileID: 11400000, guid: 845a3a166759a834da38af1e69d7d27d, type: 2}
-  - {fileID: 11400000, guid: 9c3ac18648f447446bc426b8c15749c5, type: 2}
-  - {fileID: 11400000, guid: 99219c474bc5a0143be0acae53fddacd, type: 2}
-  - {fileID: 11400000, guid: 12e16d5345378b846893e172add80ed9, type: 2}
-  - {fileID: 11400000, guid: b5a72ec0cf5df024180b143ab1b7bb2b, type: 2}
-  - {fileID: 11400000, guid: 70e342e952c25d349b9470786c53d175, type: 2}
-  - {fileID: 11400000, guid: 76b306db4ed89a848b62b598e94f74bc, type: 2}
-  - {fileID: 11400000, guid: b5fc473770a31a648834fb6d26d5c44e, type: 2}
-  - {fileID: 11400000, guid: 0a23896a9bafd7b459e3a4e94001537b, type: 2}
-  - {fileID: 11400000, guid: 9e4d5fa6c60aee04797823c7213501d7, type: 2}
+  - {fileID: 11400000, guid: ae9f5ad993455e94daaffc5ac68e9b84, type: 2}
+  - {fileID: 11400000, guid: 638f1006774cac545abc90c067631b95, type: 2}
+  - {fileID: 11400000, guid: af8446965a77c7a4db939e9467566d20, type: 2}
+  - {fileID: 11400000, guid: cf77d300c6a04d348ba3c38fed114ce1, type: 2}
+  - {fileID: 11400000, guid: 2e7a18eb3174e1244857b622bfb1ffd0, type: 2}
+  - {fileID: 11400000, guid: f88e18c678f25f8449c7f8802103cfb4, type: 2}
+  - {fileID: 11400000, guid: 64aa4b1a1001ac846aebfaae06fb5863, type: 2}
+  - {fileID: 11400000, guid: 73a0b9c30e0561f4d9622522d0af3fa0, type: 2}
+  - {fileID: 11400000, guid: 04c78bc122daeb8449653a2c07433452, type: 2}
+  - {fileID: 11400000, guid: d518c41efa592044ba6a797bda48256d, type: 2}
   timeBetweenWaves: 10
   autoLoopWaves: 1
   enableContinuousSpawn: 1

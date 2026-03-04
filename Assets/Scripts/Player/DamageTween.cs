@@ -8,16 +8,21 @@ public class DamageTween : MonoBehaviour
     [SerializeField] private Color damageColor = Color.red;
     [SerializeField] private float tweenTime = 0.3f;
     [SerializeField] private int tweenLoops = 3;
+    
 
-    private GameObject targetObject;
+    private GameObject targetObject; 
     private SpriteRenderer spriteRenderer;
     private Graphic uiGraphic;
-    private Renderer meshRenderer;
+    private Renderer meshRenderer; 
+    
+    // Soporta múltiples materiales
+    private Material[] materialInstances;
+    private bool createdMaterialInstances = false;
 
-    private Material materialInstance;
-    private bool createdMaterialInstance = false;
-
+    // Guarda colores originales por material (si hay materiales) o un único originalColor para sprite/UI
+    private Color[] originalColors;
     private Color originalColor = Color.white;
+
     private Tween damageTween;
     private bool isInitialized = false;
 
@@ -25,27 +30,27 @@ public class DamageTween : MonoBehaviour
     {
         InitializeMaterial();
     }
-
+    
     private void OnEnable()
     {
         if (!isInitialized) InitializeMaterial();
         CaptureOriginalColor();
     }
-
+    
     private void OnDisable()
     {
-        SetTargetColor(originalColor);
-
+        RestoreOriginalColors();
+        
         damageTween?.Kill();
     }
-
+    
     public void InitializeMaterial()
     {
         if (targetObject == null)
         {
             targetObject = gameObject;
         }
-
+        
         if (targetObject == null) return;
         if (isInitialized) return;
 
@@ -55,39 +60,53 @@ public class DamageTween : MonoBehaviour
 
         if (meshRenderer != null)
         {
-            materialInstance = meshRenderer.material;
-            createdMaterialInstance = true;
+            // renderer.materials crea instancias si no existen; almacenamos todas las instancias para modificarlas
+            materialInstances = meshRenderer.materials;
+            createdMaterialInstances = true;
         }
 
         isInitialized = true;
         CaptureOriginalColor();
     }
-
+    
     private void CaptureOriginalColor()
     {
         if (spriteRenderer != null)
         {
             originalColor = spriteRenderer.color;
+            originalColors = null;
             return;
         }
 
         if (uiGraphic != null)
         {
             originalColor = uiGraphic.color;
+            originalColors = null;
             return;
         }
 
-        if (materialInstance != null)
+        if (materialInstances != null && materialInstances.Length > 0)
         {
-            if (materialInstance.HasProperty("_BaseColor"))
-                originalColor = materialInstance.GetColor("_BaseColor");
-            else if (materialInstance.HasProperty("_Color"))
-                originalColor = materialInstance.GetColor("_Color");
-            else
-                originalColor = materialInstance.color;
+            originalColors = new Color[materialInstances.Length];
+            for (int i = 0; i < materialInstances.Length; i++)
+            {
+                Material m = materialInstances[i];
+                if (m == null) { originalColors[i] = Color.white; continue; }
+
+                if (m.HasProperty("_BaseColor"))
+                    originalColors[i] = m.GetColor("_BaseColor");
+                else if (m.HasProperty("_Color"))
+                    originalColors[i] = m.GetColor("_Color");
+                else
+                    originalColors[i] = m.color;
+            }
+
+            // Para compatibilidad con la API existente, set originalColor al primero
+            originalColor = originalColors.Length > 0 ? originalColors[0] : Color.white;
             return;
         }
 
+        originalColors = null;
         originalColor = Color.white;
     }
 
@@ -95,7 +114,7 @@ public class DamageTween : MonoBehaviour
     {
         if (!isInitialized) InitializeMaterial();
 
-        if (spriteRenderer == null && uiGraphic == null && materialInstance == null)
+        if (spriteRenderer == null && uiGraphic == null && (materialInstances == null || materialInstances.Length == 0))
             return;
 
         damageTween?.Kill(true);
@@ -109,26 +128,30 @@ public class DamageTween : MonoBehaviour
             adjustedTweenTime
         )
         .SetLoops(tweenLoops, LoopType.Yoyo)
-        .OnComplete(() =>
+        .OnComplete(() => 
         {
             if (this != null)
             {
-                SetTargetColor(originalColor);
+                RestoreOriginalColors();
             }
         });
     }
-
+    
     private Color GetCurrentColor()
     {
         if (spriteRenderer != null) return spriteRenderer.color;
         if (uiGraphic != null) return uiGraphic.color;
-        if (materialInstance != null)
+        if (materialInstances != null && materialInstances.Length > 0)
         {
-            if (materialInstance.HasProperty("_BaseColor"))
-                return materialInstance.GetColor("_BaseColor");
-            if (materialInstance.HasProperty("_Color"))
-                return materialInstance.GetColor("_Color");
-            return materialInstance.color;
+            Material m = materialInstances[0];
+            if (m != null)
+            {
+                if (m.HasProperty("_BaseColor"))
+                    return m.GetColor("_BaseColor");
+                if (m.HasProperty("_Color"))
+                    return m.GetColor("_Color");
+                return m.color;
+            }
         }
         return originalColor;
     }
@@ -147,23 +170,69 @@ public class DamageTween : MonoBehaviour
             return;
         }
 
-        if (materialInstance != null)
+        if (materialInstances != null && materialInstances.Length > 0)
         {
-            if (materialInstance.HasProperty("_BaseColor"))
-                materialInstance.SetColor("_BaseColor", color);
-            if (materialInstance.HasProperty("_Color"))
-                materialInstance.SetColor("_Color", color);
-            materialInstance.color = color;
+            for (int i = 0; i < materialInstances.Length; i++)
+            {
+                Material m = materialInstances[i];
+                if (m == null) continue;
+
+                if (m.HasProperty("_BaseColor"))
+                    m.SetColor("_BaseColor", color);
+                if (m.HasProperty("_Color"))
+                    m.SetColor("_Color", color);
+                m.color = color;
+            }
         }
     }
 
+    private void RestoreOriginalColors()
+    {
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = originalColor;
+            return;
+        }
+
+        if (uiGraphic != null)
+        {
+            uiGraphic.color = originalColor;
+            return;
+        }
+
+        if (materialInstances != null && originalColors != null)
+        {
+            int count = Mathf.Min(materialInstances.Length, originalColors.Length);
+            for (int i = 0; i < count; i++)
+            {
+                Material m = materialInstances[i];
+                if (m == null) continue;
+
+                Color c = originalColors[i];
+
+                if (m.HasProperty("_BaseColor"))
+                    m.SetColor("_BaseColor", c);
+                if (m.HasProperty("_Color"))
+                    m.SetColor("_Color", c);
+                m.color = c;
+            }
+        }
+    }
+    
     private void OnDestroy()
     {
         damageTween?.Kill();
-
-        if (createdMaterialInstance && materialInstance != null && Application.isPlaying)
+        
+        // Destruir instancias de material creadas para evitar memory leaks en Play mode
+        if (createdMaterialInstances && materialInstances != null && Application.isPlaying)
         {
-            Destroy(materialInstance);
+            for (int i = 0; i < materialInstances.Length; i++)
+            {
+                if (materialInstances[i] != null)
+                {
+                    Destroy(materialInstances[i]);
+                }
+            }
         }
     }
 }

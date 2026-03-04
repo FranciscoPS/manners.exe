@@ -12,9 +12,11 @@ public class PoolManager : MonoBehaviour
     {
         Projectile,
         ExperienceOrb,
-        Enemy,
-        BasicEnemy,
-        FastEnemy,
+        Enemy,          // Pool genérico (deprecated)
+        BasicEnemy,     // Enemy básico
+        FastEnemy,      // Enemy rápido
+        L2BasicEnemy,
+        L2FastEnemy,
         Coin,
         Diamond
     }
@@ -32,8 +34,13 @@ public class PoolManager : MonoBehaviour
     [SerializeField] private List<PoolConfig> poolConfigs = new List<PoolConfig>();
 
     private Dictionary<PoolType, ObjectPool<GameObject>> pools = new Dictionary<PoolType, ObjectPool<GameObject>>();
+
+    // Persistimos las referencias a prefabs y rotaciones independientemente de recargas de escena
+    // para que la configuración asignada en el inspector se mantenga siempre en el singleton.
     private Dictionary<PoolType, GameObject> poolPrefabs = new Dictionary<PoolType, GameObject>();
     private Dictionary<PoolType, Quaternion> poolPrefabRotations = new Dictionary<PoolType, Quaternion>();
+    private Dictionary<PoolType, PoolConfig> poolConfigMap = new Dictionary<PoolType, PoolConfig>();
+
     private Dictionary<GameObject, PoolType> activeObjects = new Dictionary<GameObject, PoolType>();
 
     private void Awake()
@@ -43,11 +50,31 @@ public class PoolManager : MonoBehaviour
             Instance = this;
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
+
+            // Construir mapa de configuración desde el inspector y asegurarnos de
+            // almacenar los prefabs para uso persistente.
+            BuildConfigMapFromInspector(this.poolConfigs, replace: true);
+
             InitializePools();
         }
         else
         {
-            Destroy(gameObject);
+            // Si ya existe un singleton, aplicar la configuración de la instancia
+            // que acaba de crearse (por ejemplo, escena recién cargada) PARA QUE
+            // el PoolManager refleje siempre la configuración del inspector de la
+            // escena actual. Esto reemplaza la configuración persistente y recrea pools.
+            if (Instance != this)
+            {
+                // Reemplazar configuración del singleton con la de la nueva instancia
+                Instance.BuildConfigMapFromInspector(this.poolConfigs, replace: true);
+
+                // Forzar recreación de pools basados en la nueva configuración
+                Instance.ResetAllPools();
+
+                // Destruir la instancia duplicada en la escena actual (el singleton
+                // ya contiene la configuración).
+                Destroy(gameObject);
+            }
         }
     }
 
@@ -63,33 +90,57 @@ public class PoolManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-
+        // Cuando se carga una nueva escena, queremos que el singleton utilice la
+        // configuración que esté definida en la escena si existe un PoolManager en ella.
+        // Para eso, si hay un PoolManager en la escena (no-singleson), su Awake habrá
+        // intentado reemplazar la configuración del singleton ya. Aquí sólo limpiamos pools.
         ResetAllPools();
     }
 
     private void InitializePools()
     {
-        foreach (var config in poolConfigs)
+        // Crear pools sólo para las entradas que todavía no existan.
+        foreach (var kvp in poolConfigMap)
         {
-            if (config.prefab == null)
-            {
+            PoolType poolType = kvp.Key;
+            PoolConfig config = kvp.Value;
+
+            // Si ya tenemos un pool creado para este tipo no lo recreamos
+            if (pools.ContainsKey(poolType))
                 continue;
+
+            if (config == null || config.prefab == null)
+            {
+                // Intentar usar prefab almacenado previamente si existe
+                if (!poolPrefabs.ContainsKey(poolType) || poolPrefabs[poolType] == null)
+                {
+                    Debug.LogWarning($"[PoolManager] PoolConfig for {poolType} has no prefab assigned!");
+                    continue;
+                }
             }
 
-            poolPrefabs[config.poolType] = config.prefab;
-            poolPrefabRotations[config.poolType] = config.prefab.transform.rotation;
+            GameObject prefab = (config != null && config.prefab != null) ? config.prefab : poolPrefabs[poolType];
+            int defaultCapacity = (config != null) ? config.defaultCapacity : 20;
+            int maxSize = (config != null) ? config.maxSize : 100;
+
+            // Guardar prefab/rotation si no están guardados
+            if (!poolPrefabs.ContainsKey(poolType) || poolPrefabs[poolType] == null)
+            {
+                poolPrefabs[poolType] = prefab;
+                poolPrefabRotations[poolType] = prefab != null ? prefab.transform.rotation : Quaternion.identity;
+            }
 
             var pool = new ObjectPool<GameObject>(
-                () => CreatePooledObject(config.poolType, config.prefab),
+                () => CreatePooledObject(poolType, prefab),
                 OnGetFromPool,
                 OnReturnToPool,
                 OnDestroyPoolObject,
                 true,
-                config.defaultCapacity,
-                config.maxSize
+                Mathf.Max(1, defaultCapacity),
+                Mathf.Max(1, maxSize)
             );
 
-            pools[config.poolType] = pool;
+            pools[poolType] = pool;
         }
     }
 
@@ -335,16 +386,48 @@ public class PoolManager : MonoBehaviour
 
     private void ResetAllPools()
     {
-
+        // Limpiar referencias de objetos activos
         activeObjects.Clear();
 
-        foreach (var poolType in pools.Keys)
+        // Limpiar y recrear pools usando la configuración persistente en poolConfigMap y poolPrefabs
+        foreach (var pool in pools.Values)
         {
-            pools[poolType].Clear();
+            pool.Clear();
         }
 
         pools.Clear();
-        InitializePools();
+
+        // Recrear pools basados en la configuración que guardamos en poolConfigMap
+        foreach (var kvp in poolConfigMap)
+        {
+            PoolType poolType = kvp.Key;
+            PoolConfig config = kvp.Value;
+
+            GameObject prefab = (config != null && config.prefab != null) ? config.prefab :
+                                (poolPrefabs.ContainsKey(poolType) ? poolPrefabs[poolType] : null);
+
+            if (prefab == null)
+                continue;
+
+            int defaultCapacity = (config != null) ? config.defaultCapacity : 20;
+            int maxSize = (config != null) ? config.maxSize : 100;
+
+            // Ensure we have rotation cached
+            if (!poolPrefabRotations.ContainsKey(poolType))
+                poolPrefabRotations[poolType] = prefab.transform.rotation;
+
+            var pool = new ObjectPool<GameObject>(
+                () => CreatePooledObject(poolType, prefab),
+                OnGetFromPool,
+                OnReturnToPool,
+                OnDestroyPoolObject,
+                true,
+                Mathf.Max(1, defaultCapacity),
+                Mathf.Max(1, maxSize)
+            );
+
+            pools[poolType] = pool;
+        }
     }
 
     public void CleanupDestroyedObjects()
@@ -362,6 +445,36 @@ public class PoolManager : MonoBehaviour
         foreach (var obj in toRemove)
         {
             activeObjects.Remove(obj);
+        }
+    }
+
+    // Construye el mapa de configuración desde la lista serializada en el inspector
+    // Si replace == true, REEMPLAZA la configuración existente del singleton.
+    private void BuildConfigMapFromInspector(List<PoolConfig> configs, bool replace = false)
+    {
+        if (configs == null) return;
+
+        if (replace)
+        {
+            poolConfigMap.Clear();
+        }
+
+        foreach (var config in configs)
+        {
+            if (config == null) continue;
+
+            // Si replace==true siempre sobrescribimos; si false sólo añadimos faltantes
+            poolConfigMap[config.poolType] = config;
+
+            // Guardar prefab/rotation sólo si no existe aún o si replace==true
+            if (config.prefab != null)
+            {
+                if (replace || !poolPrefabs.ContainsKey(config.poolType) || poolPrefabs[config.poolType] == null)
+                {
+                    poolPrefabs[config.poolType] = config.prefab;
+                    poolPrefabRotations[config.poolType] = config.prefab.transform.rotation;
+                }
+            }
         }
     }
 }
