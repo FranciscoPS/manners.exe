@@ -5413,6 +5413,7 @@ GameObject:
   - component: {fileID: 238261085}
   - component: {fileID: 238261086}
   - component: {fileID: 238261087}
+  - component: {fileID: 238261088}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -5598,6 +5599,20 @@ MonoBehaviour:
   enemigosHelpPanel: {fileID: 364002625}
   mejorasHelpPanel: {fileID: 74814020}
   mainMenuSceneIndex: 0
+--- !u!114 &238261088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 238261078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99a8b994d702efd4f801391624d993f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalCursorManager
+  pointerCursor: {fileID: 2800000, guid: 5521ac9330aad814eb4bd49f4e6a4e38, type: 3}
+  pointerHotspot: {x: 0, y: 0}
 --- !u!1 &239892129
 GameObject:
   m_ObjectHideFlags: 0

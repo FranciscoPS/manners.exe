@@ -15860,6 +15860,7 @@ GameObject:
   - component: {fileID: 655572743}
   - component: {fileID: 655572742}
   - component: {fileID: 655572746}
+  - component: {fileID: 655572747}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -15992,6 +15993,20 @@ MonoBehaviour:
   overlaySortingOrder: 1000
   hoverSFX: {fileID: 8300000, guid: 246c55d771c91f14f996a19a6586c70a, type: 3}
   clickSFX: {fileID: 8300000, guid: df20acfb2d7949443b4e9b7ab482ec7e, type: 3}
+--- !u!114 &655572747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 655572741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99a8b994d702efd4f801391624d993f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalCursorManager
+  pointerCursor: {fileID: 2800000, guid: 5521ac9330aad814eb4bd49f4e6a4e38, type: 3}
+  pointerHotspot: {x: 0, y: 0}
 --- !u!1 &656454237
 GameObject:
   m_ObjectHideFlags: 0
