@@ -121,6 +121,10 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private Button          choiceNoButton;
     [SerializeField] private TextMeshProUGUI choiceNoButtonText;
 
+    [Header("Skip All")]
+    [Tooltip("Botón visible en todo momento durante el tutorial. Lo completa y marca como hecho.")]
+    [SerializeField] private Button skipAllButton;
+
     [Header("Typewriter Effect")]
     [SerializeField] private float     charsPerSecond = 38f;
     [SerializeField] private AudioClip typingSound;
@@ -310,6 +314,11 @@ public class TutorialManager : MonoBehaviour
             choiceNoButton.onClick.AddListener(OnNoClicked);
             choiceNoButton.gameObject.SetActive(false);
         }
+        if (skipAllButton != null)
+        {
+            skipAllButton.onClick.AddListener(OnSkipAllClicked);
+            skipAllButton.gameObject.SetActive(true);
+        }
         return true;
     }
 
@@ -317,6 +326,7 @@ public class TutorialManager : MonoBehaviour
     {
         if (nextButton     != null) nextButton.onClick.RemoveListener(OnNextClicked);
         if (choiceNoButton != null) choiceNoButton.onClick.RemoveListener(OnNoClicked);
+        if (skipAllButton  != null) skipAllButton.onClick.RemoveListener(OnSkipAllClicked);
         UnsubscribeAll();
     }
 
@@ -745,11 +755,17 @@ public class TutorialManager : MonoBehaviour
     // -----------------------------------------------------------------------
     // Completion
     // -----------------------------------------------------------------------
+    private void OnSkipAllClicked()
+    {
+        CompleteTutorial();
+    }
+
     private void CompleteTutorial()
     {
         state = TutorialState.Complete;
         UnfreezeGame();
         HidePanel();
+        if (skipAllButton != null) skipAllButton.gameObject.SetActive(false);
         UnsubscribeAll();
         // Seguridad: desbloquear spawn si por algún motivo quedó bloqueado
         if (EnemySpawnManager.Instance != null)
