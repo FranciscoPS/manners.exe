@@ -16,10 +16,14 @@ MonoBehaviour:
   description: Increases your base damage
   upgradeType: 0
   icon: {fileID: 21300000, guid: 16b3cbbb22648cb4bb71ceb5855edb00, type: 3}
-  baseValue: 15
-  multiplierPerLevel: 1.2
+  baseValue: 18
+  multiplierPerLevel: 1.8
   maxLevel: 999
   isPercentage: 1
-  isReduction: 0
   valueSuffix: 
+  isPremium: 0
   spawnWeight: 60
+  isAvailableInShop: 1
+  shopBaseCost: 100
+  shopCostMultiplier: 1.5
+  shopSpawnWeight: 50

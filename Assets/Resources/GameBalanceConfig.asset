@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameBalanceConfig
   playerMaxHealth: 120
   playerBaseDamage: 12
-  playerMoveSpeed: 6
+  playerMoveSpeed: 6.5
   playerAttackRange: 6
   playerAttackCooldown: 0.6
   baseExperienceRequired: 100
@@ -111,7 +111,7 @@ MonoBehaviour:
   - fromWave: 9
     toWave: 999
     enemyType: 3
-    orbConfig: {fileID: 11400000, guid: 9da0efec21e8446f285f37f6b89fbcfb, type: 2}
+    orbConfig: {fileID: 0}
     minOrbs: 1
     maxOrbs: 2
     coinDropChance: 0.35
