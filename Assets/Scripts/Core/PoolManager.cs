@@ -25,7 +25,15 @@ public class PoolManager : MonoBehaviour
     public class PoolConfig
     {
         public PoolType poolType;
+
+        [Header("Prefabs")]
+        [Tooltip("Si quieres variantes (por ejemplo 3 variantes para enemigos) añádelas aquí.")]
+        public List<GameObject> prefabs = new List<GameObject>();
+
+        [Tooltip("Campo legacy: si usas este campo se convertirá en 1 elemento de 'prefabs' automáticamente.")]
         public GameObject prefab;
+
+        [Header("Capacity")]
         public int defaultCapacity = 20;
         public int maxSize = 100;
     }
@@ -35,10 +43,9 @@ public class PoolManager : MonoBehaviour
 
     private Dictionary<PoolType, ObjectPool<GameObject>> pools = new Dictionary<PoolType, ObjectPool<GameObject>>();
 
-    // Persistimos las referencias a prefabs y rotaciones independientemente de recargas de escena
-    // para que la configuración asignada en el inspector se mantenga siempre en el singleton.
-    private Dictionary<PoolType, GameObject> poolPrefabs = new Dictionary<PoolType, GameObject>();
-    private Dictionary<PoolType, Quaternion> poolPrefabRotations = new Dictionary<PoolType, Quaternion>();
+    // Ahora almacenamos arrays de prefabs y rotaciones por PoolType
+    private Dictionary<PoolType, GameObject[]> poolPrefabs = new Dictionary<PoolType, GameObject[]>();
+    private Dictionary<PoolType, Quaternion[]> poolPrefabRotations = new Dictionary<PoolType, Quaternion[]>();
     private Dictionary<PoolType, PoolConfig> poolConfigMap = new Dictionary<PoolType, PoolConfig>();
 
     private Dictionary<GameObject, PoolType> activeObjects = new Dictionary<GameObject, PoolType>();
@@ -51,28 +58,21 @@ public class PoolManager : MonoBehaviour
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
 
-            // Construir mapa de configuración desde el inspector y asegurarnos de
-            // almacenar los prefabs para uso persistente.
+            // Construye la configuración desde el inspector (migra campo legacy prefab -> prefabs)
             BuildConfigMapFromInspector(this.poolConfigs, replace: true);
 
             InitializePools();
         }
         else
         {
-            // Si ya existe un singleton, aplicar la configuración de la instancia
-            // que acaba de crearse (por ejemplo, escena recién cargada) PARA QUE
-            // el PoolManager refleje siempre la configuración del inspector de la
-            // escena actual. Esto reemplaza la configuración persistente y recrea pools.
+            // Si ya existe singleton, intentamos aplicar la configuración de la escena actual
+            // al singleton (override) para que cada escena pueda definir sus variantes.
+            // Si prefieres que el primer PoolManager (persistente) sea la única fuente,
+            // cambia `replace: true` a `replace: false` en la siguiente línea.
             if (Instance != this)
             {
-                // Reemplazar configuración del singleton con la de la nueva instancia
                 Instance.BuildConfigMapFromInspector(this.poolConfigs, replace: true);
-
-                // Forzar recreación de pools basados en la nueva configuración
                 Instance.ResetAllPools();
-
-                // Destruir la instancia duplicada en la escena actual (el singleton
-                // ya contiene la configuración).
                 Destroy(gameObject);
             }
         }
@@ -90,10 +90,8 @@ public class PoolManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Cuando se carga una nueva escena, queremos que el singleton utilice la
-        // configuración que esté definida en la escena si existe un PoolManager en ella.
-        // Para eso, si hay un PoolManager en la escena (no-singleson), su Awake habrá
-        // intentado reemplazar la configuración del singleton ya. Aquí sólo limpiamos pools.
+        // Al cargar una escena, reconstruimos pools según la configuración actual
+        // (que viene del singleton poolConfigMap / poolPrefabs).
         ResetAllPools();
     }
 
@@ -105,47 +103,45 @@ public class PoolManager : MonoBehaviour
             PoolType poolType = kvp.Key;
             PoolConfig config = kvp.Value;
 
-            // Si ya tenemos un pool creado para este tipo no lo recreamos
             if (pools.ContainsKey(poolType))
                 continue;
 
-            if (config == null || config.prefab == null)
+            GameObject[] prefabsForType = poolPrefabs.ContainsKey(poolType) ? poolPrefabs[poolType] : null;
+            if ((config == null || (config.prefab == null && (config.prefabs == null || config.prefabs.Count == 0))) 
+                && (prefabsForType == null || prefabsForType.Length == 0))
             {
-                // Intentar usar prefab almacenado previamente si existe
-                if (!poolPrefabs.ContainsKey(poolType) || poolPrefabs[poolType] == null)
-                {
-                    Debug.LogWarning($"[PoolManager] PoolConfig for {poolType} has no prefab assigned!");
-                    continue;
-                }
+                Debug.LogWarning($"[PoolManager] PoolConfig for {poolType} has no prefab(s) assigned!");
+                continue;
             }
 
-            GameObject prefab = (config != null && config.prefab != null) ? config.prefab : poolPrefabs[poolType];
-            int defaultCapacity = (config != null) ? config.defaultCapacity : 20;
-            int maxSize = (config != null) ? config.maxSize : 100;
-
-            // Guardar prefab/rotation si no están guardados
-            if (!poolPrefabs.ContainsKey(poolType) || poolPrefabs[poolType] == null)
-            {
-                poolPrefabs[poolType] = prefab;
-                poolPrefabRotations[poolType] = prefab != null ? prefab.transform.rotation : Quaternion.identity;
-            }
+            int defaultCapacity = (config != null) ? Mathf.Max(1, config.defaultCapacity) : 20;
+            int maxSize = (config != null) ? Mathf.Max(1, config.maxSize) : 100;
 
             var pool = new ObjectPool<GameObject>(
-                () => CreatePooledObject(poolType, prefab),
+                () => CreatePooledObject(poolType, prefabsForType),
                 OnGetFromPool,
                 OnReturnToPool,
                 OnDestroyPoolObject,
                 true,
-                Mathf.Max(1, defaultCapacity),
-                Mathf.Max(1, maxSize)
+                defaultCapacity,
+                maxSize
             );
 
             pools[poolType] = pool;
         }
     }
 
-    private GameObject CreatePooledObject(PoolType poolType, GameObject prefab)
+    private GameObject CreatePooledObject(PoolType poolType, GameObject[] prefabsForType)
     {
+        GameObject prefab = GetRandomPrefabForType(poolType, prefabsForType);
+        if (prefab == null)
+        {
+            Debug.LogError($"[PoolManager] No prefab available when creating pooled object for {poolType}");
+            GameObject fallback = new GameObject($"MissingPrefab_{poolType}");
+            fallback.SetActive(false);
+            return fallback;
+        }
+
         GameObject obj = Instantiate(prefab);
         obj.name = $"{prefab.name}_{poolType}";
         obj.SetActive(false);
@@ -154,6 +150,7 @@ public class PoolManager : MonoBehaviour
 
     private void OnGetFromPool(GameObject obj)
     {
+        // Hook para cuando un objeto se obtiene del pool (vacío por ahora)
         if (obj != null)
         {
         }
@@ -235,9 +232,6 @@ public class PoolManager : MonoBehaviour
         {
             config.ApplyToProjectile(projectile);
         }
-        else if (config == null)
-        {
-        }
 
         return projectile;
     }
@@ -274,6 +268,7 @@ public class PoolManager : MonoBehaviour
             ? config.enemyPoolType
             : PoolType.Enemy;
 
+        // Usamos la API existente: el pool ya contiene instancias creadas con variantes aleatorias.
         GameObject obj = GetFromPool(poolType, position, Quaternion.identity);
         if (obj != null)
         {
@@ -298,7 +293,7 @@ public class PoolManager : MonoBehaviour
     public Collectible SpawnCollectible(Vector3 position, Collectible.CollectibleType type, int value)
     {
         PoolType poolType = type == Collectible.CollectibleType.Coin ? PoolType.Coin : PoolType.Diamond;
-        Quaternion rotation = poolPrefabRotations.ContainsKey(poolType) ? poolPrefabRotations[poolType] : Quaternion.identity;
+        Quaternion rotation = GetDefaultRotationForPool(poolType);
         GameObject obj = GetFromPool(poolType, position, rotation);
 
         if (obj != null)
@@ -403,27 +398,21 @@ public class PoolManager : MonoBehaviour
             PoolType poolType = kvp.Key;
             PoolConfig config = kvp.Value;
 
-            GameObject prefab = (config != null && config.prefab != null) ? config.prefab :
-                                (poolPrefabs.ContainsKey(poolType) ? poolPrefabs[poolType] : null);
-
-            if (prefab == null)
+            GameObject[] prefabsForType = poolPrefabs.ContainsKey(poolType) ? poolPrefabs[poolType] : null;
+            if (prefabsForType == null || prefabsForType.Length == 0)
                 continue;
 
-            int defaultCapacity = (config != null) ? config.defaultCapacity : 20;
-            int maxSize = (config != null) ? config.maxSize : 100;
-
-            // Ensure we have rotation cached
-            if (!poolPrefabRotations.ContainsKey(poolType))
-                poolPrefabRotations[poolType] = prefab.transform.rotation;
+            int defaultCapacity = (config != null) ? Mathf.Max(1, config.defaultCapacity) : 20;
+            int maxSize = (config != null) ? Mathf.Max(1, config.maxSize) : 100;
 
             var pool = new ObjectPool<GameObject>(
-                () => CreatePooledObject(poolType, prefab),
+                () => CreatePooledObject(poolType, prefabsForType),
                 OnGetFromPool,
                 OnReturnToPool,
                 OnDestroyPoolObject,
                 true,
-                Mathf.Max(1, defaultCapacity),
-                Mathf.Max(1, maxSize)
+                defaultCapacity,
+                maxSize
             );
 
             pools[poolType] = pool;
@@ -457,24 +446,63 @@ public class PoolManager : MonoBehaviour
         if (replace)
         {
             poolConfigMap.Clear();
+            poolPrefabs.Clear();
+            poolPrefabRotations.Clear();
         }
 
         foreach (var config in configs)
         {
             if (config == null) continue;
 
-            // Si replace==true siempre sobrescribimos; si false sólo añadimos faltantes
             poolConfigMap[config.poolType] = config;
 
-            // Guardar prefab/rotation sólo si no existe aún o si replace==true
-            if (config.prefab != null)
+            // Construir array de prefabs: preferimos la lista `prefabs` si tiene elementos,
+            // si no usamos el campo legacy `prefab`.
+            List<GameObject> finalList = new List<GameObject>();
+            if (config.prefabs != null && config.prefabs.Count > 0)
             {
-                if (replace || !poolPrefabs.ContainsKey(config.poolType) || poolPrefabs[config.poolType] == null)
+                for (int i = 0; i < config.prefabs.Count; i++)
                 {
-                    poolPrefabs[config.poolType] = config.prefab;
-                    poolPrefabRotations[config.poolType] = config.prefab.transform.rotation;
+                    if (config.prefabs[i] != null)
+                        finalList.Add(config.prefabs[i]);
                 }
             }
+            else if (config.prefab != null)
+            {
+                finalList.Add(config.prefab);
+            }
+
+            if (finalList.Count > 0)
+            {
+                poolPrefabs[config.poolType] = finalList.ToArray();
+
+                Quaternion[] rotations = new Quaternion[finalList.Count];
+                for (int i = 0; i < finalList.Count; i++)
+                    rotations[i] = finalList[i] != null ? finalList[i].transform.rotation : Quaternion.identity;
+                poolPrefabRotations[config.poolType] = rotations;
+            }
         }
+    }
+
+    // Obtiene un prefab aleatorio (uniforme) para el poolType.
+    private GameObject GetRandomPrefabForType(PoolType poolType, GameObject[] fallback = null)
+    {
+        GameObject[] arr = null;
+        if (poolPrefabs.ContainsKey(poolType))
+            arr = poolPrefabs[poolType];
+        else
+            arr = fallback;
+
+        if (arr == null || arr.Length == 0) return null;
+        int idx = UnityEngine.Random.Range(0, arr.Length);
+        return arr[idx];
+    }
+
+    // Obtiene rotación por defecto (primera) para un poolType si existe
+    private Quaternion GetDefaultRotationForPool(PoolType poolType)
+    {
+        if (poolPrefabRotations.ContainsKey(poolType) && poolPrefabRotations[poolType].Length > 0)
+            return poolPrefabRotations[poolType][0];
+        return Quaternion.identity;
     }
 }

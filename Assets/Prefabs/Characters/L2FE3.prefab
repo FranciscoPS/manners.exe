@@ -161,8 +161,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 635547659545568360, guid: 270a27c4ccbee8e4fa1541a464fc7a41, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1834571585896338082}
   m_SourcePrefab: {fileID: 100100000, guid: 270a27c4ccbee8e4fa1541a464fc7a41, type: 3}
+--- !u!1 &1324427293665280778 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 635547659545568360, guid: 270a27c4ccbee8e4fa1541a464fc7a41, type: 3}
+  m_PrefabInstance: {fileID: 1923218056122410850}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1834571585896338082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324427293665280778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a70793ec81503ff4fbe6731693ab9bad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageTween
+  damageColor: {r: 1, g: 0, b: 0, a: 1}
+  tweenTime: 0.3
+  tweenLoops: 3
 --- !u!4 &2106028609070579849 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 270a27c4ccbee8e4fa1541a464fc7a41, type: 3}
