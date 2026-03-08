@@ -156,6 +156,13 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
         }
     }
 
+    public void Heal(float amount)
+    {
+        if (isDead) return;
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     public void AddMaxHealth(float amount)
     {
         maxHealth += amount;

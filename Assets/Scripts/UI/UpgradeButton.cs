@@ -332,6 +332,14 @@ public class UpgradeButton : MonoBehaviour
 
                     valuesText.text = $"{baseValue.ToString(format)} → {finalValue.ToString(format)}";
                 }
+                else if (assignedUpgrade.upgradeType == UpgradeType.HealOnLevelUp)
+                {
+                    float currentHP = baseValue;
+                    float afterHeal = PlayerStatsManager.Instance != null
+                        ? Mathf.Min(currentHP + nextValue, FindFirstObjectByType<PlayerHealth>()?.MaxHealth ?? currentHP + nextValue)
+                        : currentHP + nextValue;
+                    valuesText.text = $"{currentHP:F0} → {afterHeal:F0} HP";
+                }
                 else
                 {
                     float finalValue = baseValue + nextValue;
@@ -388,6 +396,14 @@ public class UpgradeButton : MonoBehaviour
                         format = "F1";
 
                     valuesText.text = $"{currentFinalValue.ToString(format)} → {nextFinalValue.ToString(format)}";
+                }
+                else if (assignedUpgrade.upgradeType == UpgradeType.HealOnLevelUp)
+                {
+                    PlayerHealth ph = FindFirstObjectByType<PlayerHealth>();
+                    float curHP  = ph != null ? ph.CurrentHealth : 0f;
+                    float maxHP  = ph != null ? ph.MaxHealth : curHP + nextUpgradeValue;
+                    float healed = Mathf.Min(curHP + nextUpgradeValue, maxHP);
+                    valuesText.text = $"{curHP:F0} → {healed:F0} HP";
                 }
                 else
                 {

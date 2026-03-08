@@ -9,7 +9,8 @@ public enum UpgradeType
     MagnetRange,
     MultiShot,
     ExplosiveShot,
-    Knockback
+    Knockback,
+    HealOnLevelUp
 }
 
 [CreateAssetMenu(fileName = "Upgrade", menuName = "Game/Upgrade Data")]
