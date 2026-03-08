@@ -396,8 +396,8 @@ public class MainMenuUIManager : MonoBehaviour
             if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
             if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
-            if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
-            if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel.SetActive(false); currentPersonalizacionSubPanel = null; }
+            if (currentTiendaSubPanel != null) { currentTiendaSubPanel?.SetActive(false); currentTiendaSubPanel = null; }
+            if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel?.SetActive(false); currentPersonalizacionSubPanel = null; }
 
             if (optionsPanel != null)
             {
@@ -450,6 +450,9 @@ public class MainMenuUIManager : MonoBehaviour
 
         // Hide premium container and its subpanels
         if (habilidadesPremiumPanel != null && habilidadesPremiumPanel.activeSelf) habilidadesPremiumPanel.SetActive(false);
+        SetButtonsActive(kbPanel, false);
+        SetButtonsActive(exPanel, false);
+        SetButtonsActive(mlsPanel, false);
         kbPanel?.SetActive(false);
         exPanel?.SetActive(false);
         mlsPanel?.SetActive(false);
@@ -458,9 +461,13 @@ public class MainMenuUIManager : MonoBehaviour
         if (selected == null) return;
 
         if (currentUpgradesSubPanel != null && currentUpgradesSubPanel != selected)
+        {
+            SetButtonsActive(currentUpgradesSubPanel, false);
             currentUpgradesSubPanel.SetActive(false);
+        }
 
         selected.SetActive(true);
+        SetButtonsActive(selected, true);
         currentUpgradesSubPanel = selected;
     }
 
@@ -476,6 +483,11 @@ public class MainMenuUIManager : MonoBehaviour
 
         // Hide normales container and its subpanels
         if (habilidadesnNormalesPanel != null && habilidadesnNormalesPanel.activeSelf) habilidadesnNormalesPanel.SetActive(false);
+        SetButtonsActive(rpPanel, false);
+        SetButtonsActive(rPanel, false);
+        SetButtonsActive(dPanel, false);
+        SetButtonsActive(mPanel, false);
+        SetButtonsActive(msPanel, false);
         rpPanel?.SetActive(false);
         rPanel?.SetActive(false);
         dPanel?.SetActive(false);
@@ -486,9 +498,13 @@ public class MainMenuUIManager : MonoBehaviour
         if (selected == null) return;
 
         if (currentUpgradesSubPanel != null && currentUpgradesSubPanel != selected)
+        {
+            SetButtonsActive(currentUpgradesSubPanel, false);
             currentUpgradesSubPanel.SetActive(false);
+        }
 
         selected.SetActive(true);
+        SetButtonsActive(selected, true);
         currentUpgradesSubPanel = selected;
     }
 
@@ -509,6 +525,20 @@ public class MainMenuUIManager : MonoBehaviour
         // Containers
         habilidadesnNormalesPanel?.SetActive(false);
         habilidadesPremiumPanel?.SetActive(false);
+    }
+
+    // Helper: activa/desactiva todos los botones (GameObject + interactable) dentro de un panel (null-safe)
+    private void SetButtonsActive(GameObject panel, bool active)
+    {
+        if (panel == null) return;
+        // Si el panel mismo está destinado a ser la "caja de botones", mantener su GameObject activo según 'active'
+        // pero por seguridad sólo ajustamos los botones hijos; el caller controla panel.SetActive(...)
+        foreach (var btn in panel.GetComponentsInChildren<Button>(true))
+        {
+            if (btn == null) continue;
+            btn.gameObject.SetActive(active);
+            btn.interactable = active;
+        }
     }
 
     public void LevelSelection(int sceneIndex)
@@ -591,7 +621,6 @@ public enum MenuScreen
     UpgradesHabilidadesNormales,
     UpgradesHabilidadesPremium,
     UpgradesDetalles,
-
 
     TiendaAtuendos,
     TiendaEfectos,
