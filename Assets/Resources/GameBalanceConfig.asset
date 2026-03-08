@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: feabf78d2e6f6a744819140996fd52a5, type: 3}
   m_Name: GameBalanceConfig
   m_EditorClassIdentifier: Assembly-CSharp::GameBalanceConfig
-  playerMaxHealth: 120
+  playerMaxHealth: 150
   playerBaseDamage: 12
   playerMoveSpeed: 6.5
   playerAttackRange: 6
@@ -32,8 +32,8 @@ MonoBehaviour:
   coinAttractionRange: 3.5
   diamondAttractionRange: 3.5
   orbAttractionRange: 3.5
-  coinLifetime: 15
-  diamondLifetime: 15
+  coinLifetime: 18
+  diamondLifetime: 18
   orbLifetime: 18
   enemyDropConfigs:
   - fromWave: 1
