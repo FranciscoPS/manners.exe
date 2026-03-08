@@ -293,19 +293,20 @@ public class MainMenuUIManager : MonoBehaviour
             // If requesting the premium container, SHOW container but DO NOT enable any subpanel
             else if (screen == MenuScreen.UpgradesHabilidadesPremium)
             {
-                // Activate premium container and deactivate normal container/subs
                 if (habilidadesPremiumPanel != null && !habilidadesPremiumPanel.activeSelf)
                     habilidadesPremiumPanel.SetActive(true);
 
                 if (habilidadesnNormalesPanel != null && habilidadesnNormalesPanel.activeSelf)
                     habilidadesnNormalesPanel.SetActive(false);
 
-                // Ensure all premium subpanels are OFF (user must press a button to open one)
+                SetButtonsActive(kbPanel, true);
+                SetButtonsActive(exPanel, true);
+                SetButtonsActive(mlsPanel, true);
+
                 kbPanel?.SetActive(false);
                 exPanel?.SetActive(false);
                 mlsPanel?.SetActive(false);
 
-                // Clear currentUpgradesSubPanel so nothing is active until user selects
                 currentUpgradesSubPanel = null;
             }
             else
