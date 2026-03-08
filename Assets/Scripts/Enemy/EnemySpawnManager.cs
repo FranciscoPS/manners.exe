@@ -65,6 +65,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         DetectSpawnPoints();
         continuousSpawnTimer = continuousSpawnInterval;
+        StartCoroutine(ScatterClusteredEnemies());
 
         if (waveQueue != null && waveQueue.Length > 0)
         {
@@ -250,6 +251,109 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         }
 
         return count - enemiesRemaining;
+    }
+
+    private const float ScatterCheckInterval         = 4f;
+    private const float ScatterClusterRadius         = 2.5f;
+    // Minimum cluster size to scatter off-screen enemies.
+    private const int   ScatterThresholdOffScreen    = 10;
+    // Minimum cluster size to scatter even on-screen enemies (extreme pileup).
+    private const int   ScatterThresholdOnScreen     = 20;
+    // Max enemies allowed to remain per cluster after scattering.
+    private const int   ScatterMaxPerCluster         = 5;
+    // Enemies within this distance of the player are never scattered (active combat).
+    private const float ScatterMinPlayerDist         = 8f;
+
+    private IEnumerator ScatterClusteredEnemies()
+    {
+        Transform playerTransform = null;
+
+        while (true)
+        {
+            yield return new WaitForSeconds(ScatterCheckInterval);
+
+            if (playerTransform == null)
+                playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+            if (allSpawnPoints.Count == 0) continue;
+
+            Camera cam = Camera.main;
+            var enemies = new List<EnemyHealth>(EnemyHealth.ActiveEnemies);
+            int count = enemies.Count;
+            if (count < ScatterThresholdOffScreen) continue;
+
+            var alreadyScattered = new HashSet<EnemyHealth>();
+            int totalScattered = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (enemies[i] == null || alreadyScattered.Contains(enemies[i])) continue;
+
+                Vector3 pos = enemies[i].transform.position;
+                var cluster = new List<EnemyHealth>();
+
+                for (int j = 0; j < count; j++)
+                {
+                    if (i == j || enemies[j] == null || alreadyScattered.Contains(enemies[j])) continue;
+                    if (Vector3.Distance(pos, enemies[j].transform.position) <= ScatterClusterRadius)
+                        cluster.Add(enemies[j]);
+                }
+
+                // Not big enough to do anything with at all.
+                if (cluster.Count < ScatterThresholdOffScreen) continue;
+
+                bool extremePileup = cluster.Count >= ScatterThresholdOnScreen;
+
+                // Separate cluster members by eligibility:
+                //  - Off-screen + far from player  → always eligible (threshold 10).
+                //  - On-screen                     → only eligible on extreme pileup (threshold 20).
+                //  - Within ScatterMinPlayerDist   → never eligible (active combat).
+                var candidates = new List<EnemyHealth>();
+                foreach (var e in cluster)
+                {
+                    if (e == null) continue;
+
+                    // Never scatter enemies in direct melee range.
+                    if (playerTransform != null &&
+                        Vector3.Distance(e.transform.position, playerTransform.position) < ScatterMinPlayerDist)
+                        continue;
+
+                    bool onScreen = false;
+                    if (cam != null)
+                    {
+                        Vector3 vp = cam.WorldToViewportPoint(e.transform.position);
+                        onScreen = vp.z > 0f && vp.x > -0.05f && vp.x < 1.05f &&
+                                   vp.y > -0.05f && vp.y < 1.05f;
+                    }
+
+                    if (onScreen && !extremePileup) continue;  // On-screen: only touch when massive.
+
+                    candidates.Add(e);
+                }
+
+                // Scatter only the excess; seed enemy (enemies[i]) counts as 1 of the 5 kept.
+                int toScatter = Mathf.Max(0, candidates.Count - (ScatterMaxPerCluster - 1));
+                if (toScatter == 0) continue;
+
+                Debug.Log($"[Scatter] Cluster {cluster.Count} (extremo={extremePileup}) — candidatos {candidates.Count} — dispersando {toScatter}");
+
+                for (int k = 0; k < toScatter; k++)
+                {
+                    if (candidates[k] == null) continue;
+                    SpawnPoint target = allSpawnPoints[Random.Range(0, allSpawnPoints.Count)];
+                    EnemyController ctrl = candidates[k].GetComponent<EnemyController>();
+                    if (ctrl != null)
+                    {
+                        ctrl.WarpTo(target.transform.position);
+                        totalScattered++;
+                    }
+                    alreadyScattered.Add(candidates[k]);
+                }
+            }
+
+            if (totalScattered > 0)
+                Debug.Log($"[Scatter] Dispersados: {totalScattered}");
+        }
     }
 
     private void LogDebug(string message)

@@ -35,6 +35,14 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     [Tooltip("Distancia a la que el enemigo se detiene alrededor del jugador. Evita que todos converjan en el mismo punto.")]
     [SerializeField] private float attackRadius = 1.5f;
 
+    private const float StuckCheckInterval = 5f;
+    private const float StuckMoveThreshold = 0.8f;
+    private const float DetourDistance     = 15f;
+
+    private bool    isDetouring       = false;
+    private float   stuckTimer        = 0f;
+    private Vector3 lastCheckPosition;
+
     public float ContactDamage => contactDamage;
 
     public bool IsActive => gameObject.activeInHierarchy && enabled;
@@ -85,6 +93,10 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         isKnockedBack = false;
         knockbackTimer = 0f;
         knockbackVelocity = Vector3.zero;
+
+        isDetouring       = false;
+        stuckTimer        = 0f;
+        lastCheckPosition = transform.position;
 
         if (agent != null)
         {
@@ -137,14 +149,29 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (useNavMesh && agent != null && agent.isOnNavMesh)
         {
-            // Cada enemigo apunta al punto del anillo más cercano a su posición actual.
-            // Esto evita que todos converjan en la misma coordenada exacta del jugador.
-            Vector3 toPlayer = player.position - transform.position;
-            toPlayer.y = 0f;
-            Vector3 destination = toPlayer.magnitude > attackRadius
-                ? player.position - toPlayer.normalized * attackRadius
-                : transform.position; // ya está dentro del anillo, no avanzar más
-            agent.SetDestination(destination);
+            stuckTimer += deltaTime;
+            if (stuckTimer >= StuckCheckInterval)
+            {
+                stuckTimer = 0f;
+                if (Vector3.Distance(transform.position, lastCheckPosition) < StuckMoveThreshold)
+                    TryDetour();
+                lastCheckPosition = transform.position;
+            }
+
+            if (isDetouring)
+            {
+                if (!agent.pathPending && agent.remainingDistance < 1.2f)
+                    isDetouring = false;
+            }
+            else
+            {
+                Vector3 toPlayer = player.position - transform.position;
+                toPlayer.y = 0f;
+                Vector3 destination = toPlayer.magnitude > attackRadius
+                    ? player.position - toPlayer.normalized * attackRadius
+                    : transform.position;
+                agent.SetDestination(destination);
+            }
         }
 
         Vector3 direction = player.position - transform.position;
@@ -187,6 +214,53 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         {
             Vector3 direction = (player.position - transform.position).normalized;
             rb.linearVelocity = new Vector3(direction.x * moveSpeed, rb.linearVelocity.y, direction.z * moveSpeed);
+        }
+    }
+
+    public void WarpTo(Vector3 position)
+    {
+        isKnockedBack = false;
+        knockbackTimer = 0f;
+        knockbackVelocity = Vector3.zero;
+        isDetouring = false;
+
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.Warp(position);
+        }
+        else
+        {
+            transform.position = position;
+        }
+    }
+
+    private void TryDetour()
+    {
+        if (player == null || agent == null || !agent.isOnNavMesh)
+        {
+            Debug.Log($"[Detour:{name}] IGNORADO — player={player != null} agent={agent != null} onNavMesh={agent?.isOnNavMesh}");
+            return;
+        }
+
+        Vector3 awayFromPlayer = transform.position - player.position;
+        awayFromPlayer.y = 0f;
+        if (awayFromPlayer.sqrMagnitude < 0.01f)
+            awayFromPlayer = new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f));
+        awayFromPlayer.Normalize();
+
+        Vector3 perp   = Vector3.Cross(awayFromPlayer, Vector3.up) * Random.Range(-0.8f, 0.8f);
+        Vector3 target = player.position + (awayFromPlayer + perp).normalized * DetourDistance;
+
+        UnityEngine.AI.NavMeshHit hit;
+        if (UnityEngine.AI.NavMesh.SamplePosition(target, out hit, 8f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            isDetouring = true;
+            agent.SetDestination(hit.position);
+            Debug.Log($"[Detour:{name}] Desviando a {hit.position} (dist al jugador={Vector3.Distance(transform.position, player.position):F1}m)");
+        }
+        else
+        {
+            Debug.Log($"[Detour:{name}] SamplePosition FALLÓ — no hay NavMesh cerca de {target}");
         }
     }
 

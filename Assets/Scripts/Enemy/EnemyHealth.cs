@@ -1,9 +1,18 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
 
     public static int ActiveEnemyCount { get; private set; }
+    public static readonly List<EnemyHealth> ActiveEnemies = new List<EnemyHealth>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ClearStatics()
+    {
+        ActiveEnemyCount = 0;
+        ActiveEnemies.Clear();
+    }
 
     [Header("Death VFX")]
     [SerializeField] private GameObject explosionPrefab;
@@ -65,14 +74,14 @@ public class EnemyHealth : MonoBehaviour
 
     private void OnEnable()
     {
-
         ActiveEnemyCount++;
+        ActiveEnemies.Add(this);
     }
 
     private void OnDisable()
     {
-
         ActiveEnemyCount = Mathf.Max(0, ActiveEnemyCount - 1);
+        ActiveEnemies.Remove(this);
     }
 
     public void ResetHealth()
@@ -139,10 +148,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void SpawnExperienceOrbs(GameBalanceConfig.EnemyDropConfig dropConfig)
     {
-        if (SpawnFactory.Instance == null)
-        {
-            return;
-        }
+        if (SpawnFactory.Instance == null) return;
 
         int minOrbs          = dropConfig != null ? dropConfig.minOrbs      : defaultMinOrbs;
         int maxOrbs          = dropConfig != null ? dropConfig.maxOrbs      : defaultMaxOrbs;
@@ -152,21 +158,9 @@ public class EnemyHealth : MonoBehaviour
         int orbCount = Random.Range(minOrbs, maxOrbs + 1);
         Vector3 spawnCenter = dropPoint != null ? dropPoint.position : transform.position;
 
+        DropSpawner spawner = DropSpawner.GetOrCreate();
         for (int i = 0; i < orbCount; i++)
-        {
-            Vector2 randomCircle = Random.insideUnitCircle * orbSpawnRadius;
-            Vector3 candidate = spawnCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
-            UnityEngine.AI.NavMeshHit hit;
-            Vector3 spawnPosition = UnityEngine.AI.NavMesh.SamplePosition(candidate, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas)
-                ? hit.position + Vector3.up * 0.1f
-                : new Vector3(candidate.x, spawnCenter.y + 0.1f, candidate.z);
-
-            ExperienceOrb orb = SpawnFactory.Instance.CreateExperienceOrb(spawnPosition, orbConfig);
-            if (orb != null && orbConfig == null)
-            {
-                orb.SetExperienceValue(10);
-            }
-        }
+            spawner.EnqueueOrb(spawnCenter, orbSpawnRadius, orbConfig, 10);
     }
 
     private void SpawnCollectibles(GameBalanceConfig.EnemyDropConfig dropConfig)
@@ -181,36 +175,22 @@ public class EnemyHealth : MonoBehaviour
         int maxDiamonds         = dropConfig != null ? dropConfig.maxDiamonds       : defaultMaxDiamonds;
 
         Vector3 spawnCenter = dropPoint != null ? dropPoint.position : transform.position;
-        float spawnRadius = 1f;
+        const float spawnRadius = 1f;
+
+        DropSpawner spawner = DropSpawner.GetOrCreate();
 
         if (Random.value <= coinDropChance)
         {
             int coinCount = Random.Range(minCoins, maxCoins + 1);
             for (int i = 0; i < coinCount; i++)
-            {
-                Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
-                Vector3 candidate = spawnCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
-                UnityEngine.AI.NavMeshHit hit;
-                Vector3 spawnPosition = UnityEngine.AI.NavMesh.SamplePosition(candidate, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas)
-                    ? hit.position + Vector3.up * 0.1f
-                    : new Vector3(candidate.x, spawnCenter.y + 0.1f, candidate.z);
-                SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Coin, 1);
-            }
+                spawner.EnqueueCoin(spawnCenter, spawnRadius);
         }
 
         if (Random.value <= diamondDropChance)
         {
             int diamondCount = Random.Range(minDiamonds, maxDiamonds + 1);
             for (int i = 0; i < diamondCount; i++)
-            {
-                Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
-                Vector3 candidate = spawnCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
-                UnityEngine.AI.NavMeshHit hit;
-                Vector3 spawnPosition = UnityEngine.AI.NavMesh.SamplePosition(candidate, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas)
-                    ? hit.position + Vector3.up * 0.1f
-                    : new Vector3(candidate.x, spawnCenter.y + 0.1f, candidate.z);
-                SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Diamond, 1);
-            }
+                spawner.EnqueueDiamond(spawnCenter, spawnRadius);
         }
     }
 

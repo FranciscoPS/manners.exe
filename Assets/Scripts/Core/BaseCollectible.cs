@@ -59,9 +59,6 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         updateOffset = Random.Range(0f, updateInterval);
         nextUpdateTime = Time.time + updateOffset;
 
-        bool registered = UpdateManager.Instance != null;
-        Debug.Log($"[Collectible:{name}] OnEnable — lifeTime={lifeTime} lifetimeTimer={lifetimeTimer} player={player?.name ?? "NULL"} UpdateManager={registered} collected={collected}");
-
         UpdateManager.Instance.Register(this);
     }
 
@@ -126,7 +123,6 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         if (lifetimeTimer <= warningTime && !isBlinking)
         {
             isBlinking = true;
-            Debug.Log($"[Collectible:{name}] Comenzando parpadeo — lifetimeTimer={lifetimeTimer:F1} warningTime={warningTime}");
         }
 
         if (isBlinking)
@@ -134,7 +130,6 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         if (lifetimeTimer <= 0f)
         {
-            Debug.Log($"[Collectible:{name}] Despawneando por lifetime");
             Despawn();
             return;
         }
