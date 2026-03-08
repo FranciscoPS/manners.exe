@@ -226,8 +226,19 @@
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "¡Entendido!",
       "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_damage_3", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false, "highlightTarget": "health"
+    },
+
+    {
+      "id": "first_damage_3",
+      "stepType": "normal",
+      "text": "El escáner del traje te puede ayudar. Revisa el <b><color=#FF4444>minimapa</color></b> para ver la posición de los enemigos que se aproximan a ti, esto te ayudará a planear mejor hacia donde te mueves.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "¡Entendido!",
+      "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
-      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false, "highlightTarget": "health"
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false, "highlightTarget": "minimap"
     },
 
     {
