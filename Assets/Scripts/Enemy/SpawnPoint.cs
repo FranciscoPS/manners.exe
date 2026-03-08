@@ -53,6 +53,9 @@ public class SpawnPoint : MonoBehaviour
     public void SpawnEnemies(int count, EnemyConfiguration config)
     {
         if (config == null || count <= 0) return;
+        if (!IsReady) return;
+
+        lastSpawnTime = Time.time; // inmediato: bloquea re-entrada antes de que termine la coroutine
 
         if (showSpawnWarning && warningIndicator != null)
         {
@@ -80,8 +83,6 @@ public class SpawnPoint : MonoBehaviour
             Vector3 spawnPosition = GetSpawnPosition();
             SpawnSingleEnemy(spawnPosition, config);
         }
-
-        lastSpawnTime = Time.time;
     }
 
     private Vector3 GetSpawnPosition()

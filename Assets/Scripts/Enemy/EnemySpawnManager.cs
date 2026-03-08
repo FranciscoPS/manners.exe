@@ -239,7 +239,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             SpawnPoint currentPoint = allSpawnPoints[pointIndex % allSpawnPoints.Count];
             EnemyConfiguration config = wave.GetRandomEnemyConfig();
 
-            if (config != null)
+            if (config != null && currentPoint.IsReady)
             {
                 int enemiesToSpawn = Mathf.Min(currentPoint.MaxEnemiesPerSpawn, enemiesRemaining);
                 currentPoint.SpawnEnemies(enemiesToSpawn, config);

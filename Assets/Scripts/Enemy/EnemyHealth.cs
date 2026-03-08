@@ -8,6 +8,7 @@ public class EnemyHealth : MonoBehaviour
     [Header("Death VFX")]
     [SerializeField] private GameObject explosionPrefab;
 
+    private Transform dropPoint;
     private float maxHealth = 30f;
     private float currentHealth;
     private DamageTween damageTween;
@@ -48,6 +49,12 @@ public class EnemyHealth : MonoBehaviour
         if (damageTween == null)
         {
             damageTween = GetComponentInChildren<DamageTween>();
+        }
+
+        if (dropPoint == null)
+        {
+            Transform found = transform.Find("DropPoint");
+            dropPoint = found != null ? found : transform;
         }
     }
 
@@ -143,12 +150,16 @@ public class EnemyHealth : MonoBehaviour
         OrbConfiguration orbConfig = dropConfig != null ? dropConfig.orbConfig : defaultOrbConfig;
 
         int orbCount = Random.Range(minOrbs, maxOrbs + 1);
-        Vector3 spawnCenter = transform.position + Vector3.up * 0.5f;
+        Vector3 spawnCenter = dropPoint != null ? dropPoint.position : transform.position;
 
         for (int i = 0; i < orbCount; i++)
         {
             Vector2 randomCircle = Random.insideUnitCircle * orbSpawnRadius;
-            Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
+            Vector3 candidate = spawnCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
+            UnityEngine.AI.NavMeshHit hit;
+            Vector3 spawnPosition = UnityEngine.AI.NavMesh.SamplePosition(candidate, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas)
+                ? hit.position + Vector3.up * 0.1f
+                : new Vector3(candidate.x, spawnCenter.y + 0.1f, candidate.z);
 
             ExperienceOrb orb = SpawnFactory.Instance.CreateExperienceOrb(spawnPosition, orbConfig);
             if (orb != null && orbConfig == null)
@@ -169,7 +180,7 @@ public class EnemyHealth : MonoBehaviour
         int minDiamonds         = dropConfig != null ? dropConfig.minDiamonds       : defaultMinDiamonds;
         int maxDiamonds         = dropConfig != null ? dropConfig.maxDiamonds       : defaultMaxDiamonds;
 
-        Vector3 spawnCenter = transform.position + Vector3.up * 0.5f;
+        Vector3 spawnCenter = dropPoint != null ? dropPoint.position : transform.position;
         float spawnRadius = 1f;
 
         if (Random.value <= coinDropChance)
@@ -178,7 +189,11 @@ public class EnemyHealth : MonoBehaviour
             for (int i = 0; i < coinCount; i++)
             {
                 Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
-                Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
+                Vector3 candidate = spawnCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
+                UnityEngine.AI.NavMeshHit hit;
+                Vector3 spawnPosition = UnityEngine.AI.NavMesh.SamplePosition(candidate, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas)
+                    ? hit.position + Vector3.up * 0.1f
+                    : new Vector3(candidate.x, spawnCenter.y + 0.1f, candidate.z);
                 SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Coin, 1);
             }
         }
@@ -189,7 +204,11 @@ public class EnemyHealth : MonoBehaviour
             for (int i = 0; i < diamondCount; i++)
             {
                 Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
-                Vector3 spawnPosition = spawnCenter + new Vector3(randomCircle.x, Random.Range(0f, 1f), randomCircle.y);
+                Vector3 candidate = spawnCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
+                UnityEngine.AI.NavMeshHit hit;
+                Vector3 spawnPosition = UnityEngine.AI.NavMesh.SamplePosition(candidate, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas)
+                    ? hit.position + Vector3.up * 0.1f
+                    : new Vector3(candidate.x, spawnCenter.y + 0.1f, candidate.z);
                 SpawnFactory.Instance.CreateCollectible(spawnPosition, Collectible.CollectibleType.Diamond, 1);
             }
         }

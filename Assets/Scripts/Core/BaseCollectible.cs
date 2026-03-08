@@ -44,7 +44,6 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         isMovingToPlayer = false;
         currentSpeed = 0f;
         isBlinking = false;
-        lifetimeTimer = lifeTime;
 
         if (player == null)
         {
@@ -53,7 +52,9 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         InitializeRenderer();
         SetupPhysics();
-        UpdateConfiguration();
+        UpdateConfiguration(); // actualiza lifeTime desde GameBalanceConfig
+
+        lifetimeTimer = lifeTime; // se setea DESPUÉS de UpdateConfiguration para usar el valor correcto
 
         updateOffset = Random.Range(0f, updateInterval);
         nextUpdateTime = Time.time + updateOffset;
@@ -111,7 +112,13 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if (player == null || collected) return;
+        if (collected) return;
+
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+            if (player == null) return;
+        }
 
         lifetimeTimer -= deltaTime;
 

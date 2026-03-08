@@ -31,6 +31,10 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     private float knockbackTimer = 0f;
     private Vector3 knockbackVelocity = Vector3.zero;
 
+    [Header("Movement")]
+    [Tooltip("Distancia a la que el enemigo se detiene alrededor del jugador. Evita que todos converjan en el mismo punto.")]
+    [SerializeField] private float attackRadius = 1.5f;
+
     public float ContactDamage => contactDamage;
 
     public bool IsActive => gameObject.activeInHierarchy && enabled;
@@ -58,6 +62,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             agent.acceleration = 8f;
             agent.angularSpeed = 120f;
             agent.stoppingDistance = 0.5f;
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
 
             if (rb != null)
             {
@@ -81,10 +86,11 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         knockbackTimer = 0f;
         knockbackVelocity = Vector3.zero;
 
-        if (agent != null && agent.isOnNavMesh)
+        if (agent != null)
         {
             agent.enabled = true;
             agent.speed = moveSpeed;
+            agent.avoidancePriority = Random.Range(1, 100);
         }
 
         if (rb != null)
@@ -131,7 +137,14 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (useNavMesh && agent != null && agent.isOnNavMesh)
         {
-            agent.SetDestination(player.position);
+            // Cada enemigo apunta al punto del anillo más cercano a su posición actual.
+            // Esto evita que todos converjan en la misma coordenada exacta del jugador.
+            Vector3 toPlayer = player.position - transform.position;
+            toPlayer.y = 0f;
+            Vector3 destination = toPlayer.magnitude > attackRadius
+                ? player.position - toPlayer.normalized * attackRadius
+                : transform.position; // ya está dentro del anillo, no avanzar más
+            agent.SetDestination(destination);
         }
 
         Vector3 direction = player.position - transform.position;
