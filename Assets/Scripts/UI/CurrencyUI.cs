@@ -35,7 +35,7 @@ public class CurrencyUI : MonoBehaviour
     {
         if (coinText != null)
         {
-            coinText.text = $"Coins: {amount}";
+            coinText.text = $"Monedas: {amount}";
         }
     }
 
@@ -43,7 +43,7 @@ public class CurrencyUI : MonoBehaviour
     {
         if (diamondText != null)
         {
-            diamondText.text = $"Gems: {amount}";
+            diamondText.text = $"Gemas: {amount}";
         }
     }
 }

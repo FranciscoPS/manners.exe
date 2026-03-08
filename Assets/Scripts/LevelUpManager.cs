@@ -126,7 +126,7 @@ public class LevelUpManager : MonoBehaviour
         Time.timeScale = 0f;
 
         if (levelUpText != null)
-            levelUpText.text = $"LEVEL {newLevel}!";
+            levelUpText.text = $"Nivel {newLevel}!";
 
         if (cooldownWarningText != null)
         {
@@ -237,7 +237,7 @@ public class LevelUpManager : MonoBehaviour
         {
             int minutes = Mathf.FloorToInt(timeRemaining / 60f);
             int seconds = Mathf.FloorToInt(timeRemaining % 60f);
-            cooldownWarningText.text = $"Next purchase in: {minutes:00}:{seconds:00}";
+            cooldownWarningText.text = $"Próxima compra en: {minutes:00}:{seconds:00}";
             cooldownWarningText.gameObject.SetActive(true);
         }
         else
@@ -285,7 +285,7 @@ public class LevelUpManager : MonoBehaviour
         Time.timeScale = 0f;
 
         if (levelUpText != null)
-            levelUpText.text = "SHOP";
+            levelUpText.text = "Tienda";
 
         if (closeInstructionText != null)
         {

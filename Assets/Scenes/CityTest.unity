@@ -376,7 +376,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Restart
+  m_text: Reiniciar
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -1088,7 +1088,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Return
+  m_text: Volver
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -2527,8 +2527,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
     m_Left: 100
-    m_Right: 100
-    m_Top: 70
+    m_Right: 200
+    m_Top: 170
     m_Bottom: 20
   m_ChildAlignment: 0
   m_Spacing: 0
@@ -3357,7 +3357,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Enemies
+  m_text: Enemigos
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -5822,7 +5822,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Help
+  m_text: Ayuda
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -6110,8 +6110,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 580, y: -335}
-  m_SizeDelta: {x: 960, y: 530}
+  m_AnchoredPosition: {x: 530, y: -360}
+  m_SizeDelta: {x: 860, y: 480}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &249307181
 MonoBehaviour:
@@ -6133,9 +6133,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "- Experience is gained by defeating enemies and destroying buildings.
-    \n\n\n- When you level up, a random stat upgrade is granted. \n\n\n- Each time
-    you level up, more experience is required to reach the next level."
+  m_text: "- La experiencia se obtiene al derrotar enemigos y destruir edificios.\n\n\n\n-
+    Cuando subes de nivel, se otorga una mejora de estad\xEDstica aleatoria.\n\n\n\n-
+    Cada vez que subes de nivel, se requiere m\xE1s experiencia para alcanzar el
+    siguiente nivel."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -6826,7 +6827,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Game paused
+  m_text: Juego pausado
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -9001,8 +9002,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
     m_Left: 100
-    m_Right: 100
-    m_Top: 70
+    m_Right: 200
+    m_Top: 120
     m_Bottom: 20
   m_ChildAlignment: 0
   m_Spacing: 0
@@ -9894,7 +9895,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Experience
+  m_text: Experiencia
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -10704,7 +10705,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GAME OVER
+  m_text: Juego terminado
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -12214,8 +12215,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 580, y: -335}
-  m_SizeDelta: {x: 960, y: 530}
+  m_AnchoredPosition: {x: 530, y: -385}
+  m_SizeDelta: {x: 860, y: 430}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &497081016
 MonoBehaviour:
@@ -12237,13 +12238,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '- Stat upgrades are granted when the player levels up. The upgrade options
-    presented to the player are random.
-
-
-
-    - Weapon upgrades are purchased through
-    the upgrade shop. Their cost increases each time the player buys one.'
+  m_text: "- Las mejoras de estad\xEDsticas se otorgan cuando el jugador sube de
+    nivel. Las opciones de mejora que se le presentan al jugador son aleatorias.\n\n\n\n-
+    Las mejoras de armas se compran en la tienda de mejoras. Su costo aumenta cada
+    vez que el jugador adquiere una."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -15576,7 +15574,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Main Menu
+  m_text: "Volver al men\xFA principal"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -15743,8 +15741,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 580, y: -335}
-  m_SizeDelta: {x: 960, y: 530}
+  m_AnchoredPosition: {x: 530, y: -360}
+  m_SizeDelta: {x: 860, y: 480}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &628971155
 MonoBehaviour:
@@ -15766,17 +15764,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '- Enemies spawn automatically throughout the map.
-
-
-
-    - They move directly
-    toward the player and deal damage upon collision.
-
-
-
-    - As time passes and
-    the player levels up, enemy stats increase progressively.  '
+  m_text: "- Los enemigos aparecen autom\xE1ticamente por todo el mapa.\n\n\n\n-
+    Se mueven directamente hacia el jugador y causan da\xF1o al entrar en contacto.\n\n\n\n-
+    A medida que pasa el tiempo y el jugador sube de nivel, las estad\xEDsticas de
+    los enemigos aumentan progresivamente."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -16479,8 +16470,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
     m_Left: 100
-    m_Right: 100
-    m_Top: 70
+    m_Right: 200
+    m_Top: 120
     m_Bottom: 20
   m_ChildAlignment: 0
   m_Spacing: 0
@@ -18311,7 +18302,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Movement
+  m_text: Movimiento
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -20132,7 +20123,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '-Time survived: 00:00'
+  m_text: '-Tiempo sobrevivido: 00:00'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -30627,7 +30618,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Resume
+  m_text: Reanudar
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -33893,7 +33884,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: help
+  m_text: Ayuda
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -34244,7 +34235,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Main Menu
+  m_text: "Men\xFA principal"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -36419,7 +36410,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Restart
+  m_text: Reiniciar
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -37551,7 +37542,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Press P to close the shop
+  m_text: Presiona P para cerrar la tienda
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -38266,7 +38257,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Xp upgrades
+  m_text: Mejoras por experiencia
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -41826,9 +41817,9 @@ MonoBehaviour:
   masterValueText: {fileID: 1605006144}
   musicValueText: {fileID: 320203031}
   sfxValueText: {fileID: 1689441096}
-  masterTitle: Master control
-  musicTitle: Music control
-  sfxTitle: SFX control
+  masterTitle: Control general
+  musicTitle: Control de musica
+  sfxTitle: Control de SFX
 --- !u!114 &1647442030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44906,7 +44897,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Level 1
+  m_text: Nivel 1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -45811,8 +45802,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 580, y: -303}
-  m_SizeDelta: {x: 960, y: 594}
+  m_AnchoredPosition: {x: 580, y: -302.5}
+  m_SizeDelta: {x: 996, y: 635}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1771399053
 MonoBehaviour:
@@ -45834,32 +45825,16 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '- The robot moves using the WASD keys.
-
-
-    - Shooting is automatic and
-    always targets enemies.
-
-
-    - The pause menu opens by pressing ESC.
-
-
-    -
-    To open the shop, press P while standing near it (look for it on the map).
-
-
-    -
-    To close the shop, press P again. It also closes automatically after making a
-    purchase.
-
-
-    - The experience upgrade menu appears automatically when you
-    level up and closes once you select an upgrade.
-
-
-    - In both the shop and
-    the experience menu, hold down the left mouse button on an upgrade to purchase
-    it. After a few seconds, it will be selected and the menu will close.'
+  m_text: "- El robot se mueve usando las teclas WASD.\n\n\n- El disparo es autom\xE1tico
+    y siempre apunta a los enemigos.\n\n\n- El men\xFA de pausa se abre presionando
+    ESC.\n\n\n- Para abrir la tienda, presiona P mientras est\xE9s cerca de ella
+    (b\xFAscala en el mapa).\n\n\n- Para cerrar la tienda, presiona P nuevamente.
+    Tambi\xE9n se cierra autom\xE1ticamente despu\xE9s de realizar una compra.\n\n\n-
+    El men\xFA de mejoras de experiencia aparece autom\xE1ticamente cuando subes
+    de nivel y se cierra una vez que seleccionas una mejora.\n\n\n- Tanto en la tienda
+    como en el men\xFA de experiencia, mant\xE9n presionado el bot\xF3n izquierdo
+    del mouse sobre una mejora para comprarla. Despu\xE9s de unos segundos se seleccionar\xE1
+    y el men\xFA se cerrar\xE1."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -45886,8 +45861,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 18
+  m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -47432,7 +47407,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.0000037625432}
+  m_AnchoredPosition: {x: 0, y: -0.0000038146973}
   m_SizeDelta: {x: 0, y: 0.0000075250864}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1829723676
@@ -47750,10 +47725,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
-    m_Left: 100
-    m_Right: 100
-    m_Top: 6
-    m_Bottom: 20
+    m_Left: 82
+    m_Right: 82
+    m_Top: -15
+    m_Bottom: 0
   m_ChildAlignment: 0
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
@@ -52047,7 +52022,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Premium upgrades
+  m_text: Mejoras especiales
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -54275,7 +54250,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Upgrades
+  m_text: Mejoras
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
