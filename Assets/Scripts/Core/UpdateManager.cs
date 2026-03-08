@@ -99,9 +99,16 @@ public class UpdateManager : MonoBehaviour
         if (updateable == null) return;
 
         if (isUpdating)
+        {
+            updateablesToRemove.Remove(updateable);
             updateablesToAdd.Add(updateable);
-        else if (updateableSet.Add(updateable))
-            updateables.Add(updateable);
+        }
+        else
+        {
+            updateableSet.Add(updateable);
+            if (!updateables.Contains(updateable))
+                updateables.Add(updateable);
+        }
     }
 
     public void Unregister(IUpdateable updateable)
@@ -109,7 +116,10 @@ public class UpdateManager : MonoBehaviour
         if (updateable == null) return;
 
         if (isUpdating)
+        {
+            updateablesToAdd.Remove(updateable);
             updateablesToRemove.Add(updateable);
+        }
         else
         {
             updateableSet.Remove(updateable);
