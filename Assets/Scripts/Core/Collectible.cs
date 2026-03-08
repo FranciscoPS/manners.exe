@@ -32,9 +32,10 @@ public class Collectible : BaseCollectible
                 GameBalanceConfig.Instance.CoinAttractionRange :
                 GameBalanceConfig.Instance.DiamondAttractionRange;
 
-            lifeTime = type == CollectibleType.Coin ?
+            int level = GameSessionStats.Instance != null ? GameSessionStats.Instance.MaxLevelReached : 1;
+            lifeTime = (type == CollectibleType.Coin ?
                 GameBalanceConfig.Instance.CoinLifetime :
-                GameBalanceConfig.Instance.DiamondLifetime;
+                GameBalanceConfig.Instance.DiamondLifetime) + (level - 1);
         }
         else
         {

@@ -65,7 +65,8 @@ public class ExperienceOrb : BaseCollectible
 
         if (GameBalanceConfig.Instance != null)
         {
-            lifeTime = GameBalanceConfig.Instance.OrbLifetime;
+            int level = GameSessionStats.Instance != null ? GameSessionStats.Instance.MaxLevelReached : 1;
+            lifeTime = GameBalanceConfig.Instance.OrbLifetime + (level - 1);
         }
         else
         {
