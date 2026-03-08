@@ -337,14 +337,21 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
                 Debug.Log($"[Scatter] Cluster {cluster.Count} (extremo={extremePileup}) — candidatos {candidates.Count} — dispersando {toScatter}");
 
+                // Pre-filter spawn points so enemies don't warp directly onto the player.
+                var safeSpawnPoints = playerTransform != null
+                    ? allSpawnPoints.FindAll(sp =>
+                        Vector3.Distance(sp.transform.position, playerTransform.position) >= ScatterMinPlayerDist)
+                    : allSpawnPoints;
+                if (safeSpawnPoints.Count == 0) safeSpawnPoints = allSpawnPoints;
+
                 for (int k = 0; k < toScatter; k++)
                 {
                     if (candidates[k] == null) continue;
-                    SpawnPoint target = allSpawnPoints[Random.Range(0, allSpawnPoints.Count)];
+                    SpawnPoint target = safeSpawnPoints[Random.Range(0, safeSpawnPoints.Count)];
                     EnemyController ctrl = candidates[k].GetComponent<EnemyController>();
                     if (ctrl != null)
                     {
-                        ctrl.WarpTo(target.transform.position);
+                        target.WarnThenWarp(ctrl);
                         totalScattered++;
                     }
                     alreadyScattered.Add(candidates[k]);

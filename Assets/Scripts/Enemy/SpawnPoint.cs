@@ -74,6 +74,26 @@ public class SpawnPoint : MonoBehaviour
         SpawnEnemiesImmediate(count, config);
     }
 
+    /// <summary>
+    /// Shows the red warning circle, waits warningDuration, then warps the enemy here.
+    /// Call this instead of EnemyController.WarpTo() when you want the player to see the indicator.
+    /// </summary>
+    public void WarnThenWarp(EnemyController ctrl)
+    {
+        StartCoroutine(WarnThenWarpRoutine(ctrl));
+    }
+
+    private IEnumerator WarnThenWarpRoutine(EnemyController ctrl)
+    {
+        if (showSpawnWarning && warningIndicator != null)
+        {
+            warningIndicator.ShowWarning(transform.position, warningDuration, spawnRadius);
+            yield return new WaitForSeconds(warningDuration);
+        }
+        if (ctrl != null)
+            ctrl.WarpTo(transform.position);
+    }
+
     private void SpawnEnemiesImmediate(int count, EnemyConfiguration config)
     {
         int enemiesToSpawn = Mathf.Min(count, maxEnemiesPerSpawn);
