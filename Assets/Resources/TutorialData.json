@@ -326,28 +326,6 @@
       "highlightTarget": "minimap",
       "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
-      "nextStepId": "first_shop_closed_3", "yesGoesToStep": "", "noGoesToStep": "",
-      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
-    },
-
-    {
-      "id": "first_shop_closed_3",
-      "stepType": "normal",
-      "text": "¡Ah! Otra cosa importante de la tienda.\nCada que realices una compra no solo cambia de lugar, sino que también tendrás que esperar un tiempo antes de poder volver a comprar.",
-      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Siguiente",
-      "yesButtonLabel": "", "noButtonLabel": "",
-      "nextStepId": "first_shop_closed_3b", "yesGoesToStep": "", "noGoesToStep": "",
-      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
-    },
-
-    {
-      "id": "first_shop_closed_3b",
-      "stepType": "normal",
-      "text": "Casi pareciera que una entidad superior quisiera evitar que compremos ilimitadamente y sin límites, ¿no?",
-      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "¡Entendido!",
-      "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
     },

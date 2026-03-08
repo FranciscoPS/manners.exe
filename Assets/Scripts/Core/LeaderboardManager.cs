@@ -12,7 +12,20 @@ public class LeaderboardEntry
 
 public class LeaderboardManager : MonoBehaviour
 {
-    public static LeaderboardManager Instance { get; private set; }
+    private static LeaderboardManager _instance;
+    public static LeaderboardManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                var go = new GameObject("LeaderboardManager");
+                _instance = go.AddComponent<LeaderboardManager>();
+                DontDestroyOnLoad(go);
+            }
+            return _instance;
+        }
+    }
 
     private const int MaxEntries = 5;
     private const string KeyPrefix = "LB_";
@@ -20,8 +33,8 @@ public class LeaderboardManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
+        if (_instance != null && _instance != this) { Destroy(gameObject); return; }
+        _instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
