@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
   m_Name: Upgrade_AttackSpeed
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
-  upgradeName: Rapid Trigger
-  description: Increases attack speed (more shots per second)
+  upgradeName: Gatillo rapido
+  description: "Aumenta la velocidad de ataque (m\xE1s disparos por segundo)"
   upgradeType: 1
   icon: {fileID: 21300000, guid: 6734fc76202f58e41a1987339af1d76c, type: 3}
   baseValue: 8
@@ -23,3 +23,7 @@ MonoBehaviour:
   valueSuffix: 
   isPremium: 0
   spawnWeight: 50
+  isAvailableInShop: 1
+  shopBaseCost: 100
+  shopCostMultiplier: 1.5
+  shopSpawnWeight: 50

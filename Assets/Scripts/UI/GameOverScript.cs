@@ -76,32 +76,32 @@ public class GameOverUI : MonoBehaviour
 
         if (survivalTimeText != null)
         {
-            survivalTimeText.text = $"Survival Time: {GameSessionStats.Instance.GetFormattedSurvivalTime()}";
+            survivalTimeText.text = $"Tiempo sobrevivido: {GameSessionStats.Instance.GetFormattedSurvivalTime()}";
         }
 
         if (levelReachedText != null)
         {
-            levelReachedText.text = $"Level Reached: {GameSessionStats.Instance.MaxLevelReached}";
+            levelReachedText.text = $"Nivel alcanzado: {GameSessionStats.Instance.MaxLevelReached}";
         }
 
         if (enemiesKilledText != null)
         {
-            enemiesKilledText.text = $"Enemies Killed: {GameSessionStats.Instance.EnemiesKilled}";
+            enemiesKilledText.text = $"Enemigos eliminados: {GameSessionStats.Instance.EnemiesKilled}";
         }
 
         if (buildingsDestroyedText != null)
         {
-            buildingsDestroyedText.text = $"Buildings Destroyed: {GameSessionStats.Instance.BuildingsDestroyed}";
+            buildingsDestroyedText.text = $"Edificios destruidos : {GameSessionStats.Instance.BuildingsDestroyed}";
         }
 
         if (coinsCollectedText != null)
         {
-            coinsCollectedText.text = $"Gold Collected: {GameSessionStats.Instance.CoinsCollected}";
+            coinsCollectedText.text = $"Monedas recolectadas: {GameSessionStats.Instance.CoinsCollected}";
         }
 
         if (diamondsCollectedText != null)
         {
-            diamondsCollectedText.text = $"Gems Collected: {GameSessionStats.Instance.DiamondsCollected}";
+            diamondsCollectedText.text = $"Gemas recolectadas: {GameSessionStats.Instance.DiamondsCollected}";
         }
 
         UpdateUpgradeLevels();

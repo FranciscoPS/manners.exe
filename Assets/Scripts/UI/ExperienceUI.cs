@@ -115,7 +115,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
         if (levelText != null && playerExperience != null)
         {
             int level = playerExperience.GetCurrentLevel();
-            levelText.text = "Level " + level;
+            levelText.text = "Nivel " + level;
         }
 
         if (expText != null && (currentExp != lastCurrentExp || requiredExp != lastRequiredExp))

@@ -254,8 +254,8 @@ public class UpgradeButton : MonoBehaviour
             {
                 costText.gameObject.SetActive(true);
 
-                string coinWord = upgradeCost == 1 ? "gold coin" : "gold coins";
-                costText.text = $"Cost: {upgradeCost} {coinWord}";
+                string coinWord = upgradeCost == 1 ? "moneda" : "monedas";
+                costText.text = $"Costo: {upgradeCost} {coinWord}";
 
                 costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
             }
@@ -307,7 +307,7 @@ public class UpgradeButton : MonoBehaviour
                 else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot)
                 {
                     int nextBullets = 3;
-                    valuesText.text = $"0% → {nextValue:F1}% (+{nextBullets} bullets)";
+                    valuesText.text = $"0% → {nextValue:F1}% (+{nextBullets} balas)";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {

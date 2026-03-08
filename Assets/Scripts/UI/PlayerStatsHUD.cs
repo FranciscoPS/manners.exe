@@ -57,7 +57,7 @@ public class PlayerStatsHUD : MonoBehaviour
         float damage = PlayerStatsManager.Instance.GetModifiedDamage();
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.Damage);
 
-        damageText.text = FormatStatLine("Damage", damage.ToString("F1"), level);
+        damageText.text = FormatStatLine("Daño", damage.ToString("F1"), level);
     }
 
     private void UpdateAttackSpeed()
@@ -68,7 +68,7 @@ public class PlayerStatsHUD : MonoBehaviour
         float fireRate = 1f / cooldown;
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.AttackSpeed);
 
-        attackSpeedText.text = FormatStatLine("Fire Rate", $"{fireRate:F2}/s", level);
+        attackSpeedText.text = FormatStatLine("Vel. de disparo", $"{fireRate:F2}/s", level);
     }
 
     private void UpdateAttackRange()
@@ -78,7 +78,7 @@ public class PlayerStatsHUD : MonoBehaviour
         float range = PlayerStatsManager.Instance.GetModifiedAttackRange();
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.AttackRange);
 
-        attackRangeText.text = FormatStatLine("Range", range.ToString("F1"), level);
+        attackRangeText.text = FormatStatLine("Rango", range.ToString("F1"), level);
     }
 
     private void UpdateMoveSpeed()
@@ -100,7 +100,7 @@ public class PlayerStatsHUD : MonoBehaviour
             }
         }
 
-        moveSpeedText.text = FormatStatLine("Speed", moveSpeed.ToString("F1"), level);
+        moveSpeedText.text = FormatStatLine("Velocidad", moveSpeed.ToString("F1"), level);
     }
 
     private void UpdateMagnetRange()
@@ -120,14 +120,14 @@ public class PlayerStatsHUD : MonoBehaviour
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.MultiShot);
         if (level == 0)
         {
-            multiShotText.text = FormatStatLine("Multi Shot", "0%", 0);
+            multiShotText.text = FormatStatLine("Multi disparo", "0%", 0);
             return;
         }
 
         float probability = PlayerStatsManager.Instance.GetMultiShotProbability();
         int extraBullets = PlayerStatsManager.Instance.GetMultiShotExtraBullets();
 
-        multiShotText.text = FormatStatLine("Multi Shot", $"{probability:F0}% +{extraBullets}", level);
+        multiShotText.text = FormatStatLine("Multi disparo", $"{probability:F0}% +{extraBullets}", level);
     }
 
     private void UpdateExplosiveShot()
@@ -137,13 +137,13 @@ public class PlayerStatsHUD : MonoBehaviour
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.ExplosiveShot);
         if (level == 0)
         {
-            explosiveShotText.text = FormatStatLine("Explosive", "0%", 0);
+            explosiveShotText.text = FormatStatLine("Explosivas", "0%", 0);
             return;
         }
 
         float probability = PlayerStatsManager.Instance.GetExplosiveShotProbability();
 
-        explosiveShotText.text = FormatStatLine("Explosive", $"{probability:F0}%", level);
+        explosiveShotText.text = FormatStatLine("Explosivas", $"{probability:F0}%", level);
     }
 
     private void UpdateKnockback()
@@ -153,14 +153,14 @@ public class PlayerStatsHUD : MonoBehaviour
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.Knockback);
         if (level == 0)
         {
-            knockbackText.text = FormatStatLine("Chain Impact", "0%", 0);
+            knockbackText.text = FormatStatLine("Cadena de impacto", "0%", 0);
             return;
         }
 
         float probability = PlayerStatsManager.Instance.GetKnockbackProbability();
         float force = PlayerStatsManager.Instance.GetKnockbackForce();
 
-        knockbackText.text = FormatStatLine("Chain Impact", $"{probability:F0}% [{force:F1}F]", level);
+        knockbackText.text = FormatStatLine("Cadena de impacto", $"{probability:F0}% [{force:F1}F]", level);
     }
 
     private string FormatStatLine(string label, string value, int level)
