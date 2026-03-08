@@ -115,22 +115,16 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         if (collected) return;
 
         if (player == null)
-        {
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
-            if (player == null) return;
-        }
 
+        // El lifetime y parpadeo corren siempre, con o sin jugador
         lifetimeTimer -= deltaTime;
 
         if (lifetimeTimer <= warningTime && !isBlinking)
-        {
             isBlinking = true;
-        }
 
         if (isBlinking)
-        {
             HandleBlinking(deltaTime);
-        }
 
         if (lifetimeTimer <= 0f)
         {
@@ -138,10 +132,11 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
             return;
         }
 
+        if (player == null) return; // movimiento y atracción requieren jugador
+
         if (isMovingToPlayer)
         {
             currentSpeed = Mathf.Min(currentSpeed + acceleration * deltaTime, moveSpeed);
-
             Vector3 direction = (player.position - transform.position).normalized;
             transform.position += direction * currentSpeed * deltaTime;
         }
