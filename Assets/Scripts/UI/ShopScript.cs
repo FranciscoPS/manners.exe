@@ -132,7 +132,6 @@ public class ShopScript : MonoBehaviour
     {
         shopOpen = false;
         lastCloseTime = Time.unscaledTime;
-        playerInRange = false;
 
         if (levelUpManager != null)
         {

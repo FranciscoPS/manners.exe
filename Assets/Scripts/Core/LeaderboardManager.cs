@@ -98,4 +98,20 @@ public class LeaderboardManager : MonoBehaviour
         int s = Mathf.FloorToInt(seconds % 60f);
         return $"{m:00}:{s:00}";
     }
+
+    [ContextMenu("Clear Leaderboard")]
+    public void ClearLeaderboard()
+    {
+        int count = PlayerPrefs.GetInt(CountKey, 0);
+        for (int i = 0; i < count; i++)
+        {
+            PlayerPrefs.DeleteKey(KeyPrefix + i + "_T");
+            PlayerPrefs.DeleteKey(KeyPrefix + i + "_N");
+            PlayerPrefs.DeleteKey(KeyPrefix + i + "_K");
+            PlayerPrefs.DeleteKey(KeyPrefix + i + "_M");
+            PlayerPrefs.DeleteKey(KeyPrefix + i + "_G");
+        }
+        PlayerPrefs.DeleteKey(CountKey);
+        PlayerPrefs.Save();
+    }
 }

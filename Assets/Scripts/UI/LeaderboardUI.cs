@@ -7,10 +7,19 @@ public class LeaderboardUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI leaderboardText;
 
-    private void OnEnable()
+    private void Start()
     {
+        _started = true;
         Refresh();
     }
+
+    private void OnEnable()
+    {
+        // Solo refresca si ya pasó Start (panel activado en runtime)
+        if (_started) Refresh();
+    }
+
+    private bool _started;
 
     public void Refresh()
     {
