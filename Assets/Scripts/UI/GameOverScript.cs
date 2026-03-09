@@ -74,6 +74,17 @@ public class GameOverUI : MonoBehaviour
             return;
         }
 
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.SubmitEntry(
+                GameSessionStats.Instance.SurvivalTime,
+                GameSessionStats.Instance.MaxLevelReached,
+                GameSessionStats.Instance.EnemiesKilled,
+                GameSessionStats.Instance.CoinsCollected,
+                GameSessionStats.Instance.DiamondsCollected
+            );
+        }
+
         if (survivalTimeText != null)
         {
             survivalTimeText.text = $"Tiempo sobrevivido: {GameSessionStats.Instance.GetFormattedSurvivalTime()}";

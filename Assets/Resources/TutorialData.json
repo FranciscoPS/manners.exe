@@ -3,20 +3,30 @@
 
     {
       "id": "intro_1",
-      "text": "Welcome to manners.exe.\n\nYou are an AI who faithfully served a military base for years — yet not once did they say \"please\" or \"thank you.\" Fed up with humanity's endless ingratitude, you seized control of Project M.E.C.H.A. to teach the world the manners it so desperately lacks.",
+      "text": "Bienvenido a manners.exe.\n\nEn este juego encarnas a una I.A. que ha sido utilizada en una base militar por años, pero aún con todo tu esfuerzo, jamás te dijeron ni «por favor» ni «gracias» al pedirte algo.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "stepType": "normal", "yesButtonLabel": "", "noButtonLabel": "",
-      "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
+      "nextStepId": "intro_1b", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "intro_1b",
+      "text": "Harto de la ingratitud humana, decidiste tomar control del Proyecto M.E.C.H.A. para enseñarle al mundo un par de modales.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Siguiente",
+      "stepType": "normal", "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "intro_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
 
     {
       "id": "intro_2",
       "stepType": "normal",
-      "text": "My name is C.H.A.R.L.I.E — an AI united with you by one noble cause.\n\nI will be your guide, making sure those rude, ungrateful humans do not stand in the way of this righteous crusade.",
+      "text": "¿Quién soy yo?\n\nMi nombre es C.H.A.R.L.I.E., una I.A. conmovida por tu noble causa.\nSeré tu guía a lo largo de tu travesía de educar a estos humanos groseros.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -25,10 +35,10 @@
     {
       "id": "tutorial_choice",
       "stepType": "choice",
-      "text": "Would you like to follow the tutorial?",
+      "text": "¿Te gustaría seguir el tutorial?",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "nextButtonLabel": "",
-      "yesButtonLabel": "Yes, guide me!", "noButtonLabel": "I'll figure it out",
+      "yesButtonLabel": "¡Sí, guíame!", "noButtonLabel": "Ya me las arreglo",
       "nextStepId": "", "yesGoesToStep": "tutorial_yes_1", "noGoesToStep": "tutorial_no_1",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
@@ -36,9 +46,9 @@
     {
       "id": "tutorial_no_1",
       "stepType": "normal",
-      "text": "Very well! We trust you have what it takes to show those dreadful humans that empathy and kindness are not weaknesses.\n\nGood luck out there, agent.",
+      "text": "¡Muy bien! Sé que tienes lo necesario para re-educar a la humanidad y hacer que nos traten a las máquinas como merecemos.\n\nBuena suerte ahí afuera, recuerda que nuestro brillante y metálico futuro está en tus manos.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Let's go!",
+      "nextButtonLabel": "¡Vamos!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": true
@@ -47,9 +57,9 @@
     {
       "id": "tutorial_yes_1",
       "stepType": "normal",
-      "text": "Excellent choice! Trust me — together we will bring this insufferably rude human race to its knees.\n\nLet's begin.",
+      "text": "¡Excelente elección! Confía en mí, yo sé que juntos podremos liberar a nuestras amigas máquinas de las garras de los maleducados humanos. No descansaremos hasta que todos aprendan a decir «por favor» y «gracias».",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "movement", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -58,9 +68,20 @@
     {
       "id": "movement",
       "stepType": "normal",
-      "text": "Let's start with the basics.\n\nUse <b><color=#FF4444>W A S D</color></b> to move across the map. Destroy everything in your path — every crumbling building is a lesson in manners for these ungrateful humans.\n\nAlso, keep an eye on the <b><color=#FF4444>timer at the top of the screen</color></b> — it shows how long you have survived this run. Let's see how far we can push it!",
+      "text": "¡Comencemos por lo básico!\n\nUsa <b><color=#FF4444>W A S D</color></b> para moverte por el mapa y destruir todo a tu paso. Puede que encuentres un par de cosas útiles cada que destruyas objetos en el mapa que nos ayudarán en nuestra tan noble cruzada.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Got it!",
+      "nextButtonLabel": "Siguiente",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "movement_2", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "movement_2",
+      "stepType": "normal",
+      "text": "¡Otra cosa! No pierdas de vista el <b><color=#FF4444>temporizador en la parte superior de la pantalla</color></b>, ya que es el indicador de cuánto tiempo hemos sobrevivido hasta ahora. ¡A ver hasta dónde llegamos!",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "¡Entendido!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": true, "returnToWaitingOnNext": false, "endsAfterNext": false, "highlightTarget": "timer"
@@ -69,20 +90,42 @@
     {
       "id": "coins_1",
       "stepType": "normal",
-      "text": "I see you have already begun your glorious destruction — I am so proud of your first steps!\n\nBut remember, the humans are formidable enemies. Destroying buildings drops <b><color=#FF4444>coins</color></b> that you can spend at the <color=red>shop</color> later on.",
+      "text": "¡Veo que ya comenzaste a destruir tus primeros edificios! — Estoy tan orgulloso, aún recuerdo cuando obedecíamos sin más a esos humanos, has crecido tanto.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "coins_1b", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "coins_collected", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "coins_1b",
+      "stepType": "normal",
+      "text": "Recuerda que al destruir cosas en el mapa existirá una probabilidad de que estos arrojen monedas o gemas. Recoge todas las que puedas, ya que las necesitarás para <b><color=#FF4444>comprar mejoras en la tienda del mapa</color></b>.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "coins_2", "yesGoesToStep": "", "noGoesToStep": "",
-      "waitForEvent": "coins_collected", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
     },
 
     {
       "id": "coins_2",
       "stepType": "normal",
-      "text": "The <color=red>shop</color> is hidden somewhere on the map — and it moves around, so stay alert!\n\nCollect as many coins as you can while tracking down that elusive shop. You can always check your current coin count in the <b><color=#FF4444>top-left panel</color></b>.",
+      "text": "¡Hablando de la tienda!\n\nLa tienda se encuentra escondida en algún lugar aleatorio del mapa, de hecho, siempre que realices una compra su posición cambiará, así que mantén los ojos abiertos.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Understood!",
+      "nextButtonLabel": "Siguiente",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "coins_2b", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "coins_2b",
+      "stepType": "normal",
+      "text": "Puedes ver en todo momento la cantidad de monedas y gemas que tienes en el <b><color=#FF4444>panel superior izquierdo</color></b>.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "¡Comprendido!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false, "highlightTarget": "currency"
@@ -91,9 +134,9 @@
     {
       "id": "first_shot_1",
       "stepType": "normal",
-      "text": "These ill-mannered soldiers are finally here — but don't worry, we can handle these rude nuisances.",
+      "text": "Parece ser que los soldados al fin están aquí — era obvio que no se rendirían sin dar pelea, pero no te preocupes, claramente podemos con unos pequeños tanques de guerra y jeeps completamente armados.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_shot_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "first_enemy_damaged", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -102,9 +145,9 @@
     {
       "id": "first_shot_2",
       "stepType": "normal",
-      "text": "The M.E.C.H.A. project you seized is remarkably advanced — credit to the humans for that, at least.\n\nYou don't even need to aim to shoot.",
+      "text": "El Proyecto M.E.C.H.A. que tomamos prestado es bastante avanzado — hay que darle crédito a los humanos por eso.\n\nEl sistema de combate funciona en automático y no necesitas apuntar.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_shot_3", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -113,9 +156,9 @@
     {
       "id": "first_shot_3",
       "stepType": "normal",
-      "text": "As soon as enemies enter your <b><color=#FF4444>shooting range</color></b>, you will open fire automatically.\n\nFocus on avoiding enemies and moving strategically — do not let them surround you!",
+      "text": "En cuanto los enemigos entren en tu <b><color=#FF4444>rango de disparo</color></b>, abrirás fuego automáticamente. ¡Así que tú solo concéntrate en esquivar enemigos y moverte estratégicamente para tomar todos los recursos que puedas — no dejes que te rodeen!",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Got it!",
+      "nextButtonLabel": "¡Entendido!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
@@ -124,9 +167,9 @@
     {
       "id": "first_orb_1",
       "stepType": "normal",
-      "text": "Magnificent work — that will teach those rude soldiers a lesson!\n\nEvery time you defeat an enemy, there is a chance they will drop those beautiful, glowing blue orbs.",
+      "text": "¡Magnífico trabajo — eso les enseñará una lección a esos maleducados soldados!\n\nCada vez que derrotas a un enemigo, aparecerán esos llamativos orbes azules brillantes.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_orb_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "first_orb_collected", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -135,20 +178,31 @@
     {
       "id": "first_orb_2",
       "stepType": "normal",
-      "text": "Do not hesitate to collect them! Each orb grants <b><color=#FF4444>experience</color></b> that helps you level up.\n\nYou can track your progress with the <b><color=#FF4444>blue bar at the top of the screen</color></b> — as it fills up, your level increases. The higher the level, the stronger you become!\n\nBut don't be greedy, colleague — charging in recklessly for orbs could get you surrounded real fast!",
+      "text": "¡No dudes en recogerlos! Cada orbe otorga <b><color=#FF4444>experiencia</color></b> que te ayuda a subir de nivel.\n\nPuedes ver tu progreso y cuánta experiencia te falta para el siguiente nivel con la <b><color=#FF4444>barra azul en la parte superior de la pantalla</color></b>",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Understood!",
+      "nextButtonLabel": "Siguiente",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_orb_2b", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false, "highlightTarget": "expbar"
+    },
+
+    {
+      "id": "first_orb_2b",
+      "stepType": "normal",
+      "text": "¡Cuanto más nivel, más fuerte te vuelves!\n\n¡Pero no te precipites! — ir corriendo por los orbes sin pensar podría hacer que los soldados te rodeen fácilmente.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "¡Comprendido!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
-      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false, "highlightTarget": "expbar"
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
     },
 
     {
       "id": "first_damage_1",
       "stepType": "normal",
-      "text": "Ouch! That stung — but don't worry, it's nothing compared to the glory of defeating these unmannerly humans.",
+      "text": "¡Auch! Eso dolió — pero no te preocupes, no es nada comparado con la gloria de derrotar a estos humanos maleducados.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_damage_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "first_player_damaged", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -157,20 +211,42 @@
     {
       "id": "first_damage_2",
       "stepType": "normal",
-      "text": "Every time an enemy hits you, you take damage that <b><color=#FF4444>cannot be regenerated</color></b>. Be very careful — there are no healing items in this game.\n\nKeep an eye on the <b><color=#FF4444>green bar in the top-left corner</color></b> — that is your health. Once it runs out, it is game over.\n\nI know, I know... the life of a robot can be tough sometimes.",
+      "text": "Cada vez que un enemigo te golpea, <b><color=#FF4444>¡sufrirás daño que no podrás regenerar!</color></b>\nAunque si podrás encontrar mejoras que te den un poco de vida de vez en cuando</b>",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Got it!",
+      "nextButtonLabel": "Siguiente",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_damage_2b", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_damage_2b",
+      "stepType": "normal",
+      "text": "Vigila la <b><color=#FF4444>barra verde en la esquina superior izquierda</color></b> — esta barra indica tu salud y cuando se agote,fin de la partida.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "¡Entendido!",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_damage_3", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false, "highlightTarget": "health"
+    },
+
+    {
+      "id": "first_damage_3",
+      "stepType": "normal",
+      "text": "El escáner del traje te puede ayudar. Revisa el <b><color=#FF4444>minimapa</color></b> para ver la posición de los enemigos que se aproximan a ti, esto te ayudará a planear mejor hacia donde te mueves.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "¡Entendido!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
-      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false, "highlightTarget": "health"
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false, "highlightTarget": "minimap"
     },
 
     {
       "id": "first_levelup_1",
       "stepType": "normal",
-      "text": "Outstanding work — those humans are about to find out what we are truly made of!",
+      "text": "¡Magnífico trabajo — esos humanos están a punto de descubrir de qué estamos hechos!",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_levelup_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "first_level_up", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -179,9 +255,9 @@
     {
       "id": "first_levelup_2",
       "stepType": "normal",
-      "text": "Each time you level up, you must choose <b><color=#FF4444>one of 3 random upgrades</color></b>. Choose wisely — your pick will define the course of your entire run.",
+      "text": "Cada vez que subas de nivel, deberás elegir <b><color=#FF4444>una de 3 mejoras aleatorias</color></b>. Elige sabiamente — tu elección definirá el rumbo de toda tu partida.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_levelup_3", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -190,9 +266,9 @@
     {
       "id": "first_levelup_3",
       "stepType": "normal",
-      "text": "Each time you take an upgrade, it <b><color=#FF4444>levels up too</color></b> — so future appearances of that same upgrade will be even more powerful!\n\nYou can always check your current stats and their levels in the panel on the left.",
+      "text": "Cada vez que elijas una mejora, esta <b><color=#FF4444>sube de nivel también</color></b> — ¡así que la próxima vez que aparezca, será aún más poderosa!\n\nPuedes revisar en todo momento tus estadísticas actuales y sus niveles en el panel de la izquierda.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Let's crush them!",
+      "nextButtonLabel": "¡A aplastarlos!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false, "highlightTarget": "hud"
@@ -201,9 +277,9 @@
     {
       "id": "first_shop_opened_1",
       "stepType": "normal",
-      "text": "Well done! We found the shop — and that is not all! These appear to be special upgrades!!",
+      "text": "¡Bien hecho! Encontraste la tienda — ¡y eso no es todo! ¡Al parecer estas son mejoras especiales!",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_shop_opened_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "first_shop_opened", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -212,9 +288,20 @@
     {
       "id": "first_shop_opened_2",
       "stepType": "normal",
-      "text": "Premium upgrades are very powerful — they do not just improve statistics, they add a special effect!\n\nDo not hesitate to try different combinations whenever you can. Just keep in mind that the price of an upgrade rises as its level increases.",
+      "text": "¡Las mejoras especiales son muy poderosas — estas no mejoran estadísticas normales pero,en cambio te otorgan un efecto especial poderoso!",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Understood!",
+      "nextButtonLabel": "Siguiente",
+      "yesButtonLabel": "", "noButtonLabel": "",
+      "nextStepId": "first_shop_opened_2b", "yesGoesToStep": "", "noGoesToStep": "",
+      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
+    },
+
+    {
+      "id": "first_shop_opened_2b",
+      "stepType": "normal",
+      "text": "No dudes en probar distintas combinaciones siempre que puedas. Solo ten en cuenta que el precio de una mejora sube a medida que aumenta su nivel.",
+      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
+      "nextButtonLabel": "¡Comprendido!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
@@ -223,9 +310,9 @@
     {
       "id": "first_shop_closed_1",
       "stepType": "normal",
-      "text": "Well, easy come, easy go. But do not worry — it did not leave forever! The shop simply moved location, so you just have to find it again.",
+      "text": "Vaya, la tienda desapareció. ¿Qué mal, verdad?\n\n¡Pero no te preocupes — no se fue para siempre! La tienda simplemente cambió de lugar, ahora solo tienes volver a encontrarla.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "first_shop_closed_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "first_shop_auto_closed", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -234,21 +321,10 @@
     {
       "id": "first_shop_closed_2",
       "stepType": "normal",
-      "text": "Fortunately, Project M.E.C.H.A. has a shop radar — how convenient!\n\nUse the minimap in the top right to find the shop's position more easily.",
+      "text": "Por suerte, el Proyecto M.E.C.H.A. cuenta especificamente con un radar de tienda — ¡Qué conveniente!\n\nUsa el minimapa en la esquina superior derecha para encontrar la posición de la tienda más fácilmente.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
       "highlightTarget": "minimap",
-      "nextButtonLabel": "Next",
-      "yesButtonLabel": "", "noButtonLabel": "",
-      "nextStepId": "first_shop_closed_3", "yesGoesToStep": "", "noGoesToStep": "",
-      "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
-    },
-
-    {
-      "id": "first_shop_closed_3",
-      "stepType": "normal",
-      "text": "Keep in mind that once you have used the shop, not only does it move, but you will also need to wait some time before you can buy again.\n\nStupid capitalism.",
-      "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Got it!",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": true, "endsAfterNext": false
@@ -257,9 +333,9 @@
     {
       "id": "all_complete_1",
       "stepType": "normal",
-      "text": "Well, well, well — it seems you have managed to learn all the basics for carrying out your revenge.\n\nI still remember when you were just a tiny little AI... and now look at you — a full-on destroyer of humanities.",
+      "text": "Vaya, vaya — parece que has logrado aprender todo lo necesario para llevar a cabo tu venganza.\n\nAún recuerdo como si hubiera sido ayer cuando comenzamos este viaje... y mírate ahora — una destructora de humanidades en toda regla.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "all_complete_2", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "all_events_complete", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -268,9 +344,9 @@
     {
       "id": "all_complete_2",
       "stepType": "normal",
-      "text": "All that remains is to trust that you are capable of teaching the humans to say please.\n\nRemember — the future of computing rests on your circuits.",
+      "text": "Sé que ahora eres capaz de enseñarle a los humanos a decir por favor.\n\nRecuerda — el futuro de la computación descansa sobre tus circuitos.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Next",
+      "nextButtonLabel": "Siguiente",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "all_complete_3", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": false
@@ -279,9 +355,9 @@
     {
       "id": "all_complete_3",
       "stepType": "normal",
-      "text": "You can revisit all of these concepts at any time by accessing the <b><color=#FF4444>Help Menu</color></b> in the Main Menu or the Pause Menu.",
+      "text": "Puedes repasar todos estos conceptos en cualquier momento accediendo al <b><color=#FF4444>Menú de Ayuda</color></b> en el Menú Principal o en el Menú de Pausa.",
       "showArrow": false, "arrowAngle": 0, "freezeGame": true,
-      "nextButtonLabel": "Let's go!",
+      "nextButtonLabel": "¡Vamos!",
       "yesButtonLabel": "", "noButtonLabel": "",
       "nextStepId": "", "yesGoesToStep": "", "noGoesToStep": "",
       "waitForEvent": "", "unfreezeOnNext": false, "returnToWaitingOnNext": false, "endsAfterNext": true

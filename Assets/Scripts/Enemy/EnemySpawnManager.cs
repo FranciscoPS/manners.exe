@@ -275,6 +275,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             if (playerTransform == null)
                 playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
 
+            if (isSpawningWave) continue;
+
             if (allSpawnPoints.Count == 0) continue;
 
             Camera cam = Camera.main;

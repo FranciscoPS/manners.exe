@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,11 +15,13 @@ public class MinimapSystem : MonoBehaviour
     [SerializeField] private RawImage mapDisplay;
     [SerializeField] private RectTransform playerIcon;
     [SerializeField] private RectTransform shopIcon;
+    [SerializeField] private RectTransform enemyIconTemplate;
 
     [Header("Icon Settings")]
     [SerializeField] private float iconEdgePadding = 0.08f;
 
     private Transform playerTransform;
+    private readonly List<RectTransform> _enemyIconPool = new List<RectTransform>();
 
     private void Awake()
     {
@@ -52,6 +55,10 @@ public class MinimapSystem : MonoBehaviour
         if (shopIcon != null)
             shopIcon.gameObject.SetActive(false);
 
+        // Hide the template — only clones will be used
+        if (enemyIconTemplate != null)
+            enemyIconTemplate.gameObject.SetActive(false);
+
         GameEvents.OnShopLocationChanged += OnShopLocationChanged;
         RefreshShopIcon();
     }
@@ -69,6 +76,33 @@ public class MinimapSystem : MonoBehaviour
         minimapCamera.transform.position = new Vector3(playerPos.x, playerPos.y + cameraHeight, playerPos.z);
 
         RefreshShopIcon();
+        UpdateEnemyIcons();
+    }
+
+    private void UpdateEnemyIcons()
+    {
+        if (enemyIconTemplate == null) return;
+
+        var enemies = EnemyHealth.ActiveEnemies;
+        int count = enemies.Count;
+
+        // Grow pool if needed, cloned under the same parent as the template (MinimapRoot)
+        while (_enemyIconPool.Count < count)
+        {
+            RectTransform dot = Instantiate(enemyIconTemplate, enemyIconTemplate.parent);
+            dot.gameObject.SetActive(false);
+            _enemyIconPool.Add(dot);
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            if (enemies[i] == null) continue;
+            _enemyIconPool[i].gameObject.SetActive(true);
+            PlaceIcon(_enemyIconPool[i], enemies[i].transform.position);
+        }
+
+        for (int i = count; i < _enemyIconPool.Count; i++)
+            _enemyIconPool[i].gameObject.SetActive(false);
     }
 
     private void PlaceIcon(RectTransform icon, Vector3 worldPos)

@@ -134,7 +134,17 @@ public class PlayerStatsManager : MonoBehaviour
                 break;
             case UpgradeType.Knockback:
                 break;
+            case UpgradeType.HealOnLevelUp:
+                ApplyHealUpgrade(value);
+                break;
         }
+    }
+
+    private void ApplyHealUpgrade(float amount)
+    {
+        PlayerHealth health = FindFirstObjectByType<PlayerHealth>();
+        if (health != null)
+            health.Heal(amount);
     }
 
     private void ApplyDamageUpgrade(float percentageIncrease)
@@ -355,6 +365,10 @@ public class PlayerStatsManager : MonoBehaviour
 
             case UpgradeType.Knockback:
                 return 0f;
+
+            case UpgradeType.HealOnLevelUp:
+                PlayerHealth ph = FindFirstObjectByType<PlayerHealth>();
+                return ph != null ? ph.CurrentHealth : 0f;
 
             default:
                 return 0f;
