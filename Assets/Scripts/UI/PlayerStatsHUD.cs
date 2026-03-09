@@ -110,7 +110,7 @@ public class PlayerStatsHUD : MonoBehaviour
         float magnetRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.MagnetRange);
 
-        magnetRangeText.text = FormatStatLine("Magnet Range", magnetRange.ToString("F1"), level);
+        magnetRangeText.text = FormatStatLine("Rango magnético", magnetRange.ToString("F1"), level);
     }
 
     private void UpdateMultiShot()

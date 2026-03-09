@@ -28,6 +28,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Tienda Subscreens")]
     [SerializeField] private GameObject atuendosPanel;
+    [SerializeField] private GameObject gemasPanel;
 
     [Header("Personalizacion Subscreens")]
     [SerializeField] private GameObject skinsPanel;
@@ -89,6 +90,7 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.UpgradesHabilidadesPremium,  habilidadesPremiumPanel },
 
             { MenuScreen.TiendaAtuendos, atuendosPanel },
+            { MenuScreen.TiendaMonedas, gemasPanel },
 
             { MenuScreen.PersonalizacionSkins, skinsPanel },
 
