@@ -1030,7 +1030,7 @@ GameObject:
   - component: {fileID: 24329683}
   - component: {fileID: 24329682}
   m_Layer: 5
-  m_Name: Image
+  m_Name: QR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1052,8 +1052,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 30, y: 0}
-  m_SizeDelta: {x: 160, y: 150}
+  m_AnchoredPosition: {x: 46.4, y: 0}
+  m_SizeDelta: {x: 150, y: 172}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &24329682
 MonoBehaviour:
@@ -1075,7 +1075,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 137000516, guid: b027b4f736333ee498c88e12c08c42e7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0cd60f6f1a22b2a488189bf1051eb866, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
