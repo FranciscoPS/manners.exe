@@ -3099,13 +3099,20 @@ MonoBehaviour:
   target: {fileID: 706228114}
   targetTag: Player
   cellSize: 3
-  neighborRadius: 2.2
-  separationRadius: 1.15
-  maxNeighbors: 6
-  seekWeight: 1.35
-  separationWeight: 1.75
+  neighborRadius: 2.6
+  separationRadius: 1.25
+  maxNeighbors: 14
+  seekWeight: 1.25
+  separationWeight: 2.15
   alignmentWeight: 0
   cohesionWeight: 0
+  crowdRadius: 4.2
+  crowdSoftLimit: 5
+  crowdPressureWeight: 0.95
+  engagementRadius: 1.85
+  engagementSpreadDistance: 6
+  engagementSpreadWeight: 0.55
+  closeSeekScale: 0.4
   autoRegisterSceneObstacles: 1
   obstacleCellSize: 8
   obstacleLookAhead: 1.8

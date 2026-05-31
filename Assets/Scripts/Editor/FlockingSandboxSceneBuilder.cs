@@ -184,13 +184,20 @@ public static class FlockingSandboxSceneBuilder
 
         SerializedObject flockSerialized = new SerializedObject(flockManager);
         flockSerialized.FindProperty("target").objectReferenceValue = player;
-        flockSerialized.FindProperty("neighborRadius").floatValue = 2.2f;
-        flockSerialized.FindProperty("separationRadius").floatValue = 1.15f;
-        flockSerialized.FindProperty("maxNeighbors").intValue = 6;
-        flockSerialized.FindProperty("seekWeight").floatValue = 1.35f;
-        flockSerialized.FindProperty("separationWeight").floatValue = 1.75f;
+        flockSerialized.FindProperty("neighborRadius").floatValue = 2.6f;
+        flockSerialized.FindProperty("separationRadius").floatValue = 1.25f;
+        flockSerialized.FindProperty("maxNeighbors").intValue = 14;
+        flockSerialized.FindProperty("seekWeight").floatValue = 1.25f;
+        flockSerialized.FindProperty("separationWeight").floatValue = 2.15f;
         flockSerialized.FindProperty("alignmentWeight").floatValue = 0f;
         flockSerialized.FindProperty("cohesionWeight").floatValue = 0f;
+        flockSerialized.FindProperty("crowdRadius").floatValue = 4.2f;
+        flockSerialized.FindProperty("crowdSoftLimit").intValue = 5;
+        flockSerialized.FindProperty("crowdPressureWeight").floatValue = 0.95f;
+        flockSerialized.FindProperty("engagementRadius").floatValue = 1.85f;
+        flockSerialized.FindProperty("engagementSpreadDistance").floatValue = 6f;
+        flockSerialized.FindProperty("engagementSpreadWeight").floatValue = 0.55f;
+        flockSerialized.FindProperty("closeSeekScale").floatValue = 0.4f;
         flockSerialized.FindProperty("obstacleLookAhead").floatValue = 1.8f;
         flockSerialized.FindProperty("obstaclePadding").floatValue = 0.45f;
         flockSerialized.FindProperty("obstacleWeight").floatValue = 1.85f;

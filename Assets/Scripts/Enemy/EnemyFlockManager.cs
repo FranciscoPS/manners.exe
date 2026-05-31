@@ -35,6 +35,18 @@ public sealed class EnemyFlockManager : MonoBehaviour
     [SerializeField] private float alignmentWeight = 0f;
     [SerializeField] private float cohesionWeight = 0f;
 
+    [Header("Crowd Shape")]
+    [Tooltip("Radio amplio para detectar cuando una zona ya esta demasiado llena.")]
+    [SerializeField] private float crowdRadius = 4.2f;
+    [Tooltip("Cantidad de vecinos cercanos permitidos antes de meter presion extra para abrir el grupo.")]
+    [SerializeField] private int crowdSoftLimit = 5;
+    [SerializeField] private float crowdPressureWeight = 0.9f;
+    [Tooltip("Distancia suave alrededor del jugador donde los enemigos empiezan a dejar de empujar todos hacia el centro.")]
+    [SerializeField] private float engagementRadius = 1.85f;
+    [SerializeField] private float engagementSpreadDistance = 6f;
+    [SerializeField] private float engagementSpreadWeight = 0.6f;
+    [SerializeField, Range(0f, 1f)] private float closeSeekScale = 0.4f;
+
     [Header("Obstacle Avoidance")]
     [SerializeField] private bool autoRegisterSceneObstacles = true;
     [SerializeField] private float obstacleCellSize = 8f;
@@ -198,16 +210,25 @@ public sealed class EnemyFlockManager : MonoBehaviour
         RebuildObstacleGridIfNeeded();
 
         Vector3 position = agent.transform.position;
-        Vector3 seek = targetPosition - position;
-        seek.y = 0f;
-        seek = seek.sqrMagnitude > 0.001f ? seek.normalized : Vector3.zero;
+        Vector3 targetOffset = targetPosition - position;
+        targetOffset.y = 0f;
+        float targetDistance = targetOffset.magnitude;
+        Vector3 seek = targetDistance > 0.001f ? targetOffset / targetDistance : Vector3.zero;
 
         Vector3 separation = Vector3.zero;
         Vector3 alignment = Vector3.zero;
         Vector3 cohesion = Vector3.zero;
+        Vector3 crowdPressure = Vector3.zero;
+        Vector3 crowdCenter = Vector3.zero;
         int neighborCount = 0;
+        int crowdCount = 0;
+        int neighborLimit = Mathf.Max(1, maxNeighbors);
+        int softCrowdLimit = Mathf.Max(1, crowdSoftLimit);
 
-        int searchRange = Mathf.CeilToInt(neighborRadius / Mathf.Max(0.1f, cellSize));
+        float safeCrowdRadius = Mathf.Max(neighborRadius, crowdRadius);
+        float neighborRadiusSqr = neighborRadius * neighborRadius;
+        float crowdRadiusSqr = safeCrowdRadius * safeCrowdRadius;
+        int searchRange = Mathf.CeilToInt(safeCrowdRadius / Mathf.Max(0.1f, cellSize));
         Vector2Int centerCell = GetCell(position, cellSize);
 
         for (int x = centerCell.x - searchRange; x <= centerCell.x + searchRange; x++)
@@ -230,7 +251,20 @@ public sealed class EnemyFlockManager : MonoBehaviour
                     Vector3 offset = position - other.transform.position;
                     offset.y = 0f;
                     float sqrDistance = offset.sqrMagnitude;
-                    if (sqrDistance <= 0.0001f || sqrDistance > neighborRadius * neighborRadius)
+                    if (sqrDistance <= 0.0001f || sqrDistance > crowdRadiusSqr)
+                    {
+                        continue;
+                    }
+
+                    float distance = Mathf.Sqrt(sqrDistance);
+                    Vector3 awayFromNeighbor = offset / distance;
+
+                    crowdCount++;
+                    crowdCenter += other.transform.position;
+                    float broadPressure = Mathf.Clamp01((safeCrowdRadius - distance) / Mathf.Max(0.1f, safeCrowdRadius));
+                    crowdPressure += awayFromNeighbor * broadPressure * broadPressure;
+
+                    if (sqrDistance > neighborRadiusSqr)
                     {
                         continue;
                     }
@@ -249,24 +283,23 @@ public sealed class EnemyFlockManager : MonoBehaviour
                     float personalSpace = Mathf.Max(separationRadius, agent.AgentRadius + other.AgentRadius);
                     if (sqrDistance < personalSpace * personalSpace)
                     {
-                        float distance = Mathf.Sqrt(sqrDistance);
                         float pressure = Mathf.Clamp01((personalSpace - distance) / personalSpace);
-                        separation += (offset / distance) * (pressure + 0.15f);
+                        separation += awayFromNeighbor * (pressure + 0.15f);
                     }
 
-                    if (neighborCount >= maxNeighbors)
+                    if (neighborCount >= neighborLimit && crowdCount >= neighborLimit)
                     {
                         break;
                     }
                 }
 
-                if (neighborCount >= maxNeighbors)
+                if (neighborCount >= neighborLimit && crowdCount >= neighborLimit)
                 {
                     break;
                 }
             }
 
-            if (neighborCount >= maxNeighbors)
+            if (neighborCount >= neighborLimit && crowdCount >= neighborLimit)
             {
                 break;
             }
@@ -280,11 +313,30 @@ public sealed class EnemyFlockManager : MonoBehaviour
             alignment = alignment.sqrMagnitude > 0.001f ? alignment.normalized : Vector3.zero;
         }
 
+        if (crowdCount > 0)
+        {
+            Vector3 awayFromCrowdCenter = position - (crowdCenter / crowdCount);
+            awayFromCrowdCenter.y = 0f;
+            if (awayFromCrowdCenter.sqrMagnitude > 0.001f)
+            {
+                float density = Mathf.Clamp01((crowdCount - softCrowdLimit + 1f) / Mathf.Max(1f, neighborLimit - softCrowdLimit + 1f));
+                crowdPressure += awayFromCrowdCenter.normalized * density;
+            }
+
+            crowdPressure = crowdPressure.sqrMagnitude > 0.001f
+                ? Vector3.ClampMagnitude(crowdPressure, 1f)
+                : Vector3.zero;
+        }
+
+        Vector3 engagementSpread = CalculateEngagementSpread(agent, position, targetPosition, targetDistance, crowdCount);
         Vector3 obstacleAvoidance = CalculateObstacleAvoidance(agent, position, seek, agent.AgentRadius);
+        float seekScale = CalculateSeekScale(agent, targetDistance);
 
         Vector3 desired =
-            seek * seekWeight +
+            seek * seekWeight * seekScale +
             separation * separationWeight +
+            crowdPressure * crowdPressureWeight +
+            engagementSpread * engagementSpreadWeight +
             alignment * alignmentWeight +
             cohesion * cohesionWeight +
             obstacleAvoidance * obstacleWeight;
@@ -346,6 +398,101 @@ public sealed class EnemyFlockManager : MonoBehaviour
         }
 
         return resolved;
+    }
+
+    private float CalculateSeekScale(EnemyController agent, float targetDistance)
+    {
+        float desiredRadius = GetPreferredEngagementRadius(agent);
+        if (targetDistance >= desiredRadius)
+        {
+            return 1f;
+        }
+
+        float distanceFactor = Smooth01(Mathf.Clamp01(targetDistance / Mathf.Max(0.1f, desiredRadius)));
+        return Mathf.Lerp(closeSeekScale, 1f, distanceFactor);
+    }
+
+    private Vector3 CalculateEngagementSpread(
+        EnemyController agent,
+        Vector3 position,
+        Vector3 targetPosition,
+        float targetDistance,
+        int crowdCount)
+    {
+        float desiredRadius = GetPreferredEngagementRadius(agent);
+        float spreadDistance = Mathf.Max(desiredRadius + 0.1f, engagementSpreadDistance);
+        if (targetDistance > spreadDistance)
+        {
+            return Vector3.zero;
+        }
+
+        Vector3 fromTarget = position - targetPosition;
+        fromTarget.y = 0f;
+        if (fromTarget.sqrMagnitude <= 0.001f)
+        {
+            fromTarget = GetAgentFallbackDirection(agent);
+        }
+        else
+        {
+            fromTarget.Normalize();
+        }
+
+        float closePressure = Smooth01(Mathf.Clamp01((desiredRadius - targetDistance) / Mathf.Max(0.1f, desiredRadius)));
+        Vector3 spread = fromTarget * closePressure;
+
+        if (crowdCount > 1)
+        {
+            Vector3 tangent = Vector3.Cross(Vector3.up, fromTarget);
+            if (tangent.sqrMagnitude > 0.001f)
+            {
+                tangent.Normalize();
+                float crowdFactor = Mathf.Clamp01((crowdCount - 1f) / Mathf.Max(1f, crowdSoftLimit));
+                float proximity = Smooth01(1f - Mathf.Clamp01(targetDistance / spreadDistance));
+                spread += tangent * GetAgentLaneOffset(agent) * crowdFactor * proximity * 0.45f;
+            }
+        }
+
+        return spread.sqrMagnitude > 0.001f ? Vector3.ClampMagnitude(spread, 1f) : Vector3.zero;
+    }
+
+    private float GetPreferredEngagementRadius(EnemyController agent)
+    {
+        float desiredRadius = Mathf.Max(0.1f, engagementRadius);
+        if (agent != null)
+        {
+            desiredRadius = Mathf.Max(desiredRadius, agent.AttackRadius + agent.AgentRadius * 0.4f);
+        }
+
+        return desiredRadius;
+    }
+
+    private static Vector3 GetAgentFallbackDirection(EnemyController agent)
+    {
+        int id = agent != null ? agent.GetInstanceID() : 1;
+        float angle = Mathf.Repeat(id * 137.508f, 360f) * Mathf.Deg2Rad;
+        return new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+    }
+
+    private static float GetAgentLaneOffset(EnemyController agent)
+    {
+        if (agent == null)
+        {
+            return 0f;
+        }
+
+        float offset = Mathf.Repeat(agent.GetInstanceID() * 0.6180339f, 1f) * 2f - 1f;
+        if (Mathf.Abs(offset) < 0.15f)
+        {
+            offset = offset < 0f ? -0.15f : 0.15f;
+        }
+
+        return offset;
+    }
+
+    private static float Smooth01(float value)
+    {
+        value = Mathf.Clamp01(value);
+        return value * value * (3f - 2f * value);
     }
 
     private void ResolveTarget()
