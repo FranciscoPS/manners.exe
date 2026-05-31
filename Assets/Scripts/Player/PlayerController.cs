@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        rb.constraints |= RigidbodyConstraints.FreezePositionY;
 
         if (GameBalanceConfig.Instance != null)
         {
@@ -119,7 +120,7 @@ public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (moveDirection.magnitude >= 0.1f)
         {
-            rb.linearVelocity = new Vector3(moveDirection.x * currentSpeed, rb.linearVelocity.y, moveDirection.z * currentSpeed);
+            rb.linearVelocity = new Vector3(moveDirection.x * currentSpeed, 0f, moveDirection.z * currentSpeed);
 
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * fixedDeltaTime);
@@ -135,7 +136,7 @@ public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
         }
         else
         {
-            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            rb.linearVelocity = Vector3.zero;
 
             if (animator != null)
                 animator.SetBool("isWalking", false);
