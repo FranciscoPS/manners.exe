@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 607832523003636405}
   - component: {fileID: 963508934966439508}
   - component: {fileID: 8520553520846978520}
+  - component: {fileID: 6464585835938798944}
   m_Layer: 6
   m_Name: Building
   m_TagString: Untagged
@@ -80,6 +81,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.86934, y: 1.2175704, z: 1.0819526}
   m_Center: {x: 0.0011143386, y: 0.6087753, z: -0.015089422}
+--- !u!114 &6464585835938798944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5746690754325058623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b368c8e8da2e4216b97502274ca8b56, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingFader
+  minVisibleAlpha: 0.3
+  affectsChildRenderers: 1
 --- !u!1 &6829781436914768719
 GameObject:
   m_ObjectHideFlags: 0

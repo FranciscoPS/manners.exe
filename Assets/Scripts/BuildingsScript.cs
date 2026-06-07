@@ -56,6 +56,10 @@ public class BuildingsScript : MonoBehaviour
         if (other.CompareTag("Player") && !isDestroying)
         {
             isDestroying = true;
+
+            var fader = GetComponent<BuildingFader>();
+            if (fader != null) fader.SuspendForDestruction();
+
             StartCoroutine(DestroySequence());
         }
     }
