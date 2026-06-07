@@ -31,6 +31,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     private float knockbackTimer = 0f;
     private Vector3 knockbackVelocity = Vector3.zero;
 
+    private Vector3 separation = Vector3.zero;
+
     [Header("Movement")]
     [Tooltip("Distancia a la que el enemigo se detiene alrededor del jugador. Evita que todos converjan en el mismo punto.")]
     [SerializeField] private float attackRadius = 1.5f;
@@ -46,6 +48,13 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     public float ContactDamage => contactDamage;
 
     public bool IsActive => gameObject.activeInHierarchy && enabled;
+
+    // --- API para el sistema de separación entre enemigos ---
+    /// <summary>True si el enemigo debe participar en la separación (activo y sin knockback).</summary>
+    public bool WantsSeparation => IsActive && !isKnockedBack;
+
+    /// <summary>El EnemySeparationManager deja aquí el vector de repulsión (u/seg en el plano XZ).</summary>
+    public void SetSeparation(Vector3 value) => separation = value;
 
     public void SetStats(float newMoveSpeed, float newContactDamage)
     {
@@ -94,6 +103,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         knockbackTimer = 0f;
         knockbackVelocity = Vector3.zero;
 
+        separation = Vector3.zero;
+
         isDetouring       = false;
         stuckTimer        = 0f;
         lastCheckPosition = transform.position;
@@ -116,6 +127,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             UpdateManager.Instance.Register(this as IUpdateable);
             UpdateManager.Instance.Register(this as IFixedUpdateable);
         }
+
+        EnemySeparationManager.Register(this);
     }
 
     private void OnDisable()
@@ -126,6 +139,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             UpdateManager.Instance.Unregister(this as IUpdateable);
             UpdateManager.Instance.Unregister(this as IFixedUpdateable);
         }
+
+        EnemySeparationManager.Unregister(this);
     }
 
     public void OnUpdate(float deltaTime)
@@ -172,6 +187,12 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
                     : transform.position;
                 agent.SetDestination(destination);
             }
+
+            // Separación entre enemigos: empuje lateral para no fundirse en un punto.
+            if (separation.sqrMagnitude > 0.0001f)
+            {
+                agent.Move(new Vector3(separation.x, 0f, separation.z) * deltaTime);
+            }
         }
 
         Vector3 direction = player.position - transform.position;
@@ -213,7 +234,10 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         if (!useNavMesh && rb != null && player != null)
         {
             Vector3 direction = (player.position - transform.position).normalized;
-            rb.linearVelocity = new Vector3(direction.x * moveSpeed, rb.linearVelocity.y, direction.z * moveSpeed);
+            rb.linearVelocity = new Vector3(
+                direction.x * moveSpeed + separation.x,
+                rb.linearVelocity.y,
+                direction.z * moveSpeed + separation.z);
         }
     }
 
