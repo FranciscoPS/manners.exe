@@ -43,6 +43,10 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
     [Tooltip("Velocidad de interpolación del desvanecimiento (unidades de fade por segundo).")]
     [SerializeField] private float fadeSpeed = 4f;
 
+    [Tooltip("Opacidad de los edificios cuando tapan algo. 0 = invisible, 1 = opaco. Sube el valor para que se vean más.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float minVisibleAlpha = 0.3f;
+
     private static readonly List<BuildingFader> faders = new List<BuildingFader>(64);
 
     private float timer;
@@ -103,13 +107,24 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
             UpdateManager.Instance.Unregister(this as IUpdateable);
     }
 
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // Permite ajustar la opacidad en vivo desde el inspector mientras se juega:
+        // reaplica el valor a todos los edificios (incluidos los ya transparentes).
+        if (!Application.isPlaying) return;
+        for (int i = 0; i < faders.Count; i++)
+            faders[i]?.ForceApply(minVisibleAlpha);
+    }
+#endif
+
     public void OnUpdate(float deltaTime)
     {
         // Interpolación suave por frame (solo edificios que lo necesitan).
         for (int i = 0; i < faders.Count; i++)
         {
             var f = faders[i];
-            if (f != null && f.NeedsTick) f.Tick(deltaTime, fadeSpeed);
+            if (f != null && f.NeedsTick) f.Tick(deltaTime, fadeSpeed, minVisibleAlpha);
         }
 
         // Detección throttled.

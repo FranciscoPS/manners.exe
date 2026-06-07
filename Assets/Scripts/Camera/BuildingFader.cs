@@ -18,12 +18,12 @@ using UnityEngine;
 public class BuildingFader : MonoBehaviour
 {
     [Header("Fade")]
-    [Tooltip("Alpha mínimo visible cuando el edificio está totalmente 'oculto'. 0 = invisible, 1 = opaco.")]
-    [Range(0f, 1f)]
-    [SerializeField] private float minVisibleAlpha = 0.3f;
-
     [Tooltip("Incluir renderers de los hijos (normalmente sí, el visual cuelga del root).")]
     [SerializeField] private bool affectsChildRenderers = true;
+
+    // Opacidad mínima cuando el edificio está totalmente 'oculto'. La controla
+    // de forma global el BuildingTransparencyManager (no es por edificio).
+    private float minVisibleAlpha = 0.6f;
 
     private static readonly int FadeID = Shader.PropertyToID("_Fade");
     private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
@@ -121,10 +121,22 @@ public class BuildingFader : MonoBehaviour
     }
 
     /// <summary>Interpolación suave del fade. Lo invoca el manager cada frame mientras NeedsTick.</summary>
-    public void Tick(float deltaTime, float speed)
+    public void Tick(float deltaTime, float speed, float minAlpha)
     {
         if (suspended) return;
+        minVisibleAlpha = minAlpha;
         currentFade = Mathf.MoveTowards(currentFade, targetFade, speed * deltaTime);
+        Apply();
+    }
+
+    /// <summary>
+    /// Reaplica el alpha con un nuevo valor mínimo sin animar (para ajustes en vivo
+    /// desde el inspector del manager mientras el edificio ya está oculto).
+    /// </summary>
+    public void ForceApply(float minAlpha)
+    {
+        if (suspended) return;
+        minVisibleAlpha = minAlpha;
         Apply();
     }
 
