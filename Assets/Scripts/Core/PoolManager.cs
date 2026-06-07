@@ -1,9 +1,21 @@
 using UnityEngine;
-using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
+using System.Collections;
 using System.Collections.Generic;
 using System;
 
+/// <summary>
+/// Pool de objetos pre-asignado. Toda la cantidad configurada se instancia al cargar
+/// (repartida en varios frames para evitar tirones) y a partir de ahí el juego SOLO
+/// apaga/enciende objetos: nunca se instancia ni se destruye en mitad del gameplay.
+///
+/// Si un pool se queda sin objetos libres puede crecer en runtime como red de seguridad
+/// (configurable por tipo). Al devolver un objeto NUNCA se destruye: vuelve a la pila
+/// de inactivos para reutilizarlo. El pool es persistente entre escenas.
+///
+/// La API pública (Spawn*, Despawn, PrewarmPool...) se mantiene igual que antes para no
+/// afectar al resto del juego (SpawnFactory, enemigos, orbes, monedas, proyectiles).
+/// </summary>
 public class PoolManager : MonoBehaviour
 {
     public static PoolManager Instance { get; private set; }
@@ -13,8 +25,8 @@ public class PoolManager : MonoBehaviour
         Projectile,
         ExperienceOrb,
         Enemy,          // Pool genérico (deprecated)
-        BasicEnemy,     // Enemy básico
-        FastEnemy,      // Enemy rápido
+        BasicEnemy,
+        FastEnemy,
         L2BasicEnemy,
         L2FastEnemy,
         Coin,
@@ -33,7 +45,15 @@ public class PoolManager : MonoBehaviour
         [Tooltip("Campo legacy: si usas este campo se convertirá en 1 elemento de 'prefabs' automáticamente.")]
         public GameObject prefab;
 
-        [Header("Capacity")]
+        [Header("Preload")]
+        [Tooltip("Cantidad fija que se instancia al cargar. Estos objetos sólo se apagan/encienden; no se crean en mitad del juego. Sube este valor para los tipos que aparecen en masa (orbes, monedas, enemigos).")]
+        public int prewarmCount = 20;
+
+        [Tooltip("Si está marcado, el pool NO crecerá aunque se quede sin objetos libres (devolverá null). Déjalo desmarcado para tener una red de seguridad.")]
+        public bool preventGrow = false;
+
+        [Header("Legacy (sin uso en el nuevo motor; se mantiene por compatibilidad)")]
+        [Tooltip("Si prewarmCount es 0, se usa este valor como cantidad de precarga.")]
         public int defaultCapacity = 20;
         public int maxSize = 100;
     }
@@ -41,14 +61,32 @@ public class PoolManager : MonoBehaviour
     [Header("Pool Configurations")]
     [SerializeField] private List<PoolConfig> poolConfigs = new List<PoolConfig>();
 
-    private Dictionary<PoolType, ObjectPool<GameObject>> pools = new Dictionary<PoolType, ObjectPool<GameObject>>();
+    [Header("Preload Timing")]
+    [Tooltip("Reparte la pre-instanciación en varios frames para evitar un tirón al cargar.")]
+    [SerializeField] private bool prewarmSpreadOverFrames = true;
 
-    // Ahora almacenamos arrays de prefabs y rotaciones por PoolType
-    private Dictionary<PoolType, GameObject[]> poolPrefabs = new Dictionary<PoolType, GameObject[]>();
-    private Dictionary<PoolType, Quaternion[]> poolPrefabRotations = new Dictionary<PoolType, Quaternion[]>();
-    private Dictionary<PoolType, PoolConfig> poolConfigMap = new Dictionary<PoolType, PoolConfig>();
+    [Tooltip("Objetos a instanciar por frame cuando se reparte la precarga.")]
+    [SerializeField] private int prewarmObjectsPerFrame = 25;
 
-    private Dictionary<GameObject, PoolType> activeObjects = new Dictionary<GameObject, PoolType>();
+    [Header("Debug")]
+    [Tooltip("Muestra un aviso cuando un pool tiene que crecer en runtime (útil para ajustar prewarmCount).")]
+    [SerializeField] private bool warnOnGrow = false;
+
+    private class Pool
+    {
+        public PoolType type;
+        public GameObject[] prefabs;
+        public Quaternion[] rotations;
+        public bool allowGrow;
+        public int prewarmCount;
+        public readonly Stack<GameObject> inactive = new Stack<GameObject>(64);
+        public int totalCount;
+    }
+
+    private readonly Dictionary<PoolType, Pool> pools = new Dictionary<PoolType, Pool>();
+    private readonly Dictionary<PoolType, PoolConfig> poolConfigMap = new Dictionary<PoolType, PoolConfig>();
+    private readonly Dictionary<GameObject, PoolType> activeObjects = new Dictionary<GameObject, PoolType>();
+    private Transform container;
 
     private void Awake()
     {
@@ -57,24 +95,18 @@ public class PoolManager : MonoBehaviour
             Instance = this;
             transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
+            container = transform;
 
-            // Construye la configuración desde el inspector (migra campo legacy prefab -> prefabs)
-            BuildConfigMapFromInspector(this.poolConfigs, replace: true);
-
+            BuildConfigMap(poolConfigs);
             InitializePools();
         }
-        else
+        else if (Instance != this)
         {
-            // Si ya existe singleton, intentamos aplicar la configuración de la escena actual
-            // al singleton (override) para que cada escena pueda definir sus variantes.
-            // Si prefieres que el primer PoolManager (persistente) sea la única fuente,
-            // cambia `replace: true` a `replace: false` en la siguiente línea.
-            if (Instance != this)
-            {
-                Instance.BuildConfigMapFromInspector(this.poolConfigs, replace: true);
-                Instance.ResetAllPools();
-                Destroy(gameObject);
-            }
+            // Conservamos el pool caliente del singleton. Sólo añadimos los tipos nuevos
+            // que esta escena defina y que aún no existan (no se destruye nada existente).
+            Instance.BuildConfigMap(poolConfigs);
+            Instance.InitializePools();
+            Destroy(gameObject);
         }
     }
 
@@ -90,103 +122,166 @@ public class PoolManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Al cargar una escena, reconstruimos pools según la configuración actual
-        // (que viene del singleton poolConfigMap / poolPrefabs).
-        ResetAllPools();
+        if (Instance != this) return;
+
+        // No destruimos el pool: devolvemos a la pila cualquier objeto que siguiera activo
+        // para reutilizarlo en la nueva escena.
+        DespawnAll();
+    }
+
+    private void BuildConfigMap(List<PoolConfig> configs)
+    {
+        if (configs == null) return;
+
+        foreach (var config in configs)
+        {
+            if (config == null) continue;
+            poolConfigMap[config.poolType] = config;
+        }
     }
 
     private void InitializePools()
     {
-        // Crear pools sólo para las entradas que todavía no existan.
+        List<Pool> newlyCreated = null;
+
         foreach (var kvp in poolConfigMap)
         {
-            PoolType poolType = kvp.Key;
+            PoolType type = kvp.Key;
             PoolConfig config = kvp.Value;
 
-            if (pools.ContainsKey(poolType))
-                continue;
+            if (pools.ContainsKey(type)) continue;
 
-            GameObject[] prefabsForType = poolPrefabs.ContainsKey(poolType) ? poolPrefabs[poolType] : null;
-            if ((config == null || (config.prefab == null && (config.prefabs == null || config.prefabs.Count == 0))) 
-                && (prefabsForType == null || prefabsForType.Length == 0))
+            GameObject[] prefabs = BuildPrefabArray(config);
+            if (prefabs.Length == 0)
             {
-                Debug.LogWarning($"[PoolManager] PoolConfig for {poolType} has no prefab(s) assigned!");
+                Debug.LogWarning($"[PoolManager] PoolConfig for {type} has no prefab(s) assigned!");
                 continue;
             }
 
-            int defaultCapacity = (config != null) ? Mathf.Max(1, config.defaultCapacity) : 20;
-            int maxSize = (config != null) ? Mathf.Max(1, config.maxSize) : 100;
+            Quaternion[] rotations = new Quaternion[prefabs.Length];
+            for (int i = 0; i < prefabs.Length; i++)
+                rotations[i] = prefabs[i] != null ? prefabs[i].transform.rotation : Quaternion.identity;
 
-            var pool = new ObjectPool<GameObject>(
-                () => CreatePooledObject(poolType, prefabsForType),
-                OnGetFromPool,
-                OnReturnToPool,
-                OnDestroyPoolObject,
-                true,
-                defaultCapacity,
-                maxSize
-            );
+            int prewarm = config.prewarmCount > 0 ? config.prewarmCount : Mathf.Max(0, config.defaultCapacity);
 
-            pools[poolType] = pool;
+            Pool pool = new Pool
+            {
+                type = type,
+                prefabs = prefabs,
+                rotations = rotations,
+                allowGrow = !config.preventGrow,
+                prewarmCount = prewarm
+            };
+
+            pools[type] = pool;
+            (newlyCreated ??= new List<Pool>()).Add(pool);
+        }
+
+        if (newlyCreated == null) return;
+
+        if (prewarmSpreadOverFrames && Application.isPlaying)
+            StartCoroutine(PrewarmRoutine(newlyCreated));
+        else
+            foreach (var pool in newlyCreated) PrewarmImmediate(pool, pool.prewarmCount);
+    }
+
+    private GameObject[] BuildPrefabArray(PoolConfig config)
+    {
+        List<GameObject> list = new List<GameObject>();
+
+        if (config.prefabs != null)
+        {
+            for (int i = 0; i < config.prefabs.Count; i++)
+                if (config.prefabs[i] != null) list.Add(config.prefabs[i]);
+        }
+
+        if (list.Count == 0 && config.prefab != null)
+            list.Add(config.prefab);
+
+        return list.ToArray();
+    }
+
+    private IEnumerator PrewarmRoutine(List<Pool> targets)
+    {
+        int budget = Mathf.Max(1, prewarmObjectsPerFrame);
+        int createdThisFrame = 0;
+
+        for (int p = 0; p < targets.Count; p++)
+        {
+            Pool pool = targets[p];
+            while (pool.inactive.Count < pool.prewarmCount)
+            {
+                GameObject obj = CreateInstance(pool);
+                if (obj == null) break;
+                pool.inactive.Push(obj);
+
+                if (++createdThisFrame >= budget)
+                {
+                    createdThisFrame = 0;
+                    yield return null;
+                }
+            }
         }
     }
 
-    private GameObject CreatePooledObject(PoolType poolType, GameObject[] prefabsForType)
+    private void PrewarmImmediate(Pool pool, int count)
     {
-        GameObject prefab = GetRandomPrefabForType(poolType, prefabsForType);
+        while (pool.inactive.Count < count)
+        {
+            GameObject obj = CreateInstance(pool);
+            if (obj == null) break;
+            pool.inactive.Push(obj);
+        }
+    }
+
+    private GameObject CreateInstance(Pool pool)
+    {
+        GameObject prefab = GetRandomPrefab(pool);
         if (prefab == null)
         {
-            Debug.LogError($"[PoolManager] No prefab available when creating pooled object for {poolType}");
-            GameObject fallback = new GameObject($"MissingPrefab_{poolType}");
-            fallback.SetActive(false);
-            return fallback;
+            Debug.LogError($"[PoolManager] No prefab available when creating pooled object for {pool.type}");
+            return null;
         }
 
         GameObject obj = Instantiate(prefab);
-        obj.name = $"{prefab.name}_{poolType}";
+        obj.name = $"{prefab.name}_{pool.type}";
+        obj.transform.SetParent(container, false);
         obj.SetActive(false);
+        pool.totalCount++;
         return obj;
     }
 
-    private void OnGetFromPool(GameObject obj)
+    private GameObject GetRandomPrefab(Pool pool)
     {
-        // Hook para cuando un objeto se obtiene del pool (vacío por ahora)
-        if (obj != null)
-        {
-        }
-    }
-
-    private void OnReturnToPool(GameObject obj)
-    {
-        if (obj != null)
-        {
-            IPoolable poolable = obj.GetComponent<IPoolable>();
-            if (poolable != null)
-            {
-                poolable.OnDespawn();
-            }
-            obj.SetActive(false);
-        }
-    }
-
-    private void OnDestroyPoolObject(GameObject obj)
-    {
-        Destroy(obj);
+        if (pool.prefabs == null || pool.prefabs.Length == 0) return null;
+        if (pool.prefabs.Length == 1) return pool.prefabs[0];
+        return pool.prefabs[UnityEngine.Random.Range(0, pool.prefabs.Length)];
     }
 
     private GameObject GetFromPool(PoolType poolType, Vector3 position, Quaternion rotation)
     {
-        if (!pools.ContainsKey(poolType))
+        if (!pools.TryGetValue(poolType, out Pool pool))
             return null;
 
-        GameObject obj = pools[poolType].Get();
+        GameObject obj = null;
+
+        // Descarta posibles referencias nulas (objetos destruidos manualmente).
+        while (pool.inactive.Count > 0 && obj == null)
+            obj = pool.inactive.Pop();
 
         if (obj == null)
-            return null;
+        {
+            if (!pool.allowGrow)
+                return null;
 
-        obj.transform.position = position;
-        obj.transform.rotation = rotation;
+            if (warnOnGrow)
+                Debug.LogWarning($"[PoolManager] Pool '{poolType}' agotado (instancias={pool.totalCount}). Creciendo en runtime; considera subir prewarmCount.");
 
+            obj = CreateInstance(pool);
+            if (obj == null) return null;
+        }
+
+        obj.transform.SetPositionAndRotation(position, rotation);
         return obj;
     }
 
@@ -202,7 +297,6 @@ public class PoolManager : MonoBehaviour
         }
 
         obj.SetActive(true);
-
         activeObjects[obj] = poolType;
 
         return obj;
@@ -268,7 +362,6 @@ public class PoolManager : MonoBehaviour
             ? config.enemyPoolType
             : PoolType.Enemy;
 
-        // Usamos la API existente: el pool ya contiene instancias creadas con variantes aleatorias.
         GameObject obj = GetFromPool(poolType, position, Quaternion.identity);
         if (obj != null)
         {
@@ -320,12 +413,16 @@ public class PoolManager : MonoBehaviour
         return null;
     }
 
+    /// <summary>
+    /// Devuelve un objeto al pool. NUNCA lo destruye: lo apaga y lo deja listo para reutilizar.
+    /// </summary>
     public void Despawn(GameObject obj)
     {
         if (obj == null) return;
 
-        if (!activeObjects.ContainsKey(obj))
+        if (!activeObjects.TryGetValue(obj, out PoolType poolType))
         {
+            // No pertenece a ningún pool conocido; sólo lo apagamos.
             obj.SetActive(false);
             return;
         }
@@ -336,37 +433,34 @@ public class PoolManager : MonoBehaviour
             poolable.OnDespawn();
         }
 
-        PoolType poolType = activeObjects[obj];
         activeObjects.Remove(obj);
+        obj.SetActive(false);
 
-        if (pools.ContainsKey(poolType))
+        if (pools.TryGetValue(poolType, out Pool pool))
         {
-            pools[poolType].Release(obj);
+            pool.inactive.Push(obj);
         }
     }
 
+    /// <summary>Garantiza que haya al menos 'count' objetos libres en el pool (no destruye nada).</summary>
     public void PrewarmPool(PoolType poolType, int count)
     {
-        if (!pools.ContainsKey(poolType))
+        if (!pools.TryGetValue(poolType, out Pool pool))
             return;
 
-        List<GameObject> temp = new List<GameObject>();
-        for (int i = 0; i < count; i++)
-        {
-            temp.Add(pools[poolType].Get());
-        }
-
-        foreach (var obj in temp)
-        {
-            pools[poolType].Release(obj);
-        }
+        PrewarmImmediate(pool, count);
     }
 
     public void ClearPool(PoolType poolType)
     {
-        if (!pools.ContainsKey(poolType)) return;
+        if (!pools.TryGetValue(poolType, out Pool pool)) return;
 
-        pools[poolType].Clear();
+        while (pool.inactive.Count > 0)
+        {
+            GameObject obj = pool.inactive.Pop();
+            if (obj != null) Destroy(obj);
+        }
+        pool.totalCount = 0;
     }
 
     public void ClearAllPools()
@@ -375,134 +469,46 @@ public class PoolManager : MonoBehaviour
 
         foreach (var pool in pools.Values)
         {
-            pool.Clear();
+            while (pool.inactive.Count > 0)
+            {
+                GameObject obj = pool.inactive.Pop();
+                if (obj != null) Destroy(obj);
+            }
+            pool.totalCount = 0;
         }
     }
 
-    private void ResetAllPools()
+    /// <summary>Devuelve al pool todos los objetos actualmente activos (sin destruirlos).</summary>
+    public void DespawnAll()
     {
-        // Limpiar referencias de objetos activos
-        activeObjects.Clear();
+        if (activeObjects.Count == 0) return;
 
-        // Limpiar y recrear pools usando la configuración persistente en poolConfigMap y poolPrefabs
-        foreach (var pool in pools.Values)
-        {
-            pool.Clear();
-        }
-
-        pools.Clear();
-
-        // Recrear pools basados en la configuración que guardamos en poolConfigMap
-        foreach (var kvp in poolConfigMap)
-        {
-            PoolType poolType = kvp.Key;
-            PoolConfig config = kvp.Value;
-
-            GameObject[] prefabsForType = poolPrefabs.ContainsKey(poolType) ? poolPrefabs[poolType] : null;
-            if (prefabsForType == null || prefabsForType.Length == 0)
-                continue;
-
-            int defaultCapacity = (config != null) ? Mathf.Max(1, config.defaultCapacity) : 20;
-            int maxSize = (config != null) ? Mathf.Max(1, config.maxSize) : 100;
-
-            var pool = new ObjectPool<GameObject>(
-                () => CreatePooledObject(poolType, prefabsForType),
-                OnGetFromPool,
-                OnReturnToPool,
-                OnDestroyPoolObject,
-                true,
-                defaultCapacity,
-                maxSize
-            );
-
-            pools[poolType] = pool;
-        }
+        var snapshot = new List<GameObject>(activeObjects.Keys);
+        for (int i = 0; i < snapshot.Count; i++)
+            Despawn(snapshot[i]);
     }
 
     public void CleanupDestroyedObjects()
     {
-        List<GameObject> toRemove = new List<GameObject>();
+        List<GameObject> toRemove = null;
 
         foreach (var kvp in activeObjects)
         {
             if (kvp.Key == null)
-            {
-                toRemove.Add(kvp.Key);
-            }
+                (toRemove ??= new List<GameObject>()).Add(kvp.Key);
         }
 
-        foreach (var obj in toRemove)
+        if (toRemove != null)
         {
-            activeObjects.Remove(obj);
+            for (int i = 0; i < toRemove.Count; i++)
+                activeObjects.Remove(toRemove[i]);
         }
     }
 
-    // Construye el mapa de configuración desde la lista serializada en el inspector
-    // Si replace == true, REEMPLAZA la configuración existente del singleton.
-    private void BuildConfigMapFromInspector(List<PoolConfig> configs, bool replace = false)
-    {
-        if (configs == null) return;
-
-        if (replace)
-        {
-            poolConfigMap.Clear();
-            poolPrefabs.Clear();
-            poolPrefabRotations.Clear();
-        }
-
-        foreach (var config in configs)
-        {
-            if (config == null) continue;
-
-            poolConfigMap[config.poolType] = config;
-
-            // Construir array de prefabs: preferimos la lista `prefabs` si tiene elementos,
-            // si no usamos el campo legacy `prefab`.
-            List<GameObject> finalList = new List<GameObject>();
-            if (config.prefabs != null && config.prefabs.Count > 0)
-            {
-                for (int i = 0; i < config.prefabs.Count; i++)
-                {
-                    if (config.prefabs[i] != null)
-                        finalList.Add(config.prefabs[i]);
-                }
-            }
-            else if (config.prefab != null)
-            {
-                finalList.Add(config.prefab);
-            }
-
-            if (finalList.Count > 0)
-            {
-                poolPrefabs[config.poolType] = finalList.ToArray();
-
-                Quaternion[] rotations = new Quaternion[finalList.Count];
-                for (int i = 0; i < finalList.Count; i++)
-                    rotations[i] = finalList[i] != null ? finalList[i].transform.rotation : Quaternion.identity;
-                poolPrefabRotations[config.poolType] = rotations;
-            }
-        }
-    }
-
-    // Obtiene un prefab aleatorio (uniforme) para el poolType.
-    private GameObject GetRandomPrefabForType(PoolType poolType, GameObject[] fallback = null)
-    {
-        GameObject[] arr = null;
-        if (poolPrefabs.ContainsKey(poolType))
-            arr = poolPrefabs[poolType];
-        else
-            arr = fallback;
-
-        if (arr == null || arr.Length == 0) return null;
-        int idx = UnityEngine.Random.Range(0, arr.Length);
-        return arr[idx];
-    }
-
-    // Obtiene rotación por defecto (primera) para un poolType si existe
     private Quaternion GetDefaultRotationForPool(PoolType poolType)
     {
-        if (poolPrefabRotations.ContainsKey(poolType) && poolPrefabRotations[poolType].Length > 0)
-            return poolPrefabRotations[poolType][0];
+        if (pools.TryGetValue(poolType, out Pool pool) && pool.rotations != null && pool.rotations.Length > 0)
+            return pool.rotations[0];
         return Quaternion.identity;
     }
 }

@@ -48785,21 +48785,29 @@ MonoBehaviour:
   - poolType: 0
     prefabs: []
     prefab: {fileID: 323352707975832528, guid: ab5a2bcba21aa4947967a00352039676, type: 3}
+    prewarmCount: 200
+    preventGrow: 0
     defaultCapacity: 10
     maxSize: 20
   - poolType: 1
     prefabs: []
     prefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
+    prewarmCount: 300
+    preventGrow: 0
     defaultCapacity: 10
     maxSize: 20
   - poolType: 7
     prefabs: []
     prefab: {fileID: 8585222995538249419, guid: 7538e81a0145545408dbf54b64a33065, type: 3}
+    prewarmCount: 100
+    preventGrow: 0
     defaultCapacity: 30
     maxSize: 100
   - poolType: 8
     prefabs: []
     prefab: {fileID: 5155632646051148866, guid: 8a653a602dbbee74e883499f7ff9c6fc, type: 3}
+    prewarmCount: 50
+    preventGrow: 0
     defaultCapacity: 20
     maxSize: 50
   - poolType: 3
@@ -48808,6 +48816,8 @@ MonoBehaviour:
     - {fileID: 1698437683998260501, guid: 7a64f2eb93138094e93ad4fc969440f0, type: 3}
     - {fileID: 1698437683998260501, guid: beaf862790b1231439e63ee647163bcf, type: 3}
     prefab: {fileID: 7510731991543114636, guid: 53983ae7b09330a459c31382c6c0d019, type: 3}
+    prewarmCount: 200
+    preventGrow: 0
     defaultCapacity: 20
     maxSize: 50
   - poolType: 4
@@ -48816,8 +48826,13 @@ MonoBehaviour:
     - {fileID: 262222577368134556, guid: cbc760f09a892b84bbe5308d09d94346, type: 3}
     - {fileID: 262222577368134556, guid: eac3f1c65acbeef4fa74ba3211c6d200, type: 3}
     prefab: {fileID: 7510731991543114636, guid: 77bbd28b56893a64ebcbdee2388feb89, type: 3}
+    prewarmCount: 200
+    preventGrow: 0
     defaultCapacity: 20
     maxSize: 50
+  prewarmSpreadOverFrames: 1
+  prewarmObjectsPerFrame: 25
+  warnOnGrow: 0
 --- !u!4 &1866126883
 Transform:
   m_ObjectHideFlags: 0
