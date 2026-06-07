@@ -14,6 +14,10 @@ public class WaveData : ScriptableObject
     public string waveName = "Wave";
     public int totalEnemies = 10;
 
+    [Header("Pacing")]
+    [Tooltip("Marca esta wave como 'descanso': silencia el spawn continuo durante la wave y su pausa posterior para que el jugador respire y recoja drops.")]
+    public bool isRestWave = false;
+
     [Header("Enemy Distribution")]
     public EnemySpawnEntry[] enemyDistribution;
 

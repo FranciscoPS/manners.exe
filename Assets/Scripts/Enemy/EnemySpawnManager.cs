@@ -28,6 +28,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private bool isSpawningWave = false;
     private float continuousSpawnTimer = 0f;
     private bool spawnBlocked = false;
+    private bool suppressContinuousSpawn = false;
 
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1;
@@ -81,7 +82,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         if (spawnBlocked) return;
 
-        if (enableContinuousSpawn && !isSpawningWave)
+        if (enableContinuousSpawn && !isSpawningWave && !suppressContinuousSpawn)
         {
             continuousSpawnTimer -= deltaTime;
 
@@ -184,6 +185,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private IEnumerator ExecuteWave(WaveData wave)
     {
         isSpawningWave = true;
+        suppressContinuousSpawn = wave.isRestWave;
         int enemiesSpawned = 0;
         int totalEnemies = wave.totalEnemies;
         string waveTag = $"{wave.waveName} [vuelta {waveLoopCount + 1}, índice {currentWaveIndex + 1}/{waveQueue.Length}]";

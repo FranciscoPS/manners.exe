@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Wave_02
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Calentamiento
-  totalEnemies: 180
+  totalEnemies: 110
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
     percentage: 80
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
     percentage: 20
-  spawnInterval: 1
-  enemiesPerBatch: 3
+  spawnInterval: 0.9
+  enemiesPerBatch: 4

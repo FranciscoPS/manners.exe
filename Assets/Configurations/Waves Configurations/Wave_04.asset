@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3829d093f91f37489645fe5ec61b7ef, type: 3}
   m_Name: Wave_04
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
-  waveName: Escalada
-  totalEnemies: 500
+  waveName: Respiro
+  totalEnemies: 35
+  isRestWave: 1
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
     percentage: 50
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
     percentage: 50
-  spawnInterval: 0.3
-  enemiesPerBatch: 7
+  spawnInterval: 2.5
+  enemiesPerBatch: 1

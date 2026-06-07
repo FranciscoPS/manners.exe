@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Wave_01
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Primeros Pasos
-  totalEnemies: 100
+  totalEnemies: 70
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
     percentage: 90
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
     percentage: 10
-  spawnInterval: 1.5
-  enemiesPerBatch: 2
+  spawnInterval: 1.2
+  enemiesPerBatch: 3
