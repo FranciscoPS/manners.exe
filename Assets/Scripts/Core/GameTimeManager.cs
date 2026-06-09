@@ -22,7 +22,7 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
 
     [Header("Match Duration")]
     [Tooltip("Duracion de la partida en minutos. El cronometro cuenta hacia atras desde aqui; al llegar a 0 se lanza la oleada final imposible.")]
-    [SerializeField] private float matchDurationMinutes = 15f;
+    [SerializeField] private float matchDurationMinutes = 10f;
 
     private float gameStartTime;
     private bool isGameActive = false;
