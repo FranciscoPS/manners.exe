@@ -7,7 +7,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class ChestPickup : MonoBehaviour, IUpdateable
 {
-    [SerializeField] private float pickupRadius = 1.8f;
+    [Tooltip("Radio horizontal (XZ) para recoger el cofre. El cofre tiene escala 2, así que conviene 3+.")]
+    [SerializeField] private float pickupRadius = 3f;
 
     [Header("Bob (salto visual)")]
     [SerializeField] private float bobHeight = 0.6f;
@@ -58,7 +59,11 @@ public class ChestPickup : MonoBehaviour, IUpdateable
         if (Time.time < nextCheckTime) return;
         nextCheckTime = Time.time + CheckInterval;
 
-        float sqrDistance = (transform.position - player.position).sqrMagnitude;
+        // Distancia solo en el plano horizontal: el salto vertical del cofre
+        // y la altura del jugador no deben afectar la recogida.
+        float dx = transform.position.x - player.position.x;
+        float dz = transform.position.z - player.position.z;
+        float sqrDistance = dx * dx + dz * dz;
         if (sqrDistance <= pickupRadius * pickupRadius)
         {
             Open();
