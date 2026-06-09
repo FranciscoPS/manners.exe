@@ -1,7 +1,30 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 {
+    private static readonly List<BaseCollectible> activeCollectibles = new List<BaseCollectible>(256);
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        activeCollectibles.Clear();
+    }
+
+    /// <summary>
+    /// Fuerza a TODOS los pickups activos del mapa (orbes, monedas, diamantes)
+    /// a volar hacia el jugador hasta ser recogidos. Usado por el ítem Imán Gigante.
+    /// </summary>
+    public static void AttractAllToPlayer()
+    {
+        for (int i = 0; i < activeCollectibles.Count; i++)
+        {
+            BaseCollectible c = activeCollectibles[i];
+            if (c == null || c.collected) continue;
+            c.isMovingToPlayer = true;
+            c.currentSpeed = 0f;
+        }
+    }
     [Header("Movement Settings")]
     [SerializeField] protected float attractionRange = 5f;
     [SerializeField] protected float moveSpeed = 8f;
@@ -59,11 +82,15 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         updateOffset = Random.Range(0f, updateInterval);
         nextUpdateTime = Time.time + updateOffset;
 
+        if (!activeCollectibles.Contains(this))
+            activeCollectibles.Add(this);
+
         UpdateManager.Instance.Register(this);
     }
 
     protected virtual void OnDisable()
     {
+        activeCollectibles.Remove(this);
 
         if (UpdateManager.Instance != null)
         {
