@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,12 +24,38 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private int maxConcurrentEnemies = 40;
 
     [Header("Final Rush (fin de partida)")]
-    [Tooltip("Tope de enemigos concurrentes durante la oleada final imposible. Alto para abrumar, pero acotado por seguridad en WebGL.")]
-    [SerializeField] private int finalRushConcurrentCap = 150;
+    [Tooltip("Tope inicial de enemigos concurrentes al empezar la oleada final.")]
+    [SerializeField] private int finalRushStartCap = 500;
+    [Tooltip("Tope maximo de enemigos concurrentes (acotado por seguridad en WebGL).")]
+    [SerializeField] private int finalRushMaxCap = 500;
+    [Tooltip("Cuanto crece el tope de enemigos por segundo durante la oleada final.")]
+    [SerializeField] private float finalRushCapGrowthPerSecond = 14f;
     [Tooltip("Cada cuanto (seg) la oleada final rellena enemigos hasta el tope.")]
-    [SerializeField] private float finalRushInterval = 0.3f;
-    [Tooltip("Enemigos que intenta spawnear por punto en cada tick de la oleada final.")]
-    [SerializeField] private int finalRushEnemiesPerSpawnPoint = 6;
+    [SerializeField] private float finalRushInterval = 0.25f;
+    [Tooltip("Maximo de enemigos nuevos por tick (rellenado hacia el tope).")]
+    [SerializeField] private int finalRushSpawnPerTick = 40;
+
+    [Header("Final Rush - Anillo alrededor del jugador")]
+    [Tooltip("Radio interno del anillo donde aparecen los enemigos respecto al jugador.")]
+    [SerializeField] private float finalRushRingMin = 6f;
+    [Tooltip("Radio externo del anillo donde aparecen los enemigos respecto al jugador.")]
+    [SerializeField] private float finalRushRingMax = 12f;
+
+    [Header("Final Rush - Stats escalados")]
+    [Tooltip("Dano de contacto inicial de los enemigos de la oleada final.")]
+    [SerializeField] private float finalRushBaseDamage = 55f;
+    [Tooltip("Cuanto sube el dano de contacto por segundo (vence los i-frames del jugador).")]
+    [SerializeField] private float finalRushDamageGrowthPerSecond = 30f;
+    [Tooltip("Vida inicial de los enemigos de la oleada final (evita que el jugador los mate de un toque).")]
+    [SerializeField] private float finalRushBaseHealth = 250f;
+    [Tooltip("Cuanto sube la vida por segundo (mantiene densa la horda).")]
+    [SerializeField] private float finalRushHealthGrowthPerSecond = 150f;
+    [Tooltip("Velocidad inicial de los enemigos de la oleada final.")]
+    [SerializeField] private float finalRushBaseSpeed = 7f;
+    [Tooltip("Cuanto sube la velocidad por segundo (impide huir), hasta el tope.")]
+    [SerializeField] private float finalRushSpeedGrowthPerSecond = 0.5f;
+    [Tooltip("Velocidad maxima de los enemigos de la oleada final.")]
+    [SerializeField] private float finalRushMaxSpeed = 15f;
 
     private List<SpawnPoint> allSpawnPoints = new List<SpawnPoint>();
     private int currentWaveIndex = 0;
@@ -121,20 +148,54 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         WaitForSeconds wait = new WaitForSeconds(finalRushInterval);
 
+        // Config buffada reutilizable (se reasignan sus stats cada tick segun la escalada).
+        EnemyConfiguration buffed = CreateFinalRushConfig();
+        if (buffed == null)
+        {
+            LogDebug("[FINAL RUSH] No hay configuracion de enemigo base; abortando rush.");
+            yield break;
+        }
+
+        float startTime = Time.time;
+        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
         while (true)
         {
-            if (allSpawnPoints.Count > 0)
+            float elapsed = Time.time - startTime;
+
+            // Escalada: todo crece con el tiempo para garantizar la muerte del jugador.
+            buffed.contactDamage = finalRushBaseDamage + finalRushDamageGrowthPerSecond * elapsed;
+            buffed.maxHealth = finalRushBaseHealth + finalRushHealthGrowthPerSecond * elapsed;
+            buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedGrowthPerSecond * elapsed);
+
+            int cap = Mathf.Min(finalRushMaxCap,
+                Mathf.RoundToInt(finalRushStartCap + finalRushCapGrowthPerSecond * elapsed));
+
+            int slots = Mathf.Min(finalRushSpawnPerTick, cap - EnemyHealth.ActiveEnemyCount);
+
+            if (player == null)
+                player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+            if (slots > 0)
             {
-                int slots = finalRushConcurrentCap - EnemyHealth.ActiveEnemyCount;
-
-                for (int p = 0; p < allSpawnPoints.Count && slots > 0; p++)
+                if (player != null)
                 {
-                    EnemyConfiguration cfg = GetFinalRushConfig();
-                    if (cfg == null) break;
-
-                    int batch = Mathf.Min(finalRushEnemiesPerSpawnPoint, slots);
-                    allSpawnPoints[p].ForceSpawn(batch, cfg);
-                    slots -= batch;
+                    // Anillo alrededor del jugador: sin embudo, contacto inmediato desde todos lados.
+                    for (int i = 0; i < slots; i++)
+                    {
+                        Vector3 pos = RingPositionAround(player.position);
+                        SpawnFactory.Instance?.CreateEnemy(pos, buffed);
+                    }
+                }
+                else
+                {
+                    // Sin jugador localizado: respaldo desde los spawn points de borde.
+                    for (int p = 0; p < allSpawnPoints.Count && slots > 0; p++)
+                    {
+                        int batch = Mathf.Min(6, slots);
+                        allSpawnPoints[p].ForceSpawn(batch, buffed);
+                        slots -= batch;
+                    }
                 }
             }
 
@@ -142,19 +203,53 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         }
     }
 
-    private EnemyConfiguration GetFinalRushConfig()
+    /// <summary>Devuelve una posicion en el NavMesh dentro de un anillo alrededor del centro dado.</summary>
+    private Vector3 RingPositionAround(Vector3 center)
     {
-        if (continuousEnemyTypes != null && continuousEnemyTypes.Length > 0)
-            return continuousEnemyTypes[Random.Range(0, continuousEnemyTypes.Length)];
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            float angle = Random.value * Mathf.PI * 2f;
+            float radius = Random.Range(finalRushRingMin, finalRushRingMax);
+            Vector3 candidate = center + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
 
-        if (waveQueue != null && waveQueue.Length > 0)
+            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, 5f, NavMesh.AllAreas))
+                return hit.position;
+        }
+
+        return center + new Vector3(finalRushRingMin, 0f, 0f);
+    }
+
+    /// <summary>
+    /// Crea en runtime una EnemyConfiguration clonada de una config base (para conservar
+    /// prefab/pool y drops) cuyos stats se sobrescriben cada tick segun la escalada.
+    /// </summary>
+    private EnemyConfiguration CreateFinalRushConfig()
+    {
+        EnemyConfiguration baseConfig = null;
+
+        if (continuousEnemyTypes != null && continuousEnemyTypes.Length > 0)
+            baseConfig = continuousEnemyTypes[0];
+
+        if (baseConfig == null && waveQueue != null && waveQueue.Length > 0)
         {
             WaveData wave = waveQueue[Mathf.Clamp(currentWaveIndex, 0, waveQueue.Length - 1)];
             if (wave != null)
-                return wave.GetRandomEnemyConfig();
+                baseConfig = wave.GetRandomEnemyConfig();
         }
 
-        return null;
+        if (baseConfig == null)
+            return null;
+
+        EnemyConfiguration clone = Instantiate(baseConfig);
+        clone.maxHealth = finalRushBaseHealth;
+        clone.moveSpeed = finalRushBaseSpeed;
+        clone.contactDamage = finalRushBaseDamage;
+        // Sin drops en la horda final: es el fin de la run, no queremos recompensar farmeo.
+        clone.coinDropChance = 0f;
+        clone.diamondDropChance = 0f;
+        clone.minOrbs = 0;
+        clone.maxOrbs = 0;
+        return clone;
     }
 
     private void SpawnContinuousEnemies()
