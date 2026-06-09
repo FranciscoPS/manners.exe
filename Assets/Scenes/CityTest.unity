@@ -46982,11 +46982,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 546137383660555592, guid: 2ccfc5c880e3c8146a783be8525fed0a, type: 3}
   m_PrefabInstance: {fileID: 1967574302}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &1814733049 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 4037166369235075890, guid: 9490baf89f380224695577b6d903edf6, type: 3}
-  m_PrefabInstance: {fileID: 3906033671347933169}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1819078939
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -56356,7 +56351,7 @@ PrefabInstance:
     - target: {fileID: 2936892197592012552, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: animator
       value: 
-      objectReference: {fileID: 1814733049}
+      objectReference: {fileID: 3906033671347933170}
     - target: {fileID: 3308049139629662346, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 27.228083
@@ -56588,7 +56583,7 @@ PrefabInstance:
     - target: {fileID: 8575133990424471097, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: animator
       value: 
-      objectReference: {fileID: 1814733049}
+      objectReference: {fileID: 3906033671347933170}
     - target: {fileID: 8575133990424471097, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: gameOverPanel
       value: 
@@ -56618,6 +56613,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+--- !u!95 &3906033671347933170 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 7590107289440812755, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+  m_PrefabInstance: {fileID: 3906033671347933169}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5993673028838877178
 PrefabInstance:
   m_ObjectHideFlags: 0
