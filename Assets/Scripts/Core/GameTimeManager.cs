@@ -20,10 +20,16 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         }
     }
 
+    [Header("Match Duration")]
+    [Tooltip("Duracion de la partida en minutos. El cronometro cuenta hacia atras desde aqui; al llegar a 0 se lanza la oleada final imposible.")]
+    [SerializeField] private float matchDurationMinutes = 15f;
+
     private float gameStartTime;
     private bool isGameActive = false;
     private int lastSecond = -1;
-    private bool showHours = false;
+    private bool matchTimeExpired = false;
+
+    private float MatchDuration => matchDurationMinutes * 60f;
 
     public bool IsActive => isGameActive && this != null && enabled;
 
@@ -82,8 +88,15 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         if (currentSecond != lastSecond)
         {
             lastSecond = currentSecond;
-            string formattedTime = showHours ? GetFormattedTimeLong() : GetFormattedTime();
+            string formattedTime = GetFormattedCountdown();
             GameEvents.TriggerGameTimeUpdated(formattedTime);
+        }
+
+        // Al agotarse el tiempo de partida, lanza la oleada final imposible (una sola vez).
+        if (!matchTimeExpired && GetRemainingTime() <= 0f)
+        {
+            matchTimeExpired = true;
+            GameEvents.TriggerMatchTimeExpired();
         }
     }
 
@@ -105,6 +118,8 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
     {
         gameStartTime = Time.time;
         isGameActive = true;
+        matchTimeExpired = false;
+        lastSecond = -1;
 
         if (GameSessionStats.Instance != null)
         {
@@ -126,6 +141,8 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
     {
         gameStartTime = Time.time;
         isGameActive = true;
+        matchTimeExpired = false;
+        lastSecond = -1;
 
         if (GameSessionStats.Instance != null)
         {
@@ -144,6 +161,24 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
             return 0f;
 
         return Time.time - gameStartTime;
+    }
+
+    /// <summary>Tiempo restante de partida en segundos (cuenta regresiva, nunca negativo).</summary>
+    public float GetRemainingTime()
+    {
+        if (!isGameActive)
+            return MatchDuration;
+
+        return Mathf.Max(0f, MatchDuration - GetGameTime());
+    }
+
+    /// <summary>Tiempo restante formateado MM:SS para el cronometro de cuenta regresiva.</summary>
+    public string GetFormattedCountdown()
+    {
+        float remaining = GetRemainingTime();
+        int minutes = Mathf.FloorToInt(remaining / 60f);
+        int seconds = Mathf.FloorToInt(remaining % 60f);
+        return $"{minutes:00}:{seconds:00}";
     }
 
     public string GetFormattedTime()

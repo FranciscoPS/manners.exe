@@ -34,6 +34,8 @@ public static class GameEvents
 
     public static event Action<string> OnGameTimeUpdated;
 
+    public static event Action OnMatchTimeExpired;
+
     public static event Action<int> OnShopLocationChanged;
 
     public static event Action OnShopOpened;
@@ -74,6 +76,8 @@ public static class GameEvents
 
     public static void TriggerGameTimeUpdated(string formattedTime) => OnGameTimeUpdated?.Invoke(formattedTime);
 
+    public static void TriggerMatchTimeExpired() => OnMatchTimeExpired?.Invoke();
+
     public static void TriggerShopLocationChanged(int newShopIndex) => OnShopLocationChanged?.Invoke(newShopIndex);
     public static void TriggerShopOpened()      => OnShopOpened?.Invoke();
     public static void TriggerShopAutoClosed()  => OnShopAutoClosed?.Invoke();
@@ -108,6 +112,7 @@ public static class GameEvents
         OnWaveStarted = null;
         OnWaveCompleted = null;
         OnGameTimeUpdated = null;
+        OnMatchTimeExpired = null;
         OnTutorialStepShown = null;
         OnTutorialCompleted = null;
     }

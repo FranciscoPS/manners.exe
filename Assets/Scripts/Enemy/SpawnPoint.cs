@@ -105,6 +105,21 @@ public class SpawnPoint : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Spawnea de inmediato ignorando el cooldown, el aviso visual y el limite
+    /// maxEnemiesPerSpawn. Usado por la oleada final imposible (fin de partida).
+    /// </summary>
+    public void ForceSpawn(int count, EnemyConfiguration config)
+    {
+        if (config == null || count <= 0) return;
+
+        for (int i = 0; i < count; i++)
+        {
+            Vector3 spawnPosition = GetSpawnPosition();
+            SpawnSingleEnemy(spawnPosition, config);
+        }
+    }
+
     private Vector3 GetSpawnPosition()
     {
         Vector2 randomOffset = Random.insideUnitCircle * spawnRadius;

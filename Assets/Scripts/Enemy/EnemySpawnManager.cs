@@ -22,6 +22,14 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [Tooltip("Máximo de enemigos activos en escena a la vez. Impide los 10M de polígonos.")]
     [SerializeField] private int maxConcurrentEnemies = 40;
 
+    [Header("Final Rush (fin de partida)")]
+    [Tooltip("Tope de enemigos concurrentes durante la oleada final imposible. Alto para abrumar, pero acotado por seguridad en WebGL.")]
+    [SerializeField] private int finalRushConcurrentCap = 150;
+    [Tooltip("Cada cuanto (seg) la oleada final rellena enemigos hasta el tope.")]
+    [SerializeField] private float finalRushInterval = 0.3f;
+    [Tooltip("Enemigos que intenta spawnear por punto en cada tick de la oleada final.")]
+    [SerializeField] private int finalRushEnemiesPerSpawnPoint = 6;
+
     private List<SpawnPoint> allSpawnPoints = new List<SpawnPoint>();
     private int currentWaveIndex = 0;
     private int waveLoopCount = 0;
@@ -29,6 +37,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private float continuousSpawnTimer = 0f;
     private bool spawnBlocked = false;
     private bool suppressContinuousSpawn = false;
+    private bool finalRushActive = false;
 
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1;
@@ -56,6 +65,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private void OnDestroy()
     {
 
+        GameEvents.OnMatchTimeExpired -= HandleMatchTimeExpired;
+
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Unregister(this);
@@ -67,6 +78,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         DetectSpawnPoints();
         continuousSpawnTimer = continuousSpawnInterval;
         StartCoroutine(ScatterClusteredEnemies());
+
+        GameEvents.OnMatchTimeExpired += HandleMatchTimeExpired;
 
         if (waveQueue != null && waveQueue.Length > 0)
         {
@@ -82,7 +95,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         if (spawnBlocked) return;
 
-        if (enableContinuousSpawn && !isSpawningWave && !suppressContinuousSpawn)
+        if (enableContinuousSpawn && !isSpawningWave && !suppressContinuousSpawn && !finalRushActive)
         {
             continuousSpawnTimer -= deltaTime;
 
@@ -92,6 +105,56 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 continuousSpawnTimer = continuousSpawnInterval;
             }
         }
+    }
+
+    private void HandleMatchTimeExpired()
+    {
+        if (finalRushActive) return;
+        finalRushActive = true;
+        suppressContinuousSpawn = true;
+        LogDebug("Tiempo de partida agotado: iniciando oleada final imposible.");
+        PerformanceMonitor.Instance?.LogEvent("[FINAL RUSH] Tiempo agotado: oleada final imposible iniciada.");
+        StartCoroutine(FinalRushRoutine());
+    }
+
+    private IEnumerator FinalRushRoutine()
+    {
+        WaitForSeconds wait = new WaitForSeconds(finalRushInterval);
+
+        while (true)
+        {
+            if (allSpawnPoints.Count > 0)
+            {
+                int slots = finalRushConcurrentCap - EnemyHealth.ActiveEnemyCount;
+
+                for (int p = 0; p < allSpawnPoints.Count && slots > 0; p++)
+                {
+                    EnemyConfiguration cfg = GetFinalRushConfig();
+                    if (cfg == null) break;
+
+                    int batch = Mathf.Min(finalRushEnemiesPerSpawnPoint, slots);
+                    allSpawnPoints[p].ForceSpawn(batch, cfg);
+                    slots -= batch;
+                }
+            }
+
+            yield return wait;
+        }
+    }
+
+    private EnemyConfiguration GetFinalRushConfig()
+    {
+        if (continuousEnemyTypes != null && continuousEnemyTypes.Length > 0)
+            return continuousEnemyTypes[Random.Range(0, continuousEnemyTypes.Length)];
+
+        if (waveQueue != null && waveQueue.Length > 0)
+        {
+            WaveData wave = waveQueue[Mathf.Clamp(currentWaveIndex, 0, waveQueue.Length - 1)];
+            if (wave != null)
+                return wave.GetRandomEnemyConfig();
+        }
+
+        return null;
     }
 
     private void SpawnContinuousEnemies()
@@ -147,6 +210,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         while (true)
         {
+            if (finalRushActive) yield break;
 
             while (spawnBlocked) yield return null;
 
@@ -194,6 +258,11 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
         while (enemiesSpawned < totalEnemies)
         {
+            if (finalRushActive)
+            {
+                isSpawningWave = false;
+                yield break;
+            }
 
             while (EnemyHealth.ActiveEnemyCount >= maxConcurrentEnemies)
                 yield return new WaitForSeconds(0.5f);
