@@ -10,13 +10,13 @@ using UnityEngine;
 public static class ChestItemProvider
 {
     private static List<ChestItemData> cachedItems;
-    private static ChestItemData defaultGiantMagnet;
+    private static List<ChestItemData> defaultItems;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         cachedItems = null;
-        defaultGiantMagnet = null;
+        defaultItems = null;
     }
 
     /// <summary>Todos los \u00edtems de cofre disponibles (cacheados).</summary>
@@ -35,7 +35,7 @@ public static class ChestItemProvider
 
         if (cachedItems.Count == 0)
         {
-            cachedItems.Add(GetDefaultGiantMagnet());
+            cachedItems.AddRange(GetDefaultItems());
         }
 
         return cachedItems;
@@ -66,22 +66,68 @@ public static class ChestItemProvider
         switch (item.effect)
         {
             case ChestItemEffect.GiantMagnet:
-                BaseCollectible.AttractAllToPlayer();
+                BaseCollectible.AttractAllToPlayer(2f);
+                break;
+
+            case ChestItemEffect.FullHeal:
+                ApplyFullHeal();
+                break;
+
+            case ChestItemEffect.KillAllEnemies:
+                ApplyKillAllEnemies();
                 break;
         }
     }
 
-    private static ChestItemData GetDefaultGiantMagnet()
+    private static void ApplyFullHeal()
     {
-        if (defaultGiantMagnet != null)
-            return defaultGiantMagnet;
+        PlayerHealth ph = Object.FindFirstObjectByType<PlayerHealth>();
+        if (ph != null)
+            ph.Heal(ph.MaxHealth);
+    }
 
-        defaultGiantMagnet = ScriptableObject.CreateInstance<ChestItemData>();
-        defaultGiantMagnet.name = "ImanGigante";
-        defaultGiantMagnet.itemName = "Im\u00e1n Gigante";
-        defaultGiantMagnet.description = "Atrae al instante todos los orbes, monedas y objetos del mapa.";
-        defaultGiantMagnet.effect = ChestItemEffect.GiantMagnet;
-        defaultGiantMagnet.accentColor = new Color(0.4f, 0.8f, 1f);
-        return defaultGiantMagnet;
+    private static void ApplyKillAllEnemies()
+    {
+        // Copia la lista: morir desregistra al enemigo (modifica ActiveEnemies).
+        List<EnemyHealth> enemies = new List<EnemyHealth>(EnemyHealth.ActiveEnemies);
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            if (enemies[i] != null)
+                enemies[i].TakeDamage(999999f);
+        }
+    }
+
+    private static List<ChestItemData> GetDefaultItems()
+    {
+        if (defaultItems != null)
+            return defaultItems;
+
+        defaultItems = new List<ChestItemData>
+        {
+            MakeItem("ImanGigante", "Imán Gigante",
+                "Atrae hacia ti todos los orbes, monedas y objetos del mapa.",
+                ChestItemEffect.GiantMagnet, new Color(0.4f, 0.8f, 1f)),
+
+            MakeItem("CuracionTotal", "Curación Total",
+                "Restaura toda tu vida al máximo.",
+                ChestItemEffect.FullHeal, new Color(0.4f, 1f, 0.5f)),
+
+            MakeItem("Aniquilacion", "Aniquilación",
+                "Destruye a todos los enemigos en pantalla de golpe.",
+                ChestItemEffect.KillAllEnemies, new Color(1f, 0.4f, 0.4f)),
+        };
+
+        return defaultItems;
+    }
+
+    private static ChestItemData MakeItem(string assetName, string itemName, string description, ChestItemEffect effect, Color accentColor)
+    {
+        ChestItemData item = ScriptableObject.CreateInstance<ChestItemData>();
+        item.name = assetName;
+        item.itemName = itemName;
+        item.description = description;
+        item.effect = effect;
+        item.accentColor = accentColor;
+        return item;
     }
 }

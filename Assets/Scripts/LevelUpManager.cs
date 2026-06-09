@@ -352,8 +352,8 @@ public class LevelUpManager : MonoBehaviour
 
     private void GenerateChestOptions()
     {
-        int optionsToShow = Mathf.Min(2, ChestItemProvider.GetAvailableItems().Count);
-        List<ChestItemData> items = ChestItemProvider.GetRandomItems(optionsToShow);
+        // El cofre siempre ofrece UNA sola mejora al azar de las disponibles.
+        List<ChestItemData> items = ChestItemProvider.GetRandomItems(1);
 
         if (upgradeButton1 != null)
         {
@@ -362,10 +362,7 @@ public class LevelUpManager : MonoBehaviour
         }
 
         if (upgradeButton2 != null)
-        {
-            if (items.Count > 1) upgradeButton2.SetupChest(items[1]);
-            else upgradeButton2.gameObject.SetActive(false);
-        }
+            upgradeButton2.gameObject.SetActive(false);
 
         // El cofre nunca usa el tercer bot\u00f3n.
         if (upgradeButton3 != null)

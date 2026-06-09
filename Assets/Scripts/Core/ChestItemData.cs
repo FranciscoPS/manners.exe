@@ -6,7 +6,9 @@ using UnityEngine;
 /// </summary>
 public enum ChestItemEffect
 {
-    GiantMagnet
+    GiantMagnet,
+    FullHeal,
+    KillAllEnemies
 }
 
 /// <summary>
