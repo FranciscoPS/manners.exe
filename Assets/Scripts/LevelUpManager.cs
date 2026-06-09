@@ -237,7 +237,7 @@ public class LevelUpManager : MonoBehaviour
         {
             int minutes = Mathf.FloorToInt(timeRemaining / 60f);
             int seconds = Mathf.FloorToInt(timeRemaining % 60f);
-            cooldownWarningText.text = $"Próxima compra en: {minutes:00}:{seconds:00}";
+            cooldownWarningText.text = $"Prï¿½xima compra en: {minutes:00}:{seconds:00}";
             cooldownWarningText.gameObject.SetActive(true);
         }
         else
@@ -319,6 +319,54 @@ public class LevelUpManager : MonoBehaviour
             levelUpPanel.SetActive(true);
 
         GameEvents.TriggerShopOpened();
+    }
+
+    /// <summary>
+    /// Abre la selecci\u00f3n de un Cofre reutilizando el panel premium existente,
+    /// mostrando \u00edtems de efecto \u00fanico (no mejoras de stats).
+    /// </summary>
+    public void ShowChestSelection()
+    {
+        if (levelUpActive)
+            return;
+
+        levelUpActive = true;
+        currentMode = UpgradeMode.Chest;
+
+        Time.timeScale = 0f;
+
+        if (levelUpText != null)
+            levelUpText.text = "\u00a1Cofre!";
+
+        if (cooldownWarningText != null)
+            cooldownWarningText.gameObject.SetActive(false);
+
+        if (closeInstructionText != null)
+            closeInstructionText.gameObject.SetActive(false);
+
+        GenerateChestOptions();
+
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(true);
+    }
+
+    private void GenerateChestOptions()
+    {
+        // El cofre siempre ofrece UNA sola mejora al azar de las disponibles.
+        List<ChestItemData> items = ChestItemProvider.GetRandomItems(1);
+
+        if (upgradeButton1 != null)
+        {
+            if (items.Count > 0) upgradeButton1.SetupChest(items[0]);
+            else upgradeButton1.gameObject.SetActive(false);
+        }
+
+        if (upgradeButton2 != null)
+            upgradeButton2.gameObject.SetActive(false);
+
+        // El cofre nunca usa el tercer bot\u00f3n.
+        if (upgradeButton3 != null)
+            upgradeButton3.gameObject.SetActive(false);
     }
 
     public void OnUpgradeChosen()

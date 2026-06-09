@@ -1,11 +1,41 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 {
+    private static readonly List<BaseCollectible> activeCollectibles = new List<BaseCollectible>(256);
+    private static float globalAttractUntil = -1f;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        activeCollectibles.Clear();
+        globalAttractUntil = -1f;
+    }
+
+    /// <summary>
+    /// Fuerza a TODOS los pickups activos del mapa (orbes, monedas, diamantes)
+    /// a volar hacia el jugador durante <paramref name="duration"/> segundos.
+    /// Los pickups que aparezcan dentro de esa ventana también serán atraídos.
+    /// Usado por el ítem Imán Gigante.
+    /// </summary>
+    public static void AttractAllToPlayer(float duration = 2f)
+    {
+        globalAttractUntil = Time.time + duration;
+
+        for (int i = 0; i < activeCollectibles.Count; i++)
+        {
+            BaseCollectible c = activeCollectibles[i];
+            if (c == null || c.collected) continue;
+            c.isMovingToPlayer = true;
+        }
+    }
     [Header("Movement Settings")]
     [SerializeField] protected float attractionRange = 5f;
     [SerializeField] protected float moveSpeed = 8f;
     [SerializeField] protected float acceleration = 15f;
+    [Tooltip("Velocidad extra (u/s) que gana el pickup por cada segundo volando hacia el jugador. Hace que lleguen cada vez más rápido.")]
+    [SerializeField] protected float attractSpeedGrowth = 14f;
     [SerializeField] protected float lifeTime = 30f;
 
     [Header("Warning Settings")]
@@ -21,6 +51,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     protected Transform player;
     protected bool isMovingToPlayer = false;
     protected float currentSpeed = 0f;
+    protected float attractTime = 0f;
     protected bool collected = false;
     protected float lifetimeTimer;
     protected Renderer objectRenderer;
@@ -43,6 +74,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         collected = false;
         isMovingToPlayer = false;
         currentSpeed = 0f;
+        attractTime = 0f;
         isBlinking = false;
 
         if (player == null)
@@ -59,11 +91,15 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         updateOffset = Random.Range(0f, updateInterval);
         nextUpdateTime = Time.time + updateOffset;
 
+        if (!activeCollectibles.Contains(this))
+            activeCollectibles.Add(this);
+
         UpdateManager.Instance.Register(this);
     }
 
     protected virtual void OnDisable()
     {
+        activeCollectibles.Remove(this);
 
         if (UpdateManager.Instance != null)
         {
@@ -136,9 +172,15 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         if (player == null) return; // movimiento y atracción requieren jugador
 
+        // Ventana global del Imán Gigante: atrae todo mientras esté activa.
+        if (Time.time < globalAttractUntil)
+            isMovingToPlayer = true;
+
         if (isMovingToPlayer)
         {
-            currentSpeed = Mathf.Min(currentSpeed + acceleration * deltaTime, moveSpeed);
+            attractTime += deltaTime;
+            float maxSpeed = moveSpeed + attractTime * attractSpeedGrowth;
+            currentSpeed = Mathf.Min(currentSpeed + acceleration * deltaTime, maxSpeed);
             Vector3 direction = (player.position - transform.position).normalized;
             transform.position += direction * currentSpeed * deltaTime;
         }

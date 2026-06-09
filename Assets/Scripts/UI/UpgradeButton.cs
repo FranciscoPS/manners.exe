@@ -5,7 +5,8 @@ using TMPro;
 public enum UpgradeMode
 {
     LevelUp,
-    Shop
+    Shop,
+    Chest
 }
 
 public class UpgradeButton : MonoBehaviour
@@ -28,6 +29,7 @@ public class UpgradeButton : MonoBehaviour
     private PurchaseEffectFeedback purchaseEffect;
 
     private UpgradeData assignedUpgrade;
+    private ChestItemData assignedChestItem;
     private int currentLevel;
     private int nextLevel;
     private UpgradeMode currentMode = UpgradeMode.LevelUp;
@@ -137,6 +139,74 @@ public class UpgradeButton : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Configura el botón para mostrar un ítem de cofre (efecto único, sin niveles ni costo).
+    /// Siempre se muestra con el estilo premium.
+    /// </summary>
+    public void SetupChest(ChestItemData item)
+    {
+        assignedChestItem = item;
+        assignedUpgrade = null;
+        currentMode = UpgradeMode.Chest;
+
+        if (item == null)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
+        gameObject.SetActive(true);
+
+        EnsureReferences();
+
+        canAfford = true;
+        upgradeCost = 0;
+
+        if (button != null) button.interactable = true;
+        if (canvasGroup != null) canvasGroup.alpha = 1f;
+        if (holdToSelectButton != null) holdToSelectButton.SetInteractable(true);
+
+        UpdateChestUI();
+
+        if (premiumVisuals != null)
+        {
+            premiumVisuals.SetPremium(true);
+        }
+    }
+
+    private void UpdateChestUI()
+    {
+        if (assignedChestItem == null) return;
+
+        if (upgradeNameText != null)
+            upgradeNameText.text = assignedChestItem.itemName;
+
+        if (descriptionText != null)
+            descriptionText.text = assignedChestItem.description;
+
+        if (iconImage != null && assignedChestItem.icon != null)
+        {
+            iconImage.sprite = assignedChestItem.icon;
+            iconImage.gameObject.SetActive(true);
+        }
+        else if (iconImage != null)
+        {
+            iconImage.gameObject.SetActive(false);
+        }
+
+        if (costText != null)
+            costText.gameObject.SetActive(false);
+
+        if (valuesText != null)
+            valuesText.gameObject.SetActive(false);
+
+        if (labelText != null)
+        {
+            labelText.text = "¡ÍTEM ESPECIAL!";
+            labelText.color = assignedChestItem.accentColor;
+        }
+    }
+
     private void EnsureReferences()
     {
         if (upgradeNameText != null && descriptionText != null) return;
@@ -178,7 +248,7 @@ public class UpgradeButton : MonoBehaviour
     private void CheckAffordability()
     {
 
-        if (currentMode == UpgradeMode.LevelUp)
+        if (currentMode == UpgradeMode.LevelUp || currentMode == UpgradeMode.Chest)
         {
             canAfford = true;
 
@@ -422,6 +492,28 @@ public class UpgradeButton : MonoBehaviour
 
     private void OnUpgradeSelected()
     {
+        if (currentMode == UpgradeMode.Chest)
+        {
+            if (button != null)
+            {
+                button.interactable = false;
+            }
+
+            ChestItemProvider.ApplyEffect(assignedChestItem);
+
+            if (purchaseEffect != null)
+            {
+                purchaseEffect.PlayPurchaseEffect();
+            }
+
+            LevelUpManager chestManager = FindFirstObjectByType<LevelUpManager>();
+            if (chestManager != null)
+            {
+                chestManager.OnUpgradeChosen();
+            }
+            return;
+        }
+
         if (assignedUpgrade == null) return;
 
         LevelUpManager levelUpManager = FindFirstObjectByType<LevelUpManager>();
