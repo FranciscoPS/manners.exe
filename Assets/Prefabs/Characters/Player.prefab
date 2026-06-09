@@ -134,7 +134,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   rotationSpeed: 10
-  animator: {fileID: 3650540138776122685}
+  animator: {fileID: 7590107289440812755}
 --- !u!114 &8575133990424471097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,7 +147,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d6ceb5db09c748dd996c6f23e3d4e5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
-  animator: {fileID: 0}
+  animator: {fileID: 7590107289440812755}
   animationHitDelay: 0.3
   gameOverPanel: {fileID: 0}
 --- !u!114 &5744792153705871918
@@ -289,7 +289,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3650540138776122685}
+      addedObject: {fileID: 7590107289440812755}
     - targetCorrespondingSourceObject: {fileID: -4035653278781203901, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3754226771014068723}
@@ -304,7 +304,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
   m_PrefabInstance: {fileID: 1425288576591131576}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &3650540138776122685
+--- !u!95 &7590107289440812755
 Animator:
   serializedVersion: 7
   m_ObjectHideFlags: 0

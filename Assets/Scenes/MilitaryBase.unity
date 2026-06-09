@@ -23145,21 +23145,29 @@ MonoBehaviour:
   - poolType: 0
     prefabs: []
     prefab: {fileID: 323352707975832528, guid: ab5a2bcba21aa4947967a00352039676, type: 3}
+    prewarmCount: 20
+    preventGrow: 0
     defaultCapacity: 10
     maxSize: 20
   - poolType: 1
     prefabs: []
     prefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
+    prewarmCount: 20
+    preventGrow: 0
     defaultCapacity: 10
     maxSize: 20
   - poolType: 7
     prefabs: []
     prefab: {fileID: 8585222995538249419, guid: 7538e81a0145545408dbf54b64a33065, type: 3}
+    prewarmCount: 20
+    preventGrow: 0
     defaultCapacity: 30
     maxSize: 100
   - poolType: 8
     prefabs: []
     prefab: {fileID: 5155632646051148866, guid: 8a653a602dbbee74e883499f7ff9c6fc, type: 3}
+    prewarmCount: 20
+    preventGrow: 0
     defaultCapacity: 20
     maxSize: 50
   - poolType: 5
@@ -23168,6 +23176,8 @@ MonoBehaviour:
     - {fileID: 115449012237020419, guid: a6598aeada4507949a30e027777b45e5, type: 3}
     - {fileID: 115449012237020419, guid: a0ef300a53c16fd4b83c67e84723d40a, type: 3}
     prefab: {fileID: 7510731991543114636, guid: 84d6e8f3fe51ec9428d7ee3d1f6f3137, type: 3}
+    prewarmCount: 20
+    preventGrow: 0
     defaultCapacity: 20
     maxSize: 50
   - poolType: 6
@@ -23176,8 +23186,13 @@ MonoBehaviour:
     - {fileID: 8931221026133902567, guid: 6a5039277f3909c48bf8f04f2aed5342, type: 3}
     - {fileID: 8931221026133902567, guid: 772fa5f309828cd42b1129ed79458142, type: 3}
     prefab: {fileID: 7510731991543114636, guid: de7621a1b9fec1f4c94c69eda121f00a, type: 3}
+    prewarmCount: 20
+    preventGrow: 0
     defaultCapacity: 20
     maxSize: 50
+  prewarmSpreadOverFrames: 1
+  prewarmObjectsPerFrame: 25
+  warnOnGrow: 0
 --- !u!1001 &1137388635
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37635,11 +37650,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1805080364}
   m_CullTransparentMesh: 1
---- !u!95 &1814733049 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 4037166369235075890, guid: 9490baf89f380224695577b6d903edf6, type: 3}
-  m_PrefabInstance: {fileID: 3906033671347933169}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1817620425
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -44345,7 +44355,7 @@ PrefabInstance:
     - target: {fileID: 2936892197592012552, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: animator
       value: 
-      objectReference: {fileID: 1814733049}
+      objectReference: {fileID: 3906033671347933170}
     - target: {fileID: 3308049139629662346, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 27.228083
@@ -44577,7 +44587,7 @@ PrefabInstance:
     - target: {fileID: 8575133990424471097, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: animator
       value: 
-      objectReference: {fileID: 1814733049}
+      objectReference: {fileID: 3906033671347933170}
     - target: {fileID: 8575133990424471097, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: gameOverPanel
       value: 
@@ -44607,6 +44617,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+--- !u!95 &3906033671347933170 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 7590107289440812755, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+  m_PrefabInstance: {fileID: 3906033671347933169}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
