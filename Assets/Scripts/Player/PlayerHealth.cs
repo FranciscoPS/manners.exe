@@ -8,6 +8,10 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     [SerializeField] private float animationHitDelay = 0.3f;
     [SerializeField] private GameObject gameOverPanel;
 
+    [Header("TEST")]
+    [Tooltip("TEST: el jugador no recibe dano (invulnerable permanente). Quitar antes de publicar.")]
+    [SerializeField] private bool testInvulnerable = false;
+
     private float maxHealth;
     private float currentHealth;
     private DamageTween damageTween;
@@ -104,6 +108,9 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     public void TakeDamage(float damage)
     {
         if (isDead) return;
+
+        // TEST: invulnerabilidad permanente para pruebas.
+        if (testInvulnerable) return;
 
         if (isInvulnerable)
         {

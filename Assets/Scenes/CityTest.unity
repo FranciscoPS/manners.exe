@@ -41393,6 +41393,16 @@ MonoBehaviour:
   continuousEnemiesPerSpawn: 2
   continuousEnemyTypes: []
   maxConcurrentEnemies: 450
+  finalRushSpawnInterval: 0.5
+  finalRushEnemiesPerSpawnPoint: 4
+  finalRushTierInterval: 10
+  finalRushBaseHealth: 200
+  finalRushHealthPerTier: 300
+  finalRushBaseSpeed: 6
+  finalRushSpeedPerTier: 1.5
+  finalRushMaxSpeed: 22
+  finalRushContactDamage: 50
+  testFinalRushFromStart: 1
 --- !u!1001 &1630993350
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -56588,6 +56598,10 @@ PrefabInstance:
       propertyPath: gameOverPanel
       value: 
       objectReference: {fileID: 803575742}
+    - target: {fileID: 8575133990424471097, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+      propertyPath: testInvulnerable
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8575133990424471097, guid: 9490baf89f380224695577b6d903edf6, type: 3}
       propertyPath: animationHitDelay
       value: 0.3
