@@ -24,38 +24,38 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private int maxConcurrentEnemies = 40;
 
     [Header("Final Rush (fin de partida)")]
-    [Tooltip("Tope inicial de enemigos concurrentes al empezar la oleada final.")]
-    [SerializeField] private int finalRushStartCap = 500;
+    [Tooltip("Tope de enemigos vivos a la vez durante la oleada final. ~1000 para abrumar (cota de seguridad en WebGL).")]
+    [SerializeField] private int finalRushStartCap = 1000;
     [Tooltip("Tope maximo de enemigos concurrentes (acotado por seguridad en WebGL).")]
-    [SerializeField] private int finalRushMaxCap = 500;
+    [SerializeField] private int finalRushMaxCap = 1000;
     [Tooltip("Cuanto crece el tope de enemigos por segundo durante la oleada final.")]
-    [SerializeField] private float finalRushCapGrowthPerSecond = 14f;
-    [Tooltip("Cada cuanto (seg) la oleada final rellena enemigos hasta el tope.")]
-    [SerializeField] private float finalRushInterval = 0.25f;
+    [SerializeField] private float finalRushCapGrowthPerSecond = 1000f;
+    [Tooltip("Cada cuanto (seg) la oleada final rellena enemigos hasta el tope. Muy bajo = spawn casi continuo.")]
+    [SerializeField] private float finalRushInterval = 0.05f;
     [Tooltip("Maximo de enemigos nuevos por tick (rellenado hacia el tope).")]
-    [SerializeField] private int finalRushSpawnPerTick = 40;
+    [SerializeField] private int finalRushSpawnPerTick = 60;
 
     [Header("Final Rush - Anillo alrededor del jugador")]
     [Tooltip("Radio interno del anillo donde aparecen los enemigos respecto al jugador.")]
-    [SerializeField] private float finalRushRingMin = 6f;
+    [SerializeField] private float finalRushRingMin = 5f;
     [Tooltip("Radio externo del anillo donde aparecen los enemigos respecto al jugador.")]
-    [SerializeField] private float finalRushRingMax = 12f;
+    [SerializeField] private float finalRushRingMax = 11f;
 
     [Header("Final Rush - Stats escalados")]
     [Tooltip("Dano de contacto inicial de los enemigos de la oleada final.")]
-    [SerializeField] private float finalRushBaseDamage = 55f;
+    [SerializeField] private float finalRushBaseDamage = 120f;
     [Tooltip("Cuanto sube el dano de contacto por segundo (vence los i-frames del jugador).")]
-    [SerializeField] private float finalRushDamageGrowthPerSecond = 30f;
-    [Tooltip("Vida inicial de los enemigos de la oleada final (evita que el jugador los mate de un toque).")]
-    [SerializeField] private float finalRushBaseHealth = 250f;
-    [Tooltip("Cuanto sube la vida por segundo (mantiene densa la horda).")]
-    [SerializeField] private float finalRushHealthGrowthPerSecond = 150f;
-    [Tooltip("Velocidad inicial de los enemigos de la oleada final.")]
-    [SerializeField] private float finalRushBaseSpeed = 7f;
+    [SerializeField] private float finalRushDamageGrowthPerSecond = 60f;
+    [Tooltip("Vida inicial de los enemigos de la oleada final. Enorme: el jugador NO debe poder matarlos por mas mejoras que tenga.")]
+    [SerializeField] private float finalRushBaseHealth = 100000f;
+    [Tooltip("Cuanto sube la vida por segundo (mantiene la horda intacta).")]
+    [SerializeField] private float finalRushHealthGrowthPerSecond = 50000f;
+    [Tooltip("Velocidad inicial de los enemigos de la oleada final (mas rapida que el jugador).")]
+    [SerializeField] private float finalRushBaseSpeed = 15f;
     [Tooltip("Cuanto sube la velocidad por segundo (impide huir), hasta el tope.")]
-    [SerializeField] private float finalRushSpeedGrowthPerSecond = 0.5f;
+    [SerializeField] private float finalRushSpeedGrowthPerSecond = 2f;
     [Tooltip("Velocidad maxima de los enemigos de la oleada final.")]
-    [SerializeField] private float finalRushMaxSpeed = 15f;
+    [SerializeField] private float finalRushMaxSpeed = 30f;
 
     private List<SpawnPoint> allSpawnPoints = new List<SpawnPoint>();
     private int currentWaveIndex = 0;
