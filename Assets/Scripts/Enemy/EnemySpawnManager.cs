@@ -30,17 +30,17 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     [Header("Final Rush - Escalado por escalones")]
     [Tooltip("Cada cuantos segundos los enemigos suben de nivel (mas vida y velocidad).")]
-    [SerializeField] private float finalRushTierInterval = 10f;
-    [Tooltip("Vida de los enemigos en el primer escalon (nivel 0).")]
-    [SerializeField] private float finalRushBaseHealth = 200f;
-    [Tooltip("Cuanta vida se suma por cada escalon de 10s.")]
-    [SerializeField] private float finalRushHealthPerTier = 300f;
+    [SerializeField] private float finalRushTierInterval = 30f;
+    [Tooltip("Vida de los enemigos en el primer escalon (nivel 0). Empieza en la vida normal.")]
+    [SerializeField] private float finalRushBaseHealth = 30f;
+    [Tooltip("Multiplicador EXPONENCIAL de vida por escalon: vida = base * mult^escalon. Ej 4 -> 30,120,480,1920...")]
+    [SerializeField] private float finalRushHealthTierMultiplier = 4f;
     [Tooltip("Velocidad de los enemigos en el primer escalon (nivel 0).")]
     [SerializeField] private float finalRushBaseSpeed = 6f;
-    [Tooltip("Cuanta velocidad se suma por cada escalon de 10s.")]
-    [SerializeField] private float finalRushSpeedPerTier = 1.5f;
+    [Tooltip("Cuanta velocidad se suma por cada escalon.")]
+    [SerializeField] private float finalRushSpeedPerTier = 2f;
     [Tooltip("Velocidad maxima que pueden alcanzar los enemigos al escalar.")]
-    [SerializeField] private float finalRushMaxSpeed = 22f;
+    [SerializeField] private float finalRushMaxSpeed = 24f;
     [Tooltip("Dano de contacto de los enemigos de la oleada final.")]
     [SerializeField] private float finalRushContactDamage = 50f;
 
@@ -160,11 +160,11 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         {
             float elapsed = Time.time - startTime;
 
-            // Escalon actual: sube cada finalRushTierInterval segundos (cada 10s por defecto).
+            // Escalon actual: sube cada finalRushTierInterval segundos (cada 30s por defecto).
             int tier = Mathf.FloorToInt(elapsed / finalRushTierInterval);
 
-            // Stats por escalon: mas vida y mas velocidad en cada nivel.
-            buffed.maxHealth = finalRushBaseHealth + finalRushHealthPerTier * tier;
+            // Vida EXPONENCIAL por escalon: empieza normal y crece muy rapido (base * mult^tier).
+            buffed.maxHealth = finalRushBaseHealth * Mathf.Pow(finalRushHealthTierMultiplier, tier);
             buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedPerTier * tier);
             buffed.contactDamage = finalRushContactDamage;
 
