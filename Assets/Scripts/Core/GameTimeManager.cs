@@ -122,6 +122,8 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         matchTimeExpired = false;
         lastSecond = -1;
 
+        GameEvents.TriggerGameStarted();
+
         if (GameSessionStats.Instance != null)
         {
             GameSessionStats.Instance.StartSession();
@@ -144,6 +146,8 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         isGameActive = true;
         matchTimeExpired = false;
         lastSecond = -1;
+
+        GameEvents.TriggerGameStarted();
 
         if (GameSessionStats.Instance != null)
         {

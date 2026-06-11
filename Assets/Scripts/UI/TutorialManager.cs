@@ -19,15 +19,15 @@ public class TutorialStep
     public bool freezeGame = true;
 
     public string stepType = "normal";
-    public string nextButtonLabel  = "Next";
-    public string yesButtonLabel   = "Yes";
-    public string noButtonLabel    = "No";
+    public string nextButtonLabel = "Next";
+    public string yesButtonLabel = "Yes";
+    public string noButtonLabel = "No";
 
-    public string nextStepId     = "";
+    public string nextStepId = "";
 
-    public string yesGoesToStep  = "";
+    public string yesGoesToStep = "";
 
-    public string noGoesToStep   = "";
+    public string noGoesToStep = "";
 
     public string waitForEvent = "";
 
@@ -55,15 +55,15 @@ public class TutorialManager : MonoBehaviour
     private static void ResetStatics() => Instance = null;
 
     [Header("UI References")]
-    [SerializeField] private GameObject     tutorialPanel;
+    [SerializeField] private GameObject tutorialPanel;
     [SerializeField] private TextMeshProUGUI messageText;
-    [SerializeField] private Button          nextButton;
+    [SerializeField] private Button nextButton;
     [SerializeField] private TextMeshProUGUI nextButtonText;
-    [SerializeField] private GameObject     arrowObject;
-    [SerializeField] private RectTransform  arrowTransform;
+    [SerializeField] private GameObject arrowObject;
+    [SerializeField] private RectTransform arrowTransform;
 
     [Header("Choice Buttons")]
-    [SerializeField] private Button          choiceNoButton;
+    [SerializeField] private Button choiceNoButton;
     [SerializeField] private TextMeshProUGUI choiceNoButtonText;
 
     [Header("Skip All")]
@@ -71,10 +71,10 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private Button skipAllButton;
 
     [Header("Typewriter Effect")]
-    [SerializeField] private float     charsPerSecond = 38f;
+    [SerializeField] private float charsPerSecond = 38f;
     [SerializeField] private AudioClip typingSound;
-    [SerializeField] [Range(0f, 1f)]   private float typingVolume = 0.4f;
-    [SerializeField] [Range(0.75f, 1.25f)] private float typingPitch = 1.0f;
+    [SerializeField][Range(0f, 1f)] private float typingVolume = 0.4f;
+    [SerializeField][Range(0.75f, 1.25f)] private float typingPitch = 1.0f;
 
     [Header("HUD Highlight Targets")]
     [Tooltip("Arrastra aquí: CurrencyPanel")]
@@ -91,11 +91,11 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private RectTransform targetMinimap;
 
     [Header("Highlight Pulse")]
-    [SerializeField] private float highlightPulseScale    = 1.12f;
+    [SerializeField] private float highlightPulseScale = 1.12f;
     [SerializeField] private float highlightPulseDuration = 0.55f;
 
     private TutorialStepList data;
-    private int          currentStepIndex = -1;
+    private int currentStepIndex = -1;
     private TutorialStep currentStep;
 
     private enum TutorialState
@@ -110,35 +110,39 @@ public class TutorialManager : MonoBehaviour
 
     private bool weFrozeTime = false;
 
-    private bool shownCoins            = false;
-    private bool shownFirstShot        = false;
-    private bool shownFirstOrb         = false;
-    private bool shownFirstDamage      = false;
-    private bool shownFirstLevelUp     = false;
-    private bool shownFirstShopOpened  = false;
-    private bool shownFirstShopClosed  = false;
+    private bool shownCoins = false;
+    private bool shownFirstShot = false;
+    private bool shownFirstOrb = false;
+    private bool shownFirstDamage = false;
+    private bool shownFirstLevelUp = false;
+    private bool shownFirstShopOpened = false;
+    private bool shownFirstShopClosed = false;
+    private bool shownGameStarted = false;
+    private bool shownChestSpawned = false;
 
     private const string TUTORIAL_DONE_KEY = "TutorialCompleted_v1";
 
-    private static bool s_isSessionRestart     = false;
-    private static bool s_seqDone              = false;
-    private static bool s_shownCoins           = false;
-    private static bool s_shownFirstShot       = false;
-    private static bool s_shownFirstOrb        = false;
-    private static bool s_shownFirstDamage     = false;
-    private static bool s_shownFirstLevelUp    = false;
+    private static bool s_isSessionRestart = false;
+    private static bool s_seqDone = false;
+    private static bool s_shownCoins = false;
+    private static bool s_shownFirstShot = false;
+    private static bool s_shownFirstOrb = false;
+    private static bool s_shownFirstDamage = false;
+    private static bool s_shownFirstLevelUp = false;
     private static bool s_shownFirstShopOpened = false;
     private static bool s_shownFirstShopClosed = false;
+    private static bool s_shownGameStarted = false;
+    private static bool s_shownChestSpawned = false;
 
-    private Coroutine   typewriterCoroutine;
-    private bool        isTyping = false;
+    private Coroutine typewriterCoroutine;
+    private bool isTyping = false;
     private AudioSource typingSource;
 
-    private Coroutine     pulseCoroutine;
+    private Coroutine pulseCoroutine;
     private RectTransform currentHighlightTarget;
-    private Vector3       highlightOriginalScale;
-    private Canvas        tempHighlightCanvas;
-    private bool          addedTempCanvas;
+    private Vector3 highlightOriginalScale;
+    private Canvas tempHighlightCanvas;
+    private bool addedTempCanvas;
 
     private void Awake()
     {
@@ -146,10 +150,12 @@ public class TutorialManager : MonoBehaviour
         Instance = this;
 
         typingSource = gameObject.AddComponent<AudioSource>();
-        typingSource.playOnAwake  = false;
-        typingSource.loop         = false;
+        typingSource.playOnAwake = false;
+        typingSource.loop = false;
         typingSource.spatialBlend = 0f;
-        typingSource.priority     = 64;
+        typingSource.priority = 64;
+
+        GameEvents.OnChestSpawned += OnChestSpawned_Tutorial;
     }
 
     private void Start()
@@ -168,13 +174,15 @@ public class TutorialManager : MonoBehaviour
 
             if (!LoadDataAndValidate()) return;
 
-            shownCoins           = s_shownCoins;
-            shownFirstShot       = s_shownFirstShot;
-            shownFirstOrb        = s_shownFirstOrb;
-            shownFirstDamage     = s_shownFirstDamage;
-            shownFirstLevelUp    = s_shownFirstLevelUp;
+            shownCoins = s_shownCoins;
+            shownFirstShot = s_shownFirstShot;
+            shownFirstOrb = s_shownFirstOrb;
+            shownFirstDamage = s_shownFirstDamage;
+            shownFirstLevelUp = s_shownFirstLevelUp;
             shownFirstShopOpened = s_shownFirstShopOpened;
             shownFirstShopClosed = s_shownFirstShopClosed;
+            shownGameStarted = s_shownGameStarted;
+            shownChestSpawned = s_shownChestSpawned;
 
             if (s_seqDone)
             {
@@ -185,9 +193,9 @@ public class TutorialManager : MonoBehaviour
             }
             else
             {
-                int first = FindNextSequentialStepAfter(-1);
+                int first = FindStepByEvent("game_started");
                 if (first >= 0) ShowStep(first);
-                else            EnterWaitingForAnyEvent();
+                else EnterWaitingForAnyEvent();
             }
             return;
         }
@@ -198,9 +206,9 @@ public class TutorialManager : MonoBehaviour
 
         if (!LoadDataAndValidate()) return;
 
-        int firstStep = FindNextSequentialStepAfter(-1);
+        int firstStep = FindStepByEvent("game_started");
         if (firstStep >= 0) ShowStep(firstStep);
-        else                EnterWaitingForAnyEvent();
+        else EnterWaitingForAnyEvent();
     }
 
     private bool LoadDataAndValidate()
@@ -222,7 +230,7 @@ public class TutorialManager : MonoBehaviour
         bool hasChoice = Array.Exists(data.steps, s => s.stepType == "choice");
         if (hasChoice && choiceNoButton == null)
 
-        if (!ok) { state = TutorialState.Complete; return false; }
+            if (!ok) { state = TutorialState.Complete; return false; }
 
         nextButton.onClick.AddListener(OnNextClicked);
         if (choiceNoButton != null)
@@ -240,9 +248,12 @@ public class TutorialManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (nextButton     != null) nextButton.onClick.RemoveListener(OnNextClicked);
+        if (nextButton != null) nextButton.onClick.RemoveListener(OnNextClicked);
         if (choiceNoButton != null) choiceNoButton.onClick.RemoveListener(OnNoClicked);
-        if (skipAllButton  != null) skipAllButton.onClick.RemoveListener(OnSkipAllClicked);
+        if (skipAllButton != null) skipAllButton.onClick.RemoveListener(OnSkipAllClicked);
+
+        GameEvents.OnChestSpawned -= OnChestSpawned_Tutorial;
+
         UnsubscribeAll();
     }
 
@@ -258,9 +269,9 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        if (currentStep.endsAfterNext)       { CompleteTutorial(); return; }
-        if (currentStep.returnToWaitingOnNext){ ReturnToWaiting();  return; }
-        if (currentStep.unfreezeOnNext)       { EnterWaitingForCoins(); return; }
+        if (currentStep.endsAfterNext) { CompleteTutorial(); return; }
+        if (currentStep.returnToWaitingOnNext) { ReturnToWaiting(); return; }
+        if (currentStep.unfreezeOnNext) { EnterWaitingForCoins(); return; }
 
         if (!string.IsNullOrEmpty(currentStep.nextStepId))
         {
@@ -270,7 +281,7 @@ public class TutorialManager : MonoBehaviour
 
         int next = FindNextSequentialStepAfter(currentStepIndex);
         if (next >= 0) ShowStep(next);
-        else           EnterWaitingForAnyEvent();
+        else EnterWaitingForAnyEvent();
     }
 
     private void OnNoClicked()
@@ -286,20 +297,20 @@ public class TutorialManager : MonoBehaviour
         if (string.IsNullOrEmpty(id)) { CompleteTutorial(); return; }
         int idx = FindStepIndexById(id);
         if (idx >= 0) ShowStep(idx);
-        else          CompleteTutorial();
+        else CompleteTutorial();
     }
 
     private void ShowStep(int index)
     {
         currentStepIndex = index;
-        currentStep      = data.steps[index];
-        state            = TutorialState.ShowingStep;
+        currentStep = data.steps[index];
+        state = TutorialState.ShowingStep;
 
         if (currentStep.stepType == "choice")
         {
-            if (choiceNoButton     != null) choiceNoButton.gameObject.SetActive(true);
-            if (nextButtonText     != null) nextButtonText.text     = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? "Yes" : currentStep.yesButtonLabel;
-            if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel)  ? "No"  : currentStep.noButtonLabel;
+            if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(true);
+            if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? "Yes" : currentStep.yesButtonLabel;
+            if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel) ? "No" : currentStep.noButtonLabel;
         }
         else
         {
@@ -338,12 +349,12 @@ public class TutorialManager : MonoBehaviour
         RectTransform target = targetName.ToLower() switch
         {
             "currency" => targetCurrencyPanel,
-            "expbar"   => targetExpBar,
-            "health"   => targetHealthBar,
-            "hud"      => targetHUD,
-            "timer"    => targetTimer,
-            "minimap"  => targetMinimap,
-            _          => null
+            "expbar" => targetExpBar,
+            "health" => targetHealthBar,
+            "hud" => targetHUD,
+            "timer" => targetTimer,
+            "minimap" => targetMinimap,
+            _ => null
         };
 
         if (target == null)
@@ -353,8 +364,8 @@ public class TutorialManager : MonoBehaviour
 
         StopHighlight();
 
-        currentHighlightTarget  = target;
-        highlightOriginalScale  = target.localScale;
+        currentHighlightTarget = target;
+        highlightOriginalScale = target.localScale;
 
         tempHighlightCanvas = target.GetComponent<Canvas>();
         if (tempHighlightCanvas == null)
@@ -367,7 +378,7 @@ public class TutorialManager : MonoBehaviour
             addedTempCanvas = false;
         }
         tempHighlightCanvas.overrideSorting = true;
-        tempHighlightCanvas.sortingOrder    = 9999;
+        tempHighlightCanvas.sortingOrder = 9999;
 
         pulseCoroutine = StartCoroutine(PulseRoutine(target));
     }
@@ -396,8 +407,8 @@ public class TutorialManager : MonoBehaviour
     private IEnumerator PulseRoutine(RectTransform target)
     {
         Vector3 baseScale = highlightOriginalScale;
-        Vector3 bigScale  = baseScale * highlightPulseScale;
-        float   half      = highlightPulseDuration * 0.5f;
+        Vector3 bigScale = baseScale * highlightPulseScale;
+        float half = highlightPulseDuration * 0.5f;
 
         while (true)
         {
@@ -432,10 +443,10 @@ public class TutorialManager : MonoBehaviour
 
         if (typingSound != null && typingSource != null)
         {
-            typingSource.clip   = typingSound;
-            typingSource.loop   = true;
+            typingSource.clip = typingSound;
+            typingSource.loop = true;
             typingSource.volume = typingVolume * (MusicManager.Instance != null ? MusicManager.Instance.GetSFXVolume() : 1f);
-            typingSource.pitch  = typingPitch;
+            typingSource.pitch = typingPitch;
             typingSource.Play();
         }
 
@@ -494,22 +505,24 @@ public class TutorialManager : MonoBehaviour
         {
             int idx = FindStepByEvent("all_events_complete");
             if (idx >= 0) ShowStep(idx);
-            else          CompleteTutorial();
+            else CompleteTutorial();
             return;
         }
 
         state = TutorialState.WaitingForAnyEvent;
         UnsubscribeAll();
 
-        if (!shownCoins && CurrencyManager.Instance != null)
-            CurrencyManager.Instance.OnCoinsChanged += OnCoinsChanged_Tutorial;
+        if (!shownFirstShopClosed) GameEvents.OnShopAutoClosed += OnFirstShopAutoClosed;
+    }
 
-        if (!shownFirstShot)        GameEvents.OnEnemyDamaged     += OnFirstEnemyDamaged;
-        if (!shownFirstOrb)         GameEvents.OnExperienceGained  += OnFirstOrbCollected;
-        if (!shownFirstDamage)      GameEvents.OnPlayerDamaged     += OnFirstPlayerDamaged;
-        if (!shownFirstLevelUp)     GameEvents.OnLevelUp           += OnFirstLevelUp;
-        if (!shownFirstShopOpened)  GameEvents.OnShopOpened        += OnFirstShopOpened;
-        if (!shownFirstShopClosed)  GameEvents.OnShopAutoClosed    += OnFirstShopAutoClosed;
+    private void OnChestSpawned_Tutorial()
+    {
+        if (shownChestSpawned || s_shownChestSpawned) return;
+        shownChestSpawned = true;
+        s_shownChestSpawned = true;
+
+        int idx = FindStepByEvent("chest_spawned");
+        if (idx >= 0) ShowStep(idx);
     }
 
     private void OnCoinsChanged_Tutorial(int coins)
@@ -517,7 +530,7 @@ public class TutorialManager : MonoBehaviour
         if (state != TutorialState.WaitingForAnyEvent) return;
         if (coins <= 0) return;
 
-        shownCoins = true;  s_shownCoins = true;
+        shownCoins = true; s_shownCoins = true;
 
         if (EnemySpawnManager.Instance != null)
             EnemySpawnManager.Instance.SetSpawnBlocked(false);
@@ -530,7 +543,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstEnemyDamaged(float damage)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstShot = true;  s_shownFirstShot = true;
+        shownFirstShot = true; s_shownFirstShot = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_enemy_damaged");
         if (idx >= 0) ShowStep(idx);
@@ -540,7 +553,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstOrbCollected(int amount)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstOrb = true;  s_shownFirstOrb = true;
+        shownFirstOrb = true; s_shownFirstOrb = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_orb_collected");
         if (idx >= 0) ShowStep(idx);
@@ -550,7 +563,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstPlayerDamaged(float damage)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstDamage = true;  s_shownFirstDamage = true;
+        shownFirstDamage = true; s_shownFirstDamage = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_player_damaged");
         if (idx >= 0) ShowStep(idx);
@@ -560,7 +573,7 @@ public class TutorialManager : MonoBehaviour
     private void OnFirstLevelUp(int level)
     {
         if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstLevelUp = true;  s_shownFirstLevelUp = true;
+        shownFirstLevelUp = true; s_shownFirstLevelUp = true;
         UnsubscribeAll();
         int idx = FindStepByEvent("first_level_up");
         if (idx >= 0) ShowStep(idx);
@@ -569,9 +582,11 @@ public class TutorialManager : MonoBehaviour
 
     private void OnFirstShopOpened()
     {
-        if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstShopOpened = true;  s_shownFirstShopOpened = true;
-        UnsubscribeAll();
+        if (shownFirstShopOpened || s_shownFirstShopOpened) return;
+        shownFirstShopOpened = true; s_shownFirstShopOpened = true;
+
+        GameEvents.OnShopOpened -= OnFirstShopOpened;
+
         int idx = FindStepByEvent("first_shop_opened");
         if (idx >= 0) ShowStep(idx);
         else EnterWaitingForAnyEvent();
@@ -579,9 +594,11 @@ public class TutorialManager : MonoBehaviour
 
     private void OnFirstShopAutoClosed()
     {
-        if (state != TutorialState.WaitingForAnyEvent) return;
-        shownFirstShopClosed = true;  s_shownFirstShopClosed = true;
-        UnsubscribeAll();
+        if (shownFirstShopClosed || s_shownFirstShopClosed) return;
+        shownFirstShopClosed = true; s_shownFirstShopClosed = true;
+
+        GameEvents.OnShopAutoClosed -= OnFirstShopAutoClosed;
+
         int idx = FindStepByEvent("first_shop_auto_closed");
         if (idx >= 0) ShowStep(idx);
         else EnterWaitingForAnyEvent();
@@ -592,12 +609,12 @@ public class TutorialManager : MonoBehaviour
         if (CurrencyManager.Instance != null)
             CurrencyManager.Instance.OnCoinsChanged -= OnCoinsChanged_Tutorial;
 
-        GameEvents.OnEnemyDamaged     -= OnFirstEnemyDamaged;
+        GameEvents.OnEnemyDamaged -= OnFirstEnemyDamaged;
         GameEvents.OnExperienceGained -= OnFirstOrbCollected;
-        GameEvents.OnPlayerDamaged    -= OnFirstPlayerDamaged;
-        GameEvents.OnLevelUp          -= OnFirstLevelUp;
-        GameEvents.OnShopOpened       -= OnFirstShopOpened;
-        GameEvents.OnShopAutoClosed   -= OnFirstShopAutoClosed;
+        GameEvents.OnPlayerDamaged -= OnFirstPlayerDamaged;
+        GameEvents.OnLevelUp -= OnFirstLevelUp;
+        GameEvents.OnShopOpened -= OnFirstShopOpened;
+        GameEvents.OnShopAutoClosed -= OnFirstShopAutoClosed;
     }
 
     private void FreezeGame()
@@ -605,7 +622,7 @@ public class TutorialManager : MonoBehaviour
         if (Time.timeScale != 0f)
         {
             Time.timeScale = 0f;
-            weFrozeTime    = true;
+            weFrozeTime = true;
         }
 
     }
@@ -614,7 +631,7 @@ public class TutorialManager : MonoBehaviour
     {
         if (!weFrozeTime) return;
         Time.timeScale = 1f;
-        weFrozeTime    = false;
+        weFrozeTime = false;
     }
 
     private void HidePanel()
@@ -654,15 +671,17 @@ public class TutorialManager : MonoBehaviour
 
     public static void ClearSession()
     {
-        s_isSessionRestart     = false;
-        s_seqDone              = false;
-        s_shownCoins           = false;
-        s_shownFirstShot       = false;
-        s_shownFirstOrb        = false;
-        s_shownFirstDamage     = false;
-        s_shownFirstLevelUp    = false;
+        s_isSessionRestart = false;
+        s_seqDone = false;
+        s_shownCoins = false;
+        s_shownFirstShot = false;
+        s_shownFirstOrb = false;
+        s_shownFirstDamage = false;
+        s_shownFirstLevelUp = false;
         s_shownFirstShopOpened = false;
         s_shownFirstShopClosed = false;
+        s_shownGameStarted = false;
+        s_shownChestSpawned = false;
     }
 
     private int FindNextSequentialStepAfter(int afterIndex)

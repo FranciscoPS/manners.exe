@@ -159,6 +159,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         Vector3 pos = centerPoint + new Vector3(Mathf.Cos(angle) * radius, spawnHeight, Mathf.Sin(angle) * radius);
 
         activeChest = Instantiate(prefab, pos, prefab.transform.rotation);
+        GameEvents.TriggerChestSpawned();
 
         if (activeChest.GetComponent<ChestPickup>() == null)
         {
