@@ -15,10 +15,18 @@ public class MinimapSystem : MonoBehaviour
     [SerializeField] private RawImage mapDisplay;
     [SerializeField] private RectTransform playerIcon;
     [SerializeField] private RectTransform shopIcon;
+    [SerializeField] private RectTransform chestIcon;
     [SerializeField] private RectTransform enemyIconTemplate;
 
     [Header("Icon Settings")]
     [SerializeField] private float iconEdgePadding = 0.08f;
+
+    [Header("Chest Icon Pulse")]
+    [Tooltip("Cuántas veces por segundo pulsa el icono del cofre (grande/pequeño). Más bajo = más lento.")]
+    [SerializeField] private float chestPulseFrequency = 0.7f;
+    [Tooltip("Escala mínima y máxima del pulso del icono del cofre.")]
+    [SerializeField] private float chestPulseMinScale = 0.85f;
+    [SerializeField] private float chestPulseMaxScale = 1.25f;
 
     private Transform playerTransform;
     private readonly List<RectTransform> _enemyIconPool = new List<RectTransform>();
@@ -55,6 +63,9 @@ public class MinimapSystem : MonoBehaviour
         if (shopIcon != null)
             shopIcon.gameObject.SetActive(false);
 
+        if (chestIcon != null)
+            chestIcon.gameObject.SetActive(false);
+
         // Hide the template — only clones will be used
         if (enemyIconTemplate != null)
             enemyIconTemplate.gameObject.SetActive(false);
@@ -76,6 +87,7 @@ public class MinimapSystem : MonoBehaviour
         minimapCamera.transform.position = new Vector3(playerPos.x, playerPos.y + cameraHeight, playerPos.z);
 
         RefreshShopIcon();
+        RefreshChestIcon();
         UpdateEnemyIcons();
     }
 
@@ -144,5 +156,25 @@ public class MinimapSystem : MonoBehaviour
 
         shopIcon.gameObject.SetActive(true);
         PlaceIcon(shopIcon, activeShop.transform.position);
+    }
+
+    private void RefreshChestIcon()
+    {
+        if (chestIcon == null) return;
+
+        if (ChestSpawner.TryGetActiveChestPosition(out Vector3 chestPos))
+        {
+            chestIcon.gameObject.SetActive(true);
+            PlaceIcon(chestIcon, chestPos);
+
+            // Pulso lento grande/pequeño para llamar la atención.
+            float t = (Mathf.Sin(Time.unscaledTime * chestPulseFrequency * Mathf.PI * 2f) + 1f) * 0.5f;
+            float scale = Mathf.Lerp(chestPulseMinScale, chestPulseMaxScale, t);
+            chestIcon.localScale = new Vector3(scale, scale, 1f);
+        }
+        else
+        {
+            chestIcon.gameObject.SetActive(false);
+        }
     }
 }

@@ -19,7 +19,10 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
 
     [Header("Spawn Position")]
     [SerializeField] private Vector3 centerPoint = Vector3.zero;
-    [SerializeField] private float spawnRadius = 5f;
+    [Tooltip("Radio MÁXIMO alrededor del centro donde puede aparecer el cofre.")]
+    [SerializeField] private float spawnRadius = 6f;
+    [Tooltip("Radio MÍNIMO: el cofre nunca aparece más cerca del centro que esto (evita que salga siempre en el mismo punto).")]
+    [SerializeField] private float minSpawnRadius = 2.5f;
     [SerializeField] private float spawnHeight = 0f;
 
     [Header("Prefab")]
@@ -62,6 +65,19 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
             instance.activeChest = null;
             instance.timer = 0f;
         }
+    }
+
+    /// <summary>Posicion del cofre activo, si existe. La usa el minimapa para dibujar el icono.</summary>
+    public static bool TryGetActiveChestPosition(out Vector3 position)
+    {
+        if (instance != null && instance.activeChest != null)
+        {
+            position = instance.activeChest.transform.position;
+            return true;
+        }
+
+        position = Vector3.zero;
+        return false;
     }
 
     private void Awake()
@@ -136,8 +152,11 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
             return;
         }
 
-        Vector2 circle = Random.insideUnitCircle * spawnRadius;
-        Vector3 pos = centerPoint + new Vector3(circle.x, spawnHeight, circle.y);
+        // Ángulo aleatorio + radio aleatorio entre min y max: siempre desplazado del
+        // centro y nunca dos veces exactamente en el mismo punto.
+        float angle = Random.value * Mathf.PI * 2f;
+        float radius = Random.Range(minSpawnRadius, spawnRadius);
+        Vector3 pos = centerPoint + new Vector3(Mathf.Cos(angle) * radius, spawnHeight, Mathf.Sin(angle) * radius);
 
         activeChest = Instantiate(prefab, pos, prefab.transform.rotation);
 
@@ -145,5 +164,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         {
             activeChest.AddComponent<ChestPickup>();
         }
+
+        ChestAnnouncement.Show("¡Un cofre ha aparecido en el centro del mapa!");
     }
 }
