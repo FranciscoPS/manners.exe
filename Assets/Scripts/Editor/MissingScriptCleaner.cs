@@ -9,6 +9,9 @@ public class MissingScriptCleaner : EditorWindow
     private string reportText = "Click 'Find Missing Scripts' to scan the scene.";
     private Vector2 scrollPosition;
 
+    private bool pendingFind = false;
+    private bool pendingRemove = false;
+
     [MenuItem("Tools/Missing Script Cleaner")]
     public static void ShowWindow()
     {
@@ -25,7 +28,7 @@ public class MissingScriptCleaner : EditorWindow
 
         if (GUILayout.Button("Find Missing Scripts", GUILayout.Height(30)))
         {
-            FindMissingScripts();
+            pendingFind = true;
         }
 
         GUILayout.Space(10);
@@ -36,7 +39,7 @@ public class MissingScriptCleaner : EditorWindow
 
             if (GUILayout.Button("Remove All Missing Scripts", GUILayout.Height(30)))
             {
-                RemoveMissingScripts();
+                pendingRemove = true;
             }
         }
 
@@ -46,6 +49,28 @@ public class MissingScriptCleaner : EditorWindow
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Height(300));
         EditorGUILayout.TextArea(reportText, GUILayout.ExpandHeight(true));
         EditorGUILayout.EndScrollView();
+
+        // Run heavy work / modal dialogs OUTSIDE the layout Begin/End region.
+        // Doing this inside a button callback can interrupt IMGUI mid-pass and
+        // leave the GUIClip stack unbalanced ("pushing more GUIClips than popping").
+        if (Event.current.type == EventType.Repaint && (pendingFind || pendingRemove))
+        {
+            bool doFind = pendingFind;
+            bool doRemove = pendingRemove;
+            pendingFind = false;
+            pendingRemove = false;
+
+            if (doFind)
+            {
+                FindMissingScripts();
+            }
+            else if (doRemove)
+            {
+                RemoveMissingScripts();
+            }
+
+            GUIUtility.ExitGUI();
+        }
     }
 
     private void FindMissingScripts()
@@ -120,7 +145,10 @@ public class MissingScriptCleaner : EditorWindow
             removedCount += RemoveMissingInGameObject(rootObj);
         }
 
-        EditorUtility.SetDirty(activeScene.GetRootGameObjects()[0]);
+        if (rootObjects.Length > 0)
+        {
+            EditorUtility.SetDirty(rootObjects[0]);
+        }
         EditorSceneManager.MarkSceneDirty(activeScene);
 
         reportText = $"✓ Successfully removed {removedCount} missing script(s)!\n\n";

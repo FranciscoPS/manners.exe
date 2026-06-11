@@ -21358,7 +21358,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameTimeUI
   gameTimeText: {fileID: 859424881}
+  overtimeLabel: {fileID: 0}
   timeColor: {r: 1, g: 1, b: 1, a: 1}
+  overtimeColor: {r: 1, g: 0.15, b: 0.15, a: 1}
 --- !u!1001 &863762146
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41473,15 +41475,19 @@ MonoBehaviour:
   continuousEnemiesPerSpawn: 2
   continuousEnemyTypes: []
   maxConcurrentEnemies: 450
-  finalRushSpawnInterval: 0.5
-  finalRushEnemiesPerSpawnPoint: 4
+  finalRushBurstInterval: 6
+  finalRushBurstIntervalReductionPerTier: 1
+  finalRushBurstIntervalMin: 1.5
+  finalRushBurstPerSpawnPoint: 2
+  finalRushBurstGrowthPerTier: 3
   finalRushTierInterval: 10
   finalRushBaseHealth: 200
   finalRushHealthTierMultiplier: 4
   finalRushBaseSpeed: 6
   finalRushSpeedPerTier: 1.5
   finalRushMaxSpeed: 22
-  finalRushContactDamage: 50
+  finalRushBaseContactDamage: 12
+  finalRushContactDamagePerTier: 18
   testFinalRushFromStart: 0
 --- !u!1001 &1630993350
 PrefabInstance:

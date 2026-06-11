@@ -25,6 +25,10 @@ public class SFXDatabase : ScriptableObject
     [Header("Enemy Sounds")]
     public AudioClip enemyDeathSFX;
 
+    [Header("Overtime")]
+    [Tooltip("Audio que suena al entrar en OVERTIME. Se reproduce solo unos segundos con fade in/out.")]
+    public AudioClip overtimeAlertSFX;
+
     [Header("Volume Settings (0-1)")]
     [Range(0f, 1f)] public float upgradeVolume = 0.8f;
     [Range(0f, 1f)] public float collectibleVolume = 0.6f;
@@ -34,6 +38,7 @@ public class SFXDatabase : ScriptableObject
     [Range(0f, 1f)] public float playerDamageVolume = 0.7f;
     [Range(0f, 1f)] public float playerDeathVolume = 0.8f;
     [Range(0f, 1f)] public float enemyDeathVolume = 0.5f;
+    [Range(0f, 1f)] public float overtimeAlertVolume = 0.9f;
 
     [Header("Pitch Variation (Min-Max)")]
     public Vector2 playerMovePitchRange = new Vector2(1.15f, 1.6f);
