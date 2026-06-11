@@ -25,15 +25,15 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [Header("Final Rush (fin de partida)")]
     [Header("Final Rush - Ráfagas (spawn por tandas)")]
     [Tooltip("Tiempo (seg) entre ráfagas al INICIO. Grande = tandas espaciadas para no abrumar de golpe.")]
-    [SerializeField] private float finalRushBurstInterval = 4f;
+    [SerializeField] private float finalRushBurstInterval = 6f;
     [Tooltip("Cuanto se reduce el intervalo entre ráfagas por cada escalon (mas frecuentes con el tiempo).")]
-    [SerializeField] private float finalRushBurstIntervalReductionPerTier = 0.6f;
+    [SerializeField] private float finalRushBurstIntervalReductionPerTier = 1f;
     [Tooltip("Intervalo MINIMO entre ráfagas (no baja de aqui por mas que escale).")]
-    [SerializeField] private float finalRushBurstIntervalMin = 1f;
-    [Tooltip("Enemigos por spawn point en la PRIMERA ráfaga (muchos de golpe).")]
-    [SerializeField] private int finalRushBurstPerSpawnPoint = 6;
+    [SerializeField] private float finalRushBurstIntervalMin = 1.5f;
+    [Tooltip("Enemigos por spawn point en la PRIMERA ráfaga (pocos al inicio para que sea sobrevivible).")]
+    [SerializeField] private int finalRushBurstPerSpawnPoint = 2;
     [Tooltip("Cuantos enemigos extra por spawn point se suman a la ráfaga por cada escalon.")]
-    [SerializeField] private int finalRushBurstGrowthPerTier = 4;
+    [SerializeField] private int finalRushBurstGrowthPerTier = 3;
 
     [Header("Final Rush - Escalado por escalones")]
     [Tooltip("Cada cuantos segundos los enemigos suben de nivel (mas vida y velocidad).")]
@@ -48,8 +48,10 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private float finalRushSpeedPerTier = 2f;
     [Tooltip("Velocidad maxima que pueden alcanzar los enemigos al escalar.")]
     [SerializeField] private float finalRushMaxSpeed = 24f;
-    [Tooltip("Dano de contacto de los enemigos de la oleada final.")]
-    [SerializeField] private float finalRushContactDamage = 50f;
+    [Tooltip("Dano de contacto en el primer escalon (bajo para que el jugador sobreviva el inicio).")]
+    [SerializeField] private float finalRushBaseContactDamage = 12f;
+    [Tooltip("Cuanto dano de contacto se suma por cada escalon (sube con el tiempo).")]
+    [SerializeField] private float finalRushContactDamagePerTier = 18f;
 
     [Header("TEST")]
     [Tooltip("TEST: dispara la oleada final inmediatamente al iniciar la partida (quitar antes de publicar).")]
@@ -171,7 +173,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             // Vida EXPONENCIAL por escalon: empieza normal y crece muy rapido (base * mult^tier).
             buffed.maxHealth = finalRushBaseHealth * Mathf.Pow(finalRushHealthTierMultiplier, tier);
             buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedPerTier * tier);
-            buffed.contactDamage = finalRushContactDamage;
+            // Dano de contacto: bajo al inicio y sube por escalon (no mata de golpe en los primeros segundos).
+            buffed.contactDamage = finalRushBaseContactDamage + finalRushContactDamagePerTier * tier;
 
             // Rafaga: cantidad por spawn point crece con el escalon (muchos de golpe).
             int perSpawnPoint = finalRushBurstPerSpawnPoint + finalRushBurstGrowthPerTier * tier;
@@ -222,7 +225,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         EnemyConfiguration clone = Instantiate(baseConfig);
         clone.maxHealth = finalRushBaseHealth;
         clone.moveSpeed = finalRushBaseSpeed;
-        clone.contactDamage = finalRushContactDamage;
+        clone.contactDamage = finalRushBaseContactDamage;
         // Sin drops en la horda final: es el fin de la run, no queremos recompensar farmeo.
         clone.coinDropChance = 0f;
         clone.diamondDropChance = 0f;
