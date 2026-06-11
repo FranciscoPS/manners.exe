@@ -23,10 +23,17 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private int maxConcurrentEnemies = 40;
 
     [Header("Final Rush (fin de partida)")]
-    [Tooltip("Cada cuanto (seg) la oleada final spawnea desde TODOS los spawn points, sin parar nunca.")]
-    [SerializeField] private float finalRushSpawnInterval = 0.5f;
-    [Tooltip("Enemigos que spawnea cada spawn point en cada tick (ignora cooldown/clamp).")]
-    [SerializeField] private int finalRushEnemiesPerSpawnPoint = 4;
+    [Header("Final Rush - Ráfagas (spawn por tandas)")]
+    [Tooltip("Tiempo (seg) entre ráfagas al INICIO. Grande = tandas espaciadas para no abrumar de golpe.")]
+    [SerializeField] private float finalRushBurstInterval = 4f;
+    [Tooltip("Cuanto se reduce el intervalo entre ráfagas por cada escalon (mas frecuentes con el tiempo).")]
+    [SerializeField] private float finalRushBurstIntervalReductionPerTier = 0.6f;
+    [Tooltip("Intervalo MINIMO entre ráfagas (no baja de aqui por mas que escale).")]
+    [SerializeField] private float finalRushBurstIntervalMin = 1f;
+    [Tooltip("Enemigos por spawn point en la PRIMERA ráfaga (muchos de golpe).")]
+    [SerializeField] private int finalRushBurstPerSpawnPoint = 6;
+    [Tooltip("Cuantos enemigos extra por spawn point se suman a la ráfaga por cada escalon.")]
+    [SerializeField] private int finalRushBurstGrowthPerTier = 4;
 
     [Header("Final Rush - Escalado por escalones")]
     [Tooltip("Cada cuantos segundos los enemigos suben de nivel (mas vida y velocidad).")]
@@ -143,9 +150,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private IEnumerator FinalRushRoutine()
     {
-        WaitForSeconds wait = new WaitForSeconds(finalRushSpawnInterval);
-
-        // Config buffada reutilizable (se reasignan sus stats cada tick segun el escalon actual).
+        // Config buffada reutilizable (se reasignan sus stats cada rafaga segun el escalon actual).
         EnemyConfiguration buffed = CreateFinalRushConfig();
         if (buffed == null)
         {
@@ -168,20 +173,28 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedPerTier * tier);
             buffed.contactDamage = finalRushContactDamage;
 
+            // Rafaga: cantidad por spawn point crece con el escalon (muchos de golpe).
+            int perSpawnPoint = finalRushBurstPerSpawnPoint + finalRushBurstGrowthPerTier * tier;
+
+            // Intervalo entre rafagas: empieza espaciado y se acorta con el escalon (mas frecuentes).
+            float burstInterval = Mathf.Max(finalRushBurstIntervalMin,
+                finalRushBurstInterval - finalRushBurstIntervalReductionPerTier * tier);
+
             if (tier != lastTier)
             {
                 lastTier = tier;
                 PerformanceMonitor.Instance?.LogEvent(
-                    $"[FINAL RUSH] Escalon {tier}: vida={buffed.maxHealth:F0} velocidad={buffed.moveSpeed:F1}");
+                    $"[FINAL RUSH] Escalon {tier}: vida={buffed.maxHealth:F0} vel={buffed.moveSpeed:F1} " +
+                    $"x{perSpawnPoint}/punto cada {burstInterval:F1}s");
             }
 
-            // Spawn continuo desde TODOS los spawn points, sin parar nunca.
+            // Rafaga: lanza muchos enemigos de golpe desde TODOS los spawn points.
             for (int p = 0; p < allSpawnPoints.Count; p++)
             {
-                allSpawnPoints[p].ForceSpawn(finalRushEnemiesPerSpawnPoint, buffed);
+                allSpawnPoints[p].ForceSpawn(perSpawnPoint, buffed);
             }
 
-            yield return wait;
+            yield return new WaitForSeconds(burstInterval);
         }
     }
 
