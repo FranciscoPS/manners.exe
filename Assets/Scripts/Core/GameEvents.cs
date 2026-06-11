@@ -25,6 +25,7 @@ public static class GameEvents
     public static event Action<UpgradeData> OnUpgradePurchased;
 
     public static event Action OnGameStarted;
+    public static event Action OnChestSpawned;
     public static event Action OnGamePaused;
     public static event Action OnGameResumed;
     public static event Action OnGameOver;
@@ -67,6 +68,7 @@ public static class GameEvents
     public static void TriggerUpgradePurchased(UpgradeData upgrade) => OnUpgradePurchased?.Invoke(upgrade);
 
     public static void TriggerGameStarted() => OnGameStarted?.Invoke();
+    public static void TriggerChestSpawned() => OnChestSpawned?.Invoke();
     public static void TriggerGamePaused() => OnGamePaused?.Invoke();
     public static void TriggerGameResumed() => OnGameResumed?.Invoke();
     public static void TriggerGameOver() => OnGameOver?.Invoke();
@@ -79,11 +81,11 @@ public static class GameEvents
     public static void TriggerMatchTimeExpired() => OnMatchTimeExpired?.Invoke();
 
     public static void TriggerShopLocationChanged(int newShopIndex) => OnShopLocationChanged?.Invoke(newShopIndex);
-    public static void TriggerShopOpened()      => OnShopOpened?.Invoke();
-    public static void TriggerShopAutoClosed()  => OnShopAutoClosed?.Invoke();
+    public static void TriggerShopOpened() => OnShopOpened?.Invoke();
+    public static void TriggerShopAutoClosed() => OnShopAutoClosed?.Invoke();
 
     public static void TriggerTutorialStepShown(string stepId) => OnTutorialStepShown?.Invoke(stepId);
-    public static void TriggerTutorialCompleted()              => OnTutorialCompleted?.Invoke();
+    public static void TriggerTutorialCompleted() => OnTutorialCompleted?.Invoke();
 
     public static void ClearAllEvents()
     {
@@ -103,6 +105,7 @@ public static class GameEvents
         OnUpgradeApplied = null;
         OnUpgradePurchased = null;
         OnGameStarted = null;
+        OnChestSpawned = null;
         OnGamePaused = null;
         OnGameResumed = null;
         OnGameOver = null;
