@@ -23,10 +23,11 @@ public class MinimapSystem : MonoBehaviour
 
     [Header("Chest Icon Pulse")]
     [Tooltip("Cuántas veces por segundo pulsa el icono del cofre (grande/pequeño). Más bajo = más lento.")]
-    [SerializeField] private float chestPulseFrequency = 0.7f;
-    [Tooltip("Escala mínima y máxima del pulso del icono del cofre.")]
-    [SerializeField] private float chestPulseMinScale = 0.85f;
-    [SerializeField] private float chestPulseMaxScale = 1.25f;
+    [SerializeField] private float chestPulseFrequency = 0.8f;
+    [Tooltip("Escala mínima (tamaño normal) del pulso del icono del cofre.")]
+    [SerializeField] private float chestPulseMinScale = 1f;
+    [Tooltip("Escala máxima (tamaño grande) del pulso del icono del cofre.")]
+    [SerializeField] private float chestPulseMaxScale = 1.6f;
 
     private Transform playerTransform;
     private readonly List<RectTransform> _enemyIconPool = new List<RectTransform>();
@@ -167,9 +168,14 @@ public class MinimapSystem : MonoBehaviour
             chestIcon.gameObject.SetActive(true);
             PlaceIcon(chestIcon, chestPos);
 
-            // Pulso lento grande/pequeño para llamar la atención.
-            float t = (Mathf.Sin(Time.unscaledTime * chestPulseFrequency * Mathf.PI * 2f) + 1f) * 0.5f;
-            float scale = Mathf.Lerp(chestPulseMinScale, chestPulseMaxScale, t);
+            // Pulso normal->grande para llamar la atención. Fallbacks por si los valores
+            // quedaron en 0 al añadir los campos a un componente ya existente en escena.
+            float freq = chestPulseFrequency > 0f ? chestPulseFrequency : 0.8f;
+            float minScale = chestPulseMinScale > 0f ? chestPulseMinScale : 1f;
+            float maxScale = chestPulseMaxScale > minScale ? chestPulseMaxScale : minScale + 0.6f;
+
+            float t = (Mathf.Sin(Time.unscaledTime * freq * Mathf.PI * 2f) + 1f) * 0.5f;
+            float scale = Mathf.Lerp(minScale, maxScale, t);
             chestIcon.localScale = new Vector3(scale, scale, 1f);
         }
         else
