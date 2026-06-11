@@ -10574,7 +10574,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2007311777423115276, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -36.87
+      value: -35.99
       objectReference: {fileID: 0}
     - target: {fileID: 2007311777423115276, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_LocalPosition.y
@@ -10582,7 +10582,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2007311777423115276, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -21.27
+      value: -19.87
       objectReference: {fileID: 0}
     - target: {fileID: 2007311777423115276, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_LocalRotation.w
@@ -10630,7 +10630,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7102552512874905415, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.43837106
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.8987941
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -232
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -12833,6 +12849,22 @@ PrefabInstance:
     - target: {fileID: 7102552512874905415, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.58070296
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.8141155
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -109
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21358,7 +21390,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameTimeUI
   gameTimeText: {fileID: 859424881}
+  overtimeLabel: {fileID: 0}
   timeColor: {r: 1, g: 1, b: 1, a: 1}
+  overtimeColor: {r: 1, g: 0.15, b: 0.15, a: 1}
 --- !u!1001 &863762146
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24501,6 +24535,22 @@ PrefabInstance:
     - target: {fileID: 7102552512874905415, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -180
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -41473,15 +41523,19 @@ MonoBehaviour:
   continuousEnemiesPerSpawn: 2
   continuousEnemyTypes: []
   maxConcurrentEnemies: 450
-  finalRushSpawnInterval: 0.5
-  finalRushEnemiesPerSpawnPoint: 4
+  finalRushBurstInterval: 6
+  finalRushBurstIntervalReductionPerTier: 1
+  finalRushBurstIntervalMin: 1.5
+  finalRushBurstPerSpawnPoint: 2
+  finalRushBurstGrowthPerTier: 3
   finalRushTierInterval: 10
   finalRushBaseHealth: 200
   finalRushHealthTierMultiplier: 4
   finalRushBaseSpeed: 6
   finalRushSpeedPerTier: 1.5
   finalRushMaxSpeed: 22
-  finalRushContactDamage: 50
+  finalRushBaseContactDamage: 12
+  finalRushContactDamagePerTier: 18
   testFinalRushFromStart: 0
 --- !u!1001 &1630993350
 PrefabInstance:
@@ -52916,6 +52970,22 @@ PrefabInstance:
     - target: {fileID: 7102552512874905415, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8145174984669464851, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -180
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
