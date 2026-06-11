@@ -88,7 +88,8 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         if (currentSecond != lastSecond)
         {
             lastSecond = currentSecond;
-            string formattedTime = GetFormattedCountdown();
+            // Antes de expirar: cuenta regresiva. Despues: cuenta hacia arriba (overtime).
+            string formattedTime = matchTimeExpired ? GetFormattedOvertime() : GetFormattedCountdown();
             GameEvents.TriggerGameTimeUpdated(formattedTime);
         }
 
@@ -178,6 +179,15 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         float remaining = GetRemainingTime();
         int minutes = Mathf.FloorToInt(remaining / 60f);
         int seconds = Mathf.FloorToInt(remaining % 60f);
+        return $"{minutes:00}:{seconds:00}";
+    }
+
+    /// <summary>Tiempo transcurrido desde que se agoto la partida (overtime), MM:SS contando hacia arriba.</summary>
+    public string GetFormattedOvertime()
+    {
+        float overtime = Mathf.Max(0f, GetGameTime() - MatchDuration);
+        int minutes = Mathf.FloorToInt(overtime / 60f);
+        int seconds = Mathf.FloorToInt(overtime % 60f);
         return $"{minutes:00}:{seconds:00}";
     }
 
