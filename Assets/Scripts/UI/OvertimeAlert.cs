@@ -45,7 +45,7 @@ public class OvertimeAlert : MonoBehaviour
 
     [Header("TEST")]
     [Tooltip("TEST: dispara el aviso de overtime poco después de iniciar la partida (quitar antes de publicar).")]
-    [SerializeField] private bool testTriggerOnStart = true;
+    [SerializeField] private bool testTriggerOnStart = false;
     [Tooltip("TEST: segundos a esperar antes de disparar el aviso de prueba.")]
     [SerializeField] private float testDelay = 3f;
 
