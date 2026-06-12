@@ -31,6 +31,9 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
 
     private float MatchDuration => matchDurationMinutes * 60f;
 
+    /// <summary>Duracion total de la partida en segundos (sin contar overtime).</summary>
+    public float MatchDurationSeconds => MatchDuration;
+
     public bool IsActive => isGameActive && this != null && enabled;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
