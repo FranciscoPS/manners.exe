@@ -30855,10 +30855,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "- Francisco Jes\xFAs Peralta Sandoval\r\n- Mauricio Reyna Mill\xE1n \nGGD0724\r\n\r\nTesters:
-    \r\n- Pedro Daniel Ju\xE1rez Coxca\r\n- Bruno Alexis Mora Valencia \r\n- Diego
-    Trejo Lopez\n\nM\xFAsica\n- Team Asobi. (2024). Astro Bot [Videojuego]. Sony
-    Interactive Entertainment."
+  m_text: "Blackdoor Studios\n\n- Francisco  Peralta - Director/Programador\r\n-
+    Mauricio Reyna - Artista 3D y Animaciones \n- Pedro Juarez -  Main Tester y Apoyo
+    General\n- Zo\xE9 Hern\xE1ndez - Directora de Arte\r\n\r\nTesters: \r\n- Bruno
+    Alexis Mora Valencia"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -62933,6 +62933,7 @@ MonoBehaviour:
   - sceneIndex: 2
     introClip: {fileID: 0}
     loopSections: []
+    loopSections: []
     loopClip: {fileID: 8300000, guid: db8e7bee02f361d45b741283ec39934c, type: 3}
   musicVolume: 0.5
   playOnAwake: 1
@@ -62942,6 +62943,7 @@ MonoBehaviour:
   reducedVolumeMultiplier: 0.3
   volumeFadeDuration: 0.5
   mainMenuSceneIndex: 0
+  fallbackMatchDurationSeconds: 600
   fallbackMatchDurationSeconds: 600
 --- !u!4 &1929732215
 Transform:

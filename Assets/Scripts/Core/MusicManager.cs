@@ -14,6 +14,8 @@ public class MusicLoopSection
     public AudioClip bridgeClip;
     [Tooltip("0 = automático (reparte el tiempo de partida entre los loops). >0 = veces exactas que se repite este loop antes del puente.")]
     public int repeatCount = 0;
+    [Tooltip("0 = automático. >0 = segundos de partida en los que debe COMENZAR este loop (su puente previo termina justo antes). Los loops anteriores se reparten para llenar hasta aquí. Ej: 150 = empieza ~2:30.")]
+    public float startAtSeconds = 0f;
 }
 
 [Serializable]
@@ -322,12 +324,48 @@ public class MusicManager : MonoBehaviour
         int k = sections.Count;
 
         // Tiempo fijo: intro + puentes (cada uno suena una sola vez; se ignora el puente del último loop).
-        double fixedTime = ClipLength(config.introClip);
+        double introLen = ClipLength(config.introClip);
+        double fixedTime = introLen;
         for (int i = 0; i < k - 1; i++)
             fixedTime += ClipLength(sections[i].bridgeClip);
 
-        double available = Mathf.Max(0f, GetMatchDurationSeconds() - (float)fixedTime);
-        double sharePerLoop = available / k; // cada loop "posee" ~1/k de la partida
+        double matchDur = GetMatchDurationSeconds();
+        double available = Mathf.Max(0f, (float)(matchDur - fixedTime));
+        double sharePerLoop = available / k; // cada loop "posee" ~1/k de la partida por defecto
+
+        // Calcula el instante (segundos de partida) en el que COMIENZA cada loop.
+        // start[0] = justo tras la intro. Los loops con startAtSeconds quedan anclados;
+        // los demás se interpolan linealmente entre los anclados.
+        double[] start = new double[k];
+        bool[] known = new bool[k];
+        start[0] = introLen;
+        known[0] = true;
+        for (int i = 1; i < k; i++)
+        {
+            if (sections[i].startAtSeconds > 0f)
+            {
+                start[i] = sections[i].startAtSeconds;
+                known[i] = true;
+            }
+        }
+        // Si el último loop no está anclado, dale un ancla por defecto (reparto uniforme)
+        // para poder interpolar los intermedios.
+        if (!known[k - 1])
+        {
+            start[k - 1] = introLen + (k - 1) * sharePerLoop;
+            known[k - 1] = true;
+        }
+        // Interpola los anclajes desconocidos entre los conocidos.
+        int prevKnown = 0;
+        for (int i = 1; i < k; i++)
+        {
+            if (known[i])
+            {
+                for (int j = prevKnown + 1; j < i; j++)
+                    start[j] = start[prevKnown] + (start[i] - start[prevKnown]) * (j - prevKnown) / (double)(i - prevKnown);
+                prevKnown = i;
+            }
+        }
 
         for (int i = 0; i < k; i++)
         {
@@ -349,7 +387,9 @@ public class MusicManager : MonoBehaviour
             else
             {
                 double len = ClipLength(s.loopClip);
-                reps = len > 0.0 ? Mathf.Max(1, Mathf.RoundToInt((float)(sharePerLoop / len))) : 1;
+                // Llena desde el inicio de este loop hasta el inicio del siguiente, menos el puente.
+                double window = start[i + 1] - ClipLength(s.bridgeClip) - start[i];
+                reps = len > 0.0 ? Mathf.Max(1, Mathf.RoundToInt((float)(window / len))) : 1;
             }
 
             for (int r = 0; r < reps; r++)
