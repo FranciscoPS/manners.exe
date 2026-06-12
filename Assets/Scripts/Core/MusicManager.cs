@@ -2,13 +2,31 @@ using UnityEngine;
 using DG.Tweening;
 using UnityEngine.SceneManagement;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+
+[Serializable]
+public class MusicLoopSection
+{
+    [Tooltip("Loop que se repite. El último loop de la lista suena para siempre (incluido overtime).")]
+    public AudioClip loopClip;
+    [Tooltip("Puente que suena UNA vez DESPUÉS de este loop, antes del siguiente loop. Dejar vacío en el último loop.")]
+    public AudioClip bridgeClip;
+    [Tooltip("0 = automático (reparte el tiempo de partida entre los loops). >0 = veces exactas que se repite este loop antes del puente.")]
+    public int repeatCount = 0;
+    [Tooltip("0 = automático. >0 = segundos de partida en los que debe COMENZAR este loop (su puente previo termina justo antes). Los loops anteriores se reparten para llenar hasta aquí. Ej: 150 = empieza ~2:30.")]
+    public float startAtSeconds = 0f;
+}
 
 [Serializable]
 public class SceneMusicConfig
 {
     public int sceneIndex;
-    [Tooltip("Opcional. Si se asigna, se reproduce primero y luego pasa al loop.")]
+    [Tooltip("Opcional. Suena una vez al inicio y luego pasa a los loops.")]
     public AudioClip introClip;
+    [Tooltip("Loops y puentes en orden: loop1, puente1, loop2, puente2, loop3... El último loop suena para siempre. Si está vacío se usa el 'loopClip' de abajo.")]
+    public MusicLoopSection[] loopSections;
+    [Tooltip("LEGADO: loop infinito simple. Solo se usa si 'loopSections' está vacío.")]
     public AudioClip loopClip;
 }
 
@@ -38,8 +56,14 @@ public class MusicManager : MonoBehaviour
     [Tooltip("Índice de la escena del menú principal. Si la escena activa coincide, la música no se reproducirá automáticamente.")]
     [SerializeField] private int mainMenuSceneIndex = 0;
 
+    [Header("Music Sequence")]
+    [Tooltip("Duración (segundos) usada para repartir las repeticiones de los loops. Si hay GameTimeManager se usa su duración de partida; si no, este valor (600 = 10 min).")]
+    [SerializeField] private float fallbackMatchDurationSeconds = 600f;
+
     private AudioSource introSource;
     private AudioSource loopSource;
+    private AudioSource[] musicSources;
+    private Coroutine musicSequenceCoroutine;
     private AudioSource menuSource;
     private AudioSource sfxLoopSource;
     private AudioSource sfxOneShotSource;
@@ -113,11 +137,14 @@ public class MusicManager : MonoBehaviour
         introSource.priority = 0;
 
         loopSource = gameObject.AddComponent<AudioSource>();
-        loopSource.loop = true;
+        loopSource.loop = false;
         loopSource.playOnAwake = false;
         loopSource.volume = musicVolume;
         loopSource.spatialBlend = 0f;
         loopSource.priority = 0;
+
+        // Dos fuentes que se alternan (ping-pong) para encadenar intro/loops/puentes sin huecos.
+        musicSources = new AudioSource[] { introSource, loopSource };
 
         menuSource = gameObject.AddComponent<AudioSource>();
         menuSource.loop = true;
@@ -228,34 +255,210 @@ public class MusicManager : MonoBehaviour
             return;
 
         SceneMusicConfig config = GetCurrentSceneConfig();
-        if (config == null || config.loopClip == null)
-        {
+        if (config == null)
             return;
-        }
 
+        StopMusicSequence();
         introSource.Stop();
         loopSource.Stop();
 
+        List<SeqItem> sequence = BuildMusicSequence(config);
+        if (sequence.Count == 0)
+            return;
+
+        musicSequenceCoroutine = StartCoroutine(MusicSequenceRoutine(sequence));
+    }
+
+    private struct SeqItem
+    {
+        public AudioClip clip;
+        public bool loopForever;
+    }
+
+    private static double ClipLength(AudioClip clip)
+    {
+        if (clip == null || clip.frequency <= 0) return 0.0;
+        return (double)clip.samples / clip.frequency;
+    }
+
+    private float GetMatchDurationSeconds()
+    {
+        if (GameTimeManager.Instance != null)
+            return GameTimeManager.Instance.MatchDurationSeconds;
+        return fallbackMatchDurationSeconds;
+    }
+
+    private float CurrentMusicVolume()
+    {
+        return isVolumeReduced ? musicVolume * reducedVolumeMultiplier : musicVolume;
+    }
+
+    /// <summary>
+    /// Construye la secuencia ordenada: intro (1 vez), loop1 (N veces), puente1 (1 vez),
+    /// loop2 (M veces), puente2 (1 vez), ..., loopN (para siempre, incluido overtime).
+    /// Las repeticiones de cada loop se reparten por tiempo para llenar la partida.
+    /// </summary>
+    private List<SeqItem> BuildMusicSequence(SceneMusicConfig config)
+    {
+        var seq = new List<SeqItem>();
+
         if (config.introClip != null)
+            seq.Add(new SeqItem { clip = config.introClip, loopForever = false });
+
+        // Recoge los loops válidos.
+        var sections = new List<MusicLoopSection>();
+        if (config.loopSections != null)
         {
-            double startTime = AudioSettings.dspTime + 0.1;
-            double loopStartTime = startTime + (double)config.introClip.samples / config.introClip.frequency;
-
-            introSource.clip = config.introClip;
-            introSource.PlayScheduled(startTime);
-
-            loopSource.clip = config.loopClip;
-            loopSource.PlayScheduled(loopStartTime);
+            foreach (var s in config.loopSections)
+                if (s != null && s.loopClip != null) sections.Add(s);
         }
-        else
+
+        // Sin secciones: cae al loop infinito legado.
+        if (sections.Count == 0)
         {
-            loopSource.clip = config.loopClip;
-            loopSource.Play();
+            if (config.loopClip != null)
+                seq.Add(new SeqItem { clip = config.loopClip, loopForever = true });
+            return seq;
+        }
+
+        int k = sections.Count;
+
+        // Tiempo fijo: intro + puentes (cada uno suena una sola vez; se ignora el puente del último loop).
+        double introLen = ClipLength(config.introClip);
+        double fixedTime = introLen;
+        for (int i = 0; i < k - 1; i++)
+            fixedTime += ClipLength(sections[i].bridgeClip);
+
+        double matchDur = GetMatchDurationSeconds();
+        double available = Mathf.Max(0f, (float)(matchDur - fixedTime));
+        double sharePerLoop = available / k; // cada loop "posee" ~1/k de la partida por defecto
+
+        // Calcula el instante (segundos de partida) en el que COMIENZA cada loop.
+        // start[0] = justo tras la intro. Los loops con startAtSeconds quedan anclados;
+        // los demás se interpolan linealmente entre los anclados.
+        double[] start = new double[k];
+        bool[] known = new bool[k];
+        start[0] = introLen;
+        known[0] = true;
+        for (int i = 1; i < k; i++)
+        {
+            if (sections[i].startAtSeconds > 0f)
+            {
+                start[i] = sections[i].startAtSeconds;
+                known[i] = true;
+            }
+        }
+        // Si el último loop no está anclado, dale un ancla por defecto (reparto uniforme)
+        // para poder interpolar los intermedios.
+        if (!known[k - 1])
+        {
+            start[k - 1] = introLen + (k - 1) * sharePerLoop;
+            known[k - 1] = true;
+        }
+        // Interpola los anclajes desconocidos entre los conocidos.
+        int prevKnown = 0;
+        for (int i = 1; i < k; i++)
+        {
+            if (known[i])
+            {
+                for (int j = prevKnown + 1; j < i; j++)
+                    start[j] = start[prevKnown] + (start[i] - start[prevKnown]) * (j - prevKnown) / (double)(i - prevKnown);
+                prevKnown = i;
+            }
+        }
+
+        for (int i = 0; i < k; i++)
+        {
+            MusicLoopSection s = sections[i];
+            bool isLast = (i == k - 1);
+
+            if (isLast)
+            {
+                // El último loop suena para siempre (cubre lo que reste + overtime). Su puente se ignora.
+                seq.Add(new SeqItem { clip = s.loopClip, loopForever = true });
+                break;
+            }
+
+            int reps;
+            if (s.repeatCount > 0)
+            {
+                reps = s.repeatCount;
+            }
+            else
+            {
+                double len = ClipLength(s.loopClip);
+                // Llena desde el inicio de este loop hasta el inicio del siguiente, menos el puente.
+                double window = start[i + 1] - ClipLength(s.bridgeClip) - start[i];
+                reps = len > 0.0 ? Mathf.Max(1, Mathf.RoundToInt((float)(window / len))) : 1;
+            }
+
+            for (int r = 0; r < reps; r++)
+                seq.Add(new SeqItem { clip = s.loopClip, loopForever = false });
+
+            // Puente para transicionar naturalmente al siguiente loop.
+            if (s.bridgeClip != null)
+                seq.Add(new SeqItem { clip = s.bridgeClip, loopForever = false });
+        }
+
+        return seq;
+    }
+
+    /// <summary>
+    /// Reproduce la secuencia encadenando clips con PlayScheduled (sin huecos) alternando
+    /// dos AudioSources. El último clip se marca como loop infinito.
+    /// </summary>
+    private IEnumerator MusicSequenceRoutine(List<SeqItem> items)
+    {
+        double startTime = AudioSettings.dspTime + 0.2;
+
+        // Programa el primer clip.
+        ScheduleClip(items[0], musicSources[0], startTime);
+        double clipStart = startTime;
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].loopForever)
+                yield break; // último clip: queda en loop infinito.
+
+            double duration = ClipLength(items[i].clip);
+            double nextStart = clipStart + duration;
+
+            if (i + 1 < items.Count)
+            {
+                // Espera a que el clip actual EMPIECE; en ese momento el clip de hace dos
+                // posiciones (que usó la fuente alterna) ya terminó, así que está libre.
+                while (AudioSettings.dspTime < clipStart)
+                    yield return null;
+
+                AudioSource nextSrc = musicSources[(i + 1) % 2];
+                ScheduleClip(items[i + 1], nextSrc, nextStart);
+            }
+
+            clipStart = nextStart;
+        }
+    }
+
+    private void ScheduleClip(SeqItem item, AudioSource src, double dspStart)
+    {
+        src.Stop();
+        src.clip = item.clip;
+        src.loop = item.loopForever;
+        src.volume = CurrentMusicVolume();
+        src.PlayScheduled(dspStart);
+    }
+
+    private void StopMusicSequence()
+    {
+        if (musicSequenceCoroutine != null)
+        {
+            StopCoroutine(musicSequenceCoroutine);
+            musicSequenceCoroutine = null;
         }
     }
 
     public void StopMusic()
     {
+        StopMusicSequence();
         introSource.Stop();
         loopSource.Stop();
     }
