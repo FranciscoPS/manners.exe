@@ -62923,18 +62923,32 @@ MonoBehaviour:
     - loopClip: {fileID: 8300000, guid: 359eef496d7e12d4a83d92b1f1e21d3f, type: 3}
       bridgeClip: {fileID: 8300000, guid: 30fa663e7ba7fcf48930c96b16be4164, type: 3}
       repeatCount: 0
+      startAtSeconds: 0
     - loopClip: {fileID: 8300000, guid: 6cd4e61e2d3684044ba60688cd4e85e3, type: 3}
       bridgeClip: {fileID: 8300000, guid: 923bcb7fcb5e5a94e948a4e6aa51715f, type: 3}
       repeatCount: 0
+      startAtSeconds: 0
     - loopClip: {fileID: 8300000, guid: 7deb0ff04c2d6ed4a9e8e642c65eb6ab, type: 3}
       bridgeClip: {fileID: 0}
       repeatCount: 0
+      startAtSeconds: 0
     loopClip: {fileID: 0}
   - sceneIndex: 2
-    introClip: {fileID: 0}
-    loopSections: []
-    loopSections: []
-    loopClip: {fileID: 8300000, guid: db8e7bee02f361d45b741283ec39934c, type: 3}
+    introClip: {fileID: 8300000, guid: 6b4a29a258cbe7b4fae49d899fba2956, type: 3}
+    loopSections:
+    - loopClip: {fileID: 8300000, guid: 415a9feedb3c2f443aece13e9cdfb647, type: 3}
+      bridgeClip: {fileID: 8300000, guid: dee72ebc5a778cb42b843221faac491e, type: 3}
+      repeatCount: 0
+      startAtSeconds: 0
+    - loopClip: {fileID: 8300000, guid: de6b44ab8618a754ea4715cf216a5128, type: 3}
+      bridgeClip: {fileID: 8300000, guid: 4e165e3743291594cbbff77b171e1388, type: 3}
+      repeatCount: 0
+      startAtSeconds: 0
+    - loopClip: {fileID: 8300000, guid: 83ebfe307e298394ba455b09a47e0171, type: 3}
+      bridgeClip: {fileID: 0}
+      repeatCount: 0
+      startAtSeconds: 0
+    loopClip: {fileID: 0}
   musicVolume: 0.5
   playOnAwake: 1
   sfxVolume: 0.8
@@ -62943,7 +62957,6 @@ MonoBehaviour:
   reducedVolumeMultiplier: 0.3
   volumeFadeDuration: 0.5
   mainMenuSceneIndex: 0
-  fallbackMatchDurationSeconds: 600
   fallbackMatchDurationSeconds: 600
 --- !u!4 &1929732215
 Transform:
