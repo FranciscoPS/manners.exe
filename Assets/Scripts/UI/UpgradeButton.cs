@@ -353,6 +353,8 @@ public class UpgradeButton : MonoBehaviour
 
         if (valuesText != null)
         {
+            // Reactivar por si este botón mostró antes un ítem de cofre (UpdateChestUI lo oculta).
+            valuesText.gameObject.SetActive(true);
             valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
 
             if (currentLevel == 0)
