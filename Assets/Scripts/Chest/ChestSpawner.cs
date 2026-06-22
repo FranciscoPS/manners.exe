@@ -1,21 +1,16 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Genera un Cofre cerca del centro del mapa cada cierto intervalo (2 min por
-/// defecto). Solo existe un cofre a la vez y permanece hasta que el jugador lo
-/// recoge. Se autocrea y registra en el UpdateManager; no requiere configuraci\u00f3n
-/// en escena.
-/// </summary>
 public class ChestSpawner : MonoBehaviour, IUpdateable
 {
     private static ChestSpawner instance;
     private static bool isQuitting = false;
 
     [Header("Spawn Timing")]
-    [SerializeField] private float spawnInterval = 120f;
-    [Tooltip("Retraso del PRIMER cofre tras iniciar la partida. Igual al intervalo normal (2 min).")]
-    [SerializeField] private float firstSpawnDelay = 120f;
+    [Tooltip("Cada cuántos segundos de JUEGO aparece un cofre. Cuenta el cronómetro de partida, no el tiempo real: si se pausa, NO avanza.")]
+    [SerializeField] private float spawnInterval = 60f;
+    [Tooltip("Segundo de JUEGO en que aparece el PRIMER cofre tras iniciar la partida (igual al intervalo normal: 1 min).")]
+    [SerializeField] private float firstSpawnDelay = 60f;
 
     [Header("Spawn Position")]
     [SerializeField] private Vector3 centerPoint = Vector3.zero;
@@ -23,14 +18,17 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     [SerializeField] private float spawnRadius = 6f;
     [Tooltip("Radio MÍNIMO: el cofre nunca aparece más cerca del centro que esto (evita que salga siempre en el mismo punto).")]
     [SerializeField] private float minSpawnRadius = 2.5f;
+    [Tooltip("Separación angular mínima (grados) respecto al cofre anterior: garantiza que dos cofres seguidos NO salgan en la misma dirección.")]
+    [SerializeField] private float minAngularSeparationDeg = 100f;
     [SerializeField] private float spawnHeight = 0f;
 
     [Header("Prefab")]
     [Tooltip("Si se deja vac\u00edo se carga 'Cofre' desde Resources.")]
     [SerializeField] private GameObject chestPrefab;
 
-    private float timer = 0f;
-    private bool firstChestSpawned = false;
+    private float nextSpawnTime = 0f;
+    private Transform cachedPlayer;
+    private float lastSpawnAngle = -999f;
     private GameObject activeChest;
 
     public bool IsActive => this != null && enabled;
@@ -57,17 +55,20 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         DontDestroyOnLoad(go);
     }
 
-    /// <summary>Llamado por el cofre al ser recogido: reinicia el temporizador.</summary>
     public static void NotifyChestCollected()
     {
         if (instance != null)
         {
             instance.activeChest = null;
-            instance.timer = 0f;
+            instance.nextSpawnTime = GetCurrentGameTime() + instance.spawnInterval;
         }
     }
 
-    /// <summary>Posicion del cofre activo, si existe. La usa el minimapa para dibujar el icono.</summary>
+    private static float GetCurrentGameTime()
+    {
+        return GameTimeManager.Instance != null ? GameTimeManager.Instance.GetGameTime() : 0f;
+    }
+
     public static bool TryGetActiveChestPosition(out Vector3 position)
     {
         if (instance != null && instance.activeChest != null)
@@ -91,6 +92,8 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         instance = this;
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        nextSpawnTime = firstSpawnDelay;
 
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Register(this);
@@ -116,31 +119,27 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        timer = 0f;
-        firstChestSpawned = false;
+        nextSpawnTime = firstSpawnDelay;
+        cachedPlayer = null;
+        lastSpawnAngle = -999f;
         activeChest = null;
     }
 
     public void OnUpdate(float deltaTime)
     {
-        // Un solo cofre a la vez: espera a que lo recojan.
         if (activeChest != null) return;
 
-        timer += deltaTime;
-        float threshold = firstChestSpawned ? spawnInterval : firstSpawnDelay;
-        if (timer < threshold) return;
-
-        // Solo durante una partida real (hay un jugador en escena).
-        GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
-        if (playerGO == null)
+        if (cachedPlayer == null)
         {
-            timer = 0f;
-            return;
+            GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
+            if (playerGO == null) return;
+            cachedPlayer = playerGO.transform;
         }
 
+        if (GetCurrentGameTime() < nextSpawnTime) return;
+
         SpawnChest();
-        firstChestSpawned = true;
-        timer = 0f;
+        nextSpawnTime = GetCurrentGameTime() + spawnInterval;
     }
 
     private void SpawnChest()
@@ -152,9 +151,19 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
             return;
         }
 
-        // Ángulo aleatorio + radio aleatorio entre min y max: siempre desplazado del
-        // centro y nunca dos veces exactamente en el mismo punto.
-        float angle = Random.value * Mathf.PI * 2f;
+        float angle;
+        if (lastSpawnAngle < -900f)
+        {
+            angle = Random.value * Mathf.PI * 2f;
+        }
+        else
+        {
+            float minSep = minAngularSeparationDeg * Mathf.Deg2Rad;
+            float offset = Random.Range(minSep, Mathf.PI * 2f - minSep);
+            angle = lastSpawnAngle + offset;
+        }
+        lastSpawnAngle = angle;
+
         float radius = Random.Range(minSpawnRadius, spawnRadius);
         Vector3 pos = centerPoint + new Vector3(Mathf.Cos(angle) * radius, spawnHeight, Mathf.Sin(angle) * radius);
 
