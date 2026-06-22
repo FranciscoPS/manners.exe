@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour, IPoolable, IUpdateable
 {
+    [SerializeField] private Transform visualRoot;
+
     private float speed = 15f;
     private float damage = 10f;
     private float lifetime = 5f;
@@ -16,7 +18,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     private float lifetimeTimer;
     private GameObject trailInstance;
     private Light projectileLight;
-    private Material materialInstance;
+    private GameObject visualInstance;
 
     private static readonly Collider[] _explosionBuffer    = new Collider[64];
     private static readonly Collider[] _chainKnockbackBuffer = new Collider[32];
@@ -59,39 +61,22 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         isChainKnockback = isChain;
     }
 
-    public void SetVisuals(Mesh mesh, Material material, Color color, Vector3 scale)
+    public void SetVisualPrefab(GameObject visualPrefab)
     {
-        MeshFilter meshFilter = GetComponent<MeshFilter>();
-        if (meshFilter != null && mesh != null)
+        if (visualInstance != null)
         {
-            meshFilter.mesh = mesh;
+            Destroy(visualInstance);
+            visualInstance = null;
         }
 
-        Renderer renderer = GetComponent<Renderer>();
-        if (renderer != null)
+        if (visualPrefab != null)
         {
-            if (material != null)
-            {
-                materialInstance = new Material(material);
-                renderer.material = materialInstance;
-            }
-            else if (materialInstance == null)
-            {
-                materialInstance = new Material(renderer.sharedMaterial);
-                renderer.material = materialInstance;
-            }
+            visualInstance = Instantiate(visualPrefab, transform);
 
-            materialInstance.color = color;
-
-            if (materialInstance.HasProperty("_BaseColor"))
-                materialInstance.SetColor("_BaseColor", color);
-            if (materialInstance.HasProperty("_Color"))
-                materialInstance.SetColor("_Color", color);
-            if (materialInstance.HasProperty("_EmissionColor"))
-                materialInstance.SetColor("_EmissionColor", color * 0.5f);
+            visualInstance.transform.localPosition = Vector3.zero;
+            visualInstance.transform.localRotation = Quaternion.identity;
+            visualInstance.transform.localScale = Vector3.one;
         }
-
-        transform.localScale = scale;
     }
 
     public void SetEffects(GameObject trail, GameObject hitEffect, bool hasLight, Color lightColor, float lightIntensity)
@@ -138,6 +123,12 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     public void SetDirection(Vector3 dir)
     {
         direction = dir.normalized;
+
+        if (direction != Vector3.zero)
+        {
+            visualRoot.rotation = Quaternion.LookRotation(direction);
+        }
+
         rb.linearVelocity = direction * speed;
     }
 
@@ -244,6 +235,12 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     {
         rb.linearVelocity = Vector3.zero;
         direction = Vector3.zero;
+
+        if (visualInstance != null)
+        {
+            Destroy(visualInstance);
+            visualInstance = null;
+        }
 
         if (UpdateManager.Instance != null)
         {

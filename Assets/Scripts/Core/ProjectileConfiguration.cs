@@ -10,10 +10,7 @@ public class ProjectileConfiguration : ScriptableObject
     public float lifetime = 5f;
 
     [Header("Visual")]
-    public Mesh mesh;
-    public Material material;
-    public Color color = Color.white;
-    public Vector3 scale = Vector3.one;
+    public GameObject visualPrefab;
 
     [Header("Effects")]
     public GameObject trailEffect;
@@ -40,7 +37,7 @@ public class ProjectileConfiguration : ScriptableObject
         }
 
         projectile.SetStats(speed, finalDamage, lifetime);
-        projectile.SetVisuals(mesh, material, color, scale);
+        projectile.SetVisualPrefab(visualPrefab);
         projectile.SetEffects(trailEffect, hitEffect, hasLight, lightColor, lightIntensity);
     }
 }
