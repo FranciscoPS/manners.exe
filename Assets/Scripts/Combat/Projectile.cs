@@ -232,19 +232,12 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     }
 
     public void OnDespawn()
-    {
-        rb.linearVelocity = Vector3.zero;
-        direction = Vector3.zero;
-
-        if (visualInstance != null)
-        {
-            Destroy(visualInstance);
-            visualInstance = null;
-        }
-
-        if (UpdateManager.Instance != null)
-        {
-            UpdateManager.Instance.Unregister(this);
-        }
+    { 
+        rb.linearVelocity = Vector3.zero; 
+        direction = Vector3.zero; 
+        if (UpdateManager.Instance != null) 
+        { 
+            UpdateManager.Instance.Unregister(this); 
+        } 
     }
 }
