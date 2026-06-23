@@ -13,9 +13,9 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     private static bool isQuitting = false;
 
     [Header("Spawn Timing")]
-    [SerializeField] private float spawnInterval = 120f;
+    [SerializeField] private float spawnInterval = 60;
     [Tooltip("Retraso del PRIMER cofre tras iniciar la partida. Igual al intervalo normal (2 min).")]
-    [SerializeField] private float firstSpawnDelay = 120f;
+    [SerializeField] private float firstSpawnDelay = 60;
 
     [Header("Spawn Position")]
     [SerializeField] private Vector3 centerPoint = Vector3.zero;
