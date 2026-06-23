@@ -334,8 +334,9 @@ public class LevelUpManager : MonoBehaviour
     /// <summary>
     /// Abre la selección de un Cofre reutilizando el panel premium existente,
     /// mostrando ítems de efecto único (no mejoras de stats).
+    /// Si se proporciona 'chestItem', se muestra ese item (persistente para el cofre).
     /// </summary>
-    public void ShowChestSelection()
+    public void ShowChestSelection(ChestItemData chestItem = null)
     {
         if (levelUpActive)
             return;
@@ -355,15 +356,32 @@ public class LevelUpManager : MonoBehaviour
         if (closeInstructionText != null)
             closeInstructionText.gameObject.SetActive(true);
 
-        GenerateChestOptions();
+        GenerateChestOptions(chestItem);
 
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
     }
 
-    private void GenerateChestOptions()
+    private void GenerateChestOptions(ChestItemData chestItem = null)
     {
-        // El cofre siempre ofrece UNA sola mejora al azar de las disponibles.
+        // Si se pasó un ChestItem explícito lo mostramos; si no, seleccionamos aleatorio.
+        if (chestItem != null)
+        {
+            if (upgradeButton1 != null)
+            {
+                upgradeButton1.SetupChest(chestItem);
+            }
+
+            if (upgradeButton2 != null)
+                upgradeButton2.gameObject.SetActive(false);
+
+            if (upgradeButton3 != null)
+                upgradeButton3.gameObject.SetActive(false);
+
+            return;
+        }
+
+        // Comportamiento previo: elegir al azar (esto se usa sólo si no se pasa item).
         List<ChestItemData> items = ChestItemProvider.GetRandomItems(1);
 
         if (upgradeButton1 != null)

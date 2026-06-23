@@ -15,7 +15,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     [Header("Spawn Timing")]
     [SerializeField] private float spawnInterval = 60;
     [Tooltip("Retraso del PRIMER cofre tras iniciar la partida. Igual al intervalo normal (2 min).")]
-    [SerializeField] private float firstSpawnDelay = 60;                    
+    [SerializeField] private float firstSpawnDelay = 60;
 
     [Header("Spawn Position")]
     [SerializeField] private Vector3 centerPoint = Vector3.zero;
@@ -63,26 +63,21 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         if (instance == null) return;
         if (instance.activeChest != null)
         {
-            // Llamar al componente para que ejecute limpieza específica si la necesita.
             ChestPickup pickup = instance.activeChest.GetComponent<ChestPickup>();
             if (pickup != null)
             {
                 pickup.OnCollected();
             }
-            else
-            {
-                // fallback: destruir directamente si no hay ChestPickup
-                Destroy(instance.activeChest);
-                instance.activeChest = null;
-                instance.timer = 0f;
-            }
+
+            // Reiniciar referencia y temporizador
+            instance.activeChest = null;
+            instance.timer = 0f;
         }
     }
 
     /// <summary>
     /// Notifica al cofre activo que la selección fue cerrada sin tomar la mejora.
-    /// LevelUpManager.CloseLevelUp() llamará a este método para permitir que el
-    /// ChestPickup restablezca su estado (selectionOpen = false).
+    /// LevelUpManager.CloseLevelUp() llamará a este método.
     /// </summary>
     public static void NotifyChestSelectionClosed()
     {
