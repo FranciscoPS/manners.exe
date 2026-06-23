@@ -88,7 +88,6 @@ public class LevelUpManager : MonoBehaviour
     private void Update()
     {
         // Permitir cerrar la selección del cofre con la tecla Espacio, igual que la tienda.
-        // Usamos la Input System directamente para detectar la pulsación (segura si el paquete está presente).
         if (levelUpActive && currentMode == UpgradeMode.Chest)
         {
             if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
@@ -381,27 +380,6 @@ public class LevelUpManager : MonoBehaviour
             upgradeButton3.gameObject.SetActive(false);
     }
 
-    public void OnUpgradeChosen()
-    {
-        if (currentMode == UpgradeMode.Shop)
-        {
-            lastPurchaseTime = Time.unscaledTime;
-            shopOnCooldown = true;
-
-            if (ShopManager.Instance != null)
-            {
-                ShopManager.Instance.OnShopPurchaseMade();
-            }
-
-            CloseLevelUp();
-            GameEvents.TriggerShopAutoClosed();
-        }
-        else
-        {
-            CloseLevelUp();
-        }
-    }
-
     private void DisableAllButtons()
     {
         foreach (var button in allButtons)
@@ -466,9 +444,48 @@ public class LevelUpManager : MonoBehaviour
             lastPurchaseTime = Time.unscaledTime - (cooldown - pausedCooldownTimeRemaining);
         }
 
+        // Si se cerró la UI mientras el modo era Chest, notificar al ChestPickup
+        // para que restaure su estado (no destruir el cofre).
+        if (currentMode == UpgradeMode.Chest)
+        {
+            ChestSpawner.NotifyChestSelectionClosed();
+        }
+
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
         {
             connectedShop.OnShopClosed();
+        }
+    }
+
+    public void OnUpgradeChosen()
+    {
+        if (currentMode == UpgradeMode.Shop)
+        {
+            lastPurchaseTime = Time.unscaledTime;
+            shopOnCooldown = true;
+
+            if (ShopManager.Instance != null)
+            {
+                ShopManager.Instance.OnShopPurchaseMade();
+            }
+
+            CloseLevelUp();
+            GameEvents.TriggerShopAutoClosed();
+        }
+        else if (currentMode == UpgradeMode.Chest)
+        {
+            // El jugador confirmó la mejora del Cofre: cerrar UI y eliminar el cofre del mapa.
+            CloseLevelUp();
+
+            // Destruye el cofre activo y reinicia temporizador.
+            ChestSpawner.CollectActiveChest();
+
+            // Notificar (si corresponde) que el cofre fue recogido.
+            ChestSpawner.NotifyChestCollected();
+        }
+        else
+        {
+            CloseLevelUp();
         }
     }
 }

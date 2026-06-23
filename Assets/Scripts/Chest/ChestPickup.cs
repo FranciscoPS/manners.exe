@@ -1,8 +1,10 @@
 using UnityEngine;
 
 /// <summary>
-/// Se a\u00f1ade al cofre instanciado. Detecta por distancia cuando el jugador se
-/// acerca; al recogerlo, abre la selecci\u00f3n del cofre y desaparece.
+/// Se añade al cofre instanciado. Detecta por distancia cuando el jugador se
+/// acerca; al recogerlo, abre la selección del cofre y NO desaparece hasta que
+/// el jugador confirme la mejora. Si el jugador cierra la UI, el cofre permanece
+/// en el mapa y sólo reabrirá cuando el jugador salga y vuelva a entrar en rango.
 /// </summary>
 [DisallowMultipleComponent]
 public class ChestPickup : MonoBehaviour, IUpdateable
@@ -15,7 +17,9 @@ public class ChestPickup : MonoBehaviour, IUpdateable
     [SerializeField] private float bobSpeed = 4.5f;
 
     private Transform player;
-    private bool opened = false;
+    private bool opened = false; // verdadero cuando el cofre fue finalmente recogido/consumido
+    private bool selectionOpen = false; // verdadero mientras la UI del cofre esté visible
+    private bool lastWasInRange = false; // para detectar transición de fuera->dentro y evitar reabrir inmediatamente
     private float nextCheckTime = 0f;
     private const float CheckInterval = 0.1f;
 
@@ -27,6 +31,8 @@ public class ChestPickup : MonoBehaviour, IUpdateable
     private void OnEnable()
     {
         opened = false;
+        selectionOpen = false;
+        lastWasInRange = false;
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Register(this);
     }
@@ -64,23 +70,52 @@ public class ChestPickup : MonoBehaviour, IUpdateable
         float dx = transform.position.x - player.position.x;
         float dz = transform.position.z - player.position.z;
         float sqrDistance = dx * dx + dz * dz;
-        if (sqrDistance <= pickupRadius * pickupRadius)
+        bool isInRange = sqrDistance <= pickupRadius * pickupRadius;
+
+        // Abrir SOLO al entrar en rango (transición fuera->dentro) y si no hay ya UI abierta.
+        if (isInRange && !lastWasInRange && !selectionOpen)
         {
             Open();
         }
+
+        lastWasInRange = isInRange;
     }
 
     private void Open()
     {
-        if (opened) return;
-        opened = true;
+        if (opened || selectionOpen) return;
 
-        ChestSpawner.NotifyChestCollected();
+        selectionOpen = true;
 
+        // Reutiliza LevelUpManager para mostrar la selección de cofre.
         if (LevelUpManager.Instance != null)
         {
             LevelUpManager.Instance.ShowChestSelection();
         }
+
+        // No destruimos ni notificamos al ChestSpawner aquí: el cofre permanecerá hasta
+        // que el jugador confirme la elección (LevelUpManager.OnUpgradeChosen llamará a ChestSpawner.CollectActiveChest()).
+    }
+
+    /// <summary>
+    /// Llamado por ChestSpawner (a través de LevelUpManager) cuando la UI se cierra
+    /// sin elegir la mejora, para permitir reabrir sólo tras salir/volver a entrar.
+    /// </summary>
+    public void OnSelectionClosed()
+    {
+        selectionOpen = false;
+        // se deja lastWasInRange tal cual: requiere que el jugador salga y vuelva a entrar
+        // para reabrir (evita reabrir inmediatamente mientras sigue en el mismo punto).
+    }
+
+    /// <summary>
+    /// Llamado por ChestSpawner (a través de LevelUpManager) cuando la mejora fue tomada.
+    /// Marca el cofre como recogido, limpia referencias y destruye objeto.
+    /// </summary>
+    public void OnCollected()
+    {
+        if (opened) return;
+        opened = true;
 
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Unregister(this);

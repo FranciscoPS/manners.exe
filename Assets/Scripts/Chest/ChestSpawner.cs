@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// Genera un Cofre cerca del centro del mapa cada cierto intervalo (2 min por
 /// defecto). Solo existe un cofre a la vez y permanece hasta que el jugador lo
-/// recoge. Se autocrea y registra en el UpdateManager; no requiere configuraci\u00f3n
+/// recoge. Se autocrea y registra en el UpdateManager; no requiere configuración
 /// en escena.
 /// </summary>
 public class ChestSpawner : MonoBehaviour, IUpdateable
@@ -15,7 +15,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     [Header("Spawn Timing")]
     [SerializeField] private float spawnInterval = 60;
     [Tooltip("Retraso del PRIMER cofre tras iniciar la partida. Igual al intervalo normal (2 min).")]
-    [SerializeField] private float firstSpawnDelay = 60;
+    [SerializeField] private float firstSpawnDelay = 60;                    
 
     [Header("Spawn Position")]
     [SerializeField] private Vector3 centerPoint = Vector3.zero;
@@ -26,7 +26,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     [SerializeField] private float spawnHeight = 0f;
 
     [Header("Prefab")]
-    [Tooltip("Si se deja vac\u00edo se carga 'Cofre' desde Resources.")]
+    [Tooltip("Si se deja vacío se carga 'Cofre' desde Resources.")]
     [SerializeField] private GameObject chestPrefab;
 
     private float timer = 0f;
@@ -55,6 +55,46 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         GameObject go = new GameObject("ChestSpawner");
         instance = go.AddComponent<ChestSpawner>();
         DontDestroyOnLoad(go);
+    }
+
+    /// <summary>Llamado por LevelUpManager cuando el jugador CONFIRMA la mejora del cofre.</summary>
+    public static void CollectActiveChest()
+    {
+        if (instance == null) return;
+        if (instance.activeChest != null)
+        {
+            // Llamar al componente para que ejecute limpieza específica si la necesita.
+            ChestPickup pickup = instance.activeChest.GetComponent<ChestPickup>();
+            if (pickup != null)
+            {
+                pickup.OnCollected();
+            }
+            else
+            {
+                // fallback: destruir directamente si no hay ChestPickup
+                Destroy(instance.activeChest);
+                instance.activeChest = null;
+                instance.timer = 0f;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Notifica al cofre activo que la selección fue cerrada sin tomar la mejora.
+    /// LevelUpManager.CloseLevelUp() llamará a este método para permitir que el
+    /// ChestPickup restablezca su estado (selectionOpen = false).
+    /// </summary>
+    public static void NotifyChestSelectionClosed()
+    {
+        if (instance == null) return;
+        if (instance.activeChest != null)
+        {
+            ChestPickup pickup = instance.activeChest.GetComponent<ChestPickup>();
+            if (pickup != null)
+            {
+                pickup.OnSelectionClosed();
+            }
+        }
     }
 
     /// <summary>Llamado por el cofre al ser recogido: reinicia el temporizador.</summary>
@@ -148,7 +188,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         GameObject prefab = chestPrefab != null ? chestPrefab : Resources.Load<GameObject>("Cofre");
         if (prefab == null)
         {
-            Debug.LogWarning("[ChestSpawner] No se encontr\u00f3 el prefab 'Cofre' en Resources.");
+            Debug.LogWarning("[ChestSpawner] No se encontró el prefab 'Cofre' en Resources.");
             return;
         }
 
