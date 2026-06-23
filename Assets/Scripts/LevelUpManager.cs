@@ -354,7 +354,10 @@ public class LevelUpManager : MonoBehaviour
 
         // Mostrar la instrucción de cierre (igual que la tienda) para que el jugador sepa que puede cerrar con Espacio.
         if (closeInstructionText != null)
+        {
+            closeInstructionText.text = "Se deseas usar el ítem en otro momento, solo presiona espacio para cerrar el cofre";
             closeInstructionText.gameObject.SetActive(true);
+        }
 
         GenerateChestOptions(chestItem);
 
