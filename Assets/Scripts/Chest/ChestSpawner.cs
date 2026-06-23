@@ -30,6 +30,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     private Transform cachedPlayer;
     private float lastSpawnAngle = -999f;
     private GameObject activeChest;
+    private float timer;
 
     public bool IsActive => this != null && enabled;
 
@@ -53,41 +54,6 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         GameObject go = new GameObject("ChestSpawner");
         instance = go.AddComponent<ChestSpawner>();
         DontDestroyOnLoad(go);
-    }
-
-    /// <summary>Llamado por LevelUpManager cuando el jugador CONFIRMA la mejora del cofre.</summary>
-    public static void CollectActiveChest()
-    {
-        if (instance == null) return;
-        if (instance.activeChest != null)
-        {
-            ChestPickup pickup = instance.activeChest.GetComponent<ChestPickup>();
-            if (pickup != null)
-            {
-                pickup.OnCollected();
-            }
-
-            // Reiniciar referencia y temporizador
-            instance.activeChest = null;
-            instance.timer = 0f;
-        }
-    }
-
-    /// <summary>
-    /// Notifica al cofre activo que la selección fue cerrada sin tomar la mejora.
-    /// LevelUpManager.CloseLevelUp() llamará a este método.
-    /// </summary>
-    public static void NotifyChestSelectionClosed()
-    {
-        if (instance == null) return;
-        if (instance.activeChest != null)
-        {
-            ChestPickup pickup = instance.activeChest.GetComponent<ChestPickup>();
-            if (pickup != null)
-            {
-                pickup.OnSelectionClosed();
-            }
-        }
     }
 
     /// <summary>Llamado por LevelUpManager cuando el jugador CONFIRMA la mejora del cofre.</summary>

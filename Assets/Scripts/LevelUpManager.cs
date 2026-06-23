@@ -87,10 +87,10 @@ public class LevelUpManager : MonoBehaviour
 
     private void Update()
     {
-        // Permitir cerrar la selección del cofre con la tecla Espacio, igual que la tienda.
+        // Permitir cerrar la selección del cofre con la tecla Esc, igual que la tienda.
         if (levelUpActive && currentMode == UpgradeMode.Chest)
         {
-            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 CloseLevelUp();
                 return;
@@ -352,10 +352,10 @@ public class LevelUpManager : MonoBehaviour
         if (cooldownWarningText != null)
             cooldownWarningText.gameObject.SetActive(false);
 
-        // Mostrar la instrucción de cierre (igual que la tienda) para que el jugador sepa que puede cerrar con Espacio.
+        // Mostrar la instrucción de cierre (igual que la tienda) para que el jugador sepa que puede cerrar con Esc.
         if (closeInstructionText != null)
         {
-            closeInstructionText.text = "Se deseas usar el ítem en otro momento, solo presiona espacio para cerrar el cofre";
+            closeInstructionText.text = "Si deseas usar el ítem en otro momento, presiona Esc para cerrar el cofre";
             closeInstructionText.gameObject.SetActive(true);
         }
 
