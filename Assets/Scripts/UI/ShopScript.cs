@@ -22,7 +22,7 @@ public class ShopScript : MonoBehaviour
     {
         openShopAction = new InputAction(
             name: "OpenShop",
-            binding: "<Keyboard>/p"
+            binding: "<Keyboard>/space"
         );
 
         if (levelUpManager == null)
