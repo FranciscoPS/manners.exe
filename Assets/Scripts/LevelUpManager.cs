@@ -87,6 +87,17 @@ public class LevelUpManager : MonoBehaviour
 
     private void Update()
     {
+        // Permitir cerrar la selección del cofre con la tecla Espacio, igual que la tienda.
+        // Usamos la Input System directamente para detectar la pulsación (segura si el paquete está presente).
+        if (levelUpActive && currentMode == UpgradeMode.Chest)
+        {
+            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                CloseLevelUp();
+                return;
+            }
+        }
+
         if (levelUpActive && levelUpText != null)
         {
             float hue = Mathf.PingPong(Time.unscaledTime * colorSpeed, 1f);
@@ -237,7 +248,7 @@ public class LevelUpManager : MonoBehaviour
         {
             int minutes = Mathf.FloorToInt(timeRemaining / 60f);
             int seconds = Mathf.FloorToInt(timeRemaining % 60f);
-            cooldownWarningText.text = $"Pr�xima compra en: {minutes:00}:{seconds:00}";
+            cooldownWarningText.text = $"Próxima compra en: {minutes:00}:{seconds:00}";
             cooldownWarningText.gameObject.SetActive(true);
         }
         else
@@ -322,8 +333,8 @@ public class LevelUpManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Abre la selecci\u00f3n de un Cofre reutilizando el panel premium existente,
-    /// mostrando \u00edtems de efecto \u00fanico (no mejoras de stats).
+    /// Abre la selección de un Cofre reutilizando el panel premium existente,
+    /// mostrando ítems de efecto único (no mejoras de stats).
     /// </summary>
     public void ShowChestSelection()
     {
@@ -341,8 +352,9 @@ public class LevelUpManager : MonoBehaviour
         if (cooldownWarningText != null)
             cooldownWarningText.gameObject.SetActive(false);
 
+        // Mostrar la instrucción de cierre (igual que la tienda) para que el jugador sepa que puede cerrar con Espacio.
         if (closeInstructionText != null)
-            closeInstructionText.gameObject.SetActive(false);
+            closeInstructionText.gameObject.SetActive(true);
 
         GenerateChestOptions();
 
@@ -364,7 +376,7 @@ public class LevelUpManager : MonoBehaviour
         if (upgradeButton2 != null)
             upgradeButton2.gameObject.SetActive(false);
 
-        // El cofre nunca usa el tercer bot\u00f3n.
+        // El cofre nunca usa el tercer botón.
         if (upgradeButton3 != null)
             upgradeButton3.gameObject.SetActive(false);
     }
