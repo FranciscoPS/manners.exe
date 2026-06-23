@@ -231,6 +231,8 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         foreach (TrailRenderer trail in trailRenderers)
         {
             trail.Clear();
+            trail.emitting = false;
+            trail.emitting = true;
         }
 
         if (UpdateManager.Instance != null)

@@ -33,6 +33,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3971270660204638880}
+  - {fileID: 932661216674959305}
   - {fileID: 7402080822146248967}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4963,8 +4964,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 1
-  m_Children:
-  - {fileID: 932661216674959305}
+  m_Children: []
   m_Father: {fileID: 8842119414103208801}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!198 &4411991892851923455
@@ -9796,11 +9796,11 @@ Transform:
   m_GameObject: {fileID: 8046761237471897125}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+  m_LocalPosition: {x: 0, y: 0, z: -0.157}
+  m_LocalScale: {x: 1.6666667, y: 1.6666667, z: 1.6666667}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3971270660204638880}
+  m_Father: {fileID: 8842119414103208801}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!96 &5917373049129958151
 TrailRenderer:
@@ -9855,27 +9855,27 @@ TrailRenderer:
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1
+    widthMultiplier: 0.5
     widthCurve:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.51704407
-        inSlope: 1.4490508
-        outSlope: 1.4490508
+        value: 1
+        inSlope: -0.15189794
+        outSlope: -0.15189794
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
-        outWeight: 0.23918575
+        outWeight: 0.5484961
       - serializedVersion: 3
         time: 1
-        value: 1
-        inSlope: -0.13135041
-        outSlope: -0.13135041
+        value: 0
+        inSlope: -2.4656527
+        outSlope: -2.4656527
         tangentMode: 0
         weightedMode: 0
-        inWeight: 0.21628499
+        inWeight: 0.1237085
         outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
@@ -9883,7 +9883,7 @@ TrailRenderer:
     colorGradient:
       serializedVersion: 2
       key0: {r: 1, g: 0.40254885, b: 0, a: 1}
-      key1: {r: 1, g: 0.36320752, b: 0.36320752, a: 0.47058824}
+      key1: {r: 1, g: 0.36320752, b: 0.36320752, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -9911,13 +9911,13 @@ TrailRenderer:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
-    numCapVertices: 0
+    numCapVertices: 90
     alignment: 0
-    textureMode: 0
-    textureScale: {x: 1, y: 0.2}
+    textureMode: 2
+    textureScale: {x: 1, y: 0.14}
     shadowBias: 0.5
     generateLightingData: 0
-  m_MinVertexDistance: 0.1
+  m_MinVertexDistance: 0.01
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
