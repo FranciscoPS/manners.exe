@@ -12,6 +12,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     private float knockbackForce = 0f;
     private bool isChainKnockback = false;
     private float chainKnockbackRadius = 2f;
+    private TrailRenderer[] trailRenderers;
 
     private Vector3 direction;
     private Rigidbody rb;
@@ -40,6 +41,8 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     {
         rb = GetComponent<Rigidbody>();
         projectileLight = GetComponent<Light>();
+
+        trailRenderers = GetComponentsInChildren<TrailRenderer>(true);
     }
 
     public void SetStats(float newSpeed, float newDamage, float newLifetime)
@@ -69,22 +72,22 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
             visualInstance = null;
         }
 
-        if (visualPrefab != null)
-        {
-            visualInstance = Instantiate(visualPrefab, transform);
+        if (visualPrefab == null) return;
 
-            visualInstance.transform.localPosition = Vector3.zero;
-            visualInstance.transform.localRotation = Quaternion.identity;
-            visualInstance.transform.localScale = Vector3.one;
+        if (visualPrefab.GetComponent<Projectile>() != null)
+        {
+            //Debug.LogError(" ERROR: Se está intentando instanciar un Projectile como visualPrefab!");
+            return;
         }
+
+        visualInstance = Instantiate(visualPrefab, transform);
+        visualInstance.transform.localPosition = Vector3.zero;
+        visualInstance.transform.localRotation = Quaternion.identity;
+        visualInstance.transform.localScale = Vector3.one;
     }
 
-    public void SetEffects(GameObject trail, GameObject hitEffect, bool hasLight, Color lightColor, float lightIntensity)
+    public void SetEffects(GameObject hitEffect, bool hasLight, Color lightColor, float lightIntensity)
     {
-        if (trail != null && trailInstance == null)
-        {
-            trailInstance = Instantiate(trail, transform);
-        }
 
         if (hasLight)
         {
@@ -224,6 +227,11 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     {
         lifetimeTimer = lifetime;
         rb.linearVelocity = Vector3.zero;
+
+        foreach (TrailRenderer trail in trailRenderers)
+        {
+            trail.Clear();
+        }
 
         if (UpdateManager.Instance != null)
         {

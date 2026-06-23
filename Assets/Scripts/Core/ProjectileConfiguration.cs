@@ -13,7 +13,6 @@ public class ProjectileConfiguration : ScriptableObject
     public GameObject visualPrefab;
 
     [Header("Effects")]
-    public GameObject trailEffect;
     public GameObject hitEffect;
     public bool hasLight = false;
     public Color lightColor = Color.white;
@@ -38,6 +37,6 @@ public class ProjectileConfiguration : ScriptableObject
 
         projectile.SetStats(speed, finalDamage, lifetime);
         projectile.SetVisualPrefab(visualPrefab);
-        projectile.SetEffects(trailEffect, hitEffect, hasLight, lightColor, lightIntensity);
+        projectile.SetEffects(hitEffect, hasLight, lightColor, lightIntensity);
     }
 }
