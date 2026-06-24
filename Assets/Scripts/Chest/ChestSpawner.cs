@@ -23,13 +23,14 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     [SerializeField] private float spawnHeight = 0f;
 
     [Header("Prefab")]
-    [Tooltip("Si se deja vac\u00edo se carga 'Cofre' desde Resources.")]
+    [Tooltip("Si se deja vacío se carga 'Cofre' desde Resources.")]
     [SerializeField] private GameObject chestPrefab;
 
     private float nextSpawnTime = 0f;
     private Transform cachedPlayer;
     private float lastSpawnAngle = -999f;
     private GameObject activeChest;
+    private float timer;
 
     public bool IsActive => this != null && enabled;
 
@@ -53,6 +54,41 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         GameObject go = new GameObject("ChestSpawner");
         instance = go.AddComponent<ChestSpawner>();
         DontDestroyOnLoad(go);
+    }
+
+    /// <summary>Llamado por LevelUpManager cuando el jugador CONFIRMA la mejora del cofre.</summary>
+    public static void CollectActiveChest()
+    {
+        if (instance == null) return;
+        if (instance.activeChest != null)
+        {
+            ChestPickup pickup = instance.activeChest.GetComponent<ChestPickup>();
+            if (pickup != null)
+            {
+                pickup.OnCollected();
+            }
+
+            // Reiniciar referencia y temporizador
+            instance.activeChest = null;
+            instance.timer = 0f;
+        }
+    }
+
+    /// <summary>
+    /// Notifica al cofre activo que la selección fue cerrada sin tomar la mejora.
+    /// LevelUpManager.CloseLevelUp() llamará a este método.
+    /// </summary>
+    public static void NotifyChestSelectionClosed()
+    {
+        if (instance == null) return;
+        if (instance.activeChest != null)
+        {
+            ChestPickup pickup = instance.activeChest.GetComponent<ChestPickup>();
+            if (pickup != null)
+            {
+                pickup.OnSelectionClosed();
+            }
+        }
     }
 
     public static void NotifyChestCollected()
@@ -147,7 +183,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         GameObject prefab = chestPrefab != null ? chestPrefab : Resources.Load<GameObject>("Cofre");
         if (prefab == null)
         {
-            Debug.LogWarning("[ChestSpawner] No se encontr\u00f3 el prefab 'Cofre' en Resources.");
+            Debug.LogWarning("[ChestSpawner] No se encontró el prefab 'Cofre' en Resources.");
             return;
         }
 
