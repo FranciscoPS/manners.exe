@@ -13,12 +13,9 @@ MonoBehaviour:
   m_Name: BasicBullet
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileConfiguration
   speed: 15
-  damage: 10
+  damageMultiplier: 1
   lifetime: 5
-  mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  material: {fileID: 2100000, guid: 3b518018b3bfe4e6ca67a14184db1aeb, type: 2}
-  color: {r: 1, g: 0.81019825, b: 0, a: 1}
-  scale: {x: 0.3, y: 0.3, z: 0.3}
+  visualPrefab: {fileID: 940807850928125033, guid: 027cefd3872f13243ac1a91e98e446f9, type: 3}
   trailEffect: {fileID: 0}
   hitEffect: {fileID: 0}
   hasLight: 0

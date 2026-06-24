@@ -87,6 +87,16 @@ public class LevelUpManager : MonoBehaviour
 
     private void Update()
     {
+        // Permitir cerrar la selección del cofre con la tecla C, igual que la tienda.
+        if (levelUpActive && currentMode == UpgradeMode.Chest)
+        {
+            if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+            {
+                CloseLevelUp();
+                return;
+            }
+        }
+
         if (levelUpActive && levelUpText != null)
         {
             float hue = Mathf.PingPong(Time.unscaledTime * colorSpeed, 1f);
@@ -237,7 +247,7 @@ public class LevelUpManager : MonoBehaviour
         {
             int minutes = Mathf.FloorToInt(timeRemaining / 60f);
             int seconds = Mathf.FloorToInt(timeRemaining % 60f);
-            cooldownWarningText.text = $"Pr�xima compra en: {minutes:00}:{seconds:00}";
+            cooldownWarningText.text = $"Próxima compra en: {minutes:00}:{seconds:00}";
             cooldownWarningText.gameObject.SetActive(true);
         }
         else
@@ -322,10 +332,11 @@ public class LevelUpManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Abre la selecci\u00f3n de un Cofre reutilizando el panel premium existente,
-    /// mostrando \u00edtems de efecto \u00fanico (no mejoras de stats).
+    /// Abre la selección de un Cofre reutilizando el panel premium existente,
+    /// mostrando ítems de efecto único (no mejoras de stats).
+    /// Si se proporciona 'chestItem', se muestra ese item (persistente para el cofre).
     /// </summary>
-    public void ShowChestSelection()
+    public void ShowChestSelection(ChestItemData chestItem = null)
     {
         if (levelUpActive)
             return;
@@ -341,18 +352,39 @@ public class LevelUpManager : MonoBehaviour
         if (cooldownWarningText != null)
             cooldownWarningText.gameObject.SetActive(false);
 
+        // Mostrar la instrucción de cierre (igual que la tienda) para que el jugador sepa que puede cerrar con C.
         if (closeInstructionText != null)
-            closeInstructionText.gameObject.SetActive(false);
+        {
+            closeInstructionText.text = "Si deseas usar el ítem en otro momento, presiona C para cerrar el cofre";
+            closeInstructionText.gameObject.SetActive(true);
+        }
 
-        GenerateChestOptions();
+        GenerateChestOptions(chestItem);
 
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
     }
 
-    private void GenerateChestOptions()
+    private void GenerateChestOptions(ChestItemData chestItem = null)
     {
-        // El cofre siempre ofrece UNA sola mejora al azar de las disponibles.
+        // Si se pasó un ChestItem explícito lo mostramos; si no, seleccionamos aleatorio.
+        if (chestItem != null)
+        {
+            if (upgradeButton1 != null)
+            {
+                upgradeButton1.SetupChest(chestItem);
+            }
+
+            if (upgradeButton2 != null)
+                upgradeButton2.gameObject.SetActive(false);
+
+            if (upgradeButton3 != null)
+                upgradeButton3.gameObject.SetActive(false);
+
+            return;
+        }
+
+        // Comportamiento previo: elegir al azar (esto se usa sólo si no se pasa item).
         List<ChestItemData> items = ChestItemProvider.GetRandomItems(1);
 
         if (upgradeButton1 != null)
@@ -364,30 +396,9 @@ public class LevelUpManager : MonoBehaviour
         if (upgradeButton2 != null)
             upgradeButton2.gameObject.SetActive(false);
 
-        // El cofre nunca usa el tercer bot\u00f3n.
+        // El cofre nunca usa el tercer botón.
         if (upgradeButton3 != null)
             upgradeButton3.gameObject.SetActive(false);
-    }
-
-    public void OnUpgradeChosen()
-    {
-        if (currentMode == UpgradeMode.Shop)
-        {
-            lastPurchaseTime = Time.unscaledTime;
-            shopOnCooldown = true;
-
-            if (ShopManager.Instance != null)
-            {
-                ShopManager.Instance.OnShopPurchaseMade();
-            }
-
-            CloseLevelUp();
-            GameEvents.TriggerShopAutoClosed();
-        }
-        else
-        {
-            CloseLevelUp();
-        }
     }
 
     private void DisableAllButtons()
@@ -454,9 +465,48 @@ public class LevelUpManager : MonoBehaviour
             lastPurchaseTime = Time.unscaledTime - (cooldown - pausedCooldownTimeRemaining);
         }
 
+        // Si se cerró la UI mientras el modo era Chest, notificar al ChestPickup
+        // para que restaure su estado (no destruir el cofre).
+        if (currentMode == UpgradeMode.Chest)
+        {
+            ChestSpawner.NotifyChestSelectionClosed();
+        }
+
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
         {
             connectedShop.OnShopClosed();
+        }
+    }
+
+    public void OnUpgradeChosen()
+    {
+        if (currentMode == UpgradeMode.Shop)
+        {
+            lastPurchaseTime = Time.unscaledTime;
+            shopOnCooldown = true;
+
+            if (ShopManager.Instance != null)
+            {
+                ShopManager.Instance.OnShopPurchaseMade();
+            }
+
+            CloseLevelUp();
+            GameEvents.TriggerShopAutoClosed();
+        }
+        else if (currentMode == UpgradeMode.Chest)
+        {
+            // El jugador confirmó la mejora del Cofre: cerrar UI y eliminar el cofre del mapa.
+            CloseLevelUp();
+
+            // Destruye el cofre activo y reinicia temporizador.
+            ChestSpawner.CollectActiveChest();
+
+            // Notificar (si corresponde) que el cofre fue recogido.
+            ChestSpawner.NotifyChestCollected();
+        }
+        else
+        {
+            CloseLevelUp();
         }
     }
 }

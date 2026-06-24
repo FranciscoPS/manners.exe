@@ -6671,7 +6671,7 @@ GameObject:
   - component: {fileID: 265672815}
   - component: {fileID: 265672814}
   m_Layer: 0
-  m_Name: Void
+  m_Name: Ocean
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6723,7 +6723,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 245ab054ab1be174b819d4dfb75dc3d8, type: 2}
+  - {fileID: 2100000, guid: 9c2e695ad92879f44a6b9857e09713a1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8776,7 +8776,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Presiona \u201CP\u201D para abrir la tienda"
+  m_text: "Presiona \u201CEspacio\u201D para abrir la tienda"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -37837,7 +37837,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Presiona P para cerrar la tienda
+  m_text: Presiona Espacio para cerrar la tienda
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -43104,7 +43104,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -430}
-  m_SizeDelta: {x: 601, y: 150}
+  m_SizeDelta: {x: 700, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1682989462
 PrefabInstance:
@@ -48935,7 +48935,7 @@ MonoBehaviour:
   poolConfigs:
   - poolType: 0
     prefabs: []
-    prefab: {fileID: 323352707975832528, guid: ab5a2bcba21aa4947967a00352039676, type: 3}
+    prefab: {fileID: 940807850928125033, guid: 027cefd3872f13243ac1a91e98e446f9, type: 3}
     prewarmCount: 200
     preventGrow: 0
     defaultCapacity: 10
