@@ -327,7 +327,24 @@ public class PlayerStatsManager : MonoBehaviour
         int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
         if (knockbackLevel <= 0) return 0f;
 
-        return 5f + (knockbackLevel - 1) * 0.5f;
+        // Base más fuerte para que el empuje se sienta; escala MODESTO por nivel (pedido del usuario).
+        return 7f + (knockbackLevel - 1) * 0.8f;
+    }
+
+    /// <summary>
+    /// Número de enemigos EXTRA que encadena el empuje (saltos de la cadena). Escala FUERTE con el nivel:
+    /// nivel 1 ≈7, nivel 2 ≈13, nivel 3 ≈19 (≈20 enemigos empujados contando el impactado), etc.
+    /// </summary>
+    public int GetKnockbackChainJumps()
+    {
+        return GetKnockbackChainJumpsForLevel(GetUpgradeLevel(UpgradeType.Knockback));
+    }
+
+    /// <summary>Saltos de la cadena de empuje para un nivel arbitrario (para previews de la tienda/level-up).</summary>
+    public int GetKnockbackChainJumpsForLevel(int knockbackLevel)
+    {
+        if (knockbackLevel <= 0) return 0;
+        return 7 + (knockbackLevel - 1) * 6;
     }
 
     public Dictionary<UpgradeType, int> GetAllUpgradeLevels()
