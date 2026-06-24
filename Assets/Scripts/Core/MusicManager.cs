@@ -143,7 +143,6 @@ public class MusicManager : MonoBehaviour
         loopSource.spatialBlend = 0f;
         loopSource.priority = 0;
 
-        // Dos fuentes que se alternan (ping-pong) para encadenar intro/loops/puentes sin huecos.
         musicSources = new AudioSource[] { introSource, loopSource };
 
         menuSource = gameObject.AddComponent<AudioSource>();
@@ -262,7 +261,6 @@ public class MusicManager : MonoBehaviour
         introSource.Stop();
         loopSource.Stop();
 
-        // Recoge los loops válidos (loop1, loop2, ..., loopN).
         var sections = new List<MusicLoopSection>();
         if (config.loopSections != null)
         {
@@ -291,7 +289,6 @@ public class MusicManager : MonoBehaviour
         return isVolumeReduced ? musicVolume * reducedVolumeMultiplier : musicVolume;
     }
 
-    /// <summary>Tiempo de PARTIDA en segundos. Se CONGELA en pausa/tutorial (Time.timeScale=0).</summary>
     private float CurrentGameTime()
     {
         if (GameTimeManager.Instance != null)
@@ -299,10 +296,6 @@ public class MusicManager : MonoBehaviour
         return 0f;
     }
 
-    /// <summary>
-    /// Calcula el segundo de PARTIDA en el que debe COMENZAR cada loop. start[0]=tras la intro.
-    /// Los loops con startAtSeconds quedan anclados; los demás se interpolan entre anclajes.
-    /// </summary>
     private double[] ComputeLoopStartTimes(AudioClip introClip, List<MusicLoopSection> sections)
     {
         int k = sections.Count;
@@ -329,13 +322,13 @@ public class MusicManager : MonoBehaviour
                 known[i] = true;
             }
         }
-        // Si el último loop no está anclado, dale un ancla por defecto (reparto uniforme).
+
         if (!known[k - 1])
         {
             start[k - 1] = introLen + (k - 1) * sharePerLoop;
             known[k - 1] = true;
         }
-        // Interpola los anclajes desconocidos entre los conocidos.
+
         int prevKnown = 0;
         for (int i = 1; i < k; i++)
         {
@@ -349,22 +342,13 @@ public class MusicManager : MonoBehaviour
         return start;
     }
 
-    /// <summary>
-    /// Reproduce intro -> loop1 -> puente1 -> loop2 -> ... -> loopN(infinito), pero el AVANCE
-    /// entre loops se decide con el TIEMPO DE JUEGO (GameTimeManager), no con tiempo real. Así,
-    /// si el juego se pausa o el tutorial congela el tiempo, el loop actual sigue sonando en bucle
-    /// (ambiente) y NO salta al siguiente hasta que el tiempo de partida realmente avance.
-    /// Las transiciones loop->puente->loop son gapless (PlayScheduled) y ocurren en el límite
-    /// natural del loop (deja terminar la iteración actual antes de cambiar).
-    /// </summary>
     private IEnumerator MusicSequenceRoutine(AudioClip introClip, List<MusicLoopSection> sections, AudioClip legacyLoop)
     {
-        const double LEAD = 0.5; // antelación (s) para programar la transición sin hueco
+        const double LEAD = 0.5;
 
         int srcIndex = 0;
         AudioSource cur = musicSources[srcIndex];
 
-        // Sin secciones: loop infinito legado (con intro opcional).
         if (sections.Count == 0)
         {
             if (legacyLoop == null) yield break;
@@ -386,7 +370,6 @@ public class MusicManager : MonoBehaviour
         double[] start = ComputeLoopStartTimes(introClip, sections);
         int k = sections.Count;
 
-        // INTRO (suena una vez; encadena gapless al primer loop).
         if (introClip != null)
         {
             PlayClipNow(cur, introClip, false);
@@ -405,16 +388,14 @@ public class MusicManager : MonoBehaviour
             PlayClipNow(cur, sections[0].loopClip, true);
         }
 
-        // STAGES: por cada loop excepto el último, espera y luego transiciona puente -> siguiente loop.
         for (int i = 0; i < k - 1; i++)
         {
             MusicLoopSection s = sections[i];
             double clipLen = ClipLength(s.loopClip);
 
-            // --- Espera para avanzar ---
             if (s.repeatCount > 0)
             {
-                // Cuenta repeticiones reales del loop (detecta el "wrap" de cur.time).
+
                 int completed = 0;
                 float lastT = cur.time;
                 while (completed < s.repeatCount)
@@ -427,14 +408,12 @@ public class MusicManager : MonoBehaviour
             }
             else
             {
-                // Avanza cuando el TIEMPO DE JUEGO cruza el umbral del siguiente loop.
-                // (Congelado en pausa/tutorial: el loop sigue sonando y no salta.)
+
                 double threshold = start[i + 1];
                 while (CurrentGameTime() < threshold)
                     yield return null;
             }
 
-            // --- Transición gapless en el límite del loop (solo en juego activo) ---
             double remaining;
             while (true)
             {
@@ -445,7 +424,7 @@ public class MusicManager : MonoBehaviour
             }
 
             double boundaryDsp = AudioSettings.dspTime + remaining;
-            cur.loop = false; // termina la iteración actual y para justo en el límite
+            cur.loop = false;
 
             AudioClip bridge = s.bridgeClip;
             AudioClip nextLoop = sections[i + 1].loopClip;
@@ -458,7 +437,7 @@ public class MusicManager : MonoBehaviour
                 while (AudioSettings.dspTime < boundaryDsp) yield return null;
                 srcIndex = 1 - srcIndex;
                 cur = bridgeSrc;
-                // programa el siguiente loop tras el puente en la fuente que quedó libre
+
                 AudioSource loopSrc = musicSources[1 - srcIndex];
                 PlayClipScheduled(loopSrc, nextLoop, true, bridgeEndDsp);
                 while (AudioSettings.dspTime < bridgeEndDsp) yield return null;
@@ -467,14 +446,14 @@ public class MusicManager : MonoBehaviour
             }
             else
             {
-                // Sin puente: encadena loop -> siguiente loop directamente en el límite.
+
                 PlayClipScheduled(bridgeSrc, nextLoop, true, boundaryDsp);
                 while (AudioSettings.dspTime < boundaryDsp) yield return null;
                 srcIndex = 1 - srcIndex;
                 cur = bridgeSrc;
             }
         }
-        // El último loop ya está sonando con loop=true (para siempre, cubre overtime).
+
     }
 
     private void PlayClipNow(AudioSource src, AudioClip clip, bool loop)

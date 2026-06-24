@@ -49,11 +49,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public bool IsActive => gameObject.activeInHierarchy && enabled;
 
-    // --- API para el sistema de separación entre enemigos ---
-    /// <summary>True si el enemigo debe participar en la separación (activo y sin knockback).</summary>
     public bool WantsSeparation => IsActive && !isKnockedBack;
 
-    /// <summary>El EnemySeparationManager deja aquí el vector de repulsión (u/seg en el plano XZ).</summary>
     public void SetSeparation(Vector3 value) => separation = value;
 
     public void SetStats(float newMoveSpeed, float newContactDamage)
@@ -188,7 +185,6 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
                 agent.SetDestination(destination);
             }
 
-            // Separación entre enemigos: empuje lateral para no fundirse en un punto.
             if (separation.sqrMagnitude > 0.0001f)
             {
                 agent.Move(new Vector3(separation.x, 0f, separation.z) * deltaTime);

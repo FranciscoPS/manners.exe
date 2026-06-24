@@ -8,18 +8,15 @@ public class DamageTween : MonoBehaviour
     [SerializeField] private Color damageColor = Color.red;
     [SerializeField] private float tweenTime = 0.3f;
     [SerializeField] private int tweenLoops = 3;
-    
 
-    private GameObject targetObject; 
+    private GameObject targetObject;
     private SpriteRenderer spriteRenderer;
     private Graphic uiGraphic;
-    private Renderer meshRenderer; 
-    
-    // Soporta múltiples materiales
+    private Renderer meshRenderer;
+
     private Material[] materialInstances;
     private bool createdMaterialInstances = false;
 
-    // Guarda colores originales por material (si hay materiales) o un único originalColor para sprite/UI
     private Color[] originalColors;
     private Color originalColor = Color.white;
 
@@ -30,27 +27,27 @@ public class DamageTween : MonoBehaviour
     {
         InitializeMaterial();
     }
-    
+
     private void OnEnable()
     {
         if (!isInitialized) InitializeMaterial();
         CaptureOriginalColor();
     }
-    
+
     private void OnDisable()
     {
         RestoreOriginalColors();
-        
+
         damageTween?.Kill();
     }
-    
+
     public void InitializeMaterial()
     {
         if (targetObject == null)
         {
             targetObject = gameObject;
         }
-        
+
         if (targetObject == null) return;
         if (isInitialized) return;
 
@@ -60,7 +57,7 @@ public class DamageTween : MonoBehaviour
 
         if (meshRenderer != null)
         {
-            // renderer.materials crea instancias si no existen; almacenamos todas las instancias para modificarlas
+
             materialInstances = meshRenderer.materials;
             createdMaterialInstances = true;
         }
@@ -68,7 +65,7 @@ public class DamageTween : MonoBehaviour
         isInitialized = true;
         CaptureOriginalColor();
     }
-    
+
     private void CaptureOriginalColor()
     {
         if (spriteRenderer != null)
@@ -101,7 +98,6 @@ public class DamageTween : MonoBehaviour
                     originalColors[i] = m.color;
             }
 
-            // Para compatibilidad con la API existente, set originalColor al primero
             originalColor = originalColors.Length > 0 ? originalColors[0] : Color.white;
             return;
         }
@@ -128,7 +124,7 @@ public class DamageTween : MonoBehaviour
             adjustedTweenTime
         )
         .SetLoops(tweenLoops, LoopType.Yoyo)
-        .OnComplete(() => 
+        .OnComplete(() =>
         {
             if (this != null)
             {
@@ -136,7 +132,7 @@ public class DamageTween : MonoBehaviour
             }
         });
     }
-    
+
     private Color GetCurrentColor()
     {
         if (spriteRenderer != null) return spriteRenderer.color;
@@ -218,12 +214,11 @@ public class DamageTween : MonoBehaviour
             }
         }
     }
-    
+
     private void OnDestroy()
     {
         damageTween?.Kill();
-        
-        // Destruir instancias de material creadas para evitar memory leaks en Play mode
+
         if (createdMaterialInstances && materialInstances != null && Application.isPlaying)
         {
             for (int i = 0; i < materialInstances.Length; i++)

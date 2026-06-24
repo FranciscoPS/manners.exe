@@ -1,18 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Aplica una fuerza de SEPARACIÓN local entre enemigos para que no se fundan en un
-/// único punto cuando persiguen al jugador. Es el componente "separation" de un sistema
-/// de boids (sin alineación ni cohesión): cada enemigo se aparta suavemente de los
-/// vecinos demasiado cercanos, pero pueden tocarse sin problema.
-///
-/// Usa un grid espacial (spatial hash) para que el coste sea ~O(n) en vez de O(n²), y el
-/// cálculo está throttled (no por frame) y registrado en el UpdateManager del proyecto.
-/// Pensado para muchos enemigos en WebGL: sin colisiones físicas, sin jitter, sin GC por frame.
-///
-/// El singleton se autocrea cuando el primer EnemyController se registra.
-/// </summary>
 public class EnemySeparationManager : MonoBehaviour, IUpdateable
 {
     public static EnemySeparationManager Instance { get; private set; }
@@ -107,7 +95,6 @@ public class EnemySeparationManager : MonoBehaviour, IUpdateable
         float invCell = 1f / cellSize;
         float radiusSqr = separationRadius * separationRadius;
 
-        // --- Construir el grid espacial ---
         ClearGrid();
         positions.Clear();
 
@@ -128,7 +115,6 @@ public class EnemySeparationManager : MonoBehaviour, IUpdateable
             bucket.Add(i);
         }
 
-        // --- Calcular separación por enemigo (vecindario 3x3 celdas) ---
         for (int i = 0; i < count; i++)
         {
             var self = agents[i];
@@ -163,7 +149,7 @@ public class EnemySeparationManager : MonoBehaviour, IUpdateable
                         {
                             if (dSqr < 1e-8f)
                             {
-                                // Exactamente encimados: empuje en dirección pseudo-aleatoria estable.
+
                                 float ang = (i * 137) % 360 * Mathf.Deg2Rad;
                                 sum += new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang));
                                 if (++neighbors >= maxNeighbors) break;
@@ -172,7 +158,7 @@ public class EnemySeparationManager : MonoBehaviour, IUpdateable
                         }
 
                         float d = Mathf.Sqrt(dSqr);
-                        // Más cerca => empuje más fuerte (0 en el borde del radio, 1 al contacto).
+
                         sum += (away / d) * (1f - d / separationRadius);
 
                         if (++neighbors >= maxNeighbors) break;

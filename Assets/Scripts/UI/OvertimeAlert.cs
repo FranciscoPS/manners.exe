@@ -3,13 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Aviso de OVERTIME: al agotarse el tiempo (GameEvents.OnMatchTimeExpired) muestra
-/// un texto rojo grande pulsante en la parte superior (sin tapar el centro), hace
-/// parpadear la pantalla en rojo y reproduce un audio con fade in/out, todo durante
-/// unos segundos. Se autocrea (genera su propio Canvas/AudioSource), no requiere
-/// setup en escena. El clip se asigna en SFXDatabase.overtimeAlertSFX.
-/// </summary>
 public class OvertimeAlert : MonoBehaviour
 {
     private static OvertimeAlert instance;
@@ -115,7 +108,7 @@ public class OvertimeAlert : MonoBehaviour
 
     private void Start()
     {
-        // TEST: dispara el aviso solo (sin la oleada) para poder verlo/escucharlo rápido.
+
         if (testTriggerOnStart)
         {
             StartCoroutine(TestTriggerRoutine());
@@ -151,7 +144,6 @@ public class OvertimeAlert : MonoBehaviour
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
 
-        // Overlay rojo a pantalla completa para el parpadeo.
         GameObject flashObj = new GameObject("RedFlash");
         flashObj.transform.SetParent(canvasObj.transform, false);
         flashImage = flashObj.AddComponent<Image>();
@@ -163,7 +155,6 @@ public class OvertimeAlert : MonoBehaviour
         flashRect.offsetMin = Vector2.zero;
         flashRect.offsetMax = Vector2.zero;
 
-        // Texto del aviso, en la parte superior (no tapa el centro de juego).
         GameObject textObj = new GameObject("OvertimeText");
         textObj.transform.SetParent(canvasObj.transform, false);
         text = textObj.AddComponent<TextMeshProUGUI>();
@@ -194,7 +185,7 @@ public class OvertimeAlert : MonoBehaviour
 
     private IEnumerator AlertRoutine()
     {
-        // Prepara el audio (clip desde SFXDatabase).
+
         AudioClip clip = SFXDatabase.Instance != null ? SFXDatabase.Instance.overtimeAlertSFX : null;
         float targetVolume = SFXDatabase.Instance != null ? SFXDatabase.Instance.overtimeAlertVolume : 0.9f;
 
@@ -219,7 +210,6 @@ public class OvertimeAlert : MonoBehaviour
             float dt = Time.unscaledDeltaTime;
             elapsed += dt;
 
-            // Pulso del texto.
             if (textRect != null)
             {
                 float tp = (Mathf.Sin(elapsed * textPulseFrequency * Mathf.PI * 2f) + 1f) * 0.5f;
@@ -227,7 +217,6 @@ public class OvertimeAlert : MonoBehaviour
                 textRect.localScale = new Vector3(scale, scale, 1f);
             }
 
-            // Parpadeo rojo de pantalla.
             if (flashImage != null)
             {
                 float tf = (Mathf.Sin(elapsed * flashFrequency * Mathf.PI * 2f) + 1f) * 0.5f;
@@ -235,7 +224,6 @@ public class OvertimeAlert : MonoBehaviour
                 flashImage.color = new Color(flashColor.r, flashColor.g, flashColor.b, a);
             }
 
-            // Fade del audio: in al principio, out al final.
             if (clip != null && audioSource != null)
             {
                 float vol;
@@ -252,7 +240,6 @@ public class OvertimeAlert : MonoBehaviour
             yield return null;
         }
 
-        // Limpieza al terminar.
         if (audioSource != null)
         {
             audioSource.Stop();

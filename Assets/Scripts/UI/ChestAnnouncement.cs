@@ -2,12 +2,6 @@ using System.Collections;
 using UnityEngine;
 using TMPro;
 
-/// <summary>
-/// Muestra un aviso centrado en pantalla (p. ej. "¡Un cofre ha aparecido!") que
-/// pulsa haciéndose grande y pequeño durante unos segundos y luego desaparece.
-/// Se autocrea: genera su propio Canvas y texto TMP en runtime, no requiere
-/// configuración en escena. Se invoca con ChestAnnouncement.Show("mensaje").
-/// </summary>
 public class ChestAnnouncement : MonoBehaviour
 {
     private static ChestAnnouncement instance;
@@ -38,7 +32,6 @@ public class ChestAnnouncement : MonoBehaviour
         isQuitting = false;
     }
 
-    /// <summary>Muestra el aviso animado. Autocrea el sistema si no existe.</summary>
     public static void Show(string message)
     {
         if (isQuitting) return;
@@ -136,12 +129,10 @@ public class ChestAnnouncement : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
 
-            // Pulso suave grande/pequeño.
             float t = (Mathf.Sin(elapsed * pulseFrequency * Mathf.PI * 2f) + 1f) * 0.5f;
             float scale = Mathf.Lerp(pulseMinScale, pulseMaxScale, t);
             textRect.localScale = new Vector3(scale, scale, 1f);
 
-            // Fundido al final (último 25% del tiempo).
             float fadeStart = displayDuration * 0.75f;
             float alpha = elapsed < fadeStart
                 ? 1f

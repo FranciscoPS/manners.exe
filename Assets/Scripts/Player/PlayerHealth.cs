@@ -109,7 +109,6 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     {
         if (isDead) return;
 
-        // TEST: invulnerabilidad permanente para pruebas.
         if (testInvulnerable) return;
 
         if (isInvulnerable)

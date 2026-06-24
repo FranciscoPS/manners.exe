@@ -85,7 +85,6 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Audio, audioPanel },
             { MenuScreen.Controles, controlesPanel },
 
-            // Upgrades containers
             { MenuScreen.UpgradesHabilidadesNormales, habilidadesnNormalesPanel },
             { MenuScreen.UpgradesHabilidadesPremium,  habilidadesPremiumPanel },
 
@@ -100,14 +99,12 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.HelpMejoras, mejorasPanel }
         };
 
-        // Deactivate all registered panels
         foreach (var screen in screenDictionary.Values)
         {
             if (screen != null)
                 screen.SetActive(false);
         }
 
-        // Deactivate every upgrade subpanel and containers
         DeactivateAllUpgradeSubpanels();
 
         currentHelpSubPanel = null;
@@ -151,7 +148,7 @@ public class MainMenuUIManager : MonoBehaviour
         return screen == MenuScreen.UpgradesHabilidadesNormales
             || screen == MenuScreen.UpgradesHabilidadesPremium
             || screen == MenuScreen.UpgradesDetalles
-            // also treat specific normal/premium subscreens as upgrades
+
             || screen == MenuScreen.UpgradesNormal_RP
             || screen == MenuScreen.UpgradesNormal_R
             || screen == MenuScreen.UpgradesNormal_D
@@ -177,7 +174,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     public void ShowScreen(MenuScreen screen)
     {
-        // --- Direct mapping for specific normal/premium upgrade subpanels ---
+
         switch (screen)
         {
             case MenuScreen.UpgradesNormal_RP:
@@ -206,7 +203,6 @@ public class MainMenuUIManager : MonoBehaviour
                 return;
         }
 
-        // --- HELP subscreens (open inside helpPanel, keep helpPanel active) ---
         if (IsHelpSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject helpSub) || helpSub == null)
@@ -232,7 +228,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- OPTIONS subscreens ---
         if (IsOptionsSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject subPanel) || subPanel == null)
@@ -260,10 +255,9 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- UPGRADES subscreens ---
         if (IsUpgradesSubscreen(screen))
         {
-            // Ensure upgrades container visible
+
             if (currentScreen != null && currentScreen != upgradesPanel)
                 currentScreen.SetActive(false);
 
@@ -272,27 +266,24 @@ public class MainMenuUIManager : MonoBehaviour
 
             currentScreen = upgradesPanel;
 
-            // If requesting the normales container, SHOW container but DO NOT enable any subpanel
             if (screen == MenuScreen.UpgradesHabilidadesNormales)
             {
-                // Activate normales container and deactivate premium container/subs
+
                 if (habilidadesnNormalesPanel != null && !habilidadesnNormalesPanel.activeSelf)
                     habilidadesnNormalesPanel.SetActive(true);
 
                 if (habilidadesPremiumPanel != null && habilidadesPremiumPanel.activeSelf)
                     habilidadesPremiumPanel.SetActive(false);
 
-                // Ensure all normal subpanels are OFF (user must press a button to open one)
                 rpPanel?.SetActive(false);
                 rPanel?.SetActive(false);
                 dPanel?.SetActive(false);
                 mPanel?.SetActive(false);
                 msPanel?.SetActive(false);
 
-                // Clear currentUpgradesSubPanel so nothing is active until user selects
                 currentUpgradesSubPanel = null;
             }
-            // If requesting the premium container, SHOW container but DO NOT enable any subpanel
+
             else if (screen == MenuScreen.UpgradesHabilidadesPremium)
             {
                 if (habilidadesPremiumPanel != null && !habilidadesPremiumPanel.activeSelf)
@@ -313,7 +304,7 @@ public class MainMenuUIManager : MonoBehaviour
             }
             else
             {
-                // Legacy: attempt to fetch a direct subpanel from dictionary
+
                 if (screenDictionary.TryGetValue(screen, out GameObject upgradesSub) && upgradesSub != null)
                 {
                     if (currentUpgradesSubPanel != null && currentUpgradesSubPanel != upgradesSub)
@@ -322,10 +313,9 @@ public class MainMenuUIManager : MonoBehaviour
                     upgradesSub.SetActive(true);
                     currentUpgradesSubPanel = upgradesSub;
                 }
-                // otherwise, specific subpanels are already handled by the switch above
+
             }
 
-            // Ensure other groups' subpanels hidden
             if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
             if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
@@ -334,7 +324,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- TIENDA subscreens ---
         if (IsTiendaSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject tiendaSub) || tiendaSub == null)
@@ -362,7 +351,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- PERSONALIZACION subscreens ---
         if (IsPersonalizacionSubscreen(screen))
         {
             if (!screenDictionary.TryGetValue(screen, out GameObject persSub) || persSub == null)
@@ -390,7 +378,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- Top-level: show Options root ---
         if (screen == MenuScreen.Options)
         {
             if (currentScreen != null)
@@ -410,7 +397,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // --- Default: deactivate all dictionary panels and show requested top-level screen ---
         foreach (var panel in screenDictionary.Values)
         {
             if (panel != null)
@@ -423,7 +409,6 @@ public class MainMenuUIManager : MonoBehaviour
             currentScreen = screenToShow;
         }
 
-        // reset subs
         currentOptionsSubPanel = null;
         currentHelpSubPanel = null;
         currentUpgradesSubPanel = null;
@@ -441,17 +426,14 @@ public class MainMenuUIManager : MonoBehaviour
         ShowScreen((MenuScreen)index);
     }
 
-    // Activa un subpanel "Normal" por índice (0..4). Garantiza exclusividad con Premium.
     public void ShowUpgradeNormalSubpanel(int index)
     {
         GameObject[] normals = new GameObject[] { rpPanel, rPanel, dPanel, mPanel, msPanel };
         if (index < 0 || index >= normals.Length) return;
 
-        // Ensure upgrades container and normales container visible
         if (upgradesPanel != null && !upgradesPanel.activeSelf) upgradesPanel.SetActive(true);
         if (habilidadesnNormalesPanel != null && !habilidadesnNormalesPanel.activeSelf) habilidadesnNormalesPanel.SetActive(true);
 
-        // Hide premium container and its subpanels
         if (habilidadesPremiumPanel != null && habilidadesPremiumPanel.activeSelf) habilidadesPremiumPanel.SetActive(false);
         SetButtonsActive(kbPanel, false);
         SetButtonsActive(exPanel, false);
@@ -474,17 +456,14 @@ public class MainMenuUIManager : MonoBehaviour
         currentUpgradesSubPanel = selected;
     }
 
-    // Activa un subpanel "Premium" por índice (0..2). Garantiza exclusividad con Normal.
     public void ShowUpgradePremiumSubpanel(int index)
     {
         GameObject[] premiums = new GameObject[] { kbPanel, exPanel, mlsPanel };
         if (index < 0 || index >= premiums.Length) return;
 
-        // Ensure upgrades container and premium container visible
         if (upgradesPanel != null && !upgradesPanel.activeSelf) upgradesPanel.SetActive(true);
         if (habilidadesPremiumPanel != null && !habilidadesPremiumPanel.activeSelf) habilidadesPremiumPanel.SetActive(true);
 
-        // Hide normales container and its subpanels
         if (habilidadesnNormalesPanel != null && habilidadesnNormalesPanel.activeSelf) habilidadesnNormalesPanel.SetActive(false);
         SetButtonsActive(rpPanel, false);
         SetButtonsActive(rPanel, false);
@@ -513,29 +492,25 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void DeactivateAllUpgradeSubpanels()
     {
-        // Normal subpanels
+
         rpPanel?.SetActive(false);
         rPanel?.SetActive(false);
         dPanel?.SetActive(false);
         mPanel?.SetActive(false);
         msPanel?.SetActive(false);
 
-        // Premium subpanels
         kbPanel?.SetActive(false);
         exPanel?.SetActive(false);
         mlsPanel?.SetActive(false);
 
-        // Containers
         habilidadesnNormalesPanel?.SetActive(false);
         habilidadesPremiumPanel?.SetActive(false);
     }
 
-    // Helper: activa/desactiva todos los botones (GameObject + interactable) dentro de un panel (null-safe)
     private void SetButtonsActive(GameObject panel, bool active)
     {
         if (panel == null) return;
-        // Si el panel mismo está destinado a ser la "caja de botones", mantener su GameObject activo según 'active'
-        // pero por seguridad sólo ajustamos los botones hijos; el caller controla panel.SetActive(...)
+
         foreach (var btn in panel.GetComponentsInChildren<Button>(true))
         {
             if (btn == null) continue;

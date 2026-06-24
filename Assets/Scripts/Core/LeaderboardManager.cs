@@ -51,7 +51,6 @@ public class LeaderboardManager : MonoBehaviour
             Gems         = gems
         });
 
-        // Sort by survival time descending (longer = better)
         entries.Sort((a, b) => b.SurvivalTime.CompareTo(a.SurvivalTime));
 
         if (entries.Count > MaxEntries)
