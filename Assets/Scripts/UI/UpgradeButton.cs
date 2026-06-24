@@ -130,6 +130,7 @@ public class UpgradeButton : MonoBehaviour
         }
 
         EnsureReferences();
+        EnsureCostTextOpaque();
         CheckAffordability();
         UpdateUI();
 
@@ -139,10 +140,6 @@ public class UpgradeButton : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Configura el botón para mostrar un ítem de cofre (efecto único, sin niveles ni costo).
-    /// Siempre se muestra con el estilo premium.
-    /// </summary>
     public void SetupChest(ChestItemData item)
     {
         assignedChestItem = item;
@@ -243,6 +240,15 @@ public class UpgradeButton : MonoBehaviour
             else if (name.Contains("Cost") || name.Contains("Price"))
                 costText = text;
         }
+    }
+
+    private void EnsureCostTextOpaque()
+    {
+        if (costText == null) return;
+        CanvasGroup cg = costText.GetComponent<CanvasGroup>();
+        if (cg == null) cg = costText.gameObject.AddComponent<CanvasGroup>();
+        cg.ignoreParentGroups = true;
+        cg.alpha = 1f;
     }
 
     private void CheckAffordability()
@@ -353,7 +359,7 @@ public class UpgradeButton : MonoBehaviour
 
         if (valuesText != null)
         {
-            // Reactivar por si este botón mostró antes un ítem de cofre (UpdateChestUI lo oculta).
+
             valuesText.gameObject.SetActive(true);
             valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
 
@@ -383,8 +389,8 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
-                    float nextForce = 5f;
-                    valuesText.text = $"0% → {nextValue:F1}% [{nextForce:F1}F]";
+                    int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
+                    valuesText.text = $"0% → {nextValue:F1}% · empuja {nextEnemies} enem.";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
@@ -446,9 +452,9 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
-                    float currentForce = PlayerStatsManager.Instance.GetKnockbackForce();
-                    float nextForce = 5f + (nextLevel - 1) * 0.5f;
-                    valuesText.text = $"{currentUpgradeValue:F1}% [{currentForce:F1}F] → {nextUpgradeValue:F1}% [{nextForce:F1}F]";
+                    int currentEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(currentLevel) + 1;
+                    int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
+                    valuesText.text = $"{currentUpgradeValue:F1}% [{currentEnemies} enem.] → {nextUpgradeValue:F1}% [{nextEnemies} enem.]";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {

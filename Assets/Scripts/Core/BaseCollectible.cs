@@ -13,12 +13,6 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         globalAttractUntil = -1f;
     }
 
-    /// <summary>
-    /// Fuerza a TODOS los pickups activos del mapa (orbes, monedas, diamantes)
-    /// a volar hacia el jugador durante <paramref name="duration"/> segundos.
-    /// Los pickups que aparezcan dentro de esa ventana también serán atraídos.
-    /// Usado por el ítem Imán Gigante.
-    /// </summary>
     public static void AttractAllToPlayer(float duration = 2f)
     {
         globalAttractUntil = Time.time + duration;
@@ -84,9 +78,9 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         InitializeRenderer();
         SetupPhysics();
-        UpdateConfiguration(); // actualiza lifeTime desde GameBalanceConfig
+        UpdateConfiguration();
 
-        lifetimeTimer = lifeTime; // se setea DESPUÉS de UpdateConfiguration para usar el valor correcto
+        lifetimeTimer = lifeTime;
 
         updateOffset = Random.Range(0f, updateInterval);
         nextUpdateTime = Time.time + updateOffset;
@@ -153,7 +147,6 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        // El lifetime y parpadeo corren siempre, con o sin jugador
         lifetimeTimer -= deltaTime;
 
         if (lifetimeTimer <= warningTime && !isBlinking)
@@ -170,9 +163,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
             return;
         }
 
-        if (player == null) return; // movimiento y atracción requieren jugador
+        if (player == null) return;
 
-        // Ventana global del Imán Gigante: atrae todo mientras esté activa.
         if (Time.time < globalAttractUntil)
             isMovingToPlayer = true;
 

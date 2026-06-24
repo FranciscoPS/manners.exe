@@ -1,17 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Detecta qué edificios quedan entre la cámara y los objetivos relevantes
-/// (jugador y/o enemigos) y les ordena desvanecerse para que el objetivo siga
-/// siendo visible.
-///
-/// La detección es por screen-space + bounds del renderer (sin física), throttled
-/// y registrada en el UpdateManager central del proyecto. Pensada para WebGL:
-/// coste de CPU mínimo y cero asignaciones por frame.
-///
-/// El singleton se autocrea la primera vez que un <see cref="BuildingFader"/> se habilita.
-/// </summary>
 public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
 {
     public static BuildingTransparencyManager Instance { get; private set; }
@@ -110,8 +99,7 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        // Permite ajustar la opacidad en vivo desde el inspector mientras se juega:
-        // reaplica el valor a todos los edificios (incluidos los ya transparentes).
+
         if (!Application.isPlaying) return;
         for (int i = 0; i < faders.Count; i++)
             faders[i]?.ForceApply(minVisibleAlpha);
@@ -120,14 +108,13 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        // Interpolación suave por frame (solo edificios que lo necesitan).
+
         for (int i = 0; i < faders.Count; i++)
         {
             var f = faders[i];
             if (f != null && f.NeedsTick) f.Tick(deltaTime, fadeSpeed, minVisibleAlpha);
         }
 
-        // Detección throttled.
         timer += deltaTime;
         if (timer < detectionInterval) return;
         timer = 0f;
@@ -147,7 +134,6 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
             if (p != null) player = p.transform;
         }
 
-        // Reunir objetivos en mundo.
         targetWorld.Clear();
         if (revealForPlayer && player != null)
             targetWorld.Add(player.position + Vector3.up * 0.8f);
@@ -202,7 +188,7 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
             for (int t = 0; t < targetWorld.Count; t++)
             {
                 Vector3 sp = cam.WorldToScreenPoint(targetWorld[t]);
-                if (sp.z <= 0f) continue; // detrás de la cámara
+                if (sp.z <= 0f) continue;
 
                 float targetCamDist = (targetWorld[t] - camPos).magnitude;
                 if (buildingCamDist < targetCamDist - depthBias &&
@@ -217,7 +203,6 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
         }
     }
 
-    /// <summary>Proyecta las 8 esquinas del bounding box a pantalla y devuelve su rect envolvente.</summary>
     private bool BoundsToScreenRect(Bounds b, out Rect rect)
     {
         rect = default;
@@ -235,7 +220,7 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
                 (i & 4) == 0 ? -e.z : e.z);
 
             Vector3 sp = cam.WorldToScreenPoint(corner);
-            if (sp.z <= 0f) return false; // alguna esquina detrás de la cámara
+            if (sp.z <= 0f) return false;
 
             if (sp.x < minX) minX = sp.x;
             if (sp.x > maxX) maxX = sp.x;

@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Tipos de efecto \u00fanico que puede otorgar un \u00edtem de cofre.
-/// Para a\u00f1adir un nuevo \u00edtem: agrega un valor aqu\u00ed y su caso en ChestItemProvider.ApplyEffect.
-/// </summary>
 public enum ChestItemEffect
 {
     GiantMagnet,
@@ -11,11 +7,6 @@ public enum ChestItemEffect
     KillAllEnemies
 }
 
-/// <summary>
-/// \u00cdtem de efecto \u00fanico que aparece dentro de un Cofre. No es una mejora de stats:
-/// ejecuta un efecto instant\u00e1neo al elegirse.
-/// Crea assets desde: Assets > Create > Game > Chest Item.
-/// </summary>
 [CreateAssetMenu(fileName = "ChestItem", menuName = "Game/Chest Item")]
 public class ChestItemData : ScriptableObject
 {

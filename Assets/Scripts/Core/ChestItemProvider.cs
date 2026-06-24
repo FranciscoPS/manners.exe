@@ -1,12 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Provee los \u00edtems de cofre disponibles y ejecuta sus efectos.
-/// Carga autom\u00e1ticamente cualquier ChestItemData ubicado en una carpeta
-/// "Resources/ChestItems". Si no hay ninguno, usa un Im\u00e1n Gigante por defecto
-/// para que el sistema funcione sin configuraci\u00f3n manual.
-/// </summary>
 public static class ChestItemProvider
 {
     private static List<ChestItemData> cachedItems;
@@ -19,7 +13,6 @@ public static class ChestItemProvider
         defaultItems = null;
     }
 
-    /// <summary>Todos los \u00edtems de cofre disponibles (cacheados).</summary>
     public static List<ChestItemData> GetAvailableItems()
     {
         if (cachedItems != null && cachedItems.Count > 0)
@@ -41,7 +34,6 @@ public static class ChestItemProvider
         return cachedItems;
     }
 
-    /// <summary>Devuelve hasta <paramref name="count"/> \u00edtems distintos al azar.</summary>
     public static List<ChestItemData> GetRandomItems(int count)
     {
         List<ChestItemData> pool = new List<ChestItemData>(GetAvailableItems());
@@ -58,7 +50,6 @@ public static class ChestItemProvider
         return result;
     }
 
-    /// <summary>Ejecuta el efecto \u00fanico del \u00edtem elegido.</summary>
     public static void ApplyEffect(ChestItemData item)
     {
         if (item == null) return;
@@ -88,7 +79,7 @@ public static class ChestItemProvider
 
     private static void ApplyKillAllEnemies()
     {
-        // Copia la lista: morir desregistra al enemigo (modifica ActiveEnemies).
+
         List<EnemyHealth> enemies = new List<EnemyHealth>(EnemyHealth.ActiveEnemies);
         for (int i = 0; i < enemies.Count; i++)
         {
