@@ -20,7 +20,7 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: 
+  m_LockedProperties: _CausticColor
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -30,6 +30,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CausticTexture:
+        m_Texture: {fileID: 2800000, guid: ed5c27ab278b0d24296e7c35786944cc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -92,6 +96,9 @@ Material:
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
+    - _CausticCutout: 0.02
+    - _CausticSpeed: 0.01
+    - _CausticTiling: 2.29
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _Cull: 2
@@ -103,6 +110,8 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
+    - _FoamAmmount: 0.8
+    - _FoamCutout: 0.1
     - _FoamDepth: 2.07
     - _FoamFalloff: 2.7
     - _FoamShoreWidth: 0.76
@@ -122,14 +131,18 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
+    - _WaveIntensity: 0
+    - _WaveSpeed: 0
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _CausticColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FoamColor: {r: 0.9622642, g: 0.9622642, b: 0.9622642, a: 1}
+    - _FoamSpeed: {r: 0.1, g: 0.1, b: 0, a: 0}
     - _MainColor: {r: 0.16862746, g: 0.32156864, b: 0.43137258, a: 1}
     - _ShoreColor: {r: 0.21568629, g: 0.36862746, b: 0.454902, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
