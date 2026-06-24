@@ -90,7 +90,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
 
         if (visualPrefab.GetComponent<Projectile>() != null)
         {
-            //Debug.LogError(" ERROR: Se est� intentando instanciar un Projectile como visualPrefab!");
+
             return;
         }
 
@@ -216,11 +216,6 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         }
     }
 
-    /// <summary>
-    /// Empuje EN CADENA: desde el enemigo golpeado salta al enemigo más cercano, lo empuja en la
-    /// dirección de propagación, y desde ese salta al siguiente, etc. (hasta chainKnockbackJumps).
-    /// La fuerza se debilita por salto (chainKnockbackFalloff). Sin GC: usa buffers estáticos.
-    /// </summary>
     private void ApplyChainKnockback(Transform firstEnemy, Vector3 initialDir)
     {
         int visitedCount = 0;
@@ -295,12 +290,12 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     }
 
     public void OnDespawn()
-    { 
-        rb.linearVelocity = Vector3.zero; 
-        direction = Vector3.zero; 
-        if (UpdateManager.Instance != null) 
-        { 
-            UpdateManager.Instance.Unregister(this); 
-        } 
+    {
+        rb.linearVelocity = Vector3.zero;
+        direction = Vector3.zero;
+        if (UpdateManager.Instance != null)
+        {
+            UpdateManager.Instance.Unregister(this);
+        }
     }
 }

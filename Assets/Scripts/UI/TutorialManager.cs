@@ -517,9 +517,7 @@ public class TutorialManager : MonoBehaviour
 
     private void OnChestSpawned_Tutorial()
     {
-        // Solo mostrar el paso del cofre si el tutorial está habilitado y en curso.
-        // Sin esto, el evento del cofre se dispara también en partidas normales
-        // (cuando el tutorial está desactivado o ya completado).
+
         if (TutorialConfig.Instance == null || !TutorialConfig.Instance.TutorialEnabled) return;
         if (state == TutorialState.Inactive || state == TutorialState.Complete) return;
 

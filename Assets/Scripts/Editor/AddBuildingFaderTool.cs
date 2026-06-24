@@ -1,10 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Utilidad de editor para añadir el componente <see cref="BuildingFader"/> a todos
-/// los prefabs de edificios de una sola vez.
-/// </summary>
 public static class AddBuildingFaderTool
 {
     private const string BuildingsFolder = "Assets/Prefabs/Buildings";

@@ -56,7 +56,6 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         DontDestroyOnLoad(go);
     }
 
-    /// <summary>Llamado por LevelUpManager cuando el jugador CONFIRMA la mejora del cofre.</summary>
     public static void CollectActiveChest()
     {
         if (instance == null) return;
@@ -68,16 +67,11 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
                 pickup.OnCollected();
             }
 
-            // Reiniciar referencia y temporizador
             instance.activeChest = null;
             instance.timer = 0f;
         }
     }
 
-    /// <summary>
-    /// Notifica al cofre activo que la selección fue cerrada sin tomar la mejora.
-    /// LevelUpManager.CloseLevelUp() llamará a este método.
-    /// </summary>
     public static void NotifyChestSelectionClosed()
     {
         if (instance == null) return;

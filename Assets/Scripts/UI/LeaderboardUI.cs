@@ -50,7 +50,6 @@ public class LeaderboardUI : MonoBehaviour
     private Tween _panelTween;
     private RectTransform _titleRect;
 
-    // Colores de medalla para el top 3 + resto.
     private static readonly Color Gold = new Color(1f, 0.84f, 0.0f);
     private static readonly Color Silver = new Color(0.80f, 0.83f, 0.88f);
     private static readonly Color Bronze = new Color(0.85f, 0.55f, 0.25f);
@@ -94,7 +93,7 @@ public class LeaderboardUI : MonoBehaviour
 
     private void OnEnable()
     {
-        // Solo refresca/anima si ya pasó Start (panel activado en runtime).
+
         if (_started)
         {
             Refresh();
@@ -206,7 +205,7 @@ public class LeaderboardUI : MonoBehaviour
 
     private static string FormatEntry(int rank, LeaderboardEntry e)
     {
-        // Rango con color de medalla; tiempo y stats al mismo tamaño.
+
         string hex = RankHex(rank);
         string time = LeaderboardManager.FormatTime(e.SurvivalTime);
         return $"<color=#{hex}><b>{rank}</b></color>   <b>{time}</b>   " +

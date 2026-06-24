@@ -55,7 +55,7 @@ public class SpawnPoint : MonoBehaviour
         if (config == null || count <= 0) return;
         if (!IsReady) return;
 
-        lastSpawnTime = Time.time; // inmediato: bloquea re-entrada antes de que termine la coroutine
+        lastSpawnTime = Time.time;
 
         if (showSpawnWarning && warningIndicator != null)
         {
@@ -74,10 +74,6 @@ public class SpawnPoint : MonoBehaviour
         SpawnEnemiesImmediate(count, config);
     }
 
-    /// <summary>
-    /// Shows the red warning circle, waits warningDuration, then warps the enemy here.
-    /// Call this instead of EnemyController.WarpTo() when you want the player to see the indicator.
-    /// </summary>
     public void WarnThenWarp(EnemyController ctrl)
     {
         StartCoroutine(WarnThenWarpRoutine(ctrl));
@@ -105,10 +101,6 @@ public class SpawnPoint : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Spawnea de inmediato ignorando el cooldown, el aviso visual y el limite
-    /// maxEnemiesPerSpawn. Usado por la oleada final imposible (fin de partida).
-    /// </summary>
     public void ForceSpawn(int count, EnemyConfiguration config)
     {
         if (config == null || count <= 0) return;

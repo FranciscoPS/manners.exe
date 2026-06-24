@@ -140,10 +140,6 @@ public class UpgradeButton : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Configura el botón para mostrar un ítem de cofre (efecto único, sin niveles ni costo).
-    /// Siempre se muestra con el estilo premium.
-    /// </summary>
     public void SetupChest(ChestItemData item)
     {
         assignedChestItem = item;
@@ -246,10 +242,6 @@ public class UpgradeButton : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// El texto del PRECIO debe verse a opacidad COMPLETA aunque el botón esté atenuado
-    /// (item no comprable). Un CanvasGroup con ignoreParentGroups hace que ignore el alpha del botón.
-    /// </summary>
     private void EnsureCostTextOpaque()
     {
         if (costText == null) return;
@@ -367,7 +359,7 @@ public class UpgradeButton : MonoBehaviour
 
         if (valuesText != null)
         {
-            // Reactivar por si este botón mostró antes un ítem de cofre (UpdateChestUI lo oculta).
+
             valuesText.gameObject.SetActive(true);
             valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
 

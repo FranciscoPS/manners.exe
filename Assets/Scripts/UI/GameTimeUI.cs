@@ -60,13 +60,12 @@ public class GameTimeUI : MonoBehaviour
 
     private void EnterOvertime()
     {
-        // Cronometro en rojo.
+
         if (gameTimeText != null)
         {
             gameTimeText.color = overtimeColor;
         }
 
-        // Etiqueta OVERTIME debajo del cronometro (se crea si no se asigno una).
         if (overtimeLabel == null)
         {
             overtimeLabel = CreateOvertimeLabel();
@@ -95,7 +94,6 @@ public class GameTimeUI : MonoBehaviour
         label.fontStyle = FontStyles.Bold;
         label.raycastTarget = false;
 
-        // Posicion: justo debajo del cronometro, centrado horizontalmente.
         RectTransform rt = label.rectTransform;
         rt.anchorMin = new Vector2(0.5f, 0f);
         rt.anchorMax = new Vector2(0.5f, 0f);
