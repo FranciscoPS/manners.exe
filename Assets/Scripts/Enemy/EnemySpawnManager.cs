@@ -22,6 +22,18 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [Tooltip("Máximo de enemigos activos en escena a la vez. Impide los 10M de polígonos.")]
     [SerializeField] private int maxConcurrentEnemies = 40;
 
+    [Header("Early Game Ramp (arranque fácil)")]
+    [Tooltip("Suaviza SOLO el arranque: durante los primeros segundos los enemigos salen más lento y en lotes más pequeños, subiendo gradualmente hasta la dificultad normal. NO toca la curva después de la rampa (factor=1).")]
+    [SerializeField] private bool enableEarlyRamp = true;
+    [Tooltip("Segundo de partida en el que el arranque alcanza la dificultad NORMAL (factor=1). Ej 150 = 2:30: el primer minuto es muy fácil, sobre el min 2 ya se nota la subida y al 2:30 corre la curva normal.")]
+    [SerializeField] private float earlyRampSeconds = 150f;
+    [Range(0.05f, 1f)]
+    [Tooltip("Factor de dificultad en el segundo 0. Más bajo = arranque más fácil/lento. 0.2 = ~1/5 del ritmo normal al empezar.")]
+    [SerializeField] private float earlyRampStartFactor = 0.2f;
+    [Range(1f, 3f)]
+    [Tooltip("Qué tan 'marcada' es la curva del arranque. 1 = lineal. 2 = se queda fácil más tiempo y sube fuerte cerca del final de la rampa.")]
+    [SerializeField] private float earlyRampCurvePower = 2f;
+
     [Header("Final Rush (fin de partida)")]
     [Header("Final Rush - Ráfagas (spawn por tandas)")]
     [Tooltip("Tiempo (seg) entre ráfagas al INICIO. Grande = tandas espaciadas para no abrumar de golpe.")]
@@ -135,7 +147,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             if (continuousSpawnTimer <= 0f)
             {
                 SpawnContinuousEnemies();
-                continuousSpawnTimer = continuousSpawnInterval;
+                continuousSpawnTimer = EarlyScaledInterval(continuousSpawnInterval);
             }
         }
     }
@@ -323,6 +335,36 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         }
     }
 
+    /// <summary>
+    /// Factor de dificultad del ARRANQUE (0..1) en función del tiempo de partida. Empieza bajo
+    /// (earlyRampStartFactor) y sube hasta 1 al llegar a earlyRampSeconds; después siempre es 1
+    /// (no afecta la curva normal). Curva con potencia configurable para un inicio bien suave.
+    /// </summary>
+    private float EarlyDifficultyFactor()
+    {
+        if (!enableEarlyRamp || earlyRampSeconds <= 0f) return 1f;
+
+        GameTimeManager gtm = GameTimeManager.Instance;
+        float t = gtm != null ? gtm.GetGameTime() : 0f;
+        if (t >= earlyRampSeconds) return 1f;
+
+        float p = Mathf.Clamp01(t / earlyRampSeconds);
+        float eased = Mathf.Pow(p, Mathf.Max(1f, earlyRampCurvePower));
+        return Mathf.Lerp(Mathf.Clamp(earlyRampStartFactor, 0.05f, 1f), 1f, eased);
+    }
+
+    /// <summary>Intervalo entre spawns escalado por el arranque: más lento cuando el factor es bajo.</summary>
+    private float EarlyScaledInterval(float baseInterval)
+    {
+        return baseInterval / Mathf.Max(0.05f, EarlyDifficultyFactor());
+    }
+
+    /// <summary>Tamaño de lote escalado por el arranque: lotes más pequeños (mínimo 1) al inicio.</summary>
+    private int EarlyScaledBatch(int baseBatch)
+    {
+        return Mathf.Max(1, Mathf.RoundToInt(baseBatch * EarlyDifficultyFactor()));
+    }
+
     private IEnumerator ExecuteWave(WaveData wave)
     {
         isSpawningWave = true;
@@ -345,13 +387,13 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 yield return new WaitForSeconds(0.5f);
 
             int remainingEnemies = totalEnemies - enemiesSpawned;
-            int enemiesToSpawnThisBatch = Mathf.Min(wave.enemiesPerBatch, remainingEnemies);
+            int enemiesToSpawnThisBatch = Mathf.Min(EarlyScaledBatch(wave.enemiesPerBatch), remainingEnemies);
 
             int actuallySpawned = SpawnBatch(enemiesToSpawnThisBatch, wave);
             enemiesSpawned += actuallySpawned;
 
             if (enemiesSpawned < totalEnemies)
-                yield return new WaitForSeconds(wave.spawnInterval);
+                yield return new WaitForSeconds(EarlyScaledInterval(wave.spawnInterval));
         }
 
         isSpawningWave = false;

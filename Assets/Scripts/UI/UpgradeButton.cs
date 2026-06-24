@@ -130,6 +130,7 @@ public class UpgradeButton : MonoBehaviour
         }
 
         EnsureReferences();
+        EnsureCostTextOpaque();
         CheckAffordability();
         UpdateUI();
 
@@ -243,6 +244,19 @@ public class UpgradeButton : MonoBehaviour
             else if (name.Contains("Cost") || name.Contains("Price"))
                 costText = text;
         }
+    }
+
+    /// <summary>
+    /// El texto del PRECIO debe verse a opacidad COMPLETA aunque el botón esté atenuado
+    /// (item no comprable). Un CanvasGroup con ignoreParentGroups hace que ignore el alpha del botón.
+    /// </summary>
+    private void EnsureCostTextOpaque()
+    {
+        if (costText == null) return;
+        CanvasGroup cg = costText.GetComponent<CanvasGroup>();
+        if (cg == null) cg = costText.gameObject.AddComponent<CanvasGroup>();
+        cg.ignoreParentGroups = true;
+        cg.alpha = 1f;
     }
 
     private void CheckAffordability()
@@ -383,8 +397,8 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
-                    float nextForce = 5f;
-                    valuesText.text = $"0% → {nextValue:F1}% [{nextForce:F1}F]";
+                    int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
+                    valuesText.text = $"0% → {nextValue:F1}% · empuja {nextEnemies} enem.";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
@@ -446,9 +460,9 @@ public class UpgradeButton : MonoBehaviour
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
-                    float currentForce = PlayerStatsManager.Instance.GetKnockbackForce();
-                    float nextForce = 5f + (nextLevel - 1) * 0.5f;
-                    valuesText.text = $"{currentUpgradeValue:F1}% [{currentForce:F1}F] → {nextUpgradeValue:F1}% [{nextForce:F1}F]";
+                    int currentEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(currentLevel) + 1;
+                    int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
+                    valuesText.text = $"{currentUpgradeValue:F1}% [{currentEnemies} enem.] → {nextUpgradeValue:F1}% [{nextEnemies} enem.]";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
