@@ -11,7 +11,19 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     private float explosionRadius = 3f;
     private float knockbackForce = 0f;
     private bool isChainKnockback = false;
-    private float chainKnockbackRadius = 2f;
+
+    [Header("Chain Knockback (empuje en cadena)")]
+    [Tooltip("Cuántos enemigos EXTRA encadena el empuje (saltos de la cadena). 0 = sin cadena.")]
+    [SerializeField] private int chainKnockbackJumps = 5;
+    [Tooltip("Radio para buscar el siguiente enemigo en cada salto de la cadena.")]
+    [SerializeField] private float chainKnockbackRadius = 2.5f;
+    [Tooltip("Fuerza del primer eslabón respecto a la fuerza base del impacto (0..1+).")]
+    [SerializeField] private float chainKnockbackForceMultiplier = 1f;
+    [Tooltip("Cuánto se debilita el empuje en cada salto (0..1). 0.95 = pierde solo 5% por salto, así toda la cadena empuja de verdad.")]
+    [SerializeField] private float chainKnockbackFalloff = 0.95f;
+    [Tooltip("Duración del empuje de cada eslabón encadenado.")]
+    [SerializeField] private float chainKnockbackDuration = 0.25f;
+
     private TrailRenderer[] trailRenderers;
 
     private Vector3 direction;
@@ -22,7 +34,8 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
     private GameObject visualInstance;
 
     private static readonly Collider[] _explosionBuffer    = new Collider[64];
-    private static readonly Collider[] _chainKnockbackBuffer = new Collider[32];
+    private static readonly Collider[] _chainKnockbackBuffer = new Collider[64];
+    private static readonly Transform[] _chainVisited = new Transform[64];
 
     private static int _enemyLayerMask = -1;
     private static int EnemyLayerMask
@@ -58,10 +71,11 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
         explosionRadius = radius;
     }
 
-    public void SetKnockback(float force, bool isChain = false)
+    public void SetKnockback(float force, bool isChain = false, int chainJumps = -1)
     {
         knockbackForce = force;
         isChainKnockback = isChain;
+        if (chainJumps >= 0) chainKnockbackJumps = chainJumps;
     }
 
     public void SetVisualPrefab(GameObject visualPrefab)
@@ -76,7 +90,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
 
         if (visualPrefab.GetComponent<Projectile>() != null)
         {
-            //Debug.LogError(" ERROR: Se est� intentando instanciar un Projectile como visualPrefab!");
+            //Debug.LogError(" ERROR: Se est� intentando instanciar un Projectile como visualPrefab!");
             return;
         }
 
@@ -194,32 +208,71 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
                 float duration = 0.3f;
                 enemyController.ApplyKnockback(knockbackDirection, knockbackForce, duration);
 
-                if (isChainKnockback)
+                if (isChainKnockback && chainKnockbackJumps > 0)
                 {
-                    ApplyChainKnockback(enemy.transform.position, knockbackDirection);
+                    ApplyChainKnockback(enemy.transform, knockbackDirection);
                 }
             }
         }
     }
 
-    private void ApplyChainKnockback(Vector3 knockedEnemyPosition, Vector3 knockbackDirection)
+    /// <summary>
+    /// Empuje EN CADENA: desde el enemigo golpeado salta al enemigo más cercano, lo empuja en la
+    /// dirección de propagación, y desde ese salta al siguiente, etc. (hasta chainKnockbackJumps).
+    /// La fuerza se debilita por salto (chainKnockbackFalloff). Sin GC: usa buffers estáticos.
+    /// </summary>
+    private void ApplyChainKnockback(Transform firstEnemy, Vector3 initialDir)
     {
-        int hitCount = Physics.OverlapSphereNonAlloc(knockedEnemyPosition, chainKnockbackRadius, _chainKnockbackBuffer, EnemyLayerMask);
+        int visitedCount = 0;
+        if (firstEnemy != null) _chainVisited[visitedCount++] = firstEnemy;
 
-        for (int i = 0; i < hitCount; i++)
+        Vector3 currentPos = firstEnemy != null ? firstEnemy.position : transform.position;
+        float currentForce = knockbackForce * chainKnockbackForceMultiplier;
+
+        for (int jump = 0; jump < chainKnockbackJumps; jump++)
         {
-            Collider enemyCollider = _chainKnockbackBuffer[i];
-            if (enemyCollider.transform.position == knockedEnemyPosition)
-                continue;
+            int hitCount = Physics.OverlapSphereNonAlloc(currentPos, chainKnockbackRadius, _chainKnockbackBuffer, EnemyLayerMask);
 
-            EnemyController chainEnemy = enemyCollider.GetComponent<EnemyController>();
-            if (chainEnemy != null)
+            EnemyController nearestCtrl = null;
+            Transform nearestT = null;
+            float nearestSqr = float.MaxValue;
+
+            for (int i = 0; i < hitCount; i++)
             {
-                Vector3 chainDirection = (enemyCollider.transform.position - knockedEnemyPosition).normalized;
-                float chainForce = knockbackForce * 0.7f;
-                float duration = 0.25f;
-                chainEnemy.ApplyKnockback(chainDirection, chainForce, duration);
+                Transform t = _chainKnockbackBuffer[i].transform;
+
+                bool visited = false;
+                for (int v = 0; v < visitedCount; v++)
+                {
+                    if (_chainVisited[v] == t) { visited = true; break; }
+                }
+                if (visited) continue;
+
+                float dSqr = (t.position - currentPos).sqrMagnitude;
+                if (dSqr < nearestSqr)
+                {
+                    EnemyController ctrl = _chainKnockbackBuffer[i].GetComponent<EnemyController>();
+                    if (ctrl != null)
+                    {
+                        nearestSqr = dSqr;
+                        nearestCtrl = ctrl;
+                        nearestT = t;
+                    }
+                }
             }
+
+            if (nearestCtrl == null) break;
+
+            Vector3 dir = nearestT.position - currentPos;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) dir = initialDir;
+            dir.Normalize();
+
+            nearestCtrl.ApplyKnockback(dir, currentForce, chainKnockbackDuration);
+
+            if (visitedCount < _chainVisited.Length) _chainVisited[visitedCount++] = nearestT;
+            currentPos = nearestT.position;
+            currentForce *= chainKnockbackFalloff;
         }
     }
 
