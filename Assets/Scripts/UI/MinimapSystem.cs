@@ -20,8 +20,8 @@ public class MinimapSystem : MonoBehaviour
 
     [Header("Icon Settings")]
     [SerializeField] private float iconEdgePadding = 0.08f;
-    [Tooltip("Padding extra (mayor) para iconos importantes como la tienda y el cofre, para que NO se escondan/recorten en el borde del minimapa y se sigan viendo completos.")]
-    [SerializeField] private float landmarkIconEdgePadding = 0.18f;
+    [Tooltip("Padding para iconos importantes (tienda/cofre). Más ALTO = más adentro (más visible); más BAJO = más pegado al borde (se esconde más). 0.13 = asoma ~70%, se esconde ~30% en el borde para que notes su dirección.")]
+    [SerializeField] private float landmarkIconEdgePadding = 0.13f;
 
     [Header("Chest Icon Pulse")]
     [Tooltip("Cuántas veces por segundo pulsa el icono del cofre (grande/pequeño). Más bajo = más lento.")]
