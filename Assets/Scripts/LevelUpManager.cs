@@ -24,6 +24,13 @@ public class LevelUpManager : MonoBehaviour
     [SerializeField] private GameObject levelUpPanel;
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private TextMeshProUGUI cooldownWarningText;
+
+    // Instrucciones separadas para tienda y cofre.
+    [Header("Close Instructions")]
+    [SerializeField] private TextMeshProUGUI closeInstructionShopText;
+    [SerializeField] private TextMeshProUGUI closeInstructionChestText;
+
+    // Compatibilidad hacia atrás: campo antiguo (si estaba asignado en escena)
     [SerializeField] private TextMeshProUGUI closeInstructionText;
 
     [Header("Upgrade Buttons")]
@@ -65,6 +72,18 @@ public class LevelUpManager : MonoBehaviour
         if (upgradeButton2 != null) allButtons.Add(upgradeButton2);
         if (upgradeButton3 != null) allButtons.Add(upgradeButton3);
 
+        // Fallback: si el proyecto todavía usa el campo antiguo, usarlo como fallback.
+        if (closeInstructionShopText == null && closeInstructionText != null)
+            closeInstructionShopText = closeInstructionText;
+        if (closeInstructionChestText == null && closeInstructionText != null)
+            closeInstructionChestText = closeInstructionText;
+
+        // Asegurar que ambas instrucciones estén ocultas al inicio.
+        if (closeInstructionShopText != null)
+            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
+        if (closeInstructionChestText != null)
+            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
+
         if (ExperienceManager.Instance != null)
             ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
 
@@ -87,10 +106,10 @@ public class LevelUpManager : MonoBehaviour
 
     private void Update()
     {
-        // Permitir cerrar la selección del cofre con la tecla C, igual que la tienda.
+        // Permitir cerrar la selección del cofre con la tecla Espacio.
         if (levelUpActive && currentMode == UpgradeMode.Chest)
         {
-            if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
             {
                 CloseLevelUp();
                 return;
@@ -143,10 +162,11 @@ public class LevelUpManager : MonoBehaviour
             cooldownWarningText.gameObject.SetActive(false);
         }
 
-        if (closeInstructionText != null)
-        {
-            closeInstructionText.gameObject.SetActive(false);
-        }
+        // Ocultar instrucciones específicas
+        if (closeInstructionShopText != null)
+            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
+        if (closeInstructionChestText != null)
+            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
 
         GenerateUpgradeOptions(UpgradeMode.LevelUp);
 
@@ -297,10 +317,18 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
             levelUpText.text = "Tienda";
 
-        if (closeInstructionText != null)
+        // Mostrar sólo la instrucción de la tienda y ocultar la del cofre
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(true);
+
+        if (closeInstructionShopText != null)
         {
-            closeInstructionText.gameObject.SetActive(true);
+            // asegurar que el texto esté dentro del panel y se muestre encima
+            EnsureInstructionParent(closeInstructionShopText);
+            SetInstructionVisible(closeInstructionShopText, "Presiona C para cerrar la tienda", true);
         }
+        if (closeInstructionChestText != null)
+            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
 
         if (shopOnCooldown)
         {
@@ -324,9 +352,6 @@ public class LevelUpManager : MonoBehaviour
                 cooldownWarningText.gameObject.SetActive(false);
             }
         }
-
-        if (levelUpPanel != null)
-            levelUpPanel.SetActive(true);
 
         GameEvents.TriggerShopOpened();
     }
@@ -352,12 +377,17 @@ public class LevelUpManager : MonoBehaviour
         if (cooldownWarningText != null)
             cooldownWarningText.gameObject.SetActive(false);
 
-        // Mostrar la instrucción de cierre (igual que la tienda) para que el jugador sepa que puede cerrar con C.
-        if (closeInstructionText != null)
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(true);
+
+        // Mostrar la instrucción del cofre (Espacio) y ocultar la de tienda
+        if (closeInstructionChestText != null)
         {
-            closeInstructionText.text = "Si deseas usar el ítem en otro momento, presiona C para cerrar el cofre";
-            closeInstructionText.gameObject.SetActive(true);
+            EnsureInstructionParent(closeInstructionChestText);
+            SetInstructionVisible(closeInstructionChestText, "Si deseas usar el ítem en otro momento, presiona Espacio para cerrar el cofre", true);
         }
+        if (closeInstructionShopText != null)
+            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
 
         GenerateChestOptions(chestItem);
 
@@ -472,6 +502,12 @@ public class LevelUpManager : MonoBehaviour
             ChestSpawner.NotifyChestSelectionClosed();
         }
 
+        // ocultar instrucciones
+        if (closeInstructionShopText != null)
+            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
+        if (closeInstructionChestText != null)
+            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
+
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
         {
             connectedShop.OnShopClosed();
@@ -507,6 +543,55 @@ public class LevelUpManager : MonoBehaviour
         else
         {
             CloseLevelUp();
+        }
+    }
+
+    // Helper: configura visibilidad + CanvasGroup y fuerza alpha del texto para evitar estar oculto por UI.
+    private void SetInstructionVisible(TextMeshProUGUI text, string message, bool visible)
+    {
+        if (text == null) return;
+
+        text.text = message ?? string.Empty;
+        if (text.gameObject.activeSelf != visible)
+            text.gameObject.SetActive(visible);
+
+        CanvasGroup cg = text.GetComponent<CanvasGroup>();
+        if (cg != null)
+        {
+            cg.alpha = visible ? 1f : 0f;
+            cg.interactable = visible;
+            cg.blocksRaycasts = visible;
+        }
+
+        Color c = text.color;
+        c.a = visible ? 1f : 1f; // mantener alpha visible (force 1) even if style previously set transparent
+        text.color = c;
+    }
+
+    // Asegura que el textMeshPro quede bajo el mismo canvas/panel para evitar estar detrás.
+    private void EnsureInstructionParent(TextMeshProUGUI text)
+    {
+        if (text == null || levelUpPanel == null) return;
+
+        if (text.transform == null) return;
+
+        if (text.transform.root == levelUpPanel.transform.root)
+        {
+            // ya comparte root; intentar traer al frente en su parent
+            text.transform.SetAsLastSibling();
+            return;
+        }
+
+        // Reparentar dentro del panel para garantizar visibilidad y orden
+        text.transform.SetParent(levelUpPanel.transform, false);
+        text.transform.SetAsLastSibling();
+
+        // Si existe Canvas en el nuevo padre, forzar overrideSorting temporalmente para asegurar orden
+        Canvas parentCanvas = levelUpPanel.GetComponentInParent<Canvas>();
+        if (parentCanvas != null)
+        {
+            parentCanvas.overrideSorting = true;
+            parentCanvas.sortingOrder = 1000;
         }
     }
 }
