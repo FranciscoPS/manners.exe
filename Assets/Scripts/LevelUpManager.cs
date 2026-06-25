@@ -306,6 +306,8 @@ public class LevelUpManager : MonoBehaviour
 
     public void ShowShop()
     {
+        Debug.Log("ShowShop ejecutado");
+
         if (levelUpActive)
             return;
 
@@ -323,10 +325,16 @@ public class LevelUpManager : MonoBehaviour
 
         if (closeInstructionShopText != null)
         {
-            // asegurar que el texto esté dentro del panel y se muestre encima
-            EnsureInstructionParent(closeInstructionShopText);
-            SetInstructionVisible(closeInstructionShopText, "Presiona C para cerrar la tienda", true);
+            closeInstructionShopText.transform.SetParent(levelUpPanel.transform, false);
+            closeInstructionShopText.transform.SetAsLastSibling();
+
+            SetInstructionVisible(
+                closeInstructionShopText,
+                "Presiona C para cerrar la tienda",
+                true
+            );
         }
+
         if (closeInstructionChestText != null)
             SetInstructionVisible(closeInstructionChestText, string.Empty, false);
 
@@ -363,6 +371,8 @@ public class LevelUpManager : MonoBehaviour
     /// </summary>
     public void ShowChestSelection(ChestItemData chestItem = null)
     {
+        Debug.Log("ShowChestSelection ejecutado");
+
         if (levelUpActive)
             return;
 
@@ -383,9 +393,16 @@ public class LevelUpManager : MonoBehaviour
         // Mostrar la instrucción del cofre (Espacio) y ocultar la de tienda
         if (closeInstructionChestText != null)
         {
-            EnsureInstructionParent(closeInstructionChestText);
-            SetInstructionVisible(closeInstructionChestText, "Si deseas usar el ítem en otro momento, presiona Espacio para cerrar el cofre", true);
+            closeInstructionChestText.transform.SetParent(levelUpPanel.transform, false);
+            closeInstructionChestText.transform.SetAsLastSibling();
+
+            SetInstructionVisible(
+                closeInstructionChestText,
+                "Si deseas usar el ítem en otro momento, presiona Espacio para cerrar el cofre",
+                true
+            );
         }
+
         if (closeInstructionShopText != null)
             SetInstructionVisible(closeInstructionShopText, string.Empty, false);
 
@@ -549,11 +566,24 @@ public class LevelUpManager : MonoBehaviour
     // Helper: configura visibilidad + CanvasGroup y fuerza alpha del texto para evitar estar oculto por UI.
     private void SetInstructionVisible(TextMeshProUGUI text, string message, bool visible)
     {
-        if (text == null) return;
+        if (text == null)
+        {
+            Debug.LogError("Instruction TMP no asignado.");
+            return;
+        }
 
-        text.text = message ?? string.Empty;
-        if (text.gameObject.activeSelf != visible)
-            text.gameObject.SetActive(visible);
+        text.gameObject.SetActive(true);
+
+        text.text = message ?? "";
+
+        // FORZAR VISIBILIDAD REAL
+        text.enableAutoSizing = false;
+
+        Color c = text.color;
+        c.a = visible ? 1f : 0f;
+        text.color = c;
+
+        text.ForceMeshUpdate();
 
         CanvasGroup cg = text.GetComponent<CanvasGroup>();
         if (cg != null)
@@ -563,35 +593,15 @@ public class LevelUpManager : MonoBehaviour
             cg.blocksRaycasts = visible;
         }
 
-        Color c = text.color;
-        c.a = visible ? 1f : 1f; // mantener alpha visible (force 1) even if style previously set transparent
-        text.color = c;
+        Debug.Log($"Instruction FINAL: '{message}' visible={visible}");
     }
 
     // Asegura que el textMeshPro quede bajo el mismo canvas/panel para evitar estar detrás.
     private void EnsureInstructionParent(TextMeshProUGUI text)
     {
-        if (text == null || levelUpPanel == null) return;
-
-        if (text.transform == null) return;
-
-        if (text.transform.root == levelUpPanel.transform.root)
-        {
-            // ya comparte root; intentar traer al frente en su parent
-            text.transform.SetAsLastSibling();
+        if (text == null)
             return;
-        }
 
-        // Reparentar dentro del panel para garantizar visibilidad y orden
-        text.transform.SetParent(levelUpPanel.transform, false);
         text.transform.SetAsLastSibling();
-
-        // Si existe Canvas en el nuevo padre, forzar overrideSorting temporalmente para asegurar orden
-        Canvas parentCanvas = levelUpPanel.GetComponentInParent<Canvas>();
-        if (parentCanvas != null)
-        {
-            parentCanvas.overrideSorting = true;
-            parentCanvas.sortingOrder = 1000;
-        }
     }
 }
