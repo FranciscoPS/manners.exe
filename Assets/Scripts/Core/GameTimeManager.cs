@@ -31,7 +31,6 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
 
     private float MatchDuration => matchDurationMinutes * 60f;
 
-    /// <summary>Duracion total de la partida en segundos (sin contar overtime).</summary>
     public float MatchDurationSeconds => MatchDuration;
 
     public bool IsActive => isGameActive && this != null && enabled;
@@ -91,12 +90,11 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         if (currentSecond != lastSecond)
         {
             lastSecond = currentSecond;
-            // Antes de expirar: cuenta regresiva. Despues: cuenta hacia arriba (overtime).
+
             string formattedTime = matchTimeExpired ? GetFormattedOvertime() : GetFormattedCountdown();
             GameEvents.TriggerGameTimeUpdated(formattedTime);
         }
 
-        // Al agotarse el tiempo de partida, lanza la oleada final imposible (una sola vez).
         if (!matchTimeExpired && GetRemainingTime() <= 0f)
         {
             matchTimeExpired = true;
@@ -171,7 +169,6 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         return Time.time - gameStartTime;
     }
 
-    /// <summary>Tiempo restante de partida en segundos (cuenta regresiva, nunca negativo).</summary>
     public float GetRemainingTime()
     {
         if (!isGameActive)
@@ -180,7 +177,6 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         return Mathf.Max(0f, MatchDuration - GetGameTime());
     }
 
-    /// <summary>Tiempo restante formateado MM:SS para el cronometro de cuenta regresiva.</summary>
     public string GetFormattedCountdown()
     {
         float remaining = GetRemainingTime();
@@ -189,7 +185,6 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         return $"{minutes:00}:{seconds:00}";
     }
 
-    /// <summary>Tiempo transcurrido desde que se agoto la partida (overtime), MM:SS contando hacia arriba.</summary>
     public string GetFormattedOvertime()
     {
         float overtime = Mathf.Max(0f, GetGameTime() - MatchDuration);

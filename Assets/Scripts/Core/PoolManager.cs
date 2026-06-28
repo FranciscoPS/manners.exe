@@ -4,18 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-/// <summary>
-/// Pool de objetos pre-asignado. Toda la cantidad configurada se instancia al cargar
-/// (repartida en varios frames para evitar tirones) y a partir de ahí el juego SOLO
-/// apaga/enciende objetos: nunca se instancia ni se destruye en mitad del gameplay.
-///
-/// Si un pool se queda sin objetos libres puede crecer en runtime como red de seguridad
-/// (configurable por tipo). Al devolver un objeto NUNCA se destruye: vuelve a la pila
-/// de inactivos para reutilizarlo. El pool es persistente entre escenas.
-///
-/// La API pública (Spawn*, Despawn, PrewarmPool...) se mantiene igual que antes para no
-/// afectar al resto del juego (SpawnFactory, enemigos, orbes, monedas, proyectiles).
-/// </summary>
 public class PoolManager : MonoBehaviour
 {
     public static PoolManager Instance { get; private set; }
@@ -24,7 +12,7 @@ public class PoolManager : MonoBehaviour
     {
         Projectile,
         ExperienceOrb,
-        Enemy,          // Pool genérico (deprecated)
+        Enemy,
         BasicEnemy,
         FastEnemy,
         L2BasicEnemy,
@@ -102,8 +90,7 @@ public class PoolManager : MonoBehaviour
         }
         else if (Instance != this)
         {
-            // Conservamos el pool caliente del singleton. Sólo añadimos los tipos nuevos
-            // que esta escena defina y que aún no existan (no se destruye nada existente).
+
             Instance.BuildConfigMap(poolConfigs);
             Instance.InitializePools();
             Destroy(gameObject);
@@ -124,8 +111,6 @@ public class PoolManager : MonoBehaviour
     {
         if (Instance != this) return;
 
-        // No destruimos el pool: devolvemos a la pila cualquier objeto que siguiera activo
-        // para reutilizarlo en la nueva escena.
         DespawnAll();
     }
 
@@ -265,7 +250,6 @@ public class PoolManager : MonoBehaviour
 
         GameObject obj = null;
 
-        // Descarta posibles referencias nulas (objetos destruidos manualmente).
         while (pool.inactive.Count > 0 && obj == null)
             obj = pool.inactive.Pop();
 
@@ -413,16 +397,13 @@ public class PoolManager : MonoBehaviour
         return null;
     }
 
-    /// <summary>
-    /// Devuelve un objeto al pool. NUNCA lo destruye: lo apaga y lo deja listo para reutilizar.
-    /// </summary>
     public void Despawn(GameObject obj)
     {
         if (obj == null) return;
 
         if (!activeObjects.TryGetValue(obj, out PoolType poolType))
         {
-            // No pertenece a ningún pool conocido; sólo lo apagamos.
+
             obj.SetActive(false);
             return;
         }
@@ -442,7 +423,6 @@ public class PoolManager : MonoBehaviour
         }
     }
 
-    /// <summary>Garantiza que haya al menos 'count' objetos libres en el pool (no destruye nada).</summary>
     public void PrewarmPool(PoolType poolType, int count)
     {
         if (!pools.TryGetValue(poolType, out Pool pool))
@@ -478,7 +458,6 @@ public class PoolManager : MonoBehaviour
         }
     }
 
-    /// <summary>Devuelve al pool todos los objetos actualmente activos (sin destruirlos).</summary>
     public void DespawnAll()
     {
         if (activeObjects.Count == 0) return;

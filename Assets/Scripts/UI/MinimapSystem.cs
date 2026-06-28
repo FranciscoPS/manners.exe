@@ -69,7 +69,6 @@ public class MinimapSystem : MonoBehaviour
         if (chestIcon != null)
             chestIcon.gameObject.SetActive(false);
 
-        // Hide the template — only clones will be used
         if (enemyIconTemplate != null)
             enemyIconTemplate.gameObject.SetActive(false);
 
@@ -101,7 +100,6 @@ public class MinimapSystem : MonoBehaviour
         var enemies = EnemyHealth.ActiveEnemies;
         int count = enemies.Count;
 
-        // Grow pool if needed, cloned under the same parent as the template (MinimapRoot)
         while (_enemyIconPool.Count < count)
         {
             RectTransform dot = Instantiate(enemyIconTemplate, enemyIconTemplate.parent);
@@ -171,8 +169,6 @@ public class MinimapSystem : MonoBehaviour
             chestIcon.gameObject.SetActive(true);
             PlaceIcon(chestIcon, chestPos, landmarkIconEdgePadding);
 
-            // Pulso normal->grande para llamar la atención. Fallbacks por si los valores
-            // quedaron en 0 al añadir los campos a un componente ya existente en escena.
             float freq = chestPulseFrequency > 0f ? chestPulseFrequency : 0.8f;
             float minScale = chestPulseMinScale > 0f ? chestPulseMinScale : 1f;
             float maxScale = chestPulseMaxScale > minScale ? chestPulseMaxScale : minScale + 0.6f;
