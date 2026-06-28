@@ -330,7 +330,7 @@ public class LevelUpManager : MonoBehaviour
 
             SetInstructionVisible(
                 closeInstructionShopText,
-                "Presiona C para cerrar la tienda",
+                "Presiona Espacio para cerrar la tienda",
                 true
             );
         }
