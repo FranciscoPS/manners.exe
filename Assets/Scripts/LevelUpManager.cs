@@ -24,13 +24,6 @@ public class LevelUpManager : MonoBehaviour
     [SerializeField] private GameObject levelUpPanel;
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private TextMeshProUGUI cooldownWarningText;
-
-    // Instrucciones separadas para tienda y cofre.
-    [Header("Close Instructions")]
-    [SerializeField] private TextMeshProUGUI closeInstructionShopText;
-    [SerializeField] private TextMeshProUGUI closeInstructionChestText;
-
-    // Compatibilidad hacia atrás: campo antiguo (si estaba asignado en escena)
     [SerializeField] private TextMeshProUGUI closeInstructionText;
 
     [Header("Upgrade Buttons")]
@@ -72,17 +65,10 @@ public class LevelUpManager : MonoBehaviour
         if (upgradeButton2 != null) allButtons.Add(upgradeButton2);
         if (upgradeButton3 != null) allButtons.Add(upgradeButton3);
 
-        // Fallback: si el proyecto todavía usa el campo antiguo, usarlo como fallback.
-        if (closeInstructionShopText == null && closeInstructionText != null)
-            closeInstructionShopText = closeInstructionText;
-        if (closeInstructionChestText == null && closeInstructionText != null)
-            closeInstructionChestText = closeInstructionText;
-
-        // Asegurar que ambas instrucciones estén ocultas al inicio.
-        if (closeInstructionShopText != null)
-            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
-        if (closeInstructionChestText != null)
-            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
+        if (closeInstructionText != null)
+        {
+            closeInstructionText.gameObject.SetActive(false);
+        }
 
         if (ExperienceManager.Instance != null)
             ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
@@ -162,11 +148,10 @@ public class LevelUpManager : MonoBehaviour
             cooldownWarningText.gameObject.SetActive(false);
         }
 
-        // Ocultar instrucciones específicas
-        if (closeInstructionShopText != null)
-            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
-        if (closeInstructionChestText != null)
-            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
+        if (closeInstructionText != null)
+        {
+            closeInstructionText.gameObject.SetActive(false);
+        }
 
         GenerateUpgradeOptions(UpgradeMode.LevelUp);
 
@@ -323,20 +308,11 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
 
-        if (closeInstructionShopText != null)
+        if (closeInstructionText != null)
         {
-            closeInstructionShopText.transform.SetParent(levelUpPanel.transform, false);
-            closeInstructionShopText.transform.SetAsLastSibling();
-
-            SetInstructionVisible(
-                closeInstructionShopText,
-                "Presiona Espacio para cerrar la tienda",
-                true
-            );
+            closeInstructionText.text = "Presiona Espacio para cerrar la tienda";
+            closeInstructionText.gameObject.SetActive(true);
         }
-
-        if (closeInstructionChestText != null)
-            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
 
         if (shopOnCooldown)
         {
@@ -390,21 +366,13 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
 
-        // Mostrar la instrucción del cofre (Espacio) y ocultar la de tienda
-        if (closeInstructionChestText != null)
+        if (closeInstructionText != null)
         {
-            closeInstructionChestText.transform.SetParent(levelUpPanel.transform, false);
-            closeInstructionChestText.transform.SetAsLastSibling();
+            closeInstructionText.text =
+                "Si deseas usar el ítem en otro momento, presiona Espacio para cerrar el cofre";
 
-            SetInstructionVisible(
-                closeInstructionChestText,
-                "Si deseas usar el ítem en otro momento, presiona Espacio para cerrar el cofre",
-                true
-            );
+            closeInstructionText.gameObject.SetActive(true);
         }
-
-        if (closeInstructionShopText != null)
-            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
 
         GenerateChestOptions(chestItem);
 
@@ -519,11 +487,13 @@ public class LevelUpManager : MonoBehaviour
             ChestSpawner.NotifyChestSelectionClosed();
         }
 
-        // ocultar instrucciones
-        if (closeInstructionShopText != null)
-            SetInstructionVisible(closeInstructionShopText, string.Empty, false);
-        if (closeInstructionChestText != null)
-            SetInstructionVisible(closeInstructionChestText, string.Empty, false);
+        if (closeInstructionText != null)
+        {
+            closeInstructionText.gameObject.SetActive(false);
+
+            // Dejamos preparado el texto para la próxima tienda.
+            closeInstructionText.text = "Presiona Espacio para cerrar la tienda";
+        }
 
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
         {
