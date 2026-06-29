@@ -3651,6 +3651,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1 &133119227
 GameObject:
   m_ObjectHideFlags: 0
@@ -6430,6 +6434,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &251607447
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7280,6 +7288,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &285685414
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7760,6 +7772,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &313910018
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -17531,6 +17547,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &671791367
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23211,11 +23231,11 @@ RectTransform:
   - {fileID: 918869266}
   m_Father: {fileID: 238261082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -100, y: -51}
+  m_AnchorMin: {x: 0.041604165, y: 0.7827778}
+  m_AnchorMax: {x: 0.041604165, y: 0.7827778}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 300, y: 300}
-  m_Pivot: {x: 1, y: 1}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &926492120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23275,6 +23295,7 @@ MonoBehaviour:
   chestIcon: {fileID: 918869266}
   enemyIconTemplate: {fileID: 1305131836}
   iconEdgePadding: 0.08
+  landmarkIconEdgePadding: 0.13
   chestPulseFrequency: 0.7
   chestPulseMinScale: 0.85
   chestPulseMaxScale: 1.25
@@ -23502,6 +23523,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!4 &930694282 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4711103166989615804, guid: 76039c6e370d9514fb41625e1f7dd600, type: 3}
@@ -26468,6 +26493,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1009612315
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26798,11 +26827,11 @@ RectTransform:
   - {fileID: 969553499}
   m_Father: {fileID: 238261082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 100, y: -103.3999}
+  m_AnchorMin: {x: 0.9480001, y: 0.9016296}
+  m_AnchorMax: {x: 0.9480001, y: 0.9016296}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 86.97}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &1019051303
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27904,6 +27933,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1058338392
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28361,6 +28394,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1065332292
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28602,6 +28639,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1087370758
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31570,6 +31611,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1225785771
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -35334,6 +35379,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1357075694
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -38847,6 +38896,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1 &1494612134
 GameObject:
   m_ObjectHideFlags: 0
@@ -42386,6 +42439,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1649896471
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -46188,7 +46245,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000061035156, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1762103407
@@ -46416,7 +46473,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -149.99998, y: -100.00003}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 300, y: 200}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1780085152
@@ -51066,6 +51123,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!1001 &1970876174
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -51195,11 +51256,11 @@ RectTransform:
   - {fileID: 1780085151}
   m_Father: {fileID: 238261082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 447, y: -99}
+  m_AnchorMin: {x: 0.9480001, y: 0.8013333}
+  m_AnchorMax: {x: 0.9480001, y: 0.8013333}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 1, y: 0.5}
 --- !u!1 &1971910504
 GameObject:
   m_ObjectHideFlags: 0
@@ -51942,6 +52003,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
+  changeTextOnHover: 0
+  hoverText: "Pr\xF3ximamente"
+  tmpText: {fileID: 0}
+  uiText: {fileID: 0}
 --- !u!114 &1988265882 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 98167900776972416, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}
