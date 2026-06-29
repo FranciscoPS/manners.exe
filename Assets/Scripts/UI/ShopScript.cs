@@ -55,6 +55,13 @@ public class ShopScript : MonoBehaviour
         {
             openShopAction.Disable();
         }
+
+        playerInRange = false;
+        shopOpen = false;
+        if (interactionText != null)
+        {
+            interactionText.SetActive(false);
+        }
     }
 
     private void Start()

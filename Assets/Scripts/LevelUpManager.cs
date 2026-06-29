@@ -476,6 +476,11 @@ public class LevelUpManager : MonoBehaviour
         if (currentMode == UpgradeMode.Chest)
         {
             ChestSpawner.NotifyChestSelectionClosed();
+
+            if (ShopManager.Instance != null && ShopManager.Instance.GetActiveShop() != null)
+            {
+                ShopManager.Instance.GetActiveShop().OnShopClosed();
+            }
         }
 
         if (closeInstructionText != null)
