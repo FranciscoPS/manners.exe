@@ -65,6 +65,11 @@ public class LevelUpManager : MonoBehaviour
         if (upgradeButton2 != null) allButtons.Add(upgradeButton2);
         if (upgradeButton3 != null) allButtons.Add(upgradeButton3);
 
+        if (closeInstructionText != null)
+        {
+            closeInstructionText.gameObject.SetActive(false);
+        }
+
         if (ExperienceManager.Instance != null)
             ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
 
@@ -87,10 +92,10 @@ public class LevelUpManager : MonoBehaviour
 
     private void Update()
     {
-
+        // Permitir cerrar la selección del cofre con la tecla Espacio.
         if (levelUpActive && currentMode == UpgradeMode.Chest)
         {
-            if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
             {
                 CloseLevelUp();
                 return;
@@ -286,6 +291,8 @@ public class LevelUpManager : MonoBehaviour
 
     public void ShowShop()
     {
+        Debug.Log("ShowShop ejecutado");
+
         if (levelUpActive)
             return;
 
@@ -297,8 +304,13 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
             levelUpText.text = "Tienda";
 
+        // Mostrar sólo la instrucción de la tienda y ocultar la del cofre
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(true);
+
         if (closeInstructionText != null)
         {
+            closeInstructionText.text = "Presiona Espacio para cerrar la tienda";
             closeInstructionText.gameObject.SetActive(true);
         }
 
@@ -325,14 +337,13 @@ public class LevelUpManager : MonoBehaviour
             }
         }
 
-        if (levelUpPanel != null)
-            levelUpPanel.SetActive(true);
-
         GameEvents.TriggerShopOpened();
     }
 
     public void ShowChestSelection(ChestItemData chestItem = null)
     {
+        Debug.Log("ShowChestSelection ejecutado");
+
         if (levelUpActive)
             return;
 
@@ -347,9 +358,14 @@ public class LevelUpManager : MonoBehaviour
         if (cooldownWarningText != null)
             cooldownWarningText.gameObject.SetActive(false);
 
+        if (levelUpPanel != null)
+            levelUpPanel.SetActive(true);
+
         if (closeInstructionText != null)
         {
-            closeInstructionText.text = "Si deseas usar el ítem en otro momento, presiona C para cerrar el cofre";
+            closeInstructionText.text =
+                "Si deseas usar el ítem en otro momento, presiona Espacio para cerrar el cofre";
+
             closeInstructionText.gameObject.SetActive(true);
         }
 
@@ -462,6 +478,14 @@ public class LevelUpManager : MonoBehaviour
             ChestSpawner.NotifyChestSelectionClosed();
         }
 
+        if (closeInstructionText != null)
+        {
+            closeInstructionText.gameObject.SetActive(false);
+
+            // Dejamos preparado el texto para la próxima tienda.
+            closeInstructionText.text = "Presiona Espacio para cerrar la tienda";
+        }
+
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
         {
             connectedShop.OnShopClosed();
@@ -496,5 +520,47 @@ public class LevelUpManager : MonoBehaviour
         {
             CloseLevelUp();
         }
+    }
+
+    // Helper: configura visibilidad + CanvasGroup y fuerza alpha del texto para evitar estar oculto por UI.
+    private void SetInstructionVisible(TextMeshProUGUI text, string message, bool visible)
+    {
+        if (text == null)
+        {
+            Debug.LogError("Instruction TMP no asignado.");
+            return;
+        }
+
+        text.gameObject.SetActive(true);
+
+        text.text = message ?? "";
+
+        // FORZAR VISIBILIDAD REAL
+        text.enableAutoSizing = false;
+
+        Color c = text.color;
+        c.a = visible ? 1f : 0f;
+        text.color = c;
+
+        text.ForceMeshUpdate();
+
+        CanvasGroup cg = text.GetComponent<CanvasGroup>();
+        if (cg != null)
+        {
+            cg.alpha = visible ? 1f : 0f;
+            cg.interactable = visible;
+            cg.blocksRaycasts = visible;
+        }
+
+        Debug.Log($"Instruction FINAL: '{message}' visible={visible}");
+    }
+
+    // Asegura que el textMeshPro quede bajo el mismo canvas/panel para evitar estar detrás.
+    private void EnsureInstructionParent(TextMeshProUGUI text)
+    {
+        if (text == null)
+            return;
+
+        text.transform.SetAsLastSibling();
     }
 }
