@@ -95,7 +95,14 @@ public class BuildingsScript : MonoBehaviour
         SpawnDestructionVFX();
 
         //StartCoroutine(FadeAndDestroy());
-        destroyedVisual.DestroyBuilding(lastImpactDirection);
+        if (destroyedVisual != null && destroyedVisual.UseDestroyedVisual)
+        {
+            destroyedVisual.DestroyBuilding(lastImpactDirection);
+        }
+        else
+        {
+            StartCoroutine(FadeAndDestroy());
+        }
 
         yield return new WaitForSeconds(dropSpawnDelay);
 

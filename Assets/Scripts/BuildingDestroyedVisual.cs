@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class BuildingDestroyedVisual : MonoBehaviour
 {
+    [Header("Settings")]
+    [SerializeField] private bool useDestroyedVisual = true;
+
     [Header("Visuals")]
     [SerializeField] private GameObject normalVisual;
     [SerializeField] private GameObject destroyedVisual;
@@ -14,8 +17,13 @@ public class BuildingDestroyedVisual : MonoBehaviour
     [SerializeField] private float upwardForce = 2f;
     [SerializeField] private float randomTorque = 5f;
 
+    public bool UseDestroyedVisual => useDestroyedVisual;
+
     private void Awake()
     {
+        if (!useDestroyedVisual)
+            return;
+
         if (destroyedVisual != null)
             destroyedVisual.SetActive(false);
 
@@ -31,8 +39,14 @@ public class BuildingDestroyedVisual : MonoBehaviour
 
     public void DestroyBuilding(Vector3 impactDirection)
     {
-        normalVisual.SetActive(false);
-        destroyedVisual.SetActive(true);
+        if (!useDestroyedVisual)
+            return;
+
+        if (normalVisual != null)
+            normalVisual.SetActive(false);
+
+        if (destroyedVisual != null)
+            destroyedVisual.SetActive(true);
 
         foreach (Rigidbody rb in physicsPieces)
         {
@@ -46,7 +60,6 @@ public class BuildingDestroyedVisual : MonoBehaviour
                 Vector3.up * upwardForce;
 
             rb.AddForce(force, ForceMode.Impulse);
-
             rb.AddTorque(Random.insideUnitSphere * randomTorque, ForceMode.Impulse);
         }
     }

@@ -133,7 +133,7 @@ PrefabInstance:
       objectReference: {fileID: 3225695969783410368}
     - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
       propertyPath: normalVisual
@@ -142,6 +142,10 @@ PrefabInstance:
     - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
       propertyPath: destroyedVisual
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: useDestroyedVisual
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
       propertyPath: 'physicsPieces.Array.data[0]'
