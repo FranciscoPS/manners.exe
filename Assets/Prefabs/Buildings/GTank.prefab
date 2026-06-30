@@ -51,6 +51,42 @@ PrefabInstance:
     - target: {fileID: 963508934966439508, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
       propertyPath: visual
       value: 
+      objectReference: {fileID: 5562530441393626115}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: normalVisual
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: destroyedVisual
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: 'physicsPieces.Array.data[0]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: 'physicsPieces.Array.data[1]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: 'physicsPieces.Array.data[2]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: 'physicsPieces.Array.data[3]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: 'physicsPieces.Array.data[4]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1175119960016814629, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+      propertyPath: 'physicsPieces.Array.data[5]'
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 5746690754325058623, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
       propertyPath: m_Name
@@ -84,6 +120,7 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 1579643252919961265, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
     - {fileID: 4356712922230623567, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+    - {fileID: 3412110520874536339, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 607832523003636405, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
       insertIndex: -1
@@ -167,5 +204,10 @@ PrefabInstance:
 --- !u!4 &5078304853015398073 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0a515e1f11c70df4882441013d253bf7, type: 3}
+  m_PrefabInstance: {fileID: 4752276339319202130}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5562530441393626115 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 0a515e1f11c70df4882441013d253bf7, type: 3}
   m_PrefabInstance: {fileID: 4752276339319202130}
   m_PrefabAsset: {fileID: 0}
