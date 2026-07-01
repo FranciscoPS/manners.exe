@@ -26,29 +26,36 @@ public class BuildingsScript : MonoBehaviour
     [SerializeField] private OrbConfiguration orbConfig;
 
     private bool isDestroying = false;
+    private BuildingDestroyedVisual destroyedVisual;
+    private Vector3 lastImpactDirection;
 
     private void Awake()
     {
-        if (visual != null) return;
+        destroyedVisual = GetComponent<BuildingDestroyedVisual>();
 
-        foreach (Transform child in transform)
+        if (visual == null)
         {
-            if (string.Equals(child.name, "visual", System.StringComparison.OrdinalIgnoreCase))
+            foreach (Transform child in transform)
             {
-                visual = child.gameObject;
-                return;
+                if (string.Equals(child.name, "visual", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    visual = child.gameObject;
+                    break;
+                }
+            }
+
+            if (visual == null)
+            {
+                foreach (Transform child in transform)
+                {
+                    if (child.GetComponentInChildren<Renderer>() != null)
+                    {
+                        visual = child.gameObject;
+                        break;
+                    }
+                }
             }
         }
-
-        foreach (Transform child in transform)
-        {
-            if (child.GetComponentInChildren<Renderer>() != null)
-            {
-                visual = child.gameObject;
-                return;
-            }
-        }
-
     }
 
     private void OnTriggerEnter(Collider other)
@@ -59,6 +66,9 @@ public class BuildingsScript : MonoBehaviour
 
             var fader = GetComponent<BuildingFader>();
             if (fader != null) fader.SuspendForDestruction();
+
+            lastImpactDirection =
+            (transform.position - other.transform.position).normalized;
 
             StartCoroutine(DestroySequence());
         }
@@ -84,7 +94,15 @@ public class BuildingsScript : MonoBehaviour
 
         SpawnDestructionVFX();
 
-        StartCoroutine(FadeAndDestroy());
+        //StartCoroutine(FadeAndDestroy());
+        if (destroyedVisual != null && destroyedVisual.UseDestroyedVisual)
+        {
+            destroyedVisual.DestroyBuilding(lastImpactDirection);
+        }
+        else
+        {
+            StartCoroutine(FadeAndDestroy());
+        }
 
         yield return new WaitForSeconds(dropSpawnDelay);
 
@@ -203,7 +221,6 @@ public class BuildingsScript : MonoBehaviour
 
         for (int m = 0; m < fadeMats.Count; m++)
             SetMaterialAlpha(fadeMats[m], 0f);
-
     }
 
     private void SetupTransparentMaterial(Material mat)
