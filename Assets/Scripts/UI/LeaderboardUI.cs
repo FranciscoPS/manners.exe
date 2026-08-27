@@ -181,9 +181,17 @@ public class LeaderboardUI : MonoBehaviour
     {
         if (leaderboardText == null) return;
 
-        List<LeaderboardEntry> entries = LeaderboardManager.Instance != null
-            ? LeaderboardManager.Instance.LoadEntries()
-            : new List<LeaderboardEntry>();
+        RenderEntries(GlobalLeaderboardService.Instance.GetCachedTop());
+
+        GlobalLeaderboardService.Instance.FetchTop(
+            entries => { if (this == null) return; RenderEntries(entries); },
+            () => { }
+        );
+    }
+
+    private void RenderEntries(List<LeaderboardEntry> entries)
+    {
+        if (leaderboardText == null) return;
 
         var sb = new StringBuilder();
         for (int i = 0; i < 5; i++)
@@ -205,15 +213,15 @@ public class LeaderboardUI : MonoBehaviour
 
     private static string FormatEntry(int rank, LeaderboardEntry e)
     {
-
         string hex = RankHex(rank);
-        string time = LeaderboardManager.FormatTime(e.SurvivalTime);
-        return $"<color=#{hex}><b>{rank}</b></color>   <b>{time}</b>   " +
-               $"<color=#FFFFFFCC>Nv {e.Level} · {e.Kills} kills</color>";
+        string time = LeaderboardEntry.FormatTime(e.SurvivalTime);
+        string initials = string.IsNullOrEmpty(e.Initials) ? "---" : e.Initials;
+        return $"<color=#{hex}><b>{rank}{LeaderboardEntry.RankSuffix(rank)}</b></color>   <b>{time}</b>   " +
+               $"<color=#FFFFFFCC>{initials}</color>";
     }
 
     private static string FormatEmpty(int rank)
     {
-        return $"<color=#FFFFFF44><b>{rank}</b>   --:--</color>";
+        return $"<color=#FFFFFF44><b>{rank}{LeaderboardEntry.RankSuffix(rank)}</b>   --:--   ---</color>";
     }
 }

@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using DG.Tweening;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 
 public class GameOverUI : MonoBehaviour
@@ -15,6 +16,10 @@ public class GameOverUI : MonoBehaviour
 
     [Header("Panel Reference")]
     [SerializeField] private GameObject gameOverPanel;
+
+    [Header("Leaderboard / Iniciales")]
+    [SerializeField] private GameObject initialsEntryPanel;
+    [SerializeField] private InitialsEntryUI initialsEntryUI;
 
     [Header("Game Over Stats UI")]
     [SerializeField] private TextMeshProUGUI survivalTimeText;
@@ -74,16 +79,7 @@ public class GameOverUI : MonoBehaviour
             return;
         }
 
-        if (LeaderboardManager.Instance != null)
-        {
-            LeaderboardManager.Instance.SubmitEntry(
-                GameSessionStats.Instance.SurvivalTime,
-                GameSessionStats.Instance.MaxLevelReached,
-                GameSessionStats.Instance.EnemiesKilled,
-                GameSessionStats.Instance.CoinsCollected,
-                GameSessionStats.Instance.DiamondsCollected
-            );
-        }
+        StartCoroutine(CheckLeaderboardQualification());
 
         if (survivalTimeText != null)
         {
@@ -169,6 +165,52 @@ public class GameOverUI : MonoBehaviour
             int level = upgradeLevels.ContainsKey(UpgradeType.Knockback) ? upgradeLevels[UpgradeType.Knockback] : 0;
             knockbackUpgradeLevelText.text = level.ToString();
         }
+    }
+
+    private IEnumerator CheckLeaderboardQualification()
+    {
+        bool fetchDone = false;
+        List<LeaderboardEntry> top = null;
+
+        GlobalLeaderboardService.Instance.FetchTop(
+            entries => { top = entries; fetchDone = true; },
+            () => { fetchDone = true; }
+        );
+
+        yield return new WaitUntil(() => fetchDone);
+
+        if (top == null || initialsEntryPanel == null || initialsEntryUI == null)
+            yield break;
+
+        int maxEntries = LeaderboardConfig.Instance != null ? LeaderboardConfig.Instance.MaxEntries : 5;
+        float survivalTime = GameSessionStats.Instance.SurvivalTime;
+        bool qualifies = top.Count < maxEntries || survivalTime > top[top.Count - 1].SurvivalTime;
+
+        if (!qualifies)
+            yield break;
+
+        string initials = null;
+        void OnConfirmed(string value) => initials = value;
+
+        initialsEntryUI.OnInitialsConfirmed += OnConfirmed;
+        initialsEntryPanel.SetActive(true);
+
+        yield return new WaitUntil(() => initials != null);
+
+        initialsEntryUI.OnInitialsConfirmed -= OnConfirmed;
+        initialsEntryPanel.SetActive(false);
+
+        var entry = new LeaderboardEntry
+        {
+            Initials = initials,
+            SurvivalTime = survivalTime,
+            Level = GameSessionStats.Instance.MaxLevelReached,
+            Kills = GameSessionStats.Instance.EnemiesKilled,
+            Coins = GameSessionStats.Instance.CoinsCollected,
+            Gems = GameSessionStats.Instance.DiamondsCollected
+        };
+
+        GlobalLeaderboardService.Instance.SubmitAndRefreshTop(entry, (list, rank) => { }, () => { });
     }
 
     public void Retry()
