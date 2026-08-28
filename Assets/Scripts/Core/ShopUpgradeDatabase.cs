@@ -13,10 +13,6 @@ public class ShopUpgradeDatabase : ScriptableObject
             if (instance == null)
             {
                 instance = Resources.Load<ShopUpgradeDatabase>("ShopUpgradeDatabase");
-
-                if (instance == null)
-                {
-                }
             }
             return instance;
         }

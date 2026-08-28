@@ -33,25 +33,5 @@ public class MissingScriptDetector
             }
         }
 
-        if (missingCount > 0)
-        {
-        }
-        else
-        {
-        }
-    }
-
-    private static string GetGameObjectPath(GameObject obj)
-    {
-        string path = obj.name;
-        Transform parent = obj.transform.parent;
-
-        while (parent != null)
-        {
-            path = parent.name + "/" + path;
-            parent = parent.parent;
-        }
-
-        return path;
     }
 }

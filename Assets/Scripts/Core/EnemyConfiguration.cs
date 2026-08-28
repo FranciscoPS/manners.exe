@@ -18,13 +18,13 @@ public class EnemyConfiguration : ScriptableObject
     public int maxOrbs = 3;
     public float orbSpawnRadius = 1f;
 
-    [Header("Currency Drops")]
-    [Tooltip("Chance to drop coins (0-1)")]
+    [Header("Currency Drops (fallback — ver Nota abajo)")]
+    [Tooltip("Chance to drop coins (0-1). Solo se usa si GameBalanceConfig.enemyDropConfigs NO tiene ninguna entrada que cubra el pool type de este enemigo para la wave actual.")]
     [Range(0f, 1f)] public float coinDropChance = 0.5f;
     public int minCoins = 1;
     public int maxCoins = 3;
 
-    [Tooltip("Chance to drop diamonds (0-1)")]
+    [Tooltip("Chance to drop diamonds (0-1). Solo se usa si GameBalanceConfig.enemyDropConfigs NO tiene ninguna entrada que cubra el pool type de este enemigo para la wave actual. Si hay una entrada que cubra todas las waves (1-999), estos valores nunca se leen.")]
     [Range(0f, 1f)] public float diamondDropChance = 0.1f;
     public int minDiamonds = 1;
     public int maxDiamonds = 1;
