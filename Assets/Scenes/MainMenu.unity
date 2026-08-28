@@ -3291,10 +3291,10 @@ RectTransform:
   - {fileID: 361510089}
   m_Father: {fileID: 1169895177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 30, y: -460}
-  m_SizeDelta: {x: 290, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &133142228
 MonoBehaviour:
@@ -8409,10 +8409,10 @@ RectTransform:
   - {fileID: 1162782384}
   m_Father: {fileID: 1169895177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 30, y: -375}
-  m_SizeDelta: {x: 290, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &295908838
 MonoBehaviour:
@@ -9495,7 +9495,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &315534463
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15136,10 +15136,10 @@ RectTransform:
   - {fileID: 1702717805}
   m_Father: {fileID: 1169895177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 30, y: -265}
-  m_SizeDelta: {x: 290, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &509553177
 MonoBehaviour:
@@ -19275,10 +19275,10 @@ RectTransform:
   - {fileID: 773102766}
   m_Father: {fileID: 1169895177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 175, y: -180}
-  m_SizeDelta: {x: 290, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &638619808
 MonoBehaviour:
@@ -23673,7 +23673,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 545, y: -300}
-  m_SizeDelta: {x: 730, y: 440.00003}
+  m_SizeDelta: {x: 730, y: 440}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &739605199
 MonoBehaviour:
@@ -23695,16 +23695,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "- El robot se mueve usando las teclas WASD.\n\n- El disparo es autom\xE1tico
-    y siempre apunta a los enemigos.\n\n- El men\xFA de pausa se abre presionando
-    ESC.\n\n- Para abrir la tienda, presiona P mientras est\xE9s cerca de ella (b\xFAscala
-    en el mapa).\n\n- Para cerrar la tienda, presiona P nuevamente. Tambi\xE9n se
-    cierra autom\xE1ticamente despu\xE9s de realizar una compra.\n\n- El men\xFA
-    de mejoras de experiencia aparece autom\xE1ticamente cuando subes de nivel y
-    se cierra una vez que seleccionas una mejora.\n\n- Tanto en la tienda como en
-    el men\xFA de experiencia, mant\xE9n presionado el bot\xF3n izquierdo del mouse
-    sobre una mejora para comprarla. Despu\xE9s de unos segundos se seleccionar\xE1
-    y el men\xFA se cerrar\xE1."
+  m_text: "- El robot se mueve usando las teclas WASD.\n\n\n- El disparo es autom\xE1tico
+    y siempre apunta a los enemigos.\n\n\n- El men\xFA de pausa se abre presionando
+    ESC.\n\n\n- Para abrir la tienda, presiona \"espacio\" mientras estes cerca de
+    ella (deberas buscarla en el mapa).\n\n\n- Para cerrar la tienda, presiona \"Espacio\"
+    nuevamente. Tambien se cierra automaticamente despues de realizar una compra."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -23731,8 +23726,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
-  m_fontSizeBase: 18
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -23770,7 +23765,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -85.58276, y: 0, z: -166.99097, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -32118,10 +32113,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 315534463}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 487.5, y: -370}
-  m_SizeDelta: {x: 645, y: 500}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1043478187
 MonoBehaviour:
@@ -32143,10 +32138,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "- La experiencia se obtiene al derrotar enemigos y destruir edificios.\n\n\n\n-
-    Cuando subes de nivel, se otorga una mejora de estad\xEDstica aleatoria.\n\n\n\n-
+  m_text: "- La experiencia se obtiene al derrotar enemigos y destruir edificios.\n\n\n-
+    Cuando subes de nivel, se otorga una mejora de estad\xEDstica aleatoria.\n\n\n-
     Cada vez que subes de nivel, se requiere m\xE1s experiencia para alcanzar el
-    siguiente nivel."
+    siguiente nivel.\n\n\n- El menu de mejoras de experiencia aparece autom\xE1ticamente
+    cuando subes de nivel y se cierra una vez que seleccionas una mejora.\n\n\n-
+    Mant\xE9n presionado el bot\xF3n izquierdo del mouse sobre una mejora para elegirla."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -32212,7 +32209,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -56.35962, y: -70.97095, z: -258.83606, w: -2.0874329}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -35971,7 +35968,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1141013227
 RectTransform:
   m_ObjectHideFlags: 0
@@ -42671,10 +42668,10 @@ RectTransform:
   - {fileID: 673758010}
   m_Father: {fileID: 1169895177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 175, y: -95}
-  m_SizeDelta: {x: 290, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1329607611
 MonoBehaviour:
