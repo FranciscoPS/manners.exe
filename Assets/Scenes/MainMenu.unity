@@ -1406,9 +1406,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e172b3974d79b4604b668d2f010ad248, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeaderboardDebugTester
-  testInitials: TST
-  minTestSurvivalTime: 30
-  maxTestSurvivalTime: 600
 --- !u!4 &54660408
 Transform:
   m_ObjectHideFlags: 0
@@ -3744,8 +3741,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3783,7 +3780,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 9.319092, z: 0, w: 2.6626282}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -9247,8 +9244,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -9286,7 +9283,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 15.364777, z: 0, w: 4.3021393}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -12815,7 +12812,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -7.6}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442028278
@@ -12904,7 +12901,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 8.203674, z: 0, w: 12.703247}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -19451,8 +19448,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '"THE VIDEOGAME"'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
-  m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
+  m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -31142,7 +31139,7 @@ MonoBehaviour:
   m_text: "Blackdoor Studios\n\n- Francisco  Peralta - Director/Programador\r\n-
     Mauricio Reyna - Artista 3D y Animaciones \n- Pedro Juarez -  Main Tester y Apoyo
     General\n- Zo\xE9 Hern\xE1ndez - Directora de Arte\n- Diego Trejo - Ingeniero
-    en audio/musico \r\n\r\nTesters: \r\n- Bruno Alexis Mora Valencia"
+    en audio/musico \r\n\r\nTesters: \n\r\n- Bruno Alexis Mora Valencia"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -31176,7 +31173,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -31208,7 +31205,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 55.17749, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -40817,7 +40814,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 1, y: -25}
+  m_AnchoredPosition: {x: 1, y: -9.3}
   m_SizeDelta: {x: 370, y: 50}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1287153124
@@ -44150,8 +44147,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -44189,7 +44186,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 15.425018, z: 0, w: 4.183052}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -47436,8 +47433,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Manners.exe
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
-  m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
+  m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -47500,7 +47497,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 31.226196, z: 0, w: 21.365356}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -56808,6 +56805,7 @@ RectTransform:
   m_Children:
   - {fileID: 1287153123}
   - {fileID: 1927237036}
+  - {fileID: 894085858}
   m_Father: {fileID: 1327334751}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
@@ -60953,8 +60951,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -60992,7 +60990,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 15.206177, z: 0, w: 4.6161575}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -65028,7 +65026,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Mejoras
+  m_text: mejoras
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -65055,8 +65053,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -65094,7 +65092,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 14.875198, z: 0, w: 4.497162}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -66156,8 +66154,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -66195,7 +66193,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 14.422241, z: 0, w: 4.206505}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
