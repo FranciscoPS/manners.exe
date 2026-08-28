@@ -11,9 +11,6 @@ public class ShopManager : MonoBehaviour
             if (instance == null)
             {
                 instance = FindFirstObjectByType<ShopManager>();
-                if (instance == null)
-                {
-                }
             }
             return instance;
         }

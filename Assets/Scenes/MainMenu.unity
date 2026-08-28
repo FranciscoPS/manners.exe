@@ -56808,7 +56808,6 @@ RectTransform:
   m_Children:
   - {fileID: 1287153123}
   - {fileID: 1927237036}
-  - {fileID: 894085858}
   m_Father: {fileID: 1327334751}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
@@ -56883,8 +56882,6 @@ MonoBehaviour:
   panelPulse: 0
   panelPulseScale: 1.03
   panelPulseDuration: 1.6
-  entryLineSpacing: 8
-  autoSizeEntries: 1
 --- !u!1001 &1721556457
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -63141,7 +63138,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 23, y: 82.9}
+  m_AnchoredPosition: {x: 27, y: 103}
   m_SizeDelta: {x: 399, y: 115.7}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1927237037
@@ -63164,18 +63161,17 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '#1  T: 12:34 | K: 0142 | M: 0380 | G: 0012
+  m_text: '<color=#FFD600><b>1ST</b></color>   <b>15:43</b>   <color=#FFFFFFCC>PJC</color>
 
-    #1  T: 12:34 | K: 0142
-    | M: 0380 | G: 0012
+    <color=#FFFFFF44><b>2ND</b>  
+    --:--   ---</color>
 
-    #1  T: 12:34 | K: 0142 | M: 0380 | G: 0012
+    <color=#FFFFFF44><b>3RD</b>   --:--   ---</color>
 
-    #1 
-    T: 12:34 | K: 0142 | M: 0380 | G: 0012
+    <color=#FFFFFF44><b>4TH</b>  
+    --:--   ---</color>
 
-    #1  T: 12:34 | K: 0142 | M: 0380
-    | G: 0012'
+    <color=#FFFFFF44><b>5TH</b>   --:--   ---</color>'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -63202,14 +63198,14 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16
-  m_fontSizeBase: 16
+  m_fontSize: 22
+  m_fontSizeBase: 22
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -63241,7 +63237,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -10.003571, y: 0, z: 25.704498, w: 0}
+  m_margin: {x: -14.778641, y: 0, z: 45.01602, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
