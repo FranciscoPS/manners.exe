@@ -38,12 +38,6 @@ public class LeaderboardUI : MonoBehaviour
     [SerializeField] private float panelPulseScale = 1.03f;
     [SerializeField] private float panelPulseDuration = 1.6f;
 
-    [Header("Filas")]
-    [Tooltip("Espacio extra entre filas (unidades TMP). 0 = sin cambios.")]
-    [SerializeField] private float entryLineSpacing = 8f;
-    [Tooltip("Ajusta el tamaño de fuente para que las 5 filas siempre quepan.")]
-    [SerializeField] private bool autoSizeEntries = true;
-
     private bool _started;
     private float _hue;
     private Tween _titleTween;
@@ -86,7 +80,6 @@ public class LeaderboardUI : MonoBehaviour
         if (hideLegend && legendObject != null)
             legendObject.SetActive(false);
 
-        StyleEntries();
         Refresh();
         StartAnimations();
     }
@@ -124,24 +117,6 @@ public class LeaderboardUI : MonoBehaviour
 
         if (rgbEntries && leaderboardText != null)
             leaderboardText.color = Color.HSVToRGB((_hue + 0.5f) % 1f, rgbSaturation, rgbValue);
-    }
-
-    private void StyleEntries()
-    {
-        if (leaderboardText == null) return;
-
-        leaderboardText.richText = true;
-        leaderboardText.alignment = TextAlignmentOptions.Left;
-
-        if (entryLineSpacing != 0f)
-            leaderboardText.lineSpacing = entryLineSpacing;
-
-        if (autoSizeEntries)
-        {
-            leaderboardText.enableAutoSizing = true;
-            leaderboardText.fontSizeMin = 16f;
-            leaderboardText.fontSizeMax = 44f;
-        }
     }
 
     private void StartAnimations()
