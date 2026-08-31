@@ -423,6 +423,33 @@ public class PoolManager : MonoBehaviour
         }
     }
 
+    public void AddPoolConfigs(IList<PoolConfig> configs)
+    {
+        if (configs == null) return;
+
+        for (int i = 0; i < configs.Count; i++)
+        {
+            if (configs[i] == null) continue;
+            poolConfigMap[configs[i].poolType] = configs[i];
+        }
+
+        InitializePools();
+    }
+
+    public bool TryGetPoolStats(PoolType poolType, out int total, out int available)
+    {
+        if (pools.TryGetValue(poolType, out Pool pool))
+        {
+            total = pool.totalCount;
+            available = pool.inactive.Count;
+            return true;
+        }
+
+        total = 0;
+        available = 0;
+        return false;
+    }
+
     public void PrewarmPool(PoolType poolType, int count)
     {
         if (!pools.TryGetValue(poolType, out Pool pool))

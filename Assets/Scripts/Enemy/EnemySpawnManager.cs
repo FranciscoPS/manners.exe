@@ -80,6 +80,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1;
+    public bool IsSpawnBlocked => spawnBlocked;
 
     public bool IsActive => this != null && enabled && gameObject.activeInHierarchy;
 
@@ -550,6 +551,27 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     public void SetSpawnBlocked(bool blocked)
     {
         spawnBlocked = blocked;
+    }
+
+    public void SetWaveQueue(WaveData[] waves, float secondsBetweenWaves, bool loop)
+    {
+        waveQueue = waves;
+        timeBetweenWaves = secondsBetweenWaves;
+        autoLoopWaves = loop;
+    }
+
+    public void SetContinuousSpawn(bool enabled, float interval, int enemiesPerSpawn, EnemyConfiguration[] types)
+    {
+        enableContinuousSpawn = enabled;
+        continuousSpawnInterval = interval;
+        continuousEnemiesPerSpawn = enemiesPerSpawn;
+        continuousEnemyTypes = types;
+    }
+
+    public void SetSpawnLimits(int maxConcurrent, bool useEarlyRamp)
+    {
+        maxConcurrentEnemies = maxConcurrent;
+        enableEarlyRamp = useEarlyRamp;
     }
 
     public void SetWaveMultiplier(float multiplier)

@@ -42,6 +42,18 @@ public class SpawnPoint : MonoBehaviour
         }
     }
 
+    public void Configure(SpawnSector newSector, int newMaxEnemiesPerSpawn, float newSpawnCooldown,
+                          float newSpawnRadius, bool newUseNavMesh, bool newShowSpawnWarning, float newWarningDuration)
+    {
+        sector = newSector;
+        maxEnemiesPerSpawn = newMaxEnemiesPerSpawn;
+        spawnCooldown = newSpawnCooldown;
+        spawnRadius = newSpawnRadius;
+        useNavMesh = newUseNavMesh;
+        showSpawnWarning = newShowSpawnWarning;
+        warningDuration = newWarningDuration;
+    }
+
     private void CreateWarningIndicator()
     {
         GameObject warningObj = new GameObject("SpawnWarningIndicator");

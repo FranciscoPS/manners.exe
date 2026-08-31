@@ -32,7 +32,28 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     private GameObject activeChest;
     private float timer;
 
+    public static ChestSpawner Instance => instance;
+
     public bool IsActive => this != null && enabled;
+
+    public void SetSpawnTiming(float interval, float firstDelay)
+    {
+        spawnInterval = interval;
+        firstSpawnDelay = firstDelay;
+        nextSpawnTime = firstDelay;
+    }
+
+    public void SetSpawnArea(Vector3 center, float minRadius, float maxRadius)
+    {
+        centerPoint = center;
+        minSpawnRadius = minRadius;
+        spawnRadius = Mathf.Max(minRadius + 0.1f, maxRadius);
+    }
+
+    public void RequestSpawnNow()
+    {
+        nextSpawnTime = 0f;
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()

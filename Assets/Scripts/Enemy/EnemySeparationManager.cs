@@ -30,6 +30,15 @@ public class EnemySeparationManager : MonoBehaviour, IUpdateable
 
     public bool IsActive => isActiveAndEnabled;
 
+    public void Configure(float radius, float maxSpeed, float push, float interval, int neighbors)
+    {
+        separationRadius = radius;
+        maxSeparationSpeed = maxSpeed;
+        pushStrength = push;
+        recalcInterval = interval;
+        maxNeighbors = neighbors;
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
