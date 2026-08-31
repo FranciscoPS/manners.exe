@@ -1,14 +1,15 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [DefaultExecutionOrder(-5000)]
 public class SandboxTuning : MonoBehaviour
 {
     [System.Serializable]
-    public class StartingUpgrade
+    public class UpgradeTypeLevel
     {
-        public UpgradeData upgrade;
-        [Range(1, 99)] public int levels = 1;
+        public UpgradeType upgradeType;
+        [Range(0, 20)] public int level = 0;
     }
 
     [Header("=== BALANCE INDEPENDIENTE ===")]
@@ -16,6 +17,8 @@ public class SandboxTuning : MonoBehaviour
     [SerializeField] private GameBalanceConfig balanceOverride;
     [Tooltip("UpgradeDatabase del sandbox. Aquí es donde se prueban mejoras y sinergias nuevas sin tocar la base real.")]
     [SerializeField] private UpgradeDatabase upgradeDatabaseOverride;
+    [Tooltip("SynergyDatabase del sandbox. Ajusta aquí los requisitos y números de cada sinergia sin tocar producción.")]
+    [SerializeField] private SynergyDatabase synergyDatabaseOverride;
 
     [Header("=== PARTIDA ===")]
     [SerializeField] private float matchDurationMinutes = 3f;
@@ -23,13 +26,19 @@ public class SandboxTuning : MonoBehaviour
 
     [Header("=== JUGADOR ===")]
     [SerializeField] private bool startInvulnerable = false;
+    [Tooltip("Vida extra añadida al máximo del jugador definido en GameBalanceConfig (ajuste rápido sin tener que abrir ese asset).")]
+    [SerializeField] private float startingHealthBonus = 0f;
+
+    [Header("=== SINERGIAS ===")]
+    [Tooltip("Apaga esto para probar el juego sin ninguna sinergia, aunque se alcancen los niveles requeridos.")]
+    [SerializeField] private bool synergiesEnabled = true;
 
     [Header("=== PROGRESIÓN INICIAL ===")]
     [SerializeField] private int startingCoins = 0;
     [SerializeField] private int startingDiamonds = 0;
     [SerializeField] private int startingPlayerLevels = 0;
-    [Tooltip("Mejoras concedidas automáticamente al arrancar. Ideal para entrar directo a probar una build o una sinergia concreta.")]
-    [SerializeField] private StartingUpgrade[] startingUpgrades;
+    [Tooltip("Nivel inicial de cada mejora. Súbelas a los niveles requeridos por una sinergia para empezar la partida con ella ya activa.")]
+    [SerializeField] private List<UpgradeTypeLevel> startingUpgradeLevels;
 
     [Header("=== COFRES ===")]
     [SerializeField] private bool overrideChestTiming = false;
@@ -67,6 +76,16 @@ public class SandboxTuning : MonoBehaviour
         {
             SandboxLog.Skipped("UpgradeDatabase: usando el asset de producción (Resources/UpgradeDatabase).");
         }
+
+        if (synergyDatabaseOverride != null)
+        {
+            SynergyDatabase.OverrideInstance(synergyDatabaseOverride);
+            SandboxLog.Ok($"SynergyDatabase sobrescrita con '{synergyDatabaseOverride.name}'.");
+        }
+        else
+        {
+            SandboxLog.Skipped("SynergyDatabase: usando el asset de producción (Resources/SynergyDatabase).");
+        }
     }
 
     private void Start()
@@ -75,6 +94,7 @@ public class SandboxTuning : MonoBehaviour
 
         ConfigureMatch();
         ConfigurePlayer();
+        ConfigureSynergies();
         ConfigureChests();
         ConfigureSeparation();
 
@@ -109,6 +129,12 @@ public class SandboxTuning : MonoBehaviour
             health.SetInvulnerable(true);
 
         SandboxLog.Ok($"Jugador: {health.CurrentHealth:F0}/{health.MaxHealth:F0} HP. Invulnerable={startInvulnerable}");
+    }
+
+    private void ConfigureSynergies()
+    {
+        SynergyManager.EnsureExists();
+        SynergyManager.Instance?.SetEnabled(synergiesEnabled);
     }
 
     private void ConfigureChests()
@@ -170,24 +196,45 @@ public class SandboxTuning : MonoBehaviour
             if (startingDiamonds > 0) CurrencyManager.Instance.AddDiamonds(startingDiamonds);
         }
 
-        int grantedUpgrades = 0;
-        if (startingUpgrades != null && PlayerStatsManager.Instance != null)
+        if (startingHealthBonus != 0f)
         {
-            for (int i = 0; i < startingUpgrades.Length; i++)
-            {
-                StartingUpgrade entry = startingUpgrades[i];
-                if (entry == null || entry.upgrade == null) continue;
-
-                for (int level = 0; level < entry.levels; level++)
-                    PlayerStatsManager.Instance.ApplyUpgrade(entry.upgrade);
-
-                grantedUpgrades++;
-            }
+            PlayerHealth health = FindFirstObjectByType<PlayerHealth>();
+            health?.AddMaxHealth(startingHealthBonus);
         }
+
+        int grantedUpgrades = ApplyStartingUpgradeLevels();
 
         if (startingPlayerLevels > 0)
             SandboxCommands.GrantLevels(startingPlayerLevels);
 
-        SandboxLog.Ok($"Progresión inicial: {startingCoins} monedas, {startingDiamonds} diamantes, {grantedUpgrades} mejoras precargadas, +{startingPlayerLevels} niveles.");
+        SandboxLog.Ok($"Progresión inicial: {startingCoins} monedas, {startingDiamonds} diamantes, +{startingHealthBonus:F0} HP, {grantedUpgrades} mejoras precargadas, +{startingPlayerLevels} niveles.");
+    }
+
+    private int ApplyStartingUpgradeLevels()
+    {
+        if (startingUpgradeLevels == null || PlayerStatsManager.Instance == null || UpgradeDatabase.Instance == null)
+            return 0;
+
+        int granted = 0;
+
+        for (int i = 0; i < startingUpgradeLevels.Count; i++)
+        {
+            UpgradeTypeLevel entry = startingUpgradeLevels[i];
+            if (entry == null || entry.level <= 0) continue;
+
+            UpgradeData data = UpgradeDatabase.Instance.allUpgrades.Find(u => u != null && u.upgradeType == entry.upgradeType);
+            if (data == null)
+            {
+                SandboxLog.Warn($"No se encontró un UpgradeData para {entry.upgradeType} en la UpgradeDatabase activa.");
+                continue;
+            }
+
+            for (int level = 0; level < entry.level; level++)
+                PlayerStatsManager.Instance.ApplyUpgrade(data);
+
+            granted++;
+        }
+
+        return granted;
     }
 }

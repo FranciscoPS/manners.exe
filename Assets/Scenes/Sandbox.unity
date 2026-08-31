@@ -4483,7 +4483,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SandboxDebugMonitor
   panelRoot: {fileID: 974597099}
-  debugText: {fileID: 776238068}
   livePanelRefreshInterval: 0.25
   consoleReportInterval: 15
   logLevelUps: 1
@@ -4504,13 +4503,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SandboxTuning
   balanceOverride: {fileID: 11400000, guid: 25c6ad9476bbc4dafbfddc8a2cac1ab6, type: 2}
   upgradeDatabaseOverride: {fileID: 11400000, guid: ba5e3bc2858e24167b54ca418e8154a5, type: 2}
+  synergyDatabaseOverride: {fileID: 11400000, guid: 01fc478299b5d4065bf4dfd5b88fcfe8, type: 2}
   matchDurationMinutes: 3
   startingTimeScale: 1
   startInvulnerable: 0
+  startingHealthBonus: 0
+  synergiesEnabled: 1
   startingCoins: 0
   startingDiamonds: 0
   startingPlayerLevels: 0
-  startingUpgrades: []
+  startingUpgradeLevels: []
   overrideChestTiming: 0
   chestFirstSpawnDelay: 20
   chestSpawnInterval: 45
@@ -19784,7 +19786,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -36975,7 +36977,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 500

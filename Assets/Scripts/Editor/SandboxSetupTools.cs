@@ -5,7 +5,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using TMPro;
 
 public static class SandboxSetupTools
 {
@@ -16,6 +15,8 @@ public static class SandboxSetupTools
     private const string WavesFolder = SandboxFolder + "/Waves";
     private const string BalancePath = SandboxFolder + "/GameBalanceConfig_Sandbox.asset";
     private const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
+    private const string SynergyDatabasePath = SandboxFolder + "/SynergyDatabase_Sandbox.asset";
+    private const string SynergiesFolder = SandboxFolder + "/Synergies";
     private const string LegacyConfigPath = SandboxFolder + "/SandboxConfig.asset";
     private const string ScenePath = "Assets/Scenes/Sandbox.unity";
 
@@ -37,6 +38,7 @@ public static class SandboxSetupTools
 
         CopyBalanceConfig();
         CopyUpgradeDatabase();
+        CopySynergyDatabase();
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = CopyEnemyConfigs();
         CopyWaves(enemyMap);
 
@@ -105,6 +107,12 @@ public static class SandboxSetupTools
             return;
         }
 
+        SynergyDatabase synergies = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
+        if (synergies == null)
+        {
+            Debug.LogWarning("[SandboxSetup] No hay SynergyDatabase de sandbox todavía. Ejecuta 'Tools > Manners > Synergies > Crear sistema de sinergias' y luego el paso 1 de nuevo si quieres probar sinergias.");
+        }
+
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = LoadEnemyMap();
         Dictionary<WaveData, WaveData> waveMap = LoadWaveMap();
 
@@ -118,14 +126,14 @@ public static class SandboxSetupTools
         SerializedObject tuningSerialized = new SerializedObject(tuning);
         SetReference(tuningSerialized, "balanceOverride", balance);
         SetReference(tuningSerialized, "upgradeDatabaseOverride", upgrades);
+        SetReference(tuningSerialized, "synergyDatabaseOverride", synergies);
         tuningSerialized.ApplyModifiedPropertiesWithoutUndo();
 
-        SandboxDebugMonitor monitor = GetOrAdd<SandboxDebugMonitor>(sandboxRoot);
-        BuildOrFindDebugUI(sandboxRoot.transform, out GameObject panelRoot, out TextMeshProUGUI debugText);
+        GameObject panelRoot = BuildOrFindDebugPanel(sandboxRoot.transform);
 
+        SandboxDebugMonitor monitor = GetOrAdd<SandboxDebugMonitor>(sandboxRoot);
         SerializedObject monitorSerialized = new SerializedObject(monitor);
         SetReference(monitorSerialized, "panelRoot", panelRoot);
-        SetReference(monitorSerialized, "debugText", debugText);
         monitorSerialized.ApplyModifiedPropertiesWithoutUndo();
 
         SandboxHotkeys hotkeys = GetOrAdd<SandboxHotkeys>(sandboxRoot);
@@ -277,6 +285,51 @@ public static class SandboxSetupTools
         return copy;
     }
 
+    private static SynergyDatabase CopySynergyDatabase()
+    {
+        SynergyDatabase existing = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
+        if (existing != null) return existing;
+
+        SynergyDatabase source = AssetDatabase.LoadAssetAtPath<SynergyDatabase>("Assets/Resources/SynergyDatabase.asset");
+        if (source == null)
+        {
+            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Resources/SynergyDatabase.asset. Ejecuta primero 'Tools > Manners > Synergies > Crear sistema de sinergias'.");
+            return null;
+        }
+
+        EnsureFolder(SynergiesFolder);
+
+        if (!AssetDatabase.CopyAsset("Assets/Resources/SynergyDatabase.asset", SynergyDatabasePath))
+        {
+            Debug.LogWarning("[SandboxSetup] No se pudo duplicar SynergyDatabase.");
+            return null;
+        }
+
+        SynergyDatabase copy = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
+        List<SynergyData> copiedSynergies = new List<SynergyData>();
+
+        for (int i = 0; i < source.allSynergies.Count; i++)
+        {
+            SynergyData synergy = source.allSynergies[i];
+            if (synergy == null) continue;
+
+            string sourcePath = AssetDatabase.GetAssetPath(synergy);
+            string targetPath = $"{SynergiesFolder}/{Path.GetFileName(sourcePath)}";
+
+            SynergyData synergyCopy = AssetDatabase.LoadAssetAtPath<SynergyData>(targetPath);
+            if (synergyCopy == null && AssetDatabase.CopyAsset(sourcePath, targetPath))
+                synergyCopy = AssetDatabase.LoadAssetAtPath<SynergyData>(targetPath);
+
+            copiedSynergies.Add(synergyCopy != null ? synergyCopy : synergy);
+        }
+
+        copy.allSynergies = copiedSynergies;
+        EditorUtility.SetDirty(copy);
+
+        Debug.Log($"[SandboxSetup] SynergyDatabase duplicada con {copiedSynergies.Count} sinergias propias en {SynergiesFolder}");
+        return copy;
+    }
+
     private static Dictionary<EnemyConfiguration, EnemyConfiguration> LoadEnemyMap()
     {
         Dictionary<EnemyConfiguration, EnemyConfiguration> map = new Dictionary<EnemyConfiguration, EnemyConfiguration>();
@@ -347,20 +400,13 @@ public static class SandboxSetupTools
         return rewired;
     }
 
-    private static void BuildOrFindDebugUI(Transform parent, out GameObject panelRoot, out TextMeshProUGUI debugText)
+    private static GameObject BuildOrFindDebugPanel(Transform parent)
     {
         Transform existingCanvas = parent.Find("SandboxDebugCanvas");
         if (existingCanvas != null)
         {
             Transform existingPanel = existingCanvas.Find("Panel");
-            TextMeshProUGUI existingText = existingPanel != null ? existingPanel.GetComponentInChildren<TextMeshProUGUI>(true) : null;
-
-            if (existingPanel != null && existingText != null)
-            {
-                panelRoot = existingPanel.gameObject;
-                debugText = existingText;
-                return;
-            }
+            if (existingPanel != null) return existingPanel.gameObject;
         }
 
         GameObject canvasObject = new GameObject("SandboxDebugCanvas");
@@ -379,33 +425,16 @@ public static class SandboxSetupTools
         panelObject.transform.SetParent(canvasObject.transform, false);
 
         Image panelImage = panelObject.AddComponent<Image>();
-        panelImage.color = new Color(0f, 0f, 0f, 0.6f);
+        panelImage.color = new Color(0f, 0f, 0f, 0.65f);
 
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0f, 1f);
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = new Vector2(12f, -12f);
-        panelRect.sizeDelta = new Vector2(620f, 460f);
+        panelRect.sizeDelta = new Vector2(540f, 700f);
 
-        GameObject textObject = new GameObject("DebugText");
-        textObject.transform.SetParent(panelObject.transform, false);
-
-        TextMeshProUGUI text = textObject.AddComponent<TextMeshProUGUI>();
-        text.fontSize = 22f;
-        text.color = Color.white;
-        text.alignment = TextAlignmentOptions.TopLeft;
-        text.enableWordWrapping = true;
-        text.text = "Sandbox listo. Dale a Play.";
-
-        RectTransform textRect = textObject.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(12f, 12f);
-        textRect.offsetMax = new Vector2(-12f, -12f);
-
-        panelRoot = panelObject;
-        debugText = text;
+        return panelObject;
     }
 
     private static T GetOrAdd<T>(GameObject target) where T : Component

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74b8822ce7aa54cc8abe370e95197f75, type: 3}
+  m_Name: Synergy_EmpPulse
+  m_EditorClassIdentifier: Assembly-CSharp::SynergyData
+  synergyName: "Pulso Electromagn\xE9tico"
+  description: "Un pulso peri\xF3dico congela a los enemigos cercanos; el congelamiento
+    se contagia entre ellos sin acumularse."
+  icon: {fileID: 0}
+  requiredUpgradeA: 2
+  requiredLevelA: 5
+  requiredUpgradeB: 4
+  requiredLevelB: 5
+  effectPrefab: {fileID: 2649018048572538545, guid: 4eede5aff86d447e8a726af9c8d8ca45, type: 3}

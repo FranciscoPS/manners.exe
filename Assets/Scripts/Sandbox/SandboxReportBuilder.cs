@@ -4,20 +4,68 @@ using UnityEngine;
 
 public static class SandboxReportBuilder
 {
-    public static string Build(float fps)
+    public static string BuildHeader(float fps)
     {
-        StringBuilder builder = new StringBuilder(768);
+        StringBuilder builder = new StringBuilder(512);
 
         builder.AppendLine($"FPS: {fps:F0}   Time scale: x{Time.timeScale:F2}");
 
         AppendMatch(builder);
         AppendPlayer(builder);
         AppendStats(builder);
-        AppendUpgrades(builder);
+
+        return builder.ToString();
+    }
+
+    public static string BuildFooter()
+    {
+        StringBuilder builder = new StringBuilder(256);
+
         AppendSpawning(builder);
         AppendPools(builder);
 
         return builder.ToString();
+    }
+
+    public static string BuildUpgradesLine()
+    {
+        PlayerStatsManager stats = PlayerStatsManager.Instance;
+        if (stats == null) return "sin PlayerStatsManager";
+
+        Dictionary<UpgradeType, int> levels = stats.GetAllUpgradeLevels();
+        StringBuilder line = new StringBuilder(128);
+
+        foreach (KeyValuePair<UpgradeType, int> entry in levels)
+        {
+            if (entry.Value <= 0) continue;
+
+            if (line.Length > 0) line.Append("  ");
+            line.Append($"{entry.Key} Lv{entry.Value}");
+        }
+
+        return line.Length > 0 ? line.ToString() : "ninguna";
+    }
+
+    public static string BuildSynergiesLine()
+    {
+        SynergyManager manager = SynergyManager.Instance;
+        SynergyDatabase database = SynergyDatabase.Instance;
+
+        if (manager == null || database == null || database.allSynergies == null)
+            return "sin datos";
+
+        StringBuilder line = new StringBuilder(128);
+
+        for (int i = 0; i < database.allSynergies.Count; i++)
+        {
+            SynergyData synergy = database.allSynergies[i];
+            if (synergy == null) continue;
+
+            if (line.Length > 0) line.Append("  ");
+            line.Append(manager.IsSynergyActive(synergy) ? $"✔{synergy.synergyName}" : $"✗{synergy.synergyName}");
+        }
+
+        return line.Length > 0 ? line.ToString() : "ninguna configurada";
     }
 
     private static void AppendMatch(StringBuilder builder)
@@ -64,25 +112,6 @@ public static class SandboxReportBuilder
 
         builder.AppendLine($"Combate:  daño={stats.GetModifiedDamage():F1} | cadencia={cooldown:F3}s ({(cooldown > 0f ? 1f / cooldown : 0f):F2}/s) | alcance={stats.GetModifiedAttackRange():F1} | imán={stats.GetModifiedMagnetRange():F1}");
         builder.AppendLine($"Especial: multishot={stats.GetMultiShotProbability():F0}% (+{stats.GetMultiShotExtraBullets()}) | explosivo={stats.GetExplosiveShotProbability():F0}% (r{stats.GetExplosionRadius():F1}) | knockback={stats.GetKnockbackProbability():F0}% (f{stats.GetKnockbackForce():F1}, cadena {stats.GetKnockbackChainJumps()})");
-    }
-
-    private static void AppendUpgrades(StringBuilder builder)
-    {
-        PlayerStatsManager stats = PlayerStatsManager.Instance;
-        if (stats == null) return;
-
-        Dictionary<UpgradeType, int> levels = stats.GetAllUpgradeLevels();
-        StringBuilder line = new StringBuilder(128);
-
-        foreach (KeyValuePair<UpgradeType, int> entry in levels)
-        {
-            if (entry.Value <= 0) continue;
-
-            if (line.Length > 0) line.Append("  ");
-            line.Append($"{entry.Key} Lv{entry.Value}");
-        }
-
-        builder.AppendLine($"Mejoras:  {(line.Length > 0 ? line.ToString() : "ninguna")}");
     }
 
     private static void AppendSpawning(StringBuilder builder)
