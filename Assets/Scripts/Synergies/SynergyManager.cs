@@ -116,6 +116,20 @@ public class SynergyManager : MonoBehaviour
         return synergy != null && activeEffects.ContainsKey(synergy);
     }
 
+    public void ForceActivate(SynergyData synergy)
+    {
+        if (synergy == null || activeEffects.ContainsKey(synergy)) return;
+
+        Transform playerTransform = GetPlayer();
+        if (playerTransform == null)
+        {
+            Debug.LogWarning($"[SYNERGY] No se pudo forzar '{synergy.synergyName}': no se encontró al jugador.");
+            return;
+        }
+
+        Activate(synergy, playerTransform);
+    }
+
     private void HandleUpgradeApplied(UpgradeType type, int level)
     {
         CheckAllSynergies();

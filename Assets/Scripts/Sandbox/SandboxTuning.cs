@@ -32,6 +32,8 @@ public class SandboxTuning : MonoBehaviour
     [Header("=== SINERGIAS ===")]
     [Tooltip("Apaga esto para probar el juego sin ninguna sinergia, aunque se alcancen los niveles requeridos.")]
     [SerializeField] private bool synergiesEnabled = true;
+    [Tooltip("Sinergias que se activan directamente al arrancar, sin comprobar ni subir los niveles requeridos. Útil para probar solo el efecto de una en aislado.")]
+    [SerializeField] private List<SynergyData> forceActiveSynergies;
 
     [Header("=== PROGRESIÓN INICIAL ===")]
     [SerializeField] private int startingCoins = 0;
@@ -135,6 +137,17 @@ public class SandboxTuning : MonoBehaviour
     {
         SynergyManager.EnsureExists();
         SynergyManager.Instance?.SetEnabled(synergiesEnabled);
+
+        if (forceActiveSynergies == null) return;
+
+        for (int i = 0; i < forceActiveSynergies.Count; i++)
+        {
+            SynergyData synergy = forceActiveSynergies[i];
+            if (synergy == null) continue;
+
+            SynergyManager.Instance?.ForceActivate(synergy);
+            SandboxLog.Ok($"Sinergia forzada: {synergy.synergyName}");
+        }
     }
 
     private void ConfigureChests()
