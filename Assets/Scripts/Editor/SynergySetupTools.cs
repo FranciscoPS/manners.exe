@@ -19,17 +19,21 @@ public static class SynergySetupTools
         GameObject laserPrefab = CreateEffectPrefab<LaserBeamEffect>("LaserBeamEffect");
         GameObject empPrefab = CreateEffectPrefab<EmpPulseEffect>("EmpPulseEffect");
 
+        CryoFieldConfig cryoConfig = CreateEffectConfig<CryoFieldConfig>("CryoFieldConfig");
+        LaserBeamConfig laserConfig = CreateEffectConfig<LaserBeamConfig>("LaserBeamConfig");
+        EmpPulseConfig empConfig = CreateEffectConfig<EmpPulseConfig>("EmpPulseConfig");
+
         SynergyData cryo = CreateSynergyData("Synergy_CryoField", "Área Criogénica",
             "Un área que se mueve contigo ralentiza y daña levemente a los enemigos que la tocan.",
-            UpgradeType.MoveSpeed, 5, UpgradeType.MagnetRange, 5, cryoPrefab);
+            UpgradeType.MoveSpeed, 5, UpgradeType.MagnetRange, 5, cryoPrefab, cryoConfig);
 
         SynergyData laser = CreateSynergyData("Synergy_LaserBeam", "Rayo Láser",
             "Cada cierto tiempo disparas un rayo perforante en línea recta hacia donde miras.",
-            UpgradeType.AttackRange, 5, UpgradeType.AttackSpeed, 5, laserPrefab);
+            UpgradeType.AttackRange, 5, UpgradeType.AttackSpeed, 5, laserPrefab, laserConfig);
 
         SynergyData emp = CreateSynergyData("Synergy_EmpPulse", "Pulso Electromagnético",
             "Un pulso periódico congela a los enemigos cercanos; el congelamiento se contagia entre ellos sin acumularse.",
-            UpgradeType.AttackRange, 5, UpgradeType.MagnetRange, 5, empPrefab);
+            UpgradeType.AttackRange, 5, UpgradeType.MagnetRange, 5, empPrefab, empConfig);
 
         SynergyDatabase database = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(DatabasePath);
         if (database == null)
@@ -44,7 +48,7 @@ public static class SynergySetupTools
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log($"[SynergySetup] Sistema de sinergias listo: 3 SynergyData en {ConfigFolder}, 3 prefabs en {PrefabFolder}, base de datos en {DatabasePath}. Ejecuta 'Tools > Manners > Sandbox > 1. Crear assets del sandbox' para duplicarlas al sandbox.");
+        Debug.Log($"[SynergySetup] Sistema de sinergias listo: 3 SynergyData + 3 configs de efecto en {ConfigFolder}, 3 prefabs en {PrefabFolder}, base de datos en {DatabasePath}. Ejecuta 'Tools > Manners > Sandbox > 1. Crear assets del sandbox' para duplicarlas al sandbox.");
     }
 
     private static GameObject CreateEffectPrefab<T>(string name) where T : Component
@@ -63,7 +67,7 @@ public static class SynergySetupTools
     }
 
     private static SynergyData CreateSynergyData(string assetName, string displayName, string description,
-        UpgradeType upgradeA, int levelA, UpgradeType upgradeB, int levelB, GameObject effectPrefab)
+        UpgradeType upgradeA, int levelA, UpgradeType upgradeB, int levelB, GameObject effectPrefab, SynergyEffectConfig effectConfig)
     {
         string path = $"{ConfigFolder}/{assetName}.asset";
         SynergyData data = AssetDatabase.LoadAssetAtPath<SynergyData>(path);
@@ -81,9 +85,21 @@ public static class SynergySetupTools
         data.requiredUpgradeB = upgradeB;
         data.requiredLevelB = levelB;
         data.effectPrefab = effectPrefab;
+        data.effectConfig = effectConfig;
 
         EditorUtility.SetDirty(data);
         return data;
+    }
+
+    private static T CreateEffectConfig<T>(string name) where T : SynergyEffectConfig
+    {
+        string path = $"{ConfigFolder}/{name}.asset";
+        T config = AssetDatabase.LoadAssetAtPath<T>(path);
+        if (config != null) return config;
+
+        config = ScriptableObject.CreateInstance<T>();
+        AssetDatabase.CreateAsset(config, path);
+        return config;
     }
 
     private static void EnsureFolder(string path)

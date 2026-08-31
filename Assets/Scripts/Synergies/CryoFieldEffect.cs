@@ -3,29 +3,39 @@ using UnityEngine;
 
 public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 {
-    [Header("Área")]
-    [SerializeField] private float radius = 4f;
-    [Range(0f, 1f)][SerializeField] private float slowMultiplier = 0.5f;
-    [SerializeField] private float damagePerTick = 2f;
-    [SerializeField] private float tickInterval = 1f;
-
-    [Header("Visual")]
-    [SerializeField] private Color visualColor = new Color(0.4f, 0.85f, 1f, 0.35f);
-
+    private CryoFieldConfig config;
     private Transform player;
     private float tickTimer;
 
     public bool IsActive => isActiveAndEnabled;
 
-    public void Activate(Transform target, SynergyData source)
+    private CryoFieldConfig Config
+    {
+        get
+        {
+            if (config == null)
+            {
+                config = ScriptableObject.CreateInstance<CryoFieldConfig>();
+                Debug.LogWarning($"[SYNERGY] {name} no tiene CryoFieldConfig asignado; usando valores por defecto.");
+            }
+
+            return config;
+        }
+    }
+
+    public void Configure(CryoFieldConfig effectConfig)
+    {
+        config = effectConfig;
+    }
+
+    public void Activate(Transform target)
     {
         player = target;
         transform.SetParent(player, false);
         transform.localPosition = Vector3.zero;
 
-        SynergyVisualUtility.CreateFlatDisc("CryoVisual", transform, new Vector3(0f, 0.05f, 0f), radius * 2f, visualColor);
-
-        tickTimer = tickInterval;
+        BuildVisual();
+        tickTimer = Config.tickInterval;
     }
 
     public void Deactivate()
@@ -49,11 +59,11 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
         tickTimer -= deltaTime;
         if (tickTimer > 0f) return;
-        tickTimer = tickInterval;
+        tickTimer = Config.tickInterval;
 
         Vector3 center = player.position;
         List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
-        float radiusSqr = radius * radius;
+        float radiusSqr = Config.radius * Config.radius;
 
         for (int i = 0; i < enemies.Count; i++)
         {
@@ -64,9 +74,21 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
             EnemyController controller = enemy.GetComponent<EnemyController>();
             if (controller != null)
-                controller.ApplySlow(slowMultiplier, tickInterval * 1.5f);
+                controller.ApplySlow(Config.slowMultiplier, Config.tickInterval * 1.5f);
 
-            enemy.TakeDamage(damagePerTick);
+            enemy.TakeDamage(Config.damagePerTick);
         }
+    }
+
+    private void BuildVisual()
+    {
+        if (Config.visualPrefabOverride != null)
+        {
+            GameObject visual = Instantiate(Config.visualPrefabOverride, transform);
+            visual.transform.localPosition = Vector3.zero;
+            return;
+        }
+
+        SynergyVisualUtility.CreateFlatDisc("CryoVisual", transform, new Vector3(0f, 0.05f, 0f), Config.radius * 2f, Config.visualColor);
     }
 }

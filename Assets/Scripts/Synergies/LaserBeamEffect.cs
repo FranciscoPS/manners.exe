@@ -3,17 +3,7 @@ using UnityEngine;
 
 public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 {
-    [Header("Disparo")]
-    [SerializeField] private float interval = 3f;
-    [SerializeField] private float damage = 15f;
-    [SerializeField] private float range = 14f;
-    [SerializeField] private float width = 0.6f;
-
-    [Header("Visual")]
-    [SerializeField] private float beamDuration = 0.2f;
-    [SerializeField] private Color beamColor = new Color(1f, 0.2f, 0.2f);
-    [SerializeField] private float lineWidth = 0.15f;
-
+    private LaserBeamConfig config;
     private Transform player;
     private float fireTimer;
     private LineRenderer line;
@@ -21,10 +11,29 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
     public bool IsActive => isActiveAndEnabled;
 
-    public void Activate(Transform target, SynergyData source)
+    private LaserBeamConfig Config
+    {
+        get
+        {
+            if (config == null)
+            {
+                config = ScriptableObject.CreateInstance<LaserBeamConfig>();
+                Debug.LogWarning($"[SYNERGY] {name} no tiene LaserBeamConfig asignado; usando valores por defecto.");
+            }
+
+            return config;
+        }
+    }
+
+    public void Configure(LaserBeamConfig effectConfig)
+    {
+        config = effectConfig;
+    }
+
+    public void Activate(Transform target)
     {
         player = target;
-        fireTimer = interval;
+        fireTimer = Config.interval;
         BuildVisual();
     }
 
@@ -50,7 +59,7 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         fireTimer -= deltaTime;
         if (fireTimer <= 0f)
         {
-            fireTimer = interval;
+            fireTimer = Config.interval;
             Fire();
         }
 
@@ -66,7 +75,7 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     {
         Vector3 origin = player.position;
         Vector3 direction = player.forward;
-        Vector3 end = origin + direction * range;
+        Vector3 end = origin + direction * Config.range;
 
         List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
 
@@ -77,13 +86,13 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
             Vector3 point = enemy.transform.position;
             float distanceAlong = Vector3.Dot(point - origin, direction);
-            if (distanceAlong < 0f || distanceAlong > range) continue;
+            if (distanceAlong < 0f || distanceAlong > Config.range) continue;
 
             Vector3 closestPointOnLine = origin + direction * distanceAlong;
             float lateralDistance = Vector3.Distance(point, closestPointOnLine);
-            if (lateralDistance > width) continue;
+            if (lateralDistance > Config.width) continue;
 
-            enemy.TakeDamage(damage);
+            enemy.TakeDamage(Config.damage);
         }
 
         ShowBeam(origin, end);
@@ -96,19 +105,27 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         line.SetPosition(0, origin + Vector3.up * 1f);
         line.SetPosition(1, end + Vector3.up * 1f);
         line.enabled = true;
-        beamVisibleTimer = beamDuration;
+        beamVisibleTimer = Config.beamDuration;
     }
 
     private void BuildVisual()
     {
         line = gameObject.AddComponent<LineRenderer>();
         line.positionCount = 2;
-        line.startWidth = lineWidth;
-        line.endWidth = lineWidth;
-        line.material = new Material(SynergyVisualUtility.FindUnlitShader());
-        line.startColor = beamColor;
-        line.endColor = beamColor;
+        line.startWidth = Config.lineWidth;
+        line.endWidth = Config.lineWidth;
         line.useWorldSpace = true;
         line.enabled = false;
+
+        if (Config.beamMaterialOverride != null)
+        {
+            line.material = Config.beamMaterialOverride;
+        }
+        else
+        {
+            line.material = new Material(SynergyVisualUtility.FindUnlitShader());
+            line.startColor = Config.beamColor;
+            line.endColor = Config.beamColor;
+        }
     }
 }

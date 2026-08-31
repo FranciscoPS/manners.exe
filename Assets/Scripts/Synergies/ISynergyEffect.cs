@@ -2,6 +2,6 @@ using UnityEngine;
 
 public interface ISynergyEffect
 {
-    void Activate(Transform player, SynergyData source);
+    void Activate(Transform player);
     void Deactivate();
 }

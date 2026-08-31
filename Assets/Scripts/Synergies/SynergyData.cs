@@ -16,6 +16,9 @@ public class SynergyData : ScriptableObject
     [Range(1, 20)] public int requiredLevelB = 5;
 
     [Header("Efecto")]
-    [Tooltip("Prefab con el componente que implementa ISynergyEffect. Sus propios campos (radio, daño, intervalo...) controlan el efecto.")]
+    [Tooltip("Prefab con el componente que implementa ISynergyEffect (solo comportamiento, sin números).")]
     public GameObject effectPrefab;
+
+    [Tooltip("Config con los números y el visual de este efecto (radio, daño, intervalo, prefab de VFX...). Debe ser del tipo que espera effectPrefab (ej. CryoFieldConfig para CryoFieldEffect).")]
+    public SynergyEffectConfig effectConfig;
 }

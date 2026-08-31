@@ -287,9 +287,6 @@ public static class SandboxSetupTools
 
     private static SynergyDatabase CopySynergyDatabase()
     {
-        SynergyDatabase existing = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
-        if (existing != null) return existing;
-
         SynergyDatabase source = AssetDatabase.LoadAssetAtPath<SynergyDatabase>("Assets/Resources/SynergyDatabase.asset");
         if (source == null)
         {
@@ -299,13 +296,18 @@ public static class SandboxSetupTools
 
         EnsureFolder(SynergiesFolder);
 
-        if (!AssetDatabase.CopyAsset("Assets/Resources/SynergyDatabase.asset", SynergyDatabasePath))
+        SynergyDatabase copy = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
+        if (copy == null)
         {
-            Debug.LogWarning("[SandboxSetup] No se pudo duplicar SynergyDatabase.");
-            return null;
+            if (!AssetDatabase.CopyAsset("Assets/Resources/SynergyDatabase.asset", SynergyDatabasePath))
+            {
+                Debug.LogWarning("[SandboxSetup] No se pudo duplicar SynergyDatabase.");
+                return null;
+            }
+
+            copy = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
         }
 
-        SynergyDatabase copy = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
         List<SynergyData> copiedSynergies = new List<SynergyData>();
 
         for (int i = 0; i < source.allSynergies.Count; i++)
@@ -319,6 +321,22 @@ public static class SandboxSetupTools
             SynergyData synergyCopy = AssetDatabase.LoadAssetAtPath<SynergyData>(targetPath);
             if (synergyCopy == null && AssetDatabase.CopyAsset(sourcePath, targetPath))
                 synergyCopy = AssetDatabase.LoadAssetAtPath<SynergyData>(targetPath);
+
+            if (synergyCopy != null && synergy.effectConfig != null)
+            {
+                string configSourcePath = AssetDatabase.GetAssetPath(synergy.effectConfig);
+                string configTargetPath = $"{SynergiesFolder}/{Path.GetFileName(configSourcePath)}";
+
+                SynergyEffectConfig configCopy = AssetDatabase.LoadAssetAtPath<SynergyEffectConfig>(configTargetPath);
+                if (configCopy == null && AssetDatabase.CopyAsset(configSourcePath, configTargetPath))
+                    configCopy = AssetDatabase.LoadAssetAtPath<SynergyEffectConfig>(configTargetPath);
+
+                if (configCopy != null)
+                {
+                    synergyCopy.effectConfig = configCopy;
+                    EditorUtility.SetDirty(synergyCopy);
+                }
+            }
 
             copiedSynergies.Add(synergyCopy != null ? synergyCopy : synergy);
         }

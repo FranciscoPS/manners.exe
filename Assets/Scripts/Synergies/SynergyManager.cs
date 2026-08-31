@@ -174,6 +174,12 @@ public class SynergyManager : MonoBehaviour
         }
 
         GameObject instance = Instantiate(synergy.effectPrefab);
+
+        if (synergy.effectConfig != null)
+            synergy.effectConfig.ApplyTo(instance);
+        else
+            Debug.LogWarning($"[SYNERGY] '{synergy.synergyName}' no tiene effectConfig asignado; usará valores por defecto.");
+
         ISynergyEffect effect = instance.GetComponent<ISynergyEffect>();
 
         if (effect == null)
@@ -183,7 +189,7 @@ public class SynergyManager : MonoBehaviour
             return;
         }
 
-        effect.Activate(playerTransform, synergy);
+        effect.Activate(playerTransform);
         activeEffects[synergy] = instance;
 
         Debug.Log($"[SYNERGY] Desbloqueada: {synergy.synergyName}");

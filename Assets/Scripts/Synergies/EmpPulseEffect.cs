@@ -3,17 +3,7 @@ using UnityEngine;
 
 public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 {
-    [Header("Pulso")]
-    [SerializeField] private float interval = 5f;
-    [SerializeField] private float radius = 5f;
-    [SerializeField] private float freezeDuration = 2f;
-    [Tooltip("Distancia a la que el congelamiento se contagia de un enemigo congelado a otro.")]
-    [SerializeField] private float chainRadius = 2.5f;
-
-    [Header("Visual")]
-    [SerializeField] private Color ringColor = new Color(0.6f, 0.9f, 1f, 0.5f);
-    [SerializeField] private float ringLifetime = 0.4f;
-
+    private EmpPulseConfig config;
     private Transform player;
     private float pulseTimer;
 
@@ -22,10 +12,29 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
     public bool IsActive => isActiveAndEnabled;
 
-    public void Activate(Transform target, SynergyData source)
+    private EmpPulseConfig Config
+    {
+        get
+        {
+            if (config == null)
+            {
+                config = ScriptableObject.CreateInstance<EmpPulseConfig>();
+                Debug.LogWarning($"[SYNERGY] {name} no tiene EmpPulseConfig asignado; usando valores por defecto.");
+            }
+
+            return config;
+        }
+    }
+
+    public void Configure(EmpPulseConfig effectConfig)
+    {
+        config = effectConfig;
+    }
+
+    public void Activate(Transform target)
     {
         player = target;
-        pulseTimer = interval;
+        pulseTimer = Config.interval;
     }
 
     public void Deactivate()
@@ -49,7 +58,7 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
         pulseTimer -= deltaTime;
         if (pulseTimer > 0f) return;
-        pulseTimer = interval;
+        pulseTimer = Config.interval;
 
         Pulse();
     }
@@ -61,8 +70,8 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
         Vector3 center = player.position;
         List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
-        float radiusSqr = radius * radius;
-        float chainRadiusSqr = chainRadius * chainRadius;
+        float radiusSqr = Config.radius * Config.radius;
+        float chainRadiusSqr = Config.chainRadius * Config.chainRadius;
 
         for (int i = 0; i < enemies.Count; i++)
         {
@@ -92,7 +101,7 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
             }
         }
 
-        SpawnRing(center);
+        SpawnVisual(center);
     }
 
     private void Freeze(EnemyHealth enemy)
@@ -102,12 +111,18 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
         EnemyController controller = enemy.GetComponent<EnemyController>();
         if (controller != null)
-            controller.ApplySlow(0f, freezeDuration);
+            controller.ApplySlow(0f, Config.freezeDuration);
     }
 
-    private void SpawnRing(Vector3 center)
+    private void SpawnVisual(Vector3 center)
     {
-        GameObject ring = SynergyVisualUtility.CreateFlatDisc("EmpRingVisual", null, center + Vector3.up * 0.05f, radius * 2f, ringColor);
-        Object.Destroy(ring, ringLifetime);
+        if (Config.visualPrefabOverride != null)
+        {
+            Instantiate(Config.visualPrefabOverride, center, Quaternion.identity);
+            return;
+        }
+
+        GameObject ring = SynergyVisualUtility.CreateFlatDisc("EmpRingVisual", null, center + Vector3.up * 0.05f, Config.radius * 2f, Config.ringColor);
+        Destroy(ring, Config.ringLifetime);
     }
 }
