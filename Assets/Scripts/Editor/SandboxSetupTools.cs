@@ -4,44 +4,20 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TMPro;
 
 public static class SandboxSetupTools
 {
+    private const string SourceScenePath = "Assets/Scenes/CityTest.unity";
     private const string SandboxFolder = "Assets/Configurations/Sandbox";
     private const string UpgradesFolder = SandboxFolder + "/Upgrades";
     private const string EnemiesFolder = SandboxFolder + "/Enemies";
     private const string WavesFolder = SandboxFolder + "/Waves";
-    private const string ConfigPath = SandboxFolder + "/SandboxConfig.asset";
     private const string BalancePath = SandboxFolder + "/GameBalanceConfig_Sandbox.asset";
     private const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
+    private const string LegacyConfigPath = SandboxFolder + "/SandboxConfig.asset";
     private const string ScenePath = "Assets/Scenes/Sandbox.unity";
-
-    private static readonly string[] ProjectilePrefabs = { "Assets/Prefabs/Resources/Bullet_VFX.prefab" };
-    private static readonly string[] OrbPrefabs = { "Assets/Prefabs/Resources/ExperienceOrb.prefab" };
-    private static readonly string[] CoinPrefabs = { "Assets/Prefabs/Resources/Coin.prefab" };
-    private static readonly string[] DiamondPrefabs = { "Assets/Prefabs/Resources/Diamond.prefab" };
-
-    private static readonly string[] BasicEnemyPrefabs =
-    {
-        "Assets/Prefabs/Characters/Basic Enemy.prefab",
-        "Assets/Prefabs/Characters/BEnemy2.prefab",
-        "Assets/Prefabs/Characters/BEnemy3.prefab"
-    };
-
-    private static readonly string[] FastEnemyPrefabs =
-    {
-        "Assets/Prefabs/Characters/Fast Enemy.prefab",
-        "Assets/Prefabs/Characters/FEnemy2.prefab",
-        "Assets/Prefabs/Characters/FEnemy3.prefab"
-    };
-
-    private static readonly string[] ObstaclePrefabs =
-    {
-        "Assets/Prefabs/Buildings/Building.prefab",
-        "Assets/Prefabs/Buildings/Building2.prefab",
-        "Assets/Prefabs/Buildings/Building3.prefab",
-        "Assets/Prefabs/Buildings/Bulding4.prefab"
-    };
 
     private static readonly string[] SourceEnemyConfigs =
     {
@@ -52,109 +28,195 @@ public static class SandboxSetupTools
     [MenuItem("Tools/Manners/Sandbox/1. Crear assets del sandbox", false, 10)]
     public static void CreateSandboxAssets()
     {
+        RemoveLegacyConfigIfPresent();
+
         EnsureFolder(SandboxFolder);
         EnsureFolder(UpgradesFolder);
         EnsureFolder(EnemiesFolder);
         EnsureFolder(WavesFolder);
 
-        GameBalanceConfig balance = CopyBalanceConfig();
-        UpgradeDatabase upgrades = CopyUpgradeDatabase();
+        CopyBalanceConfig();
+        CopyUpgradeDatabase();
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = CopyEnemyConfigs();
-        WaveData[] waves = CopyWaves(enemyMap);
-
-        SandboxConfig config = AssetDatabase.LoadAssetAtPath<SandboxConfig>(ConfigPath);
-        if (config == null)
-        {
-            config = ScriptableObject.CreateInstance<SandboxConfig>();
-            AssetDatabase.CreateAsset(config, ConfigPath);
-            Debug.Log($"[SandboxSetup] SandboxConfig creado en {ConfigPath}");
-        }
-        else
-        {
-            Debug.Log($"[SandboxSetup] SandboxConfig ya existía en {ConfigPath}, se refrescan sus referencias.");
-        }
-
-        FillConfig(config, balance, upgrades, enemyMap, waves);
+        CopyWaves(enemyMap);
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Selection.activeObject = config;
-        EditorGUIUtility.PingObject(config);
+        Debug.Log("[SandboxSetup] Assets del sandbox listos en " + SandboxFolder + ". Edítalos directamente (son independientes de los de producción).");
     }
 
-    [MenuItem("Tools/Manners/Sandbox/2. Crear escena Sandbox", false, 11)]
-    public static void CreateSandboxScene()
+    [MenuItem("Tools/Manners/Sandbox/2. Duplicar Nivel 1 en escena Sandbox", false, 11)]
+    public static void DuplicateLevelScene()
     {
-        SandboxConfig config = AssetDatabase.LoadAssetAtPath<SandboxConfig>(ConfigPath);
-        if (config == null)
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(SourceScenePath) == null)
         {
-            Debug.LogError($"[SandboxSetup] No existe {ConfigPath}. Ejecuta antes 'Tools > Manners > Sandbox > 1. Crear assets del sandbox'.");
+            Debug.LogError($"[SandboxSetup] No se encontró {SourceScenePath}.");
             return;
         }
 
-        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null)
+        {
+            bool overwrite = EditorUtility.DisplayDialog(
+                "Sandbox ya existe",
+                $"Ya existe {ScenePath}.\n\n¿Sobrescribirla con una copia nueva de {SourceScenePath}?\nSe perderá cualquier cambio manual hecho en Sandbox.unity (el historial de git no se pierde).",
+                "Sobrescribir", "Cancelar");
+
+            if (!overwrite) return;
+
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+            AssetDatabase.DeleteAsset(ScenePath);
+        }
+        else if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+        {
             return;
+        }
 
-        Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-
-        GameObject lightObject = new GameObject("Directional Light");
-        Light light = lightObject.AddComponent<Light>();
-        light.type = LightType.Directional;
-        light.intensity = 1.1f;
-        light.shadows = LightShadows.Soft;
-        lightObject.transform.rotation = Quaternion.Euler(52f, -34f, 0f);
-
-        GameObject sandboxObject = new GameObject("[SANDBOX]");
-        SandboxBootstrapper bootstrapper = sandboxObject.AddComponent<SandboxBootstrapper>();
-
-        SerializedObject serialized = new SerializedObject(bootstrapper);
-        serialized.FindProperty("config").objectReferenceValue = config;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
-
-        EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene, ScenePath);
-
-        RegisterSceneInBuildSettings();
+        if (!AssetDatabase.CopyAsset(SourceScenePath, ScenePath))
+        {
+            Debug.LogError($"[SandboxSetup] No se pudo duplicar {SourceScenePath} a {ScenePath}.");
+            return;
+        }
 
         AssetDatabase.Refresh();
-        Debug.Log($"[SandboxSetup] Escena creada en {ScenePath} y añadida a Build Settings. Dale a Play.");
+        EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+        RegisterSceneInBuildSettings();
+
+        Debug.Log($"[SandboxSetup] {ScenePath} es una copia real y completa de {SourceScenePath}: edificios, spawn points, cámara, Canvas y managers son los mismos objetos, ya funcionales. Ejecuta el paso 3 para conectarle el balance independiente del sandbox.");
     }
 
-    [MenuItem("Tools/Manners/Sandbox/3. Refrescar referencias del config", false, 12)]
-    public static void RefreshConfig()
+    [MenuItem("Tools/Manners/Sandbox/3. Conectar sandbox a la escena abierta", false, 12)]
+    public static void WireSandboxScene()
     {
-        SandboxConfig config = AssetDatabase.LoadAssetAtPath<SandboxConfig>(ConfigPath);
-        if (config == null)
+        Scene active = EditorSceneManager.GetActiveScene();
+        if (active.path != ScenePath)
         {
-            Debug.LogError($"[SandboxSetup] No existe {ConfigPath}.");
+            Debug.LogError($"[SandboxSetup] Abre primero {ScenePath} (paso 2) y vuelve a ejecutar este paso con esa escena activa.");
             return;
         }
 
         GameBalanceConfig balance = AssetDatabase.LoadAssetAtPath<GameBalanceConfig>(BalancePath);
         UpgradeDatabase upgrades = AssetDatabase.LoadAssetAtPath<UpgradeDatabase>(UpgradeDatabasePath);
 
-        Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = new Dictionary<EnemyConfiguration, EnemyConfiguration>();
+        if (balance == null || upgrades == null)
+        {
+            Debug.LogError("[SandboxSetup] Faltan los assets del sandbox. Ejecuta primero el paso 1.");
+            return;
+        }
+
+        Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = LoadEnemyMap();
+        Dictionary<WaveData, WaveData> waveMap = LoadWaveMap();
+
+        RewireEnemySpawnManager(enemyMap, waveMap);
+
+        GameObject sandboxRoot = GameObject.Find("[SANDBOX]");
+        if (sandboxRoot == null)
+            sandboxRoot = new GameObject("[SANDBOX]");
+
+        SandboxTuning tuning = GetOrAdd<SandboxTuning>(sandboxRoot);
+        SerializedObject tuningSerialized = new SerializedObject(tuning);
+        SetReference(tuningSerialized, "balanceOverride", balance);
+        SetReference(tuningSerialized, "upgradeDatabaseOverride", upgrades);
+        tuningSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+        SandboxDebugMonitor monitor = GetOrAdd<SandboxDebugMonitor>(sandboxRoot);
+        BuildOrFindDebugUI(sandboxRoot.transform, out GameObject panelRoot, out TextMeshProUGUI debugText);
+
+        SerializedObject monitorSerialized = new SerializedObject(monitor);
+        SetReference(monitorSerialized, "panelRoot", panelRoot);
+        SetReference(monitorSerialized, "debugText", debugText);
+        monitorSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+        SandboxHotkeys hotkeys = GetOrAdd<SandboxHotkeys>(sandboxRoot);
+        SerializedObject hotkeysSerialized = new SerializedObject(hotkeys);
+        SetReference(hotkeysSerialized, "debugMonitor", monitor);
+
+        if (hotkeysSerialized.FindProperty("burstEnemy").objectReferenceValue == null && enemyMap.Count > 0)
+        {
+            IEnumerator<EnemyConfiguration> enumerator = enemyMap.Values.GetEnumerator();
+            if (enumerator.MoveNext())
+                SetReference(hotkeysSerialized, "burstEnemy", enumerator.Current);
+        }
+
+        hotkeysSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(sandboxRoot);
+        EditorSceneManager.MarkSceneDirty(active);
+        EditorSceneManager.SaveScene(active);
+
+        Debug.Log("[SandboxSetup] Sandbox conectado: balance independiente inyectado, panel de debug creado, teclas activas. Dale a Play.");
+    }
+
+    private static Dictionary<EnemyConfiguration, EnemyConfiguration> CopyEnemyConfigs()
+    {
+        Dictionary<EnemyConfiguration, EnemyConfiguration> map = new Dictionary<EnemyConfiguration, EnemyConfiguration>();
+
         for (int i = 0; i < SourceEnemyConfigs.Length; i++)
         {
             EnemyConfiguration source = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(SourceEnemyConfigs[i]);
-            EnemyConfiguration copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>($"{EnemiesFolder}/{Path.GetFileName(SourceEnemyConfigs[i])}");
-            if (source != null && copy != null) enemyMap[source] = copy;
+            if (source == null)
+            {
+                Debug.LogWarning($"[SandboxSetup] No se encontró {SourceEnemyConfigs[i]}");
+                continue;
+            }
+
+            string targetPath = $"{EnemiesFolder}/{Path.GetFileName(SourceEnemyConfigs[i])}";
+            EnemyConfiguration copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(targetPath);
+
+            if (copy == null && AssetDatabase.CopyAsset(SourceEnemyConfigs[i], targetPath))
+                copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(targetPath);
+
+            if (copy != null) map[source] = copy;
         }
 
-        List<WaveData> waves = new List<WaveData>();
-        string[] waveGuids = AssetDatabase.FindAssets("t:WaveData", new[] { WavesFolder });
-        for (int i = 0; i < waveGuids.Length; i++)
+        Debug.Log($"[SandboxSetup] {map.Count} EnemyConfiguration duplicadas en {EnemiesFolder}");
+        return map;
+    }
+
+    private static void CopyWaves(Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap)
+    {
+        string[] guids = AssetDatabase.FindAssets("t:WaveData", new[] { "Assets/Configurations/Waves Configurations" });
+        List<string> sourcePaths = new List<string>();
+
+        for (int i = 0; i < guids.Length; i++)
         {
-            WaveData wave = AssetDatabase.LoadAssetAtPath<WaveData>(AssetDatabase.GUIDToAssetPath(waveGuids[i]));
-            if (wave != null) waves.Add(wave);
+            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (path.Contains("/Map2Waves/")) continue;
+            sourcePaths.Add(path);
         }
-        waves.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
 
-        FillConfig(config, balance, upgrades, enemyMap, waves.ToArray());
+        sourcePaths.Sort(string.CompareOrdinal);
 
-        AssetDatabase.SaveAssets();
-        Debug.Log("[SandboxSetup] Referencias del SandboxConfig refrescadas.");
+        int created = 0;
+        for (int i = 0; i < sourcePaths.Count; i++)
+        {
+            string targetPath = $"{WavesFolder}/{Path.GetFileName(sourcePaths[i])}";
+            WaveData copy = AssetDatabase.LoadAssetAtPath<WaveData>(targetPath);
+
+            if (copy == null && AssetDatabase.CopyAsset(sourcePaths[i], targetPath))
+                copy = AssetDatabase.LoadAssetAtPath<WaveData>(targetPath);
+
+            if (copy == null) continue;
+
+            if (copy.enemyDistribution != null)
+            {
+                for (int e = 0; e < copy.enemyDistribution.Length; e++)
+                {
+                    EnemySpawnEntry entry = copy.enemyDistribution[e];
+                    if (entry?.enemyConfig == null) continue;
+
+                    if (enemyMap.TryGetValue(entry.enemyConfig, out EnemyConfiguration mapped))
+                        entry.enemyConfig = mapped;
+                }
+
+                EditorUtility.SetDirty(copy);
+            }
+
+            created++;
+        }
+
+        Debug.Log($"[SandboxSetup] {created} WaveData duplicadas en {WavesFolder}");
     }
 
     private static GameBalanceConfig CopyBalanceConfig()
@@ -164,7 +226,7 @@ public static class SandboxSetupTools
 
         if (!AssetDatabase.CopyAsset("Assets/Resources/GameBalanceConfig.asset", BalancePath))
         {
-            Debug.LogWarning("[SandboxSetup] No se pudo duplicar GameBalanceConfig. El sandbox usará el de producción.");
+            Debug.LogWarning("[SandboxSetup] No se pudo duplicar GameBalanceConfig.");
             return null;
         }
 
@@ -215,139 +277,141 @@ public static class SandboxSetupTools
         return copy;
     }
 
-    private static Dictionary<EnemyConfiguration, EnemyConfiguration> CopyEnemyConfigs()
+    private static Dictionary<EnemyConfiguration, EnemyConfiguration> LoadEnemyMap()
     {
         Dictionary<EnemyConfiguration, EnemyConfiguration> map = new Dictionary<EnemyConfiguration, EnemyConfiguration>();
 
         for (int i = 0; i < SourceEnemyConfigs.Length; i++)
         {
             EnemyConfiguration source = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(SourceEnemyConfigs[i]);
-            if (source == null)
-            {
-                Debug.LogWarning($"[SandboxSetup] No se encontró {SourceEnemyConfigs[i]}");
-                continue;
-            }
-
-            string targetPath = $"{EnemiesFolder}/{Path.GetFileName(SourceEnemyConfigs[i])}";
-            EnemyConfiguration copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(targetPath);
-
-            if (copy == null && AssetDatabase.CopyAsset(SourceEnemyConfigs[i], targetPath))
-                copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(targetPath);
-
-            if (copy != null) map[source] = copy;
+            EnemyConfiguration copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>($"{EnemiesFolder}/{Path.GetFileName(SourceEnemyConfigs[i])}");
+            if (source != null && copy != null) map[source] = copy;
         }
 
-        Debug.Log($"[SandboxSetup] {map.Count} EnemyConfiguration duplicadas en {EnemiesFolder}");
         return map;
     }
 
-    private static WaveData[] CopyWaves(Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap)
+    private static Dictionary<WaveData, WaveData> LoadWaveMap()
     {
-        string[] guids = AssetDatabase.FindAssets("t:WaveData", new[] { "Assets/Configurations/Waves Configurations" });
-        List<string> sourcePaths = new List<string>();
+        Dictionary<WaveData, WaveData> map = new Dictionary<WaveData, WaveData>();
 
+        string[] guids = AssetDatabase.FindAssets("t:WaveData", new[] { "Assets/Configurations/Waves Configurations" });
         for (int i = 0; i < guids.Length; i++)
         {
             string path = AssetDatabase.GUIDToAssetPath(guids[i]);
             if (path.Contains("/Map2Waves/")) continue;
-            sourcePaths.Add(path);
+
+            WaveData source = AssetDatabase.LoadAssetAtPath<WaveData>(path);
+            WaveData copy = AssetDatabase.LoadAssetAtPath<WaveData>($"{WavesFolder}/{Path.GetFileName(path)}");
+            if (source != null && copy != null) map[source] = copy;
         }
 
-        sourcePaths.Sort(string.CompareOrdinal);
+        return map;
+    }
 
-        List<WaveData> result = new List<WaveData>();
-
-        for (int i = 0; i < sourcePaths.Count; i++)
+    private static void RewireEnemySpawnManager(Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap, Dictionary<WaveData, WaveData> waveMap)
+    {
+        EnemySpawnManager manager = Object.FindFirstObjectByType<EnemySpawnManager>(FindObjectsInactive.Include);
+        if (manager == null)
         {
-            string targetPath = $"{WavesFolder}/{Path.GetFileName(sourcePaths[i])}";
-            WaveData copy = AssetDatabase.LoadAssetAtPath<WaveData>(targetPath);
-
-            if (copy == null && AssetDatabase.CopyAsset(sourcePaths[i], targetPath))
-                copy = AssetDatabase.LoadAssetAtPath<WaveData>(targetPath);
-
-            if (copy == null) continue;
-
-            if (copy.enemyDistribution != null)
-            {
-                for (int e = 0; e < copy.enemyDistribution.Length; e++)
-                {
-                    EnemySpawnEntry entry = copy.enemyDistribution[e];
-                    if (entry?.enemyConfig == null) continue;
-
-                    if (enemyMap.TryGetValue(entry.enemyConfig, out EnemyConfiguration mapped))
-                        entry.enemyConfig = mapped;
-                }
-
-                EditorUtility.SetDirty(copy);
-            }
-
-            result.Add(copy);
+            Debug.LogWarning("[SandboxSetup] No se encontró EnemySpawnManager en la escena.");
+            return;
         }
 
-        Debug.Log($"[SandboxSetup] {result.Count} WaveData duplicadas en {WavesFolder}");
-        return result.ToArray();
-    }
-
-    private static void FillConfig(SandboxConfig config, GameBalanceConfig balance, UpgradeDatabase upgrades,
-                                   Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap, WaveData[] waves)
-    {
-        SerializedObject serialized = new SerializedObject(config);
-
-        SetReference(serialized, "balanceOverride", balance);
-        SetReference(serialized, "upgradeDatabaseOverride", upgrades);
-        SetReference(serialized, "playerPrefab", LoadPrefab("Assets/Prefabs/Characters/Player.prefab"));
-
-        FillObjectArray(serialized.FindProperty("obstacles").FindPropertyRelative("prefabs"), LoadPrefabs(ObstaclePrefabs));
-
-        BuildPools(serialized.FindProperty("pools"));
-
-        FillObjectArray(serialized.FindProperty("waveQueue"), waves);
-
-        List<EnemyConfiguration> enemies = new List<EnemyConfiguration>(enemyMap.Values);
-        FillObjectArray(serialized.FindProperty("continuousEnemyTypes"), enemies.ToArray());
-
-        if (enemies.Count > 0)
-            SetReference(serialized, "manualBurstEnemy", enemies[0]);
-
+        SerializedObject serialized = new SerializedObject(manager);
+        int waveRewired = RewireArray(serialized.FindProperty("waveQueue"), waveMap);
+        int enemyRewired = RewireArray(serialized.FindProperty("continuousEnemyTypes"), enemyMap);
         serialized.ApplyModifiedPropertiesWithoutUndo();
-        EditorUtility.SetDirty(config);
+        EditorUtility.SetDirty(manager);
+
+        Debug.Log($"[SandboxSetup] EnemySpawnManager: {waveRewired} WaveData y {enemyRewired} EnemyConfiguration remapeados a copias del sandbox.");
     }
 
-    private static void BuildPools(SerializedProperty pools)
+    private static int RewireArray<T>(SerializedProperty arrayProperty, Dictionary<T, T> map) where T : Object
     {
-        if (pools.arraySize > 0) return;
+        if (arrayProperty == null) return 0;
 
-        pools.arraySize = 6;
+        int rewired = 0;
+        for (int i = 0; i < arrayProperty.arraySize; i++)
+        {
+            SerializedProperty element = arrayProperty.GetArrayElementAtIndex(i);
+            T current = element.objectReferenceValue as T;
 
-        ConfigurePool(pools.GetArrayElementAtIndex(0), PoolManager.PoolType.Projectile, ProjectilePrefabs, 200);
-        ConfigurePool(pools.GetArrayElementAtIndex(1), PoolManager.PoolType.ExperienceOrb, OrbPrefabs, 300);
-        ConfigurePool(pools.GetArrayElementAtIndex(2), PoolManager.PoolType.Coin, CoinPrefabs, 100);
-        ConfigurePool(pools.GetArrayElementAtIndex(3), PoolManager.PoolType.Diamond, DiamondPrefabs, 50);
-        ConfigurePool(pools.GetArrayElementAtIndex(4), PoolManager.PoolType.BasicEnemy, BasicEnemyPrefabs, 150);
-        ConfigurePool(pools.GetArrayElementAtIndex(5), PoolManager.PoolType.FastEnemy, FastEnemyPrefabs, 150);
+            if (current != null && map.TryGetValue(current, out T mapped))
+            {
+                element.objectReferenceValue = mapped;
+                rewired++;
+            }
+        }
+
+        return rewired;
     }
 
-    private static void ConfigurePool(SerializedProperty element, PoolManager.PoolType type, string[] prefabPaths, int prewarmCount)
+    private static void BuildOrFindDebugUI(Transform parent, out GameObject panelRoot, out TextMeshProUGUI debugText)
     {
-        GameObject[] prefabs = LoadPrefabs(prefabPaths);
+        Transform existingCanvas = parent.Find("SandboxDebugCanvas");
+        if (existingCanvas != null)
+        {
+            Transform existingPanel = existingCanvas.Find("Panel");
+            TextMeshProUGUI existingText = existingPanel != null ? existingPanel.GetComponentInChildren<TextMeshProUGUI>(true) : null;
 
-        element.FindPropertyRelative("poolType").enumValueIndex = (int)type;
-        element.FindPropertyRelative("prewarmCount").intValue = prewarmCount;
-        element.FindPropertyRelative("preventGrow").boolValue = false;
-        element.FindPropertyRelative("defaultCapacity").intValue = prewarmCount;
-        element.FindPropertyRelative("maxSize").intValue = prewarmCount * 2;
-        element.FindPropertyRelative("prefab").objectReferenceValue = prefabs.Length > 0 ? prefabs[0] : null;
+            if (existingPanel != null && existingText != null)
+            {
+                panelRoot = existingPanel.gameObject;
+                debugText = existingText;
+                return;
+            }
+        }
 
-        FillObjectArray(element.FindPropertyRelative("prefabs"), prefabs);
+        GameObject canvasObject = new GameObject("SandboxDebugCanvas");
+        canvasObject.transform.SetParent(parent, false);
+
+        Canvas canvas = canvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 500;
+
+        CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.matchWidthOrHeight = 0.5f;
+
+        GameObject panelObject = new GameObject("Panel");
+        panelObject.transform.SetParent(canvasObject.transform, false);
+
+        Image panelImage = panelObject.AddComponent<Image>();
+        panelImage.color = new Color(0f, 0f, 0f, 0.6f);
+
+        RectTransform panelRect = panelObject.GetComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0f, 1f);
+        panelRect.anchorMax = new Vector2(0f, 1f);
+        panelRect.pivot = new Vector2(0f, 1f);
+        panelRect.anchoredPosition = new Vector2(12f, -12f);
+        panelRect.sizeDelta = new Vector2(620f, 460f);
+
+        GameObject textObject = new GameObject("DebugText");
+        textObject.transform.SetParent(panelObject.transform, false);
+
+        TextMeshProUGUI text = textObject.AddComponent<TextMeshProUGUI>();
+        text.fontSize = 22f;
+        text.color = Color.white;
+        text.alignment = TextAlignmentOptions.TopLeft;
+        text.enableWordWrapping = true;
+        text.text = "Sandbox listo. Dale a Play.";
+
+        RectTransform textRect = textObject.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(12f, 12f);
+        textRect.offsetMax = new Vector2(-12f, -12f);
+
+        panelRoot = panelObject;
+        debugText = text;
     }
 
-    private static void FillObjectArray<T>(SerializedProperty property, T[] values) where T : Object
+    private static T GetOrAdd<T>(GameObject target) where T : Component
     {
-        if (property == null) return;
-
-        property.arraySize = values.Length;
-        for (int i = 0; i < values.Length; i++)
-            property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+        T component = target.GetComponent<T>();
+        return component != null ? component : target.AddComponent<T>();
     }
 
     private static void SetReference(SerializedObject serialized, string fieldName, Object value)
@@ -357,24 +421,12 @@ public static class SandboxSetupTools
             property.objectReferenceValue = value;
     }
 
-    private static GameObject LoadPrefab(string path)
+    private static void RemoveLegacyConfigIfPresent()
     {
-        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-        if (prefab == null) Debug.LogWarning($"[SandboxSetup] No se encontró el prefab {path}");
-        return prefab;
-    }
+        if (AssetDatabase.LoadAssetAtPath<Object>(LegacyConfigPath) == null) return;
 
-    private static GameObject[] LoadPrefabs(string[] paths)
-    {
-        List<GameObject> result = new List<GameObject>(paths.Length);
-
-        for (int i = 0; i < paths.Length; i++)
-        {
-            GameObject prefab = LoadPrefab(paths[i]);
-            if (prefab != null) result.Add(prefab);
-        }
-
-        return result.ToArray();
+        AssetDatabase.DeleteAsset(LegacyConfigPath);
+        Debug.Log($"[SandboxSetup] Eliminado {LegacyConfigPath} (formato antiguo del sandbox procedural, ya no se usa).");
     }
 
     private static void EnsureFolder(string path)

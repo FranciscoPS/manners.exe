@@ -553,26 +553,6 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         spawnBlocked = blocked;
     }
 
-    public void SetWaveQueue(WaveData[] waves, float secondsBetweenWaves, bool loop)
-    {
-        waveQueue = waves;
-        timeBetweenWaves = secondsBetweenWaves;
-        autoLoopWaves = loop;
-    }
-
-    public void SetContinuousSpawn(bool enabled, float interval, int enemiesPerSpawn, EnemyConfiguration[] types)
-    {
-        enableContinuousSpawn = enabled;
-        continuousSpawnInterval = interval;
-        continuousEnemiesPerSpawn = enemiesPerSpawn;
-        continuousEnemyTypes = types;
-    }
-
-    public void SetSpawnLimits(int maxConcurrent, bool useEarlyRamp)
-    {
-        maxConcurrentEnemies = maxConcurrent;
-        enableEarlyRamp = useEarlyRamp;
-    }
 
     public void SetWaveMultiplier(float multiplier)
     {

@@ -12,15 +12,11 @@ public static class SandboxCommands
         timeScaleIndex = 0;
     }
 
-    public static void SpawnBurst(int count, float radius, EnemyConfiguration enemy = null)
+    public static void SpawnBurst(int count, float radius, EnemyConfiguration enemy)
     {
-        SandboxBootstrapper sandbox = SandboxBootstrapper.Instance;
-        if (sandbox == null) return;
-
-        EnemyConfiguration config = enemy != null ? enemy : sandbox.GetManualBurstEnemy();
-        if (config == null)
+        if (enemy == null)
         {
-            SandboxLog.Warn("Ráfaga manual: no hay ningún EnemyConfiguration disponible (revisa 'Manual Burst Enemy' o 'Continuous Enemy Types').");
+            SandboxLog.Warn("Ráfaga manual: no hay ningún EnemyConfiguration asignado (revisa 'Burst Enemy' en SandboxHotkeys).");
             return;
         }
 
@@ -30,7 +26,16 @@ public static class SandboxCommands
             return;
         }
 
-        Transform origin = sandbox.Player != null ? sandbox.Player.transform : sandbox.transform;
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        Transform origin = playerObject != null ? playerObject.transform : null;
+
+        if (origin == null)
+        {
+            SandboxLog.Warn("Ráfaga manual: no se encontró al jugador.");
+            return;
+        }
+
+        EnemyConfiguration config = enemy;
         int spawned = 0;
 
         for (int i = 0; i < count; i++)
@@ -62,8 +67,7 @@ public static class SandboxCommands
 
     public static void GrantLevels(int levels)
     {
-        SandboxBootstrapper sandbox = SandboxBootstrapper.Instance;
-        PlayerExperience experience = sandbox != null ? sandbox.PlayerExperience : Object.FindFirstObjectByType<PlayerExperience>();
+        PlayerExperience experience = Object.FindFirstObjectByType<PlayerExperience>();
 
         if (experience == null)
         {
@@ -84,8 +88,7 @@ public static class SandboxCommands
 
     public static void GrantExperience(int amount)
     {
-        SandboxBootstrapper sandbox = SandboxBootstrapper.Instance;
-        PlayerExperience experience = sandbox != null ? sandbox.PlayerExperience : Object.FindFirstObjectByType<PlayerExperience>();
+        PlayerExperience experience = Object.FindFirstObjectByType<PlayerExperience>();
 
         if (experience == null) return;
 
@@ -169,8 +172,7 @@ public static class SandboxCommands
 
     public static void ToggleInvulnerable()
     {
-        SandboxBootstrapper sandbox = SandboxBootstrapper.Instance;
-        PlayerHealth health = sandbox != null ? sandbox.PlayerHealth : Object.FindFirstObjectByType<PlayerHealth>();
+        PlayerHealth health = Object.FindFirstObjectByType<PlayerHealth>();
 
         if (health == null)
         {
