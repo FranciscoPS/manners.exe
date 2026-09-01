@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74b8822ce7aa54cc8abe370e95197f75, type: 3}
+  m_Name: Synergy_CryoField
+  m_EditorClassIdentifier: Assembly-CSharp::SynergyData
+  synergyName: "\xC1rea Criog\xE9nica"
+  description: "Un \xE1rea que se mueve contigo ralentiza y da\xF1a levemente a los
+    enemigos que la tocan."
+  icon: {fileID: 0}
+  requiredUpgradeA: 3
+  requiredLevelA: 5
+  requiredUpgradeB: 4
+  requiredLevelB: 5
+  effectPrefab: {fileID: 4644894923186697655, guid: 9cab676ecf98944a4a38135dd3709a13, type: 3}
+  effectConfig: {fileID: 11400000, guid: 632be6e0782b14a148f9fce116404800, type: 2}

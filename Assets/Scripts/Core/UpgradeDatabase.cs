@@ -34,6 +34,18 @@ public class UpgradeDatabase : ScriptableObject
         }
     }
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+    }
+
+    public static void OverrideInstance(UpgradeDatabase database)
+    {
+        if (database == null) return;
+        instance = database;
+    }
+
     public List<UpgradeData> GetRandomUpgrades(Dictionary<UpgradeType, int> currentUpgradeLevels, int playerLevel)
     {
         List<UpgradeData> selectedUpgrades = new List<UpgradeData>();

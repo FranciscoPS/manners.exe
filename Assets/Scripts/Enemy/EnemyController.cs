@@ -33,6 +33,9 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     private Vector3 separation = Vector3.zero;
 
+    private float slowMultiplier = 1f;
+    private float slowEndTime = -1f;
+
     [Header("Movement")]
     [Tooltip("Distancia a la que el enemigo se detiene alrededor del jugador. Evita que todos converjan en el mismo punto.")]
     [SerializeField] private float attackRadius = 1.5f;
@@ -52,6 +55,17 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     public bool WantsSeparation => IsActive && !isKnockedBack;
 
     public void SetSeparation(Vector3 value) => separation = value;
+
+    public void ApplySlow(float multiplier, float duration)
+    {
+        slowMultiplier = Mathf.Clamp01(multiplier);
+        slowEndTime = Time.time + duration;
+    }
+
+    private float CurrentSpeedMultiplier()
+    {
+        return Time.time < slowEndTime ? slowMultiplier : 1f;
+    }
 
     public void SetStats(float newMoveSpeed, float newContactDamage)
     {
@@ -101,6 +115,9 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         knockbackVelocity = Vector3.zero;
 
         separation = Vector3.zero;
+
+        slowMultiplier = 1f;
+        slowEndTime = -1f;
 
         isDetouring       = false;
         stuckTimer        = 0f;
@@ -161,6 +178,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (useNavMesh && agent != null && agent.isOnNavMesh)
         {
+            agent.speed = moveSpeed * CurrentSpeedMultiplier();
+
             stuckTimer += deltaTime;
             if (stuckTimer >= StuckCheckInterval)
             {
@@ -229,11 +248,12 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (!useNavMesh && rb != null && player != null)
         {
+            float currentSpeed = moveSpeed * CurrentSpeedMultiplier();
             Vector3 direction = (player.position - transform.position).normalized;
             rb.linearVelocity = new Vector3(
-                direction.x * moveSpeed + separation.x,
+                direction.x * currentSpeed + separation.x,
                 rb.linearVelocity.y,
-                direction.z * moveSpeed + separation.z);
+                direction.z * currentSpeed + separation.z);
         }
     }
 

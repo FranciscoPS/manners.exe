@@ -24,6 +24,12 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
     public bool IsDead => isDead;
+    public bool IsInvulnerable => testInvulnerable;
+
+    public void SetInvulnerable(bool value)
+    {
+        testInvulnerable = value;
+    }
 
     private int consecutiveHits = 0;
     private float lastHitTime = -999f;
