@@ -14,9 +14,9 @@ public class CryoFieldConfig : SynergyEffectConfig
     public float tickInterval = 1f;
 
     [Header("Visual")]
-    [Tooltip("Si se asigna, se instancia este prefab (VFX o modelo) como hijo del jugador en vez de la esfera generada por código. Tú controlas su escala/forma; no se reescala automáticamente según 'Radius'.")]
+    [Tooltip("Si se asigna, se instancia este prefab (VFX o modelo) como hijo del jugador en vez de la esfera generada por código, centrado en el mismo punto (el origen del jugador). Tú controlas su escala/forma; no se reescala automáticamente según 'Radius'.")]
     public GameObject visualPrefabOverride;
-    [Tooltip("Color de la esfera de prueba generada por código (apoyada en el piso, centrada en el jugador). Solo se usa si 'Visual Prefab Override' está vacío.")]
+    [Tooltip("Color de la esfera de prueba generada por código. Está centrada exactamente en el origen del jugador (sin offset vertical). Solo se usa si 'Visual Prefab Override' está vacío.")]
     public Color visualColor = new Color(0.4f, 0.85f, 1f, 0.35f);
 
     public override void ApplyTo(GameObject effectInstance)

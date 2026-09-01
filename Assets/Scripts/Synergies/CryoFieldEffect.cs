@@ -96,6 +96,6 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
             return;
         }
 
-        SynergyVisualUtility.CreateSphere("CryoVisual", transform, new Vector3(0f, Config.radius, 0f), Config.radius * 2f, Config.visualColor);
+        SynergyVisualUtility.CreateSphere("CryoVisual", transform, Vector3.zero, Config.radius * 2f, Config.visualColor);
     }
 }

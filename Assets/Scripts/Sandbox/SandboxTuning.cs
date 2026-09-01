@@ -5,6 +5,13 @@ using UnityEngine;
 [DefaultExecutionOrder(-5000)]
 public class SandboxTuning : MonoBehaviour
 {
+    public enum TutorialMode
+    {
+        UsarConfigDeProduccion,
+        Desactivado,
+        ForzarSiempre
+    }
+
     [System.Serializable]
     public class UpgradeTypeLevel
     {
@@ -28,6 +35,10 @@ public class SandboxTuning : MonoBehaviour
     [SerializeField] private bool startInvulnerable = false;
     [Tooltip("Vida extra añadida al máximo del jugador definido en GameBalanceConfig (ajuste rápido sin tener que abrir ese asset).")]
     [SerializeField] private float startingHealthBonus = 0f;
+
+    [Header("=== TUTORIAL ===")]
+    [Tooltip("Usar config de producción: se comporta igual que en CityTest (respeta si ya lo completaste antes).\nDesactivado: nunca se muestra en el sandbox.\nForzar siempre: se muestra siempre, aunque ya lo hayas completado antes.")]
+    [SerializeField] private TutorialMode tutorialMode = TutorialMode.Desactivado;
 
     [Header("=== SINERGIAS ===")]
     [Tooltip("Apaga esto para probar el juego sin ninguna sinergia, aunque se alcancen los niveles requeridos.")]
@@ -88,6 +99,24 @@ public class SandboxTuning : MonoBehaviour
         {
             SandboxLog.Skipped("SynergyDatabase: usando el asset de producción (Resources/SynergyDatabase).");
         }
+
+        ConfigureTutorial();
+    }
+
+    private void ConfigureTutorial()
+    {
+        if (tutorialMode == TutorialMode.UsarConfigDeProduccion)
+        {
+            SandboxLog.Skipped("Tutorial: usando TutorialConfig de producción (respeta si ya lo completaste antes).");
+            return;
+        }
+
+        TutorialConfig overrideConfig = ScriptableObject.CreateInstance<TutorialConfig>();
+        overrideConfig.SetTutorialEnabled(tutorialMode == TutorialMode.ForzarSiempre);
+        overrideConfig.SetForceShowEveryRun(tutorialMode == TutorialMode.ForzarSiempre);
+
+        TutorialConfig.OverrideInstance(overrideConfig);
+        SandboxLog.Ok($"Tutorial: {tutorialMode}.");
     }
 
     private void Start()
