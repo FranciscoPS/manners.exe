@@ -38,6 +38,7 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject experienciaPanel;
     [SerializeField] private GameObject enemigosPanel;
     [SerializeField] private GameObject mejorasPanel;
+    [SerializeField] private GameObject sinergiasPanel;
 
     [Header("Normal SubScreens")]
     [SerializeField] private GameObject rpPanel;
@@ -96,7 +97,9 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.HelpMovimiento, movimientoPanel },
             { MenuScreen.HelpExperiencia, experienciaPanel },
             { MenuScreen.HelpEnemigos, enemigosPanel },
-            { MenuScreen.HelpMejoras, mejorasPanel }
+            { MenuScreen.HelpMejoras, mejorasPanel },
+
+            {MenuScreen.HelpSinergias, sinergiasPanel}
         };
 
         foreach (var screen in screenDictionary.Values)
@@ -140,7 +143,8 @@ public class MainMenuUIManager : MonoBehaviour
         return screen == MenuScreen.HelpMovimiento
             || screen == MenuScreen.HelpExperiencia
             || screen == MenuScreen.HelpEnemigos
-            || screen == MenuScreen.HelpMejoras;
+            || screen == MenuScreen.HelpMejoras
+            || screen == MenuScreen.HelpSinergias;
     }
 
     private bool IsUpgradesSubscreen(MenuScreen screen)
@@ -623,4 +627,6 @@ public enum MenuScreen
     UpgradesPremium_KB,
     UpgradesPremium_EX,
     UpgradesPremium_MLS,
+
+    HelpSinergias,
 }
