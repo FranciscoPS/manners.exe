@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 {
+    private const float SlowRefreshWindow = 0.3f;
+
     private CryoFieldConfig config;
     private Transform player;
     private float tickTimer;
@@ -57,9 +59,13 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     {
         if (player == null) return;
 
+        bool applyDamageThisFrame = false;
         tickTimer -= deltaTime;
-        if (tickTimer > 0f) return;
-        tickTimer = Config.tickInterval;
+        if (tickTimer <= 0f)
+        {
+            tickTimer = Config.tickInterval;
+            applyDamageThisFrame = true;
+        }
 
         Vector3 center = player.position;
         List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
@@ -72,11 +78,12 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
             if ((enemy.transform.position - center).sqrMagnitude > radiusSqr) continue;
 
-            EnemyController controller = enemy.GetComponent<EnemyController>();
+            EnemyController controller = enemy.Controller;
             if (controller != null)
-                controller.ApplySlow(Config.slowMultiplier, Config.tickInterval * 1.5f);
+                controller.ApplySlow(Config.slowMultiplier, SlowRefreshWindow);
 
-            enemy.TakeDamage(Config.damagePerTick);
+            if (applyDamageThisFrame)
+                enemy.TakeDamage(Config.damagePerTick);
         }
     }
 
@@ -89,6 +96,6 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
             return;
         }
 
-        SynergyVisualUtility.CreateFlatDisc("CryoVisual", transform, new Vector3(0f, 0.05f, 0f), Config.radius * 2f, Config.visualColor);
+        SynergyVisualUtility.CreateSphere("CryoVisual", transform, new Vector3(0f, Config.radius, 0f), Config.radius * 2f, Config.visualColor);
     }
 }

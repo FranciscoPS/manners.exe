@@ -7,6 +7,10 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     private Transform player;
     private float pulseTimer;
 
+    private bool expanding;
+    private float expandTimer;
+    private GameObject proceduralVisual;
+
     private readonly List<EnemyHealth> frozenBuffer = new List<EnemyHealth>();
     private readonly HashSet<EnemyHealth> frozenSet = new HashSet<EnemyHealth>();
 
@@ -56,22 +60,52 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     {
         if (player == null) return;
 
+        if (expanding)
+        {
+            UpdateExpansion(deltaTime);
+            return;
+        }
+
         pulseTimer -= deltaTime;
         if (pulseTimer > 0f) return;
         pulseTimer = Config.interval;
 
-        Pulse();
+        StartPulse();
     }
 
-    private void Pulse()
+    private void StartPulse()
     {
         frozenSet.Clear();
         frozenBuffer.Clear();
 
+        expanding = true;
+        expandTimer = 0f;
+
+        SpawnVisual();
+    }
+
+    private void UpdateExpansion(float deltaTime)
+    {
+        expandTimer += deltaTime;
+        float t = Config.expandDuration > 0f ? Mathf.Clamp01(expandTimer / Config.expandDuration) : 1f;
+        float currentRadius = Mathf.Lerp(0f, Config.radius, t);
+
+        UpdateVisualScale(currentRadius);
+        CatchWavefront(currentRadius);
+
+        if (t >= 1f)
+        {
+            expanding = false;
+            PropagateChain();
+            FinishVisual();
+        }
+    }
+
+    private void CatchWavefront(float radius)
+    {
         Vector3 center = player.position;
         List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
-        float radiusSqr = Config.radius * Config.radius;
-        float chainRadiusSqr = Config.chainRadius * Config.chainRadius;
+        float radiusSqr = radius * radius;
 
         for (int i = 0; i < enemies.Count; i++)
         {
@@ -81,6 +115,12 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
             if ((enemy.transform.position - center).sqrMagnitude <= radiusSqr)
                 Freeze(enemy);
         }
+    }
+
+    private void PropagateChain()
+    {
+        List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
+        float chainRadiusSqr = Config.chainRadius * Config.chainRadius;
 
         int cursor = 0;
         while (cursor < frozenBuffer.Count)
@@ -100,8 +140,6 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
                     Freeze(candidate);
             }
         }
-
-        SpawnVisual(center);
     }
 
     private void Freeze(EnemyHealth enemy)
@@ -109,20 +147,38 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         if (!frozenSet.Add(enemy)) return;
         frozenBuffer.Add(enemy);
 
-        EnemyController controller = enemy.GetComponent<EnemyController>();
+        EnemyController controller = enemy.Controller;
         if (controller != null)
             controller.ApplySlow(0f, Config.freezeDuration);
     }
 
-    private void SpawnVisual(Vector3 center)
+    private void SpawnVisual()
     {
         if (Config.visualPrefabOverride != null)
         {
-            Instantiate(Config.visualPrefabOverride, center, Quaternion.identity);
+            Instantiate(Config.visualPrefabOverride, player.position, Quaternion.identity);
+            proceduralVisual = null;
             return;
         }
 
-        GameObject ring = SynergyVisualUtility.CreateFlatDisc("EmpRingVisual", null, center + Vector3.up * 0.05f, Config.radius * 2f, Config.ringColor);
-        Destroy(ring, Config.ringLifetime);
+        proceduralVisual = SynergyVisualUtility.CreateFlatDisc("EmpRingVisual", null, player.position + Vector3.up * 0.05f, 0.02f, Config.ringColor);
+    }
+
+    private void UpdateVisualScale(float radius)
+    {
+        if (proceduralVisual == null) return;
+
+        proceduralVisual.transform.position = new Vector3(player.position.x, player.position.y + 0.05f, player.position.z);
+
+        float diameter = Mathf.Max(0.02f, radius * 2f);
+        proceduralVisual.transform.localScale = new Vector3(diameter, proceduralVisual.transform.localScale.y, diameter);
+    }
+
+    private void FinishVisual()
+    {
+        if (proceduralVisual == null) return;
+
+        Destroy(proceduralVisual, Config.ringLifetime);
+        proceduralVisual = null;
     }
 }

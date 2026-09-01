@@ -40,8 +40,12 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 
     private TextMeshProUGUI headerText;
     private TextMeshProUGUI footerText;
+    private TextMeshProUGUI synergiesSectionTitle;
     private readonly List<UpgradeRow> upgradeRows = new List<UpgradeRow>();
     private readonly List<SynergyRow> synergyRows = new List<SynergyRow>();
+
+    private PlayerHealth cachedPlayerHealth;
+    private PlayerExperience cachedPlayerExperience;
 
     private float panelTimer;
     private float consoleTimer;
@@ -69,7 +73,10 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             PlayerStatsManager.Instance.OnUpgradeApplied += HandleUpgradeApplied;
 
         if (SynergyManager.Instance != null)
+        {
             SynergyManager.Instance.OnSynergyActivated += HandleSynergyActivated;
+            SynergyManager.Instance.OnSynergyDeactivated += HandleSynergyDeactivated;
+        }
     }
 
     private void OnDisable()
@@ -84,7 +91,10 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             PlayerStatsManager.Instance.OnUpgradeApplied -= HandleUpgradeApplied;
 
         if (SynergyManager.Instance != null)
+        {
             SynergyManager.Instance.OnSynergyActivated -= HandleSynergyActivated;
+            SynergyManager.Instance.OnSynergyDeactivated -= HandleSynergyDeactivated;
+        }
     }
 
     public void OnUpdate(float deltaTime)
@@ -94,6 +104,8 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             float instantFps = 1f / deltaTime;
             smoothedFps = smoothedFps <= 0f ? instantFps : Mathf.Lerp(smoothedFps, instantFps, 0.1f);
         }
+
+        EnsurePlayerCache();
 
         panelTimer -= deltaTime;
         if (panelTimer <= 0f)
@@ -116,6 +128,17 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 
         panelRoot.SetActive(!panelRoot.activeSelf);
         SandboxLog.Command($"Panel de debug: {(panelRoot.activeSelf ? "visible" : "oculto")}");
+    }
+
+    private void EnsurePlayerCache()
+    {
+        if (cachedPlayerHealth != null) return;
+
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject == null) return;
+
+        cachedPlayerHealth = playerObject.GetComponent<PlayerHealth>();
+        cachedPlayerExperience = playerObject.GetComponent<PlayerExperience>();
     }
 
     private void BuildLayout(Transform parent)
@@ -141,7 +164,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             upgradeRows.Add(new UpgradeRow { type = types[i], label = label, value = value });
         }
 
-        CreateSectionTitle(parent, "SINERGIAS");
+        synergiesSectionTitle = CreateSectionTitle(parent, "SINERGIAS");
         List<SynergyData> synergies = SynergyDatabase.Instance != null ? SynergyDatabase.Instance.allSynergies : null;
         if (synergies != null)
         {
@@ -160,8 +183,17 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 
     private void RefreshPanel()
     {
-        if (headerText != null) headerText.text = SandboxReportBuilder.BuildHeader(smoothedFps);
+        if (headerText != null) headerText.text = SandboxReportBuilder.BuildHeader(smoothedFps, cachedPlayerHealth, cachedPlayerExperience);
         if (footerText != null) footerText.text = SandboxReportBuilder.BuildFooter();
+
+        SynergyManager synergyManager = SynergyManager.Instance;
+
+        if (synergiesSectionTitle != null)
+        {
+            bool enabled = synergyManager == null || synergyManager.SynergiesEnabled;
+            synergiesSectionTitle.text = enabled ? "SINERGIAS" : "SINERGIAS (desactivadas)";
+            synergiesSectionTitle.color = enabled ? ColorSectionTitle : ColorInactive;
+        }
 
         PlayerStatsManager stats = PlayerStatsManager.Instance;
         for (int i = 0; i < upgradeRows.Count; i++)
@@ -174,7 +206,6 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             row.label.color = level > 0 ? Color.white : ColorLabelDim;
         }
 
-        SynergyManager synergyManager = SynergyManager.Instance;
         for (int i = 0; i < synergyRows.Count; i++)
         {
             SynergyRow row = synergyRows[i];
@@ -202,7 +233,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 
     private void LogFullReport()
     {
-        string header = SandboxReportBuilder.BuildHeader(smoothedFps).Replace("\n", $"\n{SandboxLog.Prefix} ").TrimEnd();
+        string header = SandboxReportBuilder.BuildHeader(smoothedFps, cachedPlayerHealth, cachedPlayerExperience).Replace("\n", $"\n{SandboxLog.Prefix} ").TrimEnd();
         string footer = SandboxReportBuilder.BuildFooter().Replace("\n", $"\n{SandboxLog.Prefix} ").TrimEnd();
 
         Debug.Log($"{SandboxLog.Prefix} ══ INFORME ══\n{SandboxLog.Prefix} {header}\n" +
@@ -227,6 +258,11 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
     private void HandleSynergyActivated(SynergyData synergy)
     {
         SandboxLog.Info($"SINERGIA desbloqueada: {synergy.synergyName}");
+    }
+
+    private void HandleSynergyDeactivated(SynergyData synergy)
+    {
+        SandboxLog.Info($"SINERGIA desactivada: {synergy.synergyName}");
     }
 
     private void HandleChestSpawned()
@@ -267,7 +303,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         text.fontSize = size;
         text.fontStyle = style;
         text.color = color;
-        text.enableWordWrapping = true;
+        text.textWrappingMode = TextWrappingModes.Normal;
         text.alignment = TextAlignmentOptions.TopLeft;
 
         LayoutElement element = obj.AddComponent<LayoutElement>();
@@ -276,11 +312,12 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         return text;
     }
 
-    private void CreateSectionTitle(Transform parent, string text)
+    private TextMeshProUGUI CreateSectionTitle(Transform parent, string text)
     {
         TextMeshProUGUI title = CreateText(parent, "Section_" + text, 14f, FontStyles.Bold, ColorSectionTitle);
         title.text = text;
         title.margin = new Vector4(0f, 8f, 0f, 2f);
+        return title;
     }
 
     private (TextMeshProUGUI, TextMeshProUGUI) CreateRow(Transform parent, string labelText)
@@ -313,7 +350,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         value.fontStyle = FontStyles.Bold;
         value.color = Color.white;
         value.alignment = TextAlignmentOptions.MidlineLeft;
-        value.enableWordWrapping = false;
+        value.textWrappingMode = TextWrappingModes.NoWrap;
         LayoutElement valueElement = valueObj.AddComponent<LayoutElement>();
         valueElement.flexibleWidth = 1f;
 
