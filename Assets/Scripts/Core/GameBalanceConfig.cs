@@ -49,6 +49,18 @@ public class GameBalanceConfig : ScriptableObject
         }
     }
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+    }
+
+    public static void OverrideInstance(GameBalanceConfig config)
+    {
+        if (config == null) return;
+        instance = config;
+    }
+
     [Header("=== INITIAL PLAYER STATS ===")]
     [SerializeField] private float playerMaxHealth = 100f;
     [SerializeField] private float playerBaseDamage = 10f;

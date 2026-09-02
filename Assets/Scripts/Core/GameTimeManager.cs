@@ -33,6 +33,11 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
 
     public float MatchDurationSeconds => MatchDuration;
 
+    public void SetMatchDuration(float minutes)
+    {
+        matchDurationMinutes = Mathf.Max(0.1f, minutes);
+    }
+
     public bool IsActive => isGameActive && this != null && enabled;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

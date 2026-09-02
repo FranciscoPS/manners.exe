@@ -1,0 +1,192 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfe87f8a1ed8d4c57a82fcb812783948, type: 3}
+  m_Name: SandboxConfig
+  m_EditorClassIdentifier: Assembly-CSharp::SandboxConfig
+  balanceOverride: {fileID: 11400000, guid: 25c6ad9476bbc4dafbfddc8a2cac1ab6, type: 2}
+  upgradeDatabaseOverride: {fileID: 11400000, guid: ba5e3bc2858e24167b54ca418e8154a5, type: 2}
+  environmentMode: 0
+  arenaSize: 120
+  groundMaterial: {fileID: 0}
+  createInvisibleWalls: 1
+  wallHeight: 12
+  obstacles:
+    prefabs:
+    - {fileID: 5746690754325058623, guid: 98fd0aedb82314a488f7a3f398c4ee4a, type: 3}
+    - {fileID: 1442248747628336631, guid: 81ba10d4367917e4b876f115747a158c, type: 3}
+    - {fileID: 1796849577866718654, guid: ba6d7f126ef5bdc41ac577a8e3ddd896, type: 3}
+    - {fileID: 490364456727804982, guid: 76039c6e370d9514fb41625e1f7dd600, type: 3}
+    count: 20
+    innerRadius: 12
+    outerRadius: 42
+    uniformScale: 2
+    randomRotation: 1
+  arenaSeed: 12345
+  environmentPrefab: {fileID: 0}
+  additiveSceneName: CityTest
+  additiveKeepRoots:
+  - MAP
+  - Directional Light
+  - Global Volume
+  playerPrefab: {fileID: 8682602881796574523, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+  playerSpawnPosition: {x: 0, y: 1, z: 0}
+  startInvulnerable: 0
+  createCamera: 1
+  cameraOffset: {x: 0, y: 26, z: -13}
+  cameraPitch: 62
+  cameraFieldOfView: 55
+  cameraDamping: 8
+  pools:
+  - poolType: 0
+    prefabs:
+    - {fileID: 940807850928125033, guid: 027cefd3872f13243ac1a91e98e446f9, type: 3}
+    prefab: {fileID: 940807850928125033, guid: 027cefd3872f13243ac1a91e98e446f9, type: 3}
+    prewarmCount: 200
+    preventGrow: 0
+    defaultCapacity: 200
+    maxSize: 400
+  - poolType: 1
+    prefabs:
+    - {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
+    prefab: {fileID: 8253307167162826837, guid: c47d2f1ecd77e5e44b4c0cf125d1fac4, type: 3}
+    prewarmCount: 300
+    preventGrow: 0
+    defaultCapacity: 300
+    maxSize: 600
+  - poolType: 7
+    prefabs:
+    - {fileID: 8585222995538249419, guid: 7538e81a0145545408dbf54b64a33065, type: 3}
+    prefab: {fileID: 8585222995538249419, guid: 7538e81a0145545408dbf54b64a33065, type: 3}
+    prewarmCount: 100
+    preventGrow: 0
+    defaultCapacity: 100
+    maxSize: 200
+  - poolType: 8
+    prefabs:
+    - {fileID: 5155632646051148866, guid: 8a653a602dbbee74e883499f7ff9c6fc, type: 3}
+    prefab: {fileID: 5155632646051148866, guid: 8a653a602dbbee74e883499f7ff9c6fc, type: 3}
+    prewarmCount: 50
+    preventGrow: 0
+    defaultCapacity: 50
+    maxSize: 100
+  - poolType: 3
+    prefabs:
+    - {fileID: 7510731991543114636, guid: 53983ae7b09330a459c31382c6c0d019, type: 3}
+    - {fileID: 1698437683998260501, guid: 7a64f2eb93138094e93ad4fc969440f0, type: 3}
+    - {fileID: 1698437683998260501, guid: beaf862790b1231439e63ee647163bcf, type: 3}
+    prefab: {fileID: 7510731991543114636, guid: 53983ae7b09330a459c31382c6c0d019, type: 3}
+    prewarmCount: 150
+    preventGrow: 0
+    defaultCapacity: 150
+    maxSize: 300
+  - poolType: 4
+    prefabs:
+    - {fileID: 7510731991543114636, guid: 77bbd28b56893a64ebcbdee2388feb89, type: 3}
+    - {fileID: 262222577368134556, guid: cbc760f09a892b84bbe5308d09d94346, type: 3}
+    - {fileID: 262222577368134556, guid: eac3f1c65acbeef4fa74ba3211c6d200, type: 3}
+    prefab: {fileID: 7510731991543114636, guid: 77bbd28b56893a64ebcbdee2388feb89, type: 3}
+    prewarmCount: 150
+    preventGrow: 0
+    defaultCapacity: 150
+    maxSize: 300
+  spawnRing:
+    count: 8
+    radius: 30
+    maxEnemiesPerSpawn: 4
+    spawnCooldown: 2
+    spawnRadius: 3
+    useNavMesh: 0
+    showSpawnWarning: 1
+    warningDuration: 1
+  waveQueue:
+  - {fileID: 11400000, guid: bf426c68814e940d19817cdc3c21a5c9, type: 2}
+  - {fileID: 11400000, guid: cb90996ca97ca420c9b695d4c6625fc4, type: 2}
+  - {fileID: 11400000, guid: 06cedfa87a3584a85ac2f69ea7e3b0a2, type: 2}
+  - {fileID: 11400000, guid: b47b520872981469cb3674333ccafc1e, type: 2}
+  - {fileID: 11400000, guid: a5bac86eadf444a01a69d47f4ecc0e4b, type: 2}
+  - {fileID: 11400000, guid: ea64ab2f79cd94124b84796cc0e177fc, type: 2}
+  - {fileID: 11400000, guid: e781117baf1c54a3897cfc72d8e8f866, type: 2}
+  - {fileID: 11400000, guid: 853586e9436424fe8ab4df0ba13a4123, type: 2}
+  - {fileID: 11400000, guid: eea1e626b66f7449385e896ada0a3046, type: 2}
+  - {fileID: 11400000, guid: 69b1319b3630a4d0abf2594968d163ae, type: 2}
+  timeBetweenWaves: 10
+  autoLoopWaves: 1
+  enableContinuousSpawn: 1
+  continuousSpawnInterval: 3
+  continuousEnemiesPerSpawn: 2
+  continuousEnemyTypes:
+  - {fileID: 11400000, guid: 7aecfe60982974d87bf31c849d6f5eff, type: 2}
+  - {fileID: 11400000, guid: 7a4ae5ff25f144ab581944c218069a8f, type: 2}
+  maxConcurrentEnemies: 120
+  enableEarlyRamp: 0
+  manualBurstEnemy: {fileID: 11400000, guid: 7aecfe60982974d87bf31c849d6f5eff, type: 2}
+  applyEnemyScaling: 0
+  enemyScaling:
+    healthMultiplier: 1
+    moveSpeedMultiplier: 1
+    contactDamageMultiplier: 1
+    orbDropMultiplier: 1
+    overrideCoinDropChance: 0
+    coinDropChance: 0.5
+    overrideDiamondDropChance: 0
+    diamondDropChance: 0.1
+  applyWaveScaling: 0
+  waveScaling:
+    sizeMultiplier: 1
+    paceMultiplier: 1
+    batchMultiplier: 1
+  overrideSeparation: 0
+  separationRadius: 1.1
+  separationMaxSpeed: 2.5
+  separationPushStrength: 3.5
+  separationRecalcInterval: 0.12
+  separationMaxNeighbors: 12
+  matchDurationMinutes: 3
+  startingTimeScale: 1
+  startingCoins: 0
+  startingDiamonds: 0
+  startingUpgrades: []
+  startingPlayerLevels: 0
+  enableChests: 1
+  chestFirstSpawnDelay: 20
+  chestSpawnInterval: 45
+  chestSpawnRadius: 10
+  enableStatusLogger: 1
+  statusReportInterval: 15
+  logLevelUps: 1
+  logUpgrades: 1
+  logWaveEvents: 1
+  logChests: 1
+  enablePerformanceMonitor: 1
+  hotkeys:
+    enabled: 1
+    statusReport: 94
+    grantLevel: 95
+    grantRandomUpgrade: 96
+    grantRandomPremiumUpgrade: 97
+    spawnEnemyBurst: 98
+    killAllEnemies: 99
+    addCurrency: 100
+    toggleInvulnerable: 101
+    toggleSpawning: 102
+    forceFinalRush: 103
+    cycleTimeScale: 104
+    spawnChest: 105
+    reloadSandbox: 65
+    burstAmount: 10
+    burstRadius: 12
+    currencyPerPress: 500
+    timeScaleSteps:
+    - 1
+    - 0.25
+    - 2
+    - 4

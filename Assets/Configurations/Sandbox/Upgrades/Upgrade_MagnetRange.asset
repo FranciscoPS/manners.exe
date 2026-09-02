@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
+  m_Name: Upgrade_MagnetRange
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
+  upgradeName: "Rango magn\xE9tico"
+  description: "Aumenta la distancia desde la que los orbes son atra\xEDdos hacia
+    ti"
+  upgradeType: 4
+  icon: {fileID: 21300000, guid: 2388c55eeb9cde34cb4d6820c6205484, type: 3}
+  baseValue: 30
+  multiplierPerLevel: 1.5
+  maxLevel: 999
+  isPercentage: 1
+  valueSuffix: 
+  isPremium: 0
+  spawnWeight: 40
+  isAvailableInShop: 1
+  shopBaseCost: 100
+  shopCostMultiplier: 1.5
+  shopSpawnWeight: 50

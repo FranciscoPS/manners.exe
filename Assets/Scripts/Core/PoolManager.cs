@@ -423,6 +423,20 @@ public class PoolManager : MonoBehaviour
         }
     }
 
+    public bool TryGetPoolStats(PoolType poolType, out int total, out int available)
+    {
+        if (pools.TryGetValue(poolType, out Pool pool))
+        {
+            total = pool.totalCount;
+            available = pool.inactive.Count;
+            return true;
+        }
+
+        total = 0;
+        available = 0;
+        return false;
+    }
+
     public void PrewarmPool(PoolType poolType, int count)
     {
         if (!pools.TryGetValue(poolType, out Pool pool))

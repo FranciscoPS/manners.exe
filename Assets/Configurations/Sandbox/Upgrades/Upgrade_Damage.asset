@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38d856554659b374a8b72e40e24eb1c6, type: 3}
+  m_Name: Upgrade_Damage
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
+  upgradeName: "M\xF3dulo de da\xF1o"
+  description: "Aumenta tu da\xF1o base"
+  upgradeType: 0
+  icon: {fileID: 21300000, guid: 16b3cbbb22648cb4bb71ceb5855edb00, type: 3}
+  baseValue: 18
+  multiplierPerLevel: 1.8
+  maxLevel: 999
+  isPercentage: 1
+  valueSuffix: 
+  isPremium: 0
+  spawnWeight: 60
+  isAvailableInShop: 1
+  shopBaseCost: 100
+  shopCostMultiplier: 1.5
+  shopSpawnWeight: 50

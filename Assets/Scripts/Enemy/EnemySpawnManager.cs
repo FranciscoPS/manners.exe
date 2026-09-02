@@ -80,6 +80,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1;
+    public bool IsSpawnBlocked => spawnBlocked;
 
     public bool IsActive => this != null && enabled && gameObject.activeInHierarchy;
 
@@ -551,6 +552,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         spawnBlocked = blocked;
     }
+
 
     public void SetWaveMultiplier(float multiplier)
     {
