@@ -42,6 +42,10 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     [SerializeField] protected float updateInterval = 0.1f;
     [SerializeField] protected float distantCullDistance = 50f;
 
+    [Header("Visual Juice")]
+    [Tooltip("Velocidad de rotación (grados/seg) del pickup sobre su propio eje mientras está en el mundo.")]
+    [SerializeField] protected float spinSpeed = 140f;
+
     protected Transform player;
     protected bool isMovingToPlayer = false;
     protected float currentSpeed = 0f;
@@ -84,6 +88,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         updateOffset = Random.Range(0f, updateInterval);
         nextUpdateTime = Time.time + updateOffset;
+
+        transform.Rotate(Vector3.up, Random.Range(0f, 360f), Space.Self);
 
         if (!activeCollectibles.Contains(this))
             activeCollectibles.Add(this);
@@ -143,6 +149,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     public void OnUpdate(float deltaTime)
     {
         if (collected) return;
+
+        transform.Rotate(Vector3.up, spinSpeed * deltaTime, Space.Self);
 
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;

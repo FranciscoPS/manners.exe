@@ -34,6 +34,10 @@ public class LevelUpManager : MonoBehaviour
     [Header("Rainbow Text Settings")]
     [SerializeField] private float colorSpeed = 1f;
 
+    [Header("Juice")]
+    [Tooltip("Retraso entre la aparición de cada card de mejora, para un efecto de cascada.")]
+    [SerializeField] private float cardIntroStagger = 0.07f;
+
     private bool levelUpActive = false;
     private int currentPlayerLevel = 1;
     private UpgradeMode currentMode = UpgradeMode.LevelUp;
@@ -141,7 +145,10 @@ public class LevelUpManager : MonoBehaviour
         Time.timeScale = 0f;
 
         if (levelUpText != null)
+        {
             levelUpText.text = $"Nivel {newLevel}!";
+            levelUpText.rectTransform.PopIn();
+        }
 
         if (cooldownWarningText != null)
         {
@@ -194,6 +201,7 @@ public class LevelUpManager : MonoBehaviour
                     ? currentLevels[selectedUpgrades[0].upgradeType]
                     : 0;
                 upgradeButton1.Setup(selectedUpgrades[0], currentLevel, mode);
+                upgradeButton1.PlayIntroAnimation(0f);
             }
             else
             {
@@ -209,6 +217,7 @@ public class LevelUpManager : MonoBehaviour
                     ? currentLevels[selectedUpgrades[1].upgradeType]
                     : 0;
                 upgradeButton2.Setup(selectedUpgrades[1], currentLevel, mode);
+                upgradeButton2.PlayIntroAnimation(cardIntroStagger);
             }
             else
             {
@@ -224,6 +233,7 @@ public class LevelUpManager : MonoBehaviour
                     ? currentLevels[selectedUpgrades[2].upgradeType]
                     : 0;
                 upgradeButton3.Setup(selectedUpgrades[2], currentLevel, mode);
+                upgradeButton3.PlayIntroAnimation(cardIntroStagger * 2f);
             }
             else
             {
@@ -302,7 +312,10 @@ public class LevelUpManager : MonoBehaviour
         Time.timeScale = 0f;
 
         if (levelUpText != null)
+        {
             levelUpText.text = "Tienda";
+            levelUpText.rectTransform.PopIn();
+        }
 
         // Mostrar sólo la instrucción de la tienda y ocultar la del cofre
         if (levelUpPanel != null)
@@ -353,7 +366,10 @@ public class LevelUpManager : MonoBehaviour
         Time.timeScale = 0f;
 
         if (levelUpText != null)
+        {
             levelUpText.text = "\u00a1Cofre!";
+            levelUpText.rectTransform.PopIn();
+        }
 
         if (cooldownWarningText != null)
             cooldownWarningText.gameObject.SetActive(false);
@@ -383,6 +399,7 @@ public class LevelUpManager : MonoBehaviour
             if (upgradeButton1 != null)
             {
                 upgradeButton1.SetupChest(chestItem);
+                upgradeButton1.PlayIntroAnimation(0f);
             }
 
             if (upgradeButton2 != null)
@@ -398,8 +415,15 @@ public class LevelUpManager : MonoBehaviour
 
         if (upgradeButton1 != null)
         {
-            if (items.Count > 0) upgradeButton1.SetupChest(items[0]);
-            else upgradeButton1.gameObject.SetActive(false);
+            if (items.Count > 0)
+            {
+                upgradeButton1.SetupChest(items[0]);
+                upgradeButton1.PlayIntroAnimation(0f);
+            }
+            else
+            {
+                upgradeButton1.gameObject.SetActive(false);
+            }
         }
 
         if (upgradeButton2 != null)
