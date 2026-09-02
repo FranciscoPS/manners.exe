@@ -18,7 +18,6 @@ public class SynergyManager : MonoBehaviour
     private Transform player;
 
     public bool SynergiesEnabled => synergiesEnabled;
-    public IReadOnlyCollection<SynergyData> ActiveSynergies => activeEffects.Keys;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()

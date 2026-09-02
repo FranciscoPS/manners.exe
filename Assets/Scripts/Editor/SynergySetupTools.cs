@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,8 +11,8 @@ public static class SynergySetupTools
     [MenuItem("Tools/Manners/Synergies/Crear sistema de sinergias", false, 20)]
     public static void CreateSynergySystem()
     {
-        EnsureFolder(ConfigFolder);
-        EnsureFolder(PrefabFolder);
+        EditorAssetUtility.EnsureFolder(ConfigFolder);
+        EditorAssetUtility.EnsureFolder(PrefabFolder);
 
         GameObject cryoPrefab = CreateEffectPrefab<CryoFieldEffect>("CryoFieldEffect");
         GameObject laserPrefab = CreateEffectPrefab<LaserBeamEffect>("LaserBeamEffect");
@@ -28,7 +27,7 @@ public static class SynergySetupTools
             UpgradeType.MoveSpeed, 5, UpgradeType.MagnetRange, 5, cryoPrefab, cryoConfig);
 
         SynergyData laser = CreateSynergyData("Synergy_LaserBeam", "Rayo Láser",
-            "Cada cierto tiempo disparas un rayo perforante en línea recta hacia donde miras.",
+            "Cada cierto tiempo disparas al piso donde está el enemigo más cercano; el punto de impacto se desliza hacia afuera en línea recta, con el origen del rayo fijo en ti.",
             UpgradeType.AttackRange, 5, UpgradeType.AttackSpeed, 5, laserPrefab, laserConfig);
 
         SynergyData emp = CreateSynergyData("Synergy_EmpPulse", "Pulso Electromagnético",
@@ -102,12 +101,4 @@ public static class SynergySetupTools
         return config;
     }
 
-    private static void EnsureFolder(string path)
-    {
-        if (AssetDatabase.IsValidFolder(path)) return;
-
-        string parent = Path.GetDirectoryName(path).Replace('\\', '/');
-        EnsureFolder(parent);
-        AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
-    }
 }

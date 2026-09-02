@@ -9,15 +9,14 @@ using UnityEngine.UI;
 public static class SandboxSetupTools
 {
     private const string SourceScenePath = "Assets/Scenes/CityTest.unity";
-    private const string SandboxFolder = "Assets/Configurations/Sandbox";
-    private const string UpgradesFolder = SandboxFolder + "/Upgrades";
-    private const string EnemiesFolder = SandboxFolder + "/Enemies";
-    private const string WavesFolder = SandboxFolder + "/Waves";
-    private const string BalancePath = SandboxFolder + "/GameBalanceConfig_Sandbox.asset";
-    private const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
-    private const string SynergyDatabasePath = SandboxFolder + "/SynergyDatabase_Sandbox.asset";
-    private const string SynergiesFolder = SandboxFolder + "/Synergies";
-    private const string LegacyConfigPath = SandboxFolder + "/SandboxConfig.asset";
+    internal const string SandboxFolder = "Assets/Configurations/Sandbox";
+    internal const string UpgradesFolder = SandboxFolder + "/Upgrades";
+    internal const string EnemiesFolder = SandboxFolder + "/Enemies";
+    internal const string WavesFolder = SandboxFolder + "/Waves";
+    internal const string BalancePath = SandboxFolder + "/GameBalanceConfig_Sandbox.asset";
+    internal const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
+    internal const string SynergyDatabasePath = SandboxFolder + "/SynergyDatabase_Sandbox.asset";
+    internal const string SynergiesFolder = SandboxFolder + "/Synergies";
     private const string ScenePath = "Assets/Scenes/Sandbox.unity";
 
     private static readonly string[] SourceEnemyConfigs =
@@ -29,12 +28,10 @@ public static class SandboxSetupTools
     [MenuItem("Tools/Manners/Sandbox/1. Crear assets del sandbox", false, 10)]
     public static void CreateSandboxAssets()
     {
-        RemoveLegacyConfigIfPresent();
-
-        EnsureFolder(SandboxFolder);
-        EnsureFolder(UpgradesFolder);
-        EnsureFolder(EnemiesFolder);
-        EnsureFolder(WavesFolder);
+        EditorAssetUtility.EnsureFolder(SandboxFolder);
+        EditorAssetUtility.EnsureFolder(UpgradesFolder);
+        EditorAssetUtility.EnsureFolder(EnemiesFolder);
+        EditorAssetUtility.EnsureFolder(WavesFolder);
 
         CopyBalanceConfig();
         CopyUpgradeDatabase();
@@ -149,7 +146,6 @@ public static class SandboxSetupTools
 
         hotkeysSerialized.ApplyModifiedPropertiesWithoutUndo();
 
-        EditorUtility.SetDirty(sandboxRoot);
         EditorSceneManager.MarkSceneDirty(active);
         EditorSceneManager.SaveScene(active);
 
@@ -294,7 +290,7 @@ public static class SandboxSetupTools
             return null;
         }
 
-        EnsureFolder(SynergiesFolder);
+        EditorAssetUtility.EnsureFolder(SynergiesFolder);
 
         SynergyDatabase copy = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
         if (copy == null)
@@ -348,7 +344,7 @@ public static class SandboxSetupTools
         return copy;
     }
 
-    private static Dictionary<EnemyConfiguration, EnemyConfiguration> LoadEnemyMap()
+    internal static Dictionary<EnemyConfiguration, EnemyConfiguration> LoadEnemyMap()
     {
         Dictionary<EnemyConfiguration, EnemyConfiguration> map = new Dictionary<EnemyConfiguration, EnemyConfiguration>();
 
@@ -362,7 +358,7 @@ public static class SandboxSetupTools
         return map;
     }
 
-    private static Dictionary<WaveData, WaveData> LoadWaveMap()
+    internal static Dictionary<WaveData, WaveData> LoadWaveMap()
     {
         Dictionary<WaveData, WaveData> map = new Dictionary<WaveData, WaveData>();
 
@@ -466,23 +462,6 @@ public static class SandboxSetupTools
         SerializedProperty property = serialized.FindProperty(fieldName);
         if (property != null && value != null)
             property.objectReferenceValue = value;
-    }
-
-    private static void RemoveLegacyConfigIfPresent()
-    {
-        if (AssetDatabase.LoadAssetAtPath<Object>(LegacyConfigPath) == null) return;
-
-        AssetDatabase.DeleteAsset(LegacyConfigPath);
-        Debug.Log($"[SandboxSetup] Eliminado {LegacyConfigPath} (formato antiguo del sandbox procedural, ya no se usa).");
-    }
-
-    private static void EnsureFolder(string path)
-    {
-        if (AssetDatabase.IsValidFolder(path)) return;
-
-        string parent = Path.GetDirectoryName(path).Replace('\\', '/');
-        EnsureFolder(parent);
-        AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
     }
 
     private static void RegisterSceneInBuildSettings()

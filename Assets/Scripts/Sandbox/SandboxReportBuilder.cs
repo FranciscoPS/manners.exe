@@ -4,14 +4,14 @@ using UnityEngine;
 
 public static class SandboxReportBuilder
 {
-    public static string BuildHeader(float fps)
+    public static string BuildHeader(float fps, PlayerHealth health, PlayerExperience experience)
     {
         StringBuilder builder = new StringBuilder(512);
 
         builder.AppendLine($"FPS: {fps:F0}   Time scale: x{Time.timeScale:F2}");
 
         AppendMatch(builder);
-        AppendPlayer(builder);
+        AppendPlayer(builder, health, experience);
         AppendStats(builder);
 
         return builder.ToString();
@@ -82,11 +82,8 @@ public static class SandboxReportBuilder
         builder.AppendLine($"Sesión:   {session}");
     }
 
-    private static void AppendPlayer(StringBuilder builder)
+    private static void AppendPlayer(StringBuilder builder, PlayerHealth health, PlayerExperience experience)
     {
-        PlayerHealth health = Object.FindFirstObjectByType<PlayerHealth>();
-        PlayerExperience experience = Object.FindFirstObjectByType<PlayerExperience>();
-
         if (health == null)
         {
             builder.AppendLine("Jugador:  no encontrado");

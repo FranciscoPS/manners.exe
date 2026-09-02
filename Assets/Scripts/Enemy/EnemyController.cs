@@ -213,7 +213,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         Vector3 direction = player.position - transform.position;
         direction.y = 0f;
 
-        if (direction.sqrMagnitude > 0.001f)
+        if (direction.sqrMagnitude > 0.001f && CurrentSpeedMultiplier() > 0f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
 
