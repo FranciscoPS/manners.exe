@@ -1,16 +1,12 @@
-Shader "UI/SunburstAura"
+Shader "UI/RadialVignette"
 {
     Properties
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
-        _Color ("Tint", Color) = (1,1,1,1)
-        _RayColor ("Ray Color", Color) = (1,1,1,1)
-        _RaySegments ("Ray Segments", Float) = 14
-        _RaySharpness ("Ray Sharpness", Float) = 3
-        _CoreIntensity ("Core Intensity", Float) = 1.1
+        _Color ("Tint", Color) = (0,0,0,1)
+        _InnerRadius ("Inner Radius (clear)", Float) = 0.9
+        _OuterRadius ("Outer Radius (full dark)", Float) = 2.0
         _RectSize ("Rect Size (normalized)", Vector) = (1,1,0,0)
-        _HoleRadius ("Hole Radius", Float) = 0
-        _HoleSoftness ("Hole Softness", Float) = 0.001
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -72,13 +68,9 @@ Shader "UI/SunburstAura"
             };
 
             fixed4 _Color;
-            fixed4 _RayColor;
-            float _RaySegments;
-            float _RaySharpness;
-            float _CoreIntensity;
+            float _InnerRadius;
+            float _OuterRadius;
             float4 _RectSize;
-            float _HoleRadius;
-            float _HoleSoftness;
             float4 _ClipRect;
 
             v2f vert(appdata_t v)
@@ -95,21 +87,12 @@ Shader "UI/SunburstAura"
             {
                 float2 uv = (IN.texcoord - 0.5) * _RectSize.xy;
                 float radius = length(uv) * 2.0;
-                float angle = atan2(uv.y, uv.x);
 
-                float rays = pow(abs(sin(angle * _RaySegments * 0.5)), _RaySharpness);
-                float outerFalloff = saturate(1.0 - radius);
-                float core = saturate(1.0 - radius * 2.2);
-                core = core * core;
-
-                float intensity = saturate(rays * outerFalloff + core * _CoreIntensity);
-
-                float holeMask = smoothstep(_HoleRadius, _HoleRadius + _HoleSoftness, radius);
-                intensity *= holeMask;
+                float t = smoothstep(_InnerRadius, _OuterRadius, radius);
 
                 fixed4 color;
-                color.rgb = _RayColor.rgb;
-                color.a = intensity * _RayColor.a * IN.color.a;
+                color.rgb = _Color.rgb;
+                color.a = t * IN.color.a;
 
                 color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
 

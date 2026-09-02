@@ -11,17 +11,18 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     private RectTransform rectTransform;
     private Tween pulseTween;
     private RadiantAuraVFX aura;
+    private PokemonHoloEffect holo;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
     }
 
-    public void SetPremium(bool premium)
+    public void SetPremium(bool premium, UpgradeMode mode = UpgradeMode.LevelUp)
     {
         if (premium)
         {
-            EnablePremiumEffects();
+            EnablePremiumEffects(mode == UpgradeMode.Shop);
         }
         else
         {
@@ -29,15 +30,45 @@ public class PremiumUpgradeVisuals : MonoBehaviour
         }
     }
 
-    private void EnablePremiumEffects()
+    private void EnablePremiumEffects(bool useHolo)
     {
-        if (aura == null)
+        if (useHolo)
         {
-            aura = CreateAura();
+            if (holo == null)
+            {
+                holo = CreateHolo();
+            }
+
+            holo.Play();
+            aura?.Stop();
+        }
+        else
+        {
+            if (aura == null)
+            {
+                aura = CreateAura();
+            }
+
+            aura.Play();
+            holo?.Stop();
         }
 
-        aura.Play();
         StartPulseAnimation();
+    }
+
+    private PokemonHoloEffect CreateHolo()
+    {
+        GameObject holoObj = new GameObject("HoloFoil", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        holoObj.transform.SetParent(rectTransform, false);
+        holoObj.transform.SetAsLastSibling();
+
+        RectTransform holoRect = holoObj.GetComponent<RectTransform>();
+        holoRect.anchorMin = Vector2.zero;
+        holoRect.anchorMax = Vector2.one;
+        holoRect.offsetMin = Vector2.zero;
+        holoRect.offsetMax = Vector2.zero;
+
+        return holoObj.AddComponent<PokemonHoloEffect>();
     }
 
     private RadiantAuraVFX CreateAura()
@@ -67,10 +98,8 @@ public class PremiumUpgradeVisuals : MonoBehaviour
 
     private void DisablePremiumEffects()
     {
-        if (aura != null)
-        {
-            aura.Stop();
-        }
+        aura?.Stop();
+        holo?.Stop();
 
         StopAnimations();
     }
@@ -102,6 +131,11 @@ public class PremiumUpgradeVisuals : MonoBehaviour
         if (aura != null)
         {
             Destroy(aura.gameObject);
+        }
+
+        if (holo != null)
+        {
+            Destroy(holo.gameObject);
         }
     }
 }

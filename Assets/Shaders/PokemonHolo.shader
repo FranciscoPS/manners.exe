@@ -1,16 +1,14 @@
-Shader "UI/SunburstAura"
+Shader "UI/PokemonHolo"
 {
     Properties
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
-        _RayColor ("Ray Color", Color) = (1,1,1,1)
-        _RaySegments ("Ray Segments", Float) = 14
-        _RaySharpness ("Ray Sharpness", Float) = 3
-        _CoreIntensity ("Core Intensity", Float) = 1.1
-        _RectSize ("Rect Size (normalized)", Vector) = (1,1,0,0)
-        _HoleRadius ("Hole Radius", Float) = 0
-        _HoleSoftness ("Hole Softness", Float) = 0.001
+        _Angle ("Diagonal Angle (rad)", Float) = 0.785398
+        _Frequency ("Band Frequency", Float) = 3
+        _Offset ("Scroll Offset", Float) = 0
+        _Saturation ("Saturation", Float) = 0.9
+        _Intensity ("Sheen Intensity", Float) = 0.55
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -45,7 +43,7 @@ Shader "UI/SunburstAura"
         Lighting Off
         ZWrite Off
         ZTest [unity_GUIZTestMode]
-        Blend SrcAlpha OneMinusSrcAlpha
+        Blend One One
         ColorMask [_ColorMask]
 
         Pass
@@ -72,13 +70,11 @@ Shader "UI/SunburstAura"
             };
 
             fixed4 _Color;
-            fixed4 _RayColor;
-            float _RaySegments;
-            float _RaySharpness;
-            float _CoreIntensity;
-            float4 _RectSize;
-            float _HoleRadius;
-            float _HoleSoftness;
+            float _Angle;
+            float _Frequency;
+            float _Offset;
+            float _Saturation;
+            float _Intensity;
             float4 _ClipRect;
 
             v2f vert(appdata_t v)
@@ -91,29 +87,34 @@ Shader "UI/SunburstAura"
                 return OUT;
             }
 
+            float3 holoHsv2rgb(float h, float s, float v)
+            {
+                float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                float3 p = abs(frac(h.xxx + K.xyz) * 6.0 - K.www);
+                return v * lerp(K.xxx, saturate(p - K.xxx), s);
+            }
+
             fixed4 frag(v2f IN) : SV_Target
             {
-                float2 uv = (IN.texcoord - 0.5) * _RectSize.xy;
-                float radius = length(uv) * 2.0;
-                float angle = atan2(uv.y, uv.x);
+                float2 uv = IN.texcoord;
+                float diag = uv.x * cos(_Angle) + uv.y * sin(_Angle);
 
-                float rays = pow(abs(sin(angle * _RaySegments * 0.5)), _RaySharpness);
-                float outerFalloff = saturate(1.0 - radius);
-                float core = saturate(1.0 - radius * 2.2);
-                core = core * core;
+                float phase = diag * _Frequency + _Offset;
+                float hue = frac(phase);
+                float3 rainbow = holoHsv2rgb(hue, _Saturation, 1.0);
 
-                float intensity = saturate(rays * outerFalloff + core * _CoreIntensity);
+                float band = pow(abs(sin(phase * 3.14159)), 2.0);
 
-                float holeMask = smoothstep(_HoleRadius, _HoleRadius + _HoleSoftness, radius);
-                intensity *= holeMask;
+                float3 color = rainbow * band * _Intensity;
+                float alpha = band * _Intensity * IN.color.a;
 
-                fixed4 color;
-                color.rgb = _RayColor.rgb;
-                color.a = intensity * _RayColor.a * IN.color.a;
+                fixed4 outColor;
+                outColor.rgb = color;
+                outColor.a = alpha;
 
-                color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
+                outColor.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
 
-                return color;
+                return outColor;
             }
             ENDCG
         }

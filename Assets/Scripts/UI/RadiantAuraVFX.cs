@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 
 [RequireComponent(typeof(RectTransform))]
 public class RadiantAuraVFX : MonoBehaviour
@@ -14,6 +13,8 @@ public class RadiantAuraVFX : MonoBehaviour
     [SerializeField] private float secondarySpinSpeedDegPerSec = -11f;
     [SerializeField] private float secondarySizeMultiplier = 0.72f;
     [SerializeField] private float secondaryAlphaMultiplier = 0.55f;
+    [SerializeField] private float holeRadius = 0f;
+    [SerializeField] private float holeSoftness = 0.001f;
 
     [Header("Pulso")]
     [SerializeField] private float pulseSpeed = 1.5f;
@@ -24,24 +25,17 @@ public class RadiantAuraVFX : MonoBehaviour
     [SerializeField] private float colorAlpha = 0.85f;
     [SerializeField] private float colorSaturation = 0.8f;
 
-    [Header("Chispas")]
-    [SerializeField] private bool spawnSparkles = true;
-    [SerializeField] private int sparkleCount = 10;
-    [SerializeField] private float sparkleMinSize = 8f;
-    [SerializeField] private float sparkleMaxSize = 20f;
-    [SerializeField] private float sparkleCycleDuration = 1.6f;
-
     public int RaySegments { get => raySegments; set => raySegments = value; }
     public float SizeMultiplier { get => sizeMultiplier; set => sizeMultiplier = value; }
     public float SpinSpeedDegPerSec { get => spinSpeedDegPerSec; set => spinSpeedDegPerSec = value; }
     public float ColorAlpha { get => colorAlpha; set => colorAlpha = value; }
-    public bool SpawnSparkles { get => spawnSparkles; set => spawnSparkles = value; }
+    public float HoleRadius { get => holeRadius; set => holeRadius = value; }
+    public float HoleSoftness { get => holeSoftness; set => holeSoftness = value; }
 
     [System.NonSerialized] public float SpinMultiplier = 1f;
     [System.NonSerialized] public RectTransform TrackTarget;
 
     private static Texture2D softDotTexture;
-    private static Sprite softDotSprite;
     private static Shader sunburstShader;
 
     private RectTransform rectTransform;
@@ -49,9 +43,6 @@ public class RadiantAuraVFX : MonoBehaviour
     private RectTransform secondaryRay;
     private Material primaryMat;
     private Material secondaryMat;
-    private RectTransform sparkleContainer;
-    private Image[] sparkleImages;
-    private Sequence[] sparkleTweens;
     private float hue;
     private bool playing;
     private bool initialized;
@@ -73,9 +64,6 @@ public class RadiantAuraVFX : MonoBehaviour
 
         BuildRayLayer(out secondaryRay, out secondaryMat, "AuraSecondary", baseSize * sizeMultiplier * secondarySizeMultiplier);
         BuildRayLayer(out primaryRay, out primaryMat, "AuraPrimary", baseSize * sizeMultiplier);
-
-        if (spawnSparkles)
-            BuildSparkles(baseSize * sizeMultiplier * 0.6f);
 
         gameObject.SetActive(false);
     }
@@ -109,6 +97,8 @@ public class RadiantAuraVFX : MonoBehaviour
             mat.SetFloat("_RaySegments", raySegments);
             mat.SetFloat("_RaySharpness", raySharpness);
             mat.SetFloat("_CoreIntensity", coreGlowIntensity);
+            mat.SetFloat("_HoleRadius", holeRadius);
+            mat.SetFloat("_HoleSoftness", Mathf.Max(0.001f, holeSoftness));
 
             float minDim = Mathf.Max(1f, Mathf.Min(size.x, size.y));
             mat.SetVector("_RectSize", new Vector4(size.x / minDim, size.y / minDim, 0f, 0f));
@@ -119,91 +109,15 @@ public class RadiantAuraVFX : MonoBehaviour
         img.color = Color.white;
     }
 
-    private void BuildSparkles(Vector2 area)
-    {
-        GameObject container = new GameObject("AuraSparkles", typeof(RectTransform));
-        container.transform.SetParent(transform, false);
-
-        sparkleContainer = container.GetComponent<RectTransform>();
-        sparkleContainer.anchorMin = sparkleContainer.anchorMax = new Vector2(0.5f, 0.5f);
-        sparkleContainer.pivot = new Vector2(0.5f, 0.5f);
-        sparkleContainer.sizeDelta = area;
-        sparkleContainer.anchoredPosition = Vector2.zero;
-
-        sparkleImages = new Image[sparkleCount];
-        sparkleTweens = new Sequence[sparkleCount];
-
-        for (int i = 0; i < sparkleCount; i++)
-        {
-            GameObject dot = new GameObject("Sparkle", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            dot.transform.SetParent(sparkleContainer, false);
-
-            Image img = dot.GetComponent<Image>();
-            img.sprite = GetOrCreateSoftDotSprite();
-            img.raycastTarget = false;
-            img.color = new Color(1f, 1f, 1f, 0f);
-
-            sparkleImages[i] = img;
-            StartSparkleLoop(i, area);
-        }
-    }
-
-    private void StartSparkleLoop(int index, Vector2 area)
-    {
-        Image img = sparkleImages[index];
-        RectTransform rt = img.rectTransform;
-
-        float delay = Random.Range(0f, sparkleCycleDuration);
-        float duration = sparkleCycleDuration * Random.Range(0.8f, 1.3f);
-        float angle = Random.Range(0f, Mathf.PI * 2f);
-        float maxRadius = Mathf.Min(area.x, area.y) * 0.5f;
-        float radius = Random.Range(maxRadius * 0.2f, maxRadius);
-        Vector2 target = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-        float size = Random.Range(sparkleMinSize, sparkleMaxSize);
-
-        rt.anchoredPosition = target * 0.25f;
-        rt.sizeDelta = Vector2.one * size;
-        rt.localScale = Vector3.one * 0.6f;
-
-        Sequence seq = DOTween.Sequence();
-        seq.AppendInterval(delay);
-        seq.Append(img.DOFade(0.95f, duration * 0.35f));
-        seq.Join(rt.DOAnchorPos(target, duration).SetEase(Ease.OutSine));
-        seq.Join(rt.DOScale(1f, duration * 0.45f).SetEase(Ease.OutBack));
-        seq.Append(img.DOFade(0f, duration * 0.4f));
-        seq.AppendCallback(() =>
-        {
-            rt.anchoredPosition = target * 0.25f;
-            rt.localScale = Vector3.one * 0.6f;
-        });
-        seq.SetLoops(-1);
-        seq.SetUpdate(true);
-        seq.Pause();
-        sparkleTweens[index] = seq;
-    }
-
     public void Play()
     {
         playing = true;
         gameObject.SetActive(true);
-
-        if (sparkleTweens != null)
-        {
-            foreach (Sequence seq in sparkleTweens)
-                seq?.Play();
-        }
     }
 
     public void Stop()
     {
         playing = false;
-
-        if (sparkleTweens != null)
-        {
-            foreach (Sequence seq in sparkleTweens)
-                seq?.Pause();
-        }
-
         gameObject.SetActive(false);
     }
 
@@ -247,28 +161,12 @@ public class RadiantAuraVFX : MonoBehaviour
             secondaryMat.SetColor("_RayColor", secondaryColor);
         }
 
-        if (sparkleImages != null)
-        {
-            for (int i = 0; i < sparkleImages.Length; i++)
-            {
-                if (sparkleImages[i] == null) continue;
-                float currentAlpha = sparkleImages[i].color.a;
-                sparkleImages[i].color = new Color(cycled.r, cycled.g, cycled.b, currentAlpha);
-            }
-        }
-
         float pulse = 1f + Mathf.Sin(Time.unscaledTime * pulseSpeed * Mathf.PI * 2f) * pulseAmount;
         transform.localScale = Vector3.one * pulse;
     }
 
     private void OnDestroy()
     {
-        if (sparkleTweens != null)
-        {
-            foreach (Sequence seq in sparkleTweens)
-                seq?.Kill();
-        }
-
         if (primaryMat != null) Destroy(primaryMat);
         if (secondaryMat != null) Destroy(secondaryMat);
     }
@@ -298,14 +196,5 @@ public class RadiantAuraVFX : MonoBehaviour
         tex.Apply();
         softDotTexture = tex;
         return softDotTexture;
-    }
-
-    internal static Sprite GetOrCreateSoftDotSprite()
-    {
-        if (softDotSprite != null) return softDotSprite;
-
-        Texture2D tex = GetOrCreateSoftDotTexture();
-        softDotSprite = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-        return softDotSprite;
     }
 }

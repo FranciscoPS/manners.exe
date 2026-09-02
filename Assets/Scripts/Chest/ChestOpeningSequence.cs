@@ -89,6 +89,7 @@ public class ChestOpeningSequence : MonoBehaviour
 
         dimOverlay = CreateFullscreenImage("DimOverlay", Color.clear);
         dimOverlay.raycastTarget = false;
+        SetupVignetteMaterial(dimOverlay);
 
         GameObject auraObj = new GameObject("Aura", typeof(RectTransform));
         auraObj.transform.SetParent(canvasRoot.transform, false);
@@ -101,7 +102,8 @@ public class ChestOpeningSequence : MonoBehaviour
         aura = auraObj.AddComponent<RadiantAuraVFX>();
         aura.SizeMultiplier = 1f;
         aura.RaySegments = 18;
-        aura.SpawnSparkles = true;
+        aura.HoleRadius = 0.5f;
+        aura.HoleSoftness = 0.35f;
         aura.Initialize(auraRect);
 
         BuildPromptText();
@@ -110,6 +112,22 @@ public class ChestOpeningSequence : MonoBehaviour
         flashOverlay.raycastTarget = false;
 
         canvasRoot.SetActive(false);
+    }
+
+    private static void SetupVignetteMaterial(Image target)
+    {
+        Shader shader = Shader.Find("UI/RadialVignette");
+        if (shader == null) return;
+
+        Material mat = new Material(shader);
+        mat.SetFloat("_InnerRadius", 0.55f);
+        mat.SetFloat("_OuterRadius", 1.7f);
+
+        Vector2 size = target.rectTransform.rect.size;
+        float minDim = Mathf.Max(1f, Mathf.Min(size.x, size.y));
+        mat.SetVector("_RectSize", new Vector4(size.x / minDim, size.y / minDim, 0f, 0f));
+
+        target.material = mat;
     }
 
     private Image CreateFullscreenImage(string objName, Color color)
