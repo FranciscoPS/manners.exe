@@ -35,7 +35,6 @@ public static class SandboxCommands
             return;
         }
 
-        EnemyConfiguration config = enemy;
         int spawned = 0;
 
         for (int i = 0; i < count; i++)
@@ -43,11 +42,11 @@ public static class SandboxCommands
             float angle = (i / (float)count) * Mathf.PI * 2f;
             Vector3 position = origin.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
 
-            if (SpawnFactory.Instance.CreateEnemy(position, config) != null)
+            if (SpawnFactory.Instance.CreateEnemy(position, enemy) != null)
                 spawned++;
         }
 
-        SandboxLog.Command($"Ráfaga manual: {spawned}/{count} '{config.name}' a {radius}m del jugador. Activos ahora: {EnemyHealth.ActiveEnemyCount}");
+        SandboxLog.Command($"Ráfaga manual: {spawned}/{count} '{enemy.name}' a {radius}m del jugador. Activos ahora: {EnemyHealth.ActiveEnemyCount}");
     }
 
     public static void KillAllEnemies()
@@ -84,16 +83,6 @@ public static class SandboxCommands
         }
 
         SandboxLog.Command($"Nivel: {startLevel} → {experience.GetCurrentLevel()}");
-    }
-
-    public static void GrantExperience(int amount)
-    {
-        PlayerExperience experience = Object.FindFirstObjectByType<PlayerExperience>();
-
-        if (experience == null) return;
-
-        experience.AddExperience(amount);
-        SandboxLog.Command($"Experiencia: +{amount} (nivel {experience.GetCurrentLevel()}, {experience.GetCurrentExperience()}/{experience.GetExperienceRequiredForNextLevel()})");
     }
 
     public static UpgradeData GrantRandomUpgrade(bool premium)

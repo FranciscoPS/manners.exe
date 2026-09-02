@@ -25,6 +25,29 @@ public static class SynergyVisualUtility
         return disc;
     }
 
+    public static GameObject CreateSphere(string name, Transform parent, Vector3 position, float diameter, Color color)
+    {
+        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        sphere.name = name;
+        Object.Destroy(sphere.GetComponent<Collider>());
+        sphere.transform.SetParent(parent, false);
+
+        if (parent != null)
+            sphere.transform.localPosition = position;
+        else
+            sphere.transform.position = position;
+
+        sphere.transform.localScale = new Vector3(diameter, diameter, diameter);
+
+        Renderer renderer = sphere.GetComponent<Renderer>();
+        Material material = new Material(FindLitShader());
+        material.color = color;
+        MakeTransparent(material);
+        renderer.sharedMaterial = material;
+
+        return sphere;
+    }
+
     public static Shader FindLitShader()
     {
         Shader shader = Shader.Find("Universal Render Pipeline/Lit");

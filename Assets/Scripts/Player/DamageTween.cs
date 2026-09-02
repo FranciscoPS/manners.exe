@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,11 +9,12 @@ public class DamageTween : MonoBehaviour
     [SerializeField] private Color damageColor = Color.red;
     [SerializeField] private float tweenTime = 0.3f;
     [SerializeField] private int tweenLoops = 3;
+    [Tooltip("Si está activo, también tiñe los Renderer de los hijos (útil para modelos con varias partes, como la torreta de un tanque). Si no, solo tiñe el Renderer del propio GameObject.")]
+    [SerializeField] private bool includeChildRenderers = false;
 
     private GameObject targetObject;
     private SpriteRenderer spriteRenderer;
     private Graphic uiGraphic;
-    private Renderer meshRenderer;
 
     private Material[] materialInstances;
     private bool createdMaterialInstances = false;
@@ -53,13 +55,25 @@ public class DamageTween : MonoBehaviour
 
         spriteRenderer = targetObject.GetComponent<SpriteRenderer>();
         uiGraphic = targetObject.GetComponent<Graphic>();
-        meshRenderer = (spriteRenderer == null && uiGraphic == null) ? targetObject.GetComponent<Renderer>() : null;
 
-        if (meshRenderer != null)
+        if (spriteRenderer == null && uiGraphic == null)
         {
+            Renderer[] renderers = includeChildRenderers
+                ? targetObject.GetComponentsInChildren<Renderer>(true)
+                : new[] { targetObject.GetComponent<Renderer>() };
 
-            materialInstances = meshRenderer.materials;
-            createdMaterialInstances = true;
+            List<Material> combined = new List<Material>();
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] == null) continue;
+                combined.AddRange(renderers[i].materials);
+            }
+
+            if (combined.Count > 0)
+            {
+                materialInstances = combined.ToArray();
+                createdMaterialInstances = true;
+            }
         }
 
         isInitialized = true;
