@@ -37,6 +37,8 @@ public class LevelUpManager : MonoBehaviour
     [Header("Juice")]
     [Tooltip("Retraso entre la aparición de cada card de mejora, para un efecto de cascada.")]
     [SerializeField] private float cardIntroStagger = 0.07f;
+    [Tooltip("Duración de la animación de cierre de las cards (de grande a chica) al elegir una mejora.")]
+    [SerializeField] private float cardOutroDuration = 0.2f;
 
     private bool levelUpActive = false;
     private int currentPlayerLevel = 1;
@@ -48,6 +50,7 @@ public class LevelUpManager : MonoBehaviour
 
     private bool cooldownPaused = false;
     private float pausedCooldownTimeRemaining = 0f;
+    private Coroutine closeAfterOutroRoutine;
 
     private void Awake()
     {
@@ -522,6 +525,32 @@ public class LevelUpManager : MonoBehaviour
     }
 
     public void OnUpgradeChosen()
+    {
+        foreach (var button in allButtons)
+        {
+            if (button == null || !button.gameObject.activeSelf) continue;
+
+            Button btn = button.GetComponent<Button>();
+            if (btn != null) btn.interactable = false;
+
+            button.PlayOutroAnimation(cardOutroDuration);
+        }
+
+        if (closeAfterOutroRoutine != null)
+            StopCoroutine(closeAfterOutroRoutine);
+
+        closeAfterOutroRoutine = StartCoroutine(CloseAfterOutroRoutine());
+    }
+
+    private IEnumerator CloseAfterOutroRoutine()
+    {
+        yield return new WaitForSecondsRealtime(cardOutroDuration);
+
+        closeAfterOutroRoutine = null;
+        FinishUpgradeChosen();
+    }
+
+    private void FinishUpgradeChosen()
     {
         if (currentMode == UpgradeMode.Shop)
         {

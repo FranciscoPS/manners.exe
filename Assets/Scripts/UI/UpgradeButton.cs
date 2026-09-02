@@ -26,9 +26,9 @@ public class UpgradeButton : MonoBehaviour
 
     [Header("Juice")]
     [Tooltip("Duración de la animación de aparición de la card (rebote de chica a grande).")]
-    [SerializeField] private float introDuration = 0.32f;
+    [SerializeField] private float introDuration = 0.36f;
     [Tooltip("Fuerza del rebote al aparecer. Valores del estilo DOTween OutBack: más alto = más exagerado.")]
-    [SerializeField] private float introOvershoot = 0.9f;
+    [SerializeField] private float introOvershoot = 1.3f;
 
     [Header("Component References")]
     private HoldToSelectButton holdToSelectButton;
@@ -156,6 +156,16 @@ public class UpgradeButton : MonoBehaviour
         }
 
         rectTransform.PopIn(introDuration, introOvershoot, delay);
+    }
+
+    public void PlayOutroAnimation(float duration, float delay = 0f)
+    {
+        if (rectTransform == null)
+        {
+            rectTransform = GetComponent<RectTransform>();
+        }
+
+        rectTransform.PopOut(duration, delay: delay);
     }
 
     public void SetupChest(ChestItemData item)

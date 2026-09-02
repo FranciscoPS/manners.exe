@@ -25,4 +25,14 @@ public static class UIJuice
 
         return sequence;
     }
+
+    public static Tween PopOut(this RectTransform rectTransform, float duration = 0.2f, float overshoot = 0.7f, float delay = 0f)
+    {
+        rectTransform.DOKill();
+
+        return rectTransform.DOScale(0f, duration)
+            .SetDelay(delay)
+            .SetEase(Ease.InBack, overshoot)
+            .SetUpdate(true);
+    }
 }
