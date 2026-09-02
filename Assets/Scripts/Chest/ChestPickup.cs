@@ -38,6 +38,10 @@ public class ChestPickup : MonoBehaviour, IUpdateable
             chosenItem = items[0];
         else
             chosenItem = null;
+
+        Animator chestAnimator = GetComponentInChildren<Animator>();
+        if (chestAnimator != null)
+            chestAnimator.speed = 0f;
     }
 
     private void OnDisable()
@@ -86,11 +90,11 @@ public class ChestPickup : MonoBehaviour, IUpdateable
 
         selectionOpen = true;
 
-        if (LevelUpManager.Instance != null)
+        ChestOpeningSequence.Play(chosenItem, gameObject, () =>
         {
-            LevelUpManager.Instance.ShowChestSelection(chosenItem);
-        }
-
+            if (LevelUpManager.Instance != null)
+                LevelUpManager.Instance.ShowChestSelection(chosenItem);
+        });
     }
 
     public void OnSelectionClosed()

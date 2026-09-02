@@ -4,44 +4,21 @@ using DG.Tweening;
 
 public class PremiumUpgradeVisuals : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private Image backgroundImage;
-
-    [Header("Rainbow Overlay Settings")]
-    [SerializeField] private bool useRainbowOverlay = true;
-    [SerializeField] private float rainbowSpeed = 2f;
-    [SerializeField] private float rainbowBrightness = 1.8f;
-    [SerializeField] private float overlayAlpha = 0.5f;
-
-    [Header("Particles Settings")]
-    [SerializeField] private bool useParticles = true;
-
     [Header("Animation Settings")]
-    [SerializeField] private float pulseScale = 1.12f;
+    [SerializeField] private float pulseScale = 1.06f;
     [SerializeField] private float pulseDuration = 1.0f;
 
     private RectTransform rectTransform;
     private Tween pulseTween;
-    private bool isPremium = false;
-    private Image rainbowOverlayImage;
-    private Material rainbowMaterial;
-    private float rainbowHue = 0f;
-    private PremiumParticleEffect particleEffect;
+    private RadiantAuraVFX aura;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
-
-        if (backgroundImage == null)
-        {
-            backgroundImage = GetComponent<Image>();
-        }
     }
 
     public void SetPremium(bool premium)
     {
-        isPremium = premium;
-
         if (premium)
         {
             EnablePremiumEffects();
@@ -54,111 +31,48 @@ public class PremiumUpgradeVisuals : MonoBehaviour
 
     private void EnablePremiumEffects()
     {
-        if (useRainbowOverlay && rainbowOverlayImage == null)
+        if (aura == null)
         {
-            CreateRainbowOverlay();
+            aura = CreateAura();
         }
 
-        if (rainbowOverlayImage != null)
-        {
-            rainbowOverlayImage.gameObject.SetActive(true);
-        }
-
-        if (useParticles && particleEffect == null)
-        {
-            CreateParticleEffect();
-        }
-
-        if (particleEffect != null)
-        {
-            particleEffect.Play();
-        }
-
+        aura.Play();
         StartPulseAnimation();
     }
 
-    private void CreateParticleEffect()
+    private RadiantAuraVFX CreateAura()
     {
-        GameObject particleObj = new GameObject("PremiumParticles");
-        particleObj.transform.SetParent(transform, false);
+        Transform parent = rectTransform.parent != null ? rectTransform.parent : rectTransform;
 
-        RectTransform particleRect = particleObj.AddComponent<RectTransform>();
-        particleRect.anchorMin = Vector2.zero;
-        particleRect.anchorMax = Vector2.one;
-        particleRect.offsetMin = Vector2.zero;
-        particleRect.offsetMax = Vector2.zero;
-        particleRect.localPosition = Vector3.zero;
-        particleRect.SetAsLastSibling();
+        GameObject auraObj = new GameObject("CardAura", typeof(RectTransform));
+        auraObj.transform.SetParent(parent, false);
+        auraObj.transform.SetSiblingIndex(Mathf.Max(0, rectTransform.GetSiblingIndex()));
 
-        particleObj.AddComponent<ParticleSystem>();
-        particleEffect = particleObj.AddComponent<PremiumParticleEffect>();
-    }
+        RectTransform auraRect = auraObj.GetComponent<RectTransform>();
+        auraRect.anchorMin = rectTransform.anchorMin;
+        auraRect.anchorMax = rectTransform.anchorMax;
+        auraRect.pivot = rectTransform.pivot;
+        auraRect.anchoredPosition = rectTransform.anchoredPosition;
+        auraRect.sizeDelta = rectTransform.sizeDelta;
 
-    private void CreateRainbowOverlay()
-    {
-        GameObject overlayObj = new GameObject("RainbowOverlay");
-        overlayObj.transform.SetParent(transform, false);
+        LayoutElement layoutElement = auraObj.AddComponent<LayoutElement>();
+        layoutElement.ignoreLayout = true;
 
-        rainbowOverlayImage = overlayObj.AddComponent<Image>();
-        rainbowOverlayImage.raycastTarget = false;
+        RadiantAuraVFX newAura = auraObj.AddComponent<RadiantAuraVFX>();
+        newAura.TrackTarget = rectTransform;
+        newAura.Initialize(auraRect);
 
-        RectTransform overlayRect = overlayObj.GetComponent<RectTransform>();
-        overlayRect.anchorMin = Vector2.zero;
-        overlayRect.anchorMax = Vector2.one;
-        overlayRect.offsetMin = Vector2.zero;
-        overlayRect.offsetMax = Vector2.zero;
-        overlayRect.SetAsLastSibling();
-
-        Material templateMaterial = Resources.Load<Material>("RainbowOverlayMaterial");
-        if (templateMaterial != null)
-        {
-            rainbowMaterial = new Material(templateMaterial);
-            rainbowOverlayImage.material = rainbowMaterial;
-        }
-        else
-        {
-
-            Shader rainbowShader = Shader.Find("UI/RainbowOverlay");
-            if (rainbowShader != null)
-            {
-                rainbowMaterial = new Material(rainbowShader);
-                rainbowOverlayImage.material = rainbowMaterial;
-            }
-            else
-            {
-                rainbowMaterial = null;
-            }
-        }
-
-        rainbowOverlayImage.color = new Color(1f, 1f, 1f, overlayAlpha);
+        return newAura;
     }
 
     private void DisablePremiumEffects()
     {
-        if (rainbowOverlayImage != null)
+        if (aura != null)
         {
-            rainbowOverlayImage.gameObject.SetActive(false);
-        }
-
-        if (particleEffect != null)
-        {
-            particleEffect.Stop();
+            aura.Stop();
         }
 
         StopAnimations();
-    }
-
-    private void Update()
-    {
-        if (isPremium && useRainbowOverlay && rainbowMaterial != null)
-        {
-            rainbowHue += Time.unscaledDeltaTime * rainbowSpeed * 0.1f;
-            if (rainbowHue > 1f) rainbowHue -= 1f;
-
-            Color rainbowColor = Color.HSVToRGB(rainbowHue, 1f, rainbowBrightness);
-            rainbowColor.a = overlayAlpha;
-            rainbowMaterial.SetColor("_RainbowColor", rainbowColor);
-        }
     }
 
     private void StartPulseAnimation()
@@ -185,9 +99,9 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     {
         StopAnimations();
 
-        if (rainbowMaterial != null)
+        if (aura != null)
         {
-            Destroy(rainbowMaterial);
+            Destroy(aura.gameObject);
         }
     }
 }
