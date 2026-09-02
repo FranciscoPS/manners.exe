@@ -14,12 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LaserBeamConfig
   interval: 3
   range: 14
-  damage: 20
-  damageTickInterval: 0.25
+  damage: 15
+  damageTickInterval: 0.09
   impactRadius: 1.2
   sweepDuration: 1.2
   extendDistance: 4
   beamOriginHeight: 1.6
-  beamColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  lineWidth: 0.15
-  beamMaterialOverride: {fileID: 0}
+  beamColor: {r: 0.8867924, g: 0, b: 0, a: 1}
+  lineWidth: 0.5
+  beamMaterialOverride: {fileID: 2100000, guid: 2c5ea582fcb636a4c8231338cd8d16ae, type: 2}
+  fireSFX: {fileID: 0}
+  sfxVolume: 0.7
