@@ -17,6 +17,7 @@ public static class SandboxSetupTools
     internal const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
     internal const string SynergyDatabasePath = SandboxFolder + "/SynergyDatabase_Sandbox.asset";
     internal const string SynergiesFolder = SandboxFolder + "/Synergies";
+    internal const string ChestOpeningConfigPath = SandboxFolder + "/ChestOpeningConfig_Sandbox.asset";
     private const string ScenePath = "Assets/Scenes/Sandbox.unity";
 
     private static readonly string[] SourceEnemyConfigs =
@@ -36,6 +37,7 @@ public static class SandboxSetupTools
         CopyBalanceConfig();
         CopyUpgradeDatabase();
         CopySynergyDatabase();
+        CopyChestOpeningConfig();
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = CopyEnemyConfigs();
         CopyWaves(enemyMap);
 
@@ -110,6 +112,12 @@ public static class SandboxSetupTools
             Debug.LogWarning("[SandboxSetup] No hay SynergyDatabase de sandbox todavía. Ejecuta 'Tools > Manners > Synergies > Crear sistema de sinergias' y luego el paso 1 de nuevo si quieres probar sinergias.");
         }
 
+        ChestOpeningConfig chestOpening = AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>(ChestOpeningConfigPath);
+        if (chestOpening == null)
+        {
+            Debug.LogWarning("[SandboxSetup] No hay ChestOpeningConfig de sandbox todavía. Ejecuta 'Tools > Manners > VFX > Crear configuración de apertura de cofre' y luego el paso 1 de nuevo si quieres tunearla por separado.");
+        }
+
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = LoadEnemyMap();
         Dictionary<WaveData, WaveData> waveMap = LoadWaveMap();
 
@@ -124,6 +132,7 @@ public static class SandboxSetupTools
         SetReference(tuningSerialized, "balanceOverride", balance);
         SetReference(tuningSerialized, "upgradeDatabaseOverride", upgrades);
         SetReference(tuningSerialized, "synergyDatabaseOverride", synergies);
+        SetReference(tuningSerialized, "chestOpeningConfigOverride", chestOpening);
         tuningSerialized.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject panelRoot = BuildOrFindDebugPanel(sandboxRoot.transform);
@@ -236,6 +245,27 @@ public static class SandboxSetupTools
 
         Debug.Log($"[SandboxSetup] GameBalanceConfig duplicado en {BalancePath}");
         return AssetDatabase.LoadAssetAtPath<GameBalanceConfig>(BalancePath);
+    }
+
+    private static ChestOpeningConfig CopyChestOpeningConfig()
+    {
+        ChestOpeningConfig existing = AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>(ChestOpeningConfigPath);
+        if (existing != null) return existing;
+
+        if (!AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>("Assets/Resources/ChestOpeningConfig.asset"))
+        {
+            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Resources/ChestOpeningConfig.asset. Ejecuta primero 'Tools > Manners > VFX > Crear configuración de apertura de cofre' y luego este paso de nuevo si quieres tunear la cinemática por separado en el sandbox.");
+            return null;
+        }
+
+        if (!AssetDatabase.CopyAsset("Assets/Resources/ChestOpeningConfig.asset", ChestOpeningConfigPath))
+        {
+            Debug.LogWarning("[SandboxSetup] No se pudo duplicar ChestOpeningConfig.");
+            return null;
+        }
+
+        Debug.Log($"[SandboxSetup] ChestOpeningConfig duplicado en {ChestOpeningConfigPath}");
+        return AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>(ChestOpeningConfigPath);
     }
 
     private static UpgradeDatabase CopyUpgradeDatabase()

@@ -4,47 +4,25 @@ using DG.Tweening;
 
 public class PremiumUpgradeVisuals : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private Image backgroundImage;
-
-    [Header("Rainbow Overlay Settings")]
-    [SerializeField] private bool useRainbowOverlay = true;
-    [SerializeField] private float rainbowSpeed = 2f;
-    [SerializeField] private float rainbowBrightness = 1.8f;
-    [SerializeField] private float overlayAlpha = 0.5f;
-
-    [Header("Particles Settings")]
-    [SerializeField] private bool useParticles = true;
-
     [Header("Animation Settings")]
-    [SerializeField] private float pulseScale = 1.12f;
+    [SerializeField] private float pulseScale = 1.06f;
     [SerializeField] private float pulseDuration = 1.0f;
 
     private RectTransform rectTransform;
     private Tween pulseTween;
-    private bool isPremium = false;
-    private Image rainbowOverlayImage;
-    private Material rainbowMaterial;
-    private float rainbowHue = 0f;
-    private PremiumParticleEffect particleEffect;
+    private RadiantAuraVFX aura;
+    private PokemonHoloEffect holo;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
-
-        if (backgroundImage == null)
-        {
-            backgroundImage = GetComponent<Image>();
-        }
     }
 
-    public void SetPremium(bool premium)
+    public void SetPremium(bool premium, UpgradeMode mode = UpgradeMode.LevelUp)
     {
-        isPremium = premium;
-
         if (premium)
         {
-            EnablePremiumEffects();
+            EnablePremiumEffects(mode == UpgradeMode.Shop);
         }
         else
         {
@@ -52,113 +30,78 @@ public class PremiumUpgradeVisuals : MonoBehaviour
         }
     }
 
-    private void EnablePremiumEffects()
+    private void EnablePremiumEffects(bool useHolo)
     {
-        if (useRainbowOverlay && rainbowOverlayImage == null)
+        if (useHolo)
         {
-            CreateRainbowOverlay();
-        }
+            if (holo == null)
+            {
+                holo = CreateHolo();
+            }
 
-        if (rainbowOverlayImage != null)
-        {
-            rainbowOverlayImage.gameObject.SetActive(true);
+            holo.Play();
+            aura?.Stop();
         }
-
-        if (useParticles && particleEffect == null)
+        else
         {
-            CreateParticleEffect();
-        }
+            if (aura == null)
+            {
+                aura = CreateAura();
+            }
 
-        if (particleEffect != null)
-        {
-            particleEffect.Play();
+            aura.Play();
+            holo?.Stop();
         }
 
         StartPulseAnimation();
     }
 
-    private void CreateParticleEffect()
+    private PokemonHoloEffect CreateHolo()
     {
-        GameObject particleObj = new GameObject("PremiumParticles");
-        particleObj.transform.SetParent(transform, false);
+        GameObject holoObj = new GameObject("HoloFoil", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        holoObj.transform.SetParent(rectTransform, false);
+        holoObj.transform.SetAsLastSibling();
 
-        RectTransform particleRect = particleObj.AddComponent<RectTransform>();
-        particleRect.anchorMin = Vector2.zero;
-        particleRect.anchorMax = Vector2.one;
-        particleRect.offsetMin = Vector2.zero;
-        particleRect.offsetMax = Vector2.zero;
-        particleRect.localPosition = Vector3.zero;
-        particleRect.SetAsLastSibling();
+        RectTransform holoRect = holoObj.GetComponent<RectTransform>();
+        holoRect.anchorMin = Vector2.zero;
+        holoRect.anchorMax = Vector2.one;
+        holoRect.offsetMin = Vector2.zero;
+        holoRect.offsetMax = Vector2.zero;
 
-        particleObj.AddComponent<ParticleSystem>();
-        particleEffect = particleObj.AddComponent<PremiumParticleEffect>();
+        return holoObj.AddComponent<PokemonHoloEffect>();
     }
 
-    private void CreateRainbowOverlay()
+    private RadiantAuraVFX CreateAura()
     {
-        GameObject overlayObj = new GameObject("RainbowOverlay");
-        overlayObj.transform.SetParent(transform, false);
+        Transform parent = rectTransform.parent != null ? rectTransform.parent : rectTransform;
 
-        rainbowOverlayImage = overlayObj.AddComponent<Image>();
-        rainbowOverlayImage.raycastTarget = false;
+        GameObject auraObj = new GameObject("CardAura", typeof(RectTransform));
+        auraObj.transform.SetParent(parent, false);
+        auraObj.transform.SetSiblingIndex(Mathf.Max(0, rectTransform.GetSiblingIndex()));
 
-        RectTransform overlayRect = overlayObj.GetComponent<RectTransform>();
-        overlayRect.anchorMin = Vector2.zero;
-        overlayRect.anchorMax = Vector2.one;
-        overlayRect.offsetMin = Vector2.zero;
-        overlayRect.offsetMax = Vector2.zero;
-        overlayRect.SetAsLastSibling();
+        RectTransform auraRect = auraObj.GetComponent<RectTransform>();
+        auraRect.anchorMin = rectTransform.anchorMin;
+        auraRect.anchorMax = rectTransform.anchorMax;
+        auraRect.pivot = rectTransform.pivot;
+        auraRect.anchoredPosition = rectTransform.anchoredPosition;
+        auraRect.sizeDelta = rectTransform.sizeDelta;
 
-        Material templateMaterial = Resources.Load<Material>("RainbowOverlayMaterial");
-        if (templateMaterial != null)
-        {
-            rainbowMaterial = new Material(templateMaterial);
-            rainbowOverlayImage.material = rainbowMaterial;
-        }
-        else
-        {
+        LayoutElement layoutElement = auraObj.AddComponent<LayoutElement>();
+        layoutElement.ignoreLayout = true;
 
-            Shader rainbowShader = Shader.Find("UI/RainbowOverlay");
-            if (rainbowShader != null)
-            {
-                rainbowMaterial = new Material(rainbowShader);
-                rainbowOverlayImage.material = rainbowMaterial;
-            }
-            else
-            {
-                rainbowMaterial = null;
-            }
-        }
+        RadiantAuraVFX newAura = auraObj.AddComponent<RadiantAuraVFX>();
+        newAura.TrackTarget = rectTransform;
+        newAura.Initialize(auraRect);
 
-        rainbowOverlayImage.color = new Color(1f, 1f, 1f, overlayAlpha);
+        return newAura;
     }
 
     private void DisablePremiumEffects()
     {
-        if (rainbowOverlayImage != null)
-        {
-            rainbowOverlayImage.gameObject.SetActive(false);
-        }
-
-        if (particleEffect != null)
-        {
-            particleEffect.Stop();
-        }
+        aura?.Stop();
+        holo?.Stop();
 
         StopAnimations();
-    }
-
-    private void Update()
-    {
-        if (isPremium && useRainbowOverlay && rainbowMaterial != null)
-        {
-            rainbowHue += Time.unscaledDeltaTime * rainbowSpeed * 0.1f;
-            if (rainbowHue > 1f) rainbowHue -= 1f;
-
-            Color rainbowColor = Color.HSVToRGB(rainbowHue, 1f, rainbowBrightness);
-            rainbowColor.a = overlayAlpha;
-            rainbowMaterial.SetColor("_RainbowColor", rainbowColor);
-        }
     }
 
     private void StartPulseAnimation()
@@ -185,9 +128,14 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     {
         StopAnimations();
 
-        if (rainbowMaterial != null)
+        if (aura != null)
         {
-            Destroy(rainbowMaterial);
+            Destroy(aura.gameObject);
+        }
+
+        if (holo != null)
+        {
+            Destroy(holo.gameObject);
         }
     }
 }

@@ -136,7 +136,7 @@ public class UpgradeButton : MonoBehaviour
 
         if (premiumVisuals != null && assignedUpgrade != null)
         {
-            premiumVisuals.SetPremium(assignedUpgrade.isPremium);
+            premiumVisuals.SetPremium(assignedUpgrade.isPremium, currentMode);
         }
     }
 
@@ -167,7 +167,7 @@ public class UpgradeButton : MonoBehaviour
 
         if (premiumVisuals != null)
         {
-            premiumVisuals.SetPremium(true);
+            premiumVisuals.SetPremium(true, currentMode);
         }
     }
 

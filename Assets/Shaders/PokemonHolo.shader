@@ -1,20 +1,24 @@
-Shader "UI/RainbowOverlay"
+Shader "UI/PokemonHolo"
 {
     Properties
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
-        _RainbowColor ("Rainbow Color", Color) = (1,1,1,1)
-        
+        _Angle ("Diagonal Angle (rad)", Float) = 0.785398
+        _Frequency ("Band Frequency", Float) = 3
+        _Offset ("Scroll Offset", Float) = 0
+        _Saturation ("Saturation", Float) = 0.9
+        _Intensity ("Sheen Intensity", Float) = 0.55
+
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
         _StencilOp ("Stencil Operation", Float) = 0
         _StencilWriteMask ("Stencil Write Mask", Float) = 255
         _StencilReadMask ("Stencil Read Mask", Float) = 255
-        
+
         _ColorMask ("Color Mask", Float) = 15
     }
-    
+
     SubShader
     {
         Tags
@@ -25,7 +29,7 @@ Shader "UI/RainbowOverlay"
             "PreviewType"="Plane"
             "CanUseSpriteAtlas"="True"
         }
-        
+
         Stencil
         {
             Ref [_Stencil]
@@ -34,14 +38,14 @@ Shader "UI/RainbowOverlay"
             ReadMask [_StencilReadMask]
             WriteMask [_StencilWriteMask]
         }
-        
+
         Cull Off
         Lighting Off
         ZWrite Off
         ZTest [unity_GUIZTestMode]
-        Blend SrcAlpha OneMinusSrcAlpha
+        Blend One One
         ColorMask [_ColorMask]
-        
+
         Pass
         {
             CGPROGRAM
@@ -49,14 +53,14 @@ Shader "UI/RainbowOverlay"
             #pragma fragment frag
             #include "UnityCG.cginc"
             #include "UnityUI.cginc"
-            
+
             struct appdata_t
             {
                 float4 vertex : POSITION;
                 float4 color : COLOR;
                 float2 texcoord : TEXCOORD0;
             };
-            
+
             struct v2f
             {
                 float4 vertex : SV_POSITION;
@@ -64,13 +68,15 @@ Shader "UI/RainbowOverlay"
                 float2 texcoord : TEXCOORD0;
                 float4 worldPosition : TEXCOORD1;
             };
-            
-            sampler2D _MainTex;
+
             fixed4 _Color;
-            fixed4 _RainbowColor;
-            fixed4 _TextureSampleAdd;
+            float _Angle;
+            float _Frequency;
+            float _Offset;
+            float _Saturation;
+            float _Intensity;
             float4 _ClipRect;
-            
+
             v2f vert(appdata_t v)
             {
                 v2f OUT;
@@ -80,16 +86,35 @@ Shader "UI/RainbowOverlay"
                 OUT.color = v.color * _Color;
                 return OUT;
             }
-            
+
+            float3 holoHsv2rgb(float h, float s, float v)
+            {
+                float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                float3 p = abs(frac(h.xxx + K.xyz) * 6.0 - K.www);
+                return v * lerp(K.xxx, saturate(p - K.xxx), s);
+            }
+
             fixed4 frag(v2f IN) : SV_Target
             {
-                half4 color = (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd) * IN.color;
-                color.rgb = _RainbowColor.rgb;
-                color.a *= _RainbowColor.a;
-                
-                color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
-                
-                return color;
+                float2 uv = IN.texcoord;
+                float diag = uv.x * cos(_Angle) + uv.y * sin(_Angle);
+
+                float phase = diag * _Frequency + _Offset;
+                float hue = frac(phase);
+                float3 rainbow = holoHsv2rgb(hue, _Saturation, 1.0);
+
+                float band = pow(abs(sin(phase * 3.14159)), 2.0);
+
+                float3 color = rainbow * band * _Intensity;
+                float alpha = band * _Intensity * IN.color.a;
+
+                fixed4 outColor;
+                outColor.rgb = color;
+                outColor.a = alpha;
+
+                outColor.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
+
+                return outColor;
             }
             ENDCG
         }
