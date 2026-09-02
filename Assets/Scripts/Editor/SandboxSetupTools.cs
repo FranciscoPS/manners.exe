@@ -9,14 +9,14 @@ using UnityEngine.UI;
 public static class SandboxSetupTools
 {
     private const string SourceScenePath = "Assets/Scenes/CityTest.unity";
-    private const string SandboxFolder = "Assets/Configurations/Sandbox";
-    private const string UpgradesFolder = SandboxFolder + "/Upgrades";
-    private const string EnemiesFolder = SandboxFolder + "/Enemies";
-    private const string WavesFolder = SandboxFolder + "/Waves";
-    private const string BalancePath = SandboxFolder + "/GameBalanceConfig_Sandbox.asset";
-    private const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
-    private const string SynergyDatabasePath = SandboxFolder + "/SynergyDatabase_Sandbox.asset";
-    private const string SynergiesFolder = SandboxFolder + "/Synergies";
+    internal const string SandboxFolder = "Assets/Configurations/Sandbox";
+    internal const string UpgradesFolder = SandboxFolder + "/Upgrades";
+    internal const string EnemiesFolder = SandboxFolder + "/Enemies";
+    internal const string WavesFolder = SandboxFolder + "/Waves";
+    internal const string BalancePath = SandboxFolder + "/GameBalanceConfig_Sandbox.asset";
+    internal const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
+    internal const string SynergyDatabasePath = SandboxFolder + "/SynergyDatabase_Sandbox.asset";
+    internal const string SynergiesFolder = SandboxFolder + "/Synergies";
     private const string ScenePath = "Assets/Scenes/Sandbox.unity";
 
     private static readonly string[] SourceEnemyConfigs =
@@ -344,7 +344,7 @@ public static class SandboxSetupTools
         return copy;
     }
 
-    private static Dictionary<EnemyConfiguration, EnemyConfiguration> LoadEnemyMap()
+    internal static Dictionary<EnemyConfiguration, EnemyConfiguration> LoadEnemyMap()
     {
         Dictionary<EnemyConfiguration, EnemyConfiguration> map = new Dictionary<EnemyConfiguration, EnemyConfiguration>();
 
@@ -358,7 +358,7 @@ public static class SandboxSetupTools
         return map;
     }
 
-    private static Dictionary<WaveData, WaveData> LoadWaveMap()
+    internal static Dictionary<WaveData, WaveData> LoadWaveMap()
     {
         Dictionary<WaveData, WaveData> map = new Dictionary<WaveData, WaveData>();
 

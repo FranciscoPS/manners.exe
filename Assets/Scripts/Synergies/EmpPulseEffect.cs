@@ -82,6 +82,9 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         expandTimer = 0f;
 
         SpawnVisual();
+
+        if (Config.pulseSFX != null && MusicManager.Instance != null)
+            MusicManager.Instance.PlaySFXOneShot(Config.pulseSFX, Config.sfxVolume);
     }
 
     private void UpdateExpansion(float deltaTime)

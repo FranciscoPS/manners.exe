@@ -31,6 +31,11 @@ public class LaserBeamConfig : SynergyEffectConfig
     [Tooltip("Si se asigna, se usa este material en el LineRenderer en vez del material unlit + color por defecto. Ideal para un shader de energía con textura o scroll de UV.")]
     public Material beamMaterialOverride;
 
+    [Header("Audio")]
+    [Tooltip("Sonido que se reproduce cada vez que se dispara un barrido. Opcional.")]
+    public AudioClip fireSFX;
+    [Range(0f, 1f)] public float sfxVolume = 0.7f;
+
     public override void ApplyTo(GameObject effectInstance)
     {
         LaserBeamEffect effect = effectInstance.GetComponent<LaserBeamEffect>();

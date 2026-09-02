@@ -23,6 +23,11 @@ public class EmpPulseConfig : SynergyEffectConfig
     [Tooltip("Cuánto tiempo permanece visible el círculo ya expandido, antes de desaparecer. Solo aplica si 'Visual Prefab Override' está vacío.")]
     public float ringLifetime = 0.4f;
 
+    [Header("Audio")]
+    [Tooltip("Sonido que se reproduce cada vez que se dispara un pulso. Opcional.")]
+    public AudioClip pulseSFX;
+    [Range(0f, 1f)] public float sfxVolume = 0.7f;
+
     public override void ApplyTo(GameObject effectInstance)
     {
         EmpPulseEffect effect = effectInstance.GetComponent<EmpPulseEffect>();

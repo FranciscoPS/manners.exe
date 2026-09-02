@@ -38,6 +38,9 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
         BuildVisual();
         tickTimer = Config.tickInterval;
+
+        if (Config.activationSFX != null && MusicManager.Instance != null)
+            MusicManager.Instance.PlaySFXOneShot(Config.activationSFX, Config.sfxVolume);
     }
 
     public void Deactivate()

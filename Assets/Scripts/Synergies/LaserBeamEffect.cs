@@ -113,6 +113,9 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         line.enabled = true;
 
         UpdateBeamPositions(sweepStartDistance);
+
+        if (Config.fireSFX != null && MusicManager.Instance != null)
+            MusicManager.Instance.PlaySFXOneShot(Config.fireSFX, Config.sfxVolume);
     }
 
     private Vector3? FindRandomBuildingPosition()

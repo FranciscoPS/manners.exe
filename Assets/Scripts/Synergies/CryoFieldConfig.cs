@@ -19,6 +19,11 @@ public class CryoFieldConfig : SynergyEffectConfig
     [Tooltip("Color de la esfera de prueba generada por código. Está centrada exactamente en el origen del jugador (sin offset vertical). Solo se usa si 'Visual Prefab Override' está vacío.")]
     public Color visualColor = new Color(0.4f, 0.85f, 1f, 0.35f);
 
+    [Header("Audio")]
+    [Tooltip("Sonido que se reproduce una vez, al activarse la sinergia. Opcional.")]
+    public AudioClip activationSFX;
+    [Range(0f, 1f)] public float sfxVolume = 0.7f;
+
     public override void ApplyTo(GameObject effectInstance)
     {
         CryoFieldEffect effect = effectInstance.GetComponent<CryoFieldEffect>();
