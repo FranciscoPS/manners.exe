@@ -6,10 +6,11 @@ public class PokemonHoloEffect : MonoBehaviour
 {
     [Header("Holo Foil")]
     [SerializeField] private float scrollSpeed = 0.35f;
-    [SerializeField] private float bandFrequency = 3f;
+    [SerializeField] private float rainbowRepeats = 1f;
     [SerializeField] private float diagonalAngleDegrees = 45f;
     [SerializeField] private float saturation = 0.9f;
     [SerializeField] private float sheenIntensity = 0.55f;
+    [SerializeField] private float minBrightness = 0.55f;
 
     private static Shader holoShader;
 
@@ -31,9 +32,10 @@ public class PokemonHoloEffect : MonoBehaviour
         {
             material = new Material(holoShader);
             material.SetFloat("_Angle", diagonalAngleDegrees * Mathf.Deg2Rad);
-            material.SetFloat("_Frequency", bandFrequency);
+            material.SetFloat("_Frequency", rainbowRepeats);
             material.SetFloat("_Saturation", saturation);
             material.SetFloat("_Intensity", sheenIntensity);
+            material.SetFloat("_MinBrightness", minBrightness);
             image.material = material;
         }
 

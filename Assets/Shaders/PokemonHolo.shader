@@ -5,10 +5,11 @@ Shader "UI/PokemonHolo"
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
         _Angle ("Diagonal Angle (rad)", Float) = 0.785398
-        _Frequency ("Band Frequency", Float) = 3
+        _Frequency ("Rainbow Repeats Across Card", Float) = 1
         _Offset ("Scroll Offset", Float) = 0
         _Saturation ("Saturation", Float) = 0.9
         _Intensity ("Sheen Intensity", Float) = 0.55
+        _MinBrightness ("Minimum Brightness", Range(0,1)) = 0.55
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -75,6 +76,7 @@ Shader "UI/PokemonHolo"
             float _Offset;
             float _Saturation;
             float _Intensity;
+            float _MinBrightness;
             float4 _ClipRect;
 
             v2f vert(appdata_t v)
@@ -98,12 +100,14 @@ Shader "UI/PokemonHolo"
             {
                 float2 uv = IN.texcoord;
                 float diag = uv.x * cos(_Angle) + uv.y * sin(_Angle);
+                float diagRange = abs(cos(_Angle)) + abs(sin(_Angle));
+                float diagNorm = diag / max(diagRange, 1e-4);
 
-                float phase = diag * _Frequency + _Offset;
+                float phase = diagNorm * _Frequency + _Offset;
                 float hue = frac(phase);
                 float3 rainbow = holoHsv2rgb(hue, _Saturation, 1.0);
 
-                float band = pow(abs(sin(phase * 3.14159)), 2.0);
+                float band = lerp(_MinBrightness, 1.0, pow(abs(sin(phase * 3.14159)), 2.0));
 
                 float3 color = rainbow * band * _Intensity;
                 float alpha = band * _Intensity * IN.color.a;
