@@ -33,17 +33,26 @@ public class SynergyHintRowUI : MonoBehaviour
         UpgradeData upgradeA = UpgradeDatabase.Instance != null ? UpgradeDatabase.Instance.GetUpgradeData(synergy.requiredUpgradeA) : null;
         UpgradeData upgradeB = UpgradeDatabase.Instance != null ? UpgradeDatabase.Instance.GetUpgradeData(synergy.requiredUpgradeB) : null;
 
-        int levelA = PlayerStatsManager.Instance != null ? PlayerStatsManager.Instance.GetUpgradeLevel(synergy.requiredUpgradeA) : 0;
-        int levelB = PlayerStatsManager.Instance != null ? PlayerStatsManager.Instance.GetUpgradeLevel(synergy.requiredUpgradeB) : 0;
+        int reachedA = ReachedLevel(synergy.requiredUpgradeA);
+        int reachedB = ReachedLevel(synergy.requiredUpgradeB);
 
-        ApplySlot(iconA, unknownTextA, levelTextA, upgradeA != null ? upgradeA.icon : null, levelA > 0, synergy.requiredLevelA);
-        ApplySlot(iconB, unknownTextB, levelTextB, upgradeB != null ? upgradeB.icon : null, levelB > 0, synergy.requiredLevelB);
+        ApplySlot(iconA, unknownTextA, levelTextA, upgradeA != null ? upgradeA.icon : null, reachedA > 0, reachedA, synergy.requiredLevelA);
+        ApplySlot(iconB, unknownTextB, levelTextB, upgradeB != null ? upgradeB.icon : null, reachedB > 0, reachedB, synergy.requiredLevelB);
 
-        bool unlocked = levelA >= synergy.requiredLevelA && levelB >= synergy.requiredLevelB;
-        ApplySlot(iconResult, unknownTextResult, null, synergy.icon, unlocked, 0);
+        bool unlocked = SynergyDiscovery.IsSynergyUnlocked(synergy)
+            || (SynergyManager.Instance != null && SynergyManager.Instance.IsSynergyActive(synergy))
+            || (reachedA >= synergy.requiredLevelA && reachedB >= synergy.requiredLevelB);
+
+        ApplySlot(iconResult, unknownTextResult, null, synergy.icon, unlocked, 0, 0);
     }
 
-    private void ApplySlot(Image icon, TextMeshProUGUI unknownText, TextMeshProUGUI levelText, Sprite discoveredIcon, bool discovered, int requiredLevel)
+    private static int ReachedLevel(UpgradeType type)
+    {
+        int current = PlayerStatsManager.Instance != null ? PlayerStatsManager.Instance.GetUpgradeLevel(type) : 0;
+        return Mathf.Max(current, SynergyDiscovery.GetMaxUpgradeLevel(type));
+    }
+
+    private void ApplySlot(Image icon, TextMeshProUGUI unknownText, TextMeshProUGUI levelText, Sprite discoveredIcon, bool discovered, int reachedLevel, int requiredLevel)
     {
         bool reveal = discovered && discoveredIcon != null;
 
@@ -59,7 +68,7 @@ public class SynergyHintRowUI : MonoBehaviour
         if (levelText != null)
         {
             levelText.gameObject.SetActive(reveal);
-            levelText.text = reveal ? $"Nv. {requiredLevel}" : "";
+            levelText.text = reveal ? $"Nv. {Mathf.Min(reachedLevel, requiredLevel)}/{requiredLevel}" : "";
         }
     }
 }

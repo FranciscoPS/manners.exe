@@ -131,6 +131,7 @@ public class SynergyManager : MonoBehaviour
 
     private void HandleUpgradeApplied(UpgradeType type, int level)
     {
+        SynergyDiscovery.RecordUpgradeLevel(type, level);
         CheckAllSynergies();
     }
 
@@ -192,6 +193,7 @@ public class SynergyManager : MonoBehaviour
         activeEffects[synergy] = instance;
 
         Debug.Log($"[SYNERGY] Desbloqueada: {synergy.synergyName}");
+        SynergyDiscovery.RecordSynergyUnlocked(synergy);
         OnSynergyActivated?.Invoke(synergy);
     }
 

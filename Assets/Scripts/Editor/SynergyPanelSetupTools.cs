@@ -94,6 +94,8 @@ public static class SynergyPanelSetupTools
             return;
         }
 
+        PatchPrefabLevelTexts();
+
         GameObject existingMenuScreen = (GameObject)managerSO.FindProperty("sinergiasMenuPanel").objectReferenceValue;
         GameObject menuScreen = EnsureMenuScreen(existingMenuScreen, creditosPanel, prefabAsset);
 
@@ -144,6 +146,39 @@ public static class SynergyPanelSetupTools
             EditorSceneManager.OpenScene(originalScenePath, OpenSceneMode.Single);
 
         Debug.Log("[SynergyPanelSetup] Iconos de la pantalla final conectados dinámicamente a UpgradeDatabase donde fue posible. Revisa el log por cada escena para ver qué campos quedaron sin asignar.");
+    }
+
+    [MenuItem("Tools/Manners/Synergies/Borrar progreso guardado de sinergias", false, 40)]
+    public static void ClearSavedSynergyDiscoveries()
+    {
+        SynergyDiscovery.Clear();
+
+        foreach (string guid in AssetDatabase.FindAssets("t:SynergyData"))
+        {
+            SynergyData synergy = AssetDatabase.LoadAssetAtPath<SynergyData>(AssetDatabase.GUIDToAssetPath(guid));
+            SynergyDiscovery.Forget(synergy);
+        }
+
+        Debug.Log("[SynergyPanelSetup] Progreso guardado de sinergias borrado: todas las mejoras y sinergias vuelven a '?'.");
+    }
+
+    private static void PatchPrefabLevelTexts()
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(PrefabPath);
+
+        foreach (TextMeshProUGUI tmp in root.GetComponentsInChildren<TextMeshProUGUI>(true))
+        {
+            if (tmp.gameObject.name != "LevelText") continue;
+
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMin = 10f;
+            tmp.fontSizeMax = 22f;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.overflowMode = TextOverflowModes.Overflow;
+        }
+
+        PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+        PrefabUtility.UnloadPrefabContents(root);
     }
 
     private static void RemoveLegacyCloseButton(Transform panel)

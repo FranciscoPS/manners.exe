@@ -39,7 +39,8 @@ public class PokemonHoloEffect : MonoBehaviour
             image.material = material;
         }
 
-        gameObject.SetActive(false);
+        if (!playing)
+            gameObject.SetActive(false);
     }
 
     public void Play()

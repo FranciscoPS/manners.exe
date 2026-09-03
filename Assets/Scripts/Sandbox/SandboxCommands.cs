@@ -253,6 +253,19 @@ public static class SandboxCommands
         SandboxLog.Command("Panel de sinergias: visible con el progreso actual (vuelve a pulsar para ocultarlo).");
     }
 
+    public static void ClearSynergyDiscoveries()
+    {
+        SynergyDiscovery.Clear();
+
+        if (activeSynergyHintsInstance != null)
+        {
+            foreach (SynergyHintRowUI row in activeSynergyHintsInstance.GetComponentsInChildren<SynergyHintRowUI>(true))
+                row.Refresh();
+        }
+
+        SandboxLog.Command("Progreso guardado de sinergias borrado (mejoras y sinergias descubiertas en 0).");
+    }
+
     public static void ReloadSandbox()
     {
         Scene active = SceneManager.GetActiveScene();
