@@ -62,7 +62,12 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public void ApplySlow(float multiplier, float duration)
     {
-        slowMultiplier = Mathf.Clamp01(multiplier);
+        float clamped = Mathf.Clamp01(multiplier);
+        bool strongerSlowStillActive = Time.time < slowEndTime && slowMultiplier < clamped;
+
+        if (strongerSlowStillActive) return;
+
+        slowMultiplier = clamped;
         slowEndTime = Time.time + duration;
     }
 
