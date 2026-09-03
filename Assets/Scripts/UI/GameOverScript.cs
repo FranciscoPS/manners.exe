@@ -29,21 +29,16 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI coinsCollectedText;
     [SerializeField] private TextMeshProUGUI diamondsCollectedText;
 
-    [Header("Upgrade Levels UI")]
-    [SerializeField] private TextMeshProUGUI damageUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI attackSpeedUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI attackRangeUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI moveSpeedUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI magnetRangeUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI multiShotUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI explosiveShotUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI knockbackUpgradeLevelText;
+    [Header("Sinergias")]
+    [Tooltip("Aviso que aparece solo si en esta partida se descubrió una pista o una sinergia nueva.")]
+    [SerializeField] private TextMeshProUGUI synergyDiscoveryText;
 
     private bool isTransitioning = false;
     private bool statsUpdated = false;
 
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
+    private CanvasGroup gameOverCanvasGroup;
 
     private void Update()
     {
@@ -98,7 +93,7 @@ public class GameOverUI : MonoBehaviour
 
         if (buildingsDestroyedText != null)
         {
-            buildingsDestroyedText.text = $"Edificios destruidos : {GameSessionStats.Instance.BuildingsDestroyed}";
+            buildingsDestroyedText.text = $"Edificios destruidos: {GameSessionStats.Instance.BuildingsDestroyed}";
         }
 
         if (coinsCollectedText != null)
@@ -111,60 +106,38 @@ public class GameOverUI : MonoBehaviour
             diamondsCollectedText.text = $"Gemas recolectadas: {GameSessionStats.Instance.DiamondsCollected}";
         }
 
-        UpdateUpgradeLevels();
+        UpdateSynergyDiscovery();
     }
 
-    private void UpdateUpgradeLevels()
+    private void UpdateSynergyDiscovery()
     {
-        Dictionary<UpgradeType, int> upgradeLevels = GameSessionStats.Instance.GetUpgradeLevels();
+        if (synergyDiscoveryText == null) return;
 
-        if (damageUpgradeLevelText != null)
+        int newSynergies = SynergyDiscovery.NewSynergiesThisRun;
+        int newPieces = SynergyDiscovery.NewPiecesThisRun;
+
+        if (newSynergies > 0)
+            synergyDiscoveryText.text = newSynergies == 1 ? "¡Nueva sinergia descubierta!" : $"¡{newSynergies} sinergias nuevas descubiertas!";
+        else if (newPieces > 0)
+            synergyDiscoveryText.text = newPieces == 1 ? "¡Nueva pista de sinergia encontrada!" : $"¡{newPieces} pistas de sinergia nuevas!";
+
+        synergyDiscoveryText.gameObject.SetActive(newSynergies > 0 || newPieces > 0);
+    }
+
+    private void SetGameOverVisible(bool visible)
+    {
+        if (gameOverPanel == null) return;
+
+        if (gameOverCanvasGroup == null)
         {
-            int level = upgradeLevels.ContainsKey(UpgradeType.Damage) ? upgradeLevels[UpgradeType.Damage] : 0;
-            damageUpgradeLevelText.text = level.ToString();
+            gameOverCanvasGroup = gameOverPanel.GetComponent<CanvasGroup>();
+            if (gameOverCanvasGroup == null)
+                gameOverCanvasGroup = gameOverPanel.AddComponent<CanvasGroup>();
         }
 
-        if (attackSpeedUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.AttackSpeed) ? upgradeLevels[UpgradeType.AttackSpeed] : 0;
-            attackSpeedUpgradeLevelText.text = level.ToString();
-        }
-
-        if (attackRangeUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.AttackRange) ? upgradeLevels[UpgradeType.AttackRange] : 0;
-            attackRangeUpgradeLevelText.text = level.ToString();
-        }
-
-        if (moveSpeedUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.MoveSpeed) ? upgradeLevels[UpgradeType.MoveSpeed] : 0;
-            moveSpeedUpgradeLevelText.text = level.ToString();
-        }
-
-        if (magnetRangeUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.MagnetRange) ? upgradeLevels[UpgradeType.MagnetRange] : 0;
-            magnetRangeUpgradeLevelText.text = level.ToString();
-        }
-
-        if (multiShotUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.MultiShot) ? upgradeLevels[UpgradeType.MultiShot] : 0;
-            multiShotUpgradeLevelText.text = level.ToString();
-        }
-
-        if (explosiveShotUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.ExplosiveShot) ? upgradeLevels[UpgradeType.ExplosiveShot] : 0;
-            explosiveShotUpgradeLevelText.text = level.ToString();
-        }
-
-        if (knockbackUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.Knockback) ? upgradeLevels[UpgradeType.Knockback] : 0;
-            knockbackUpgradeLevelText.text = level.ToString();
-        }
+        gameOverCanvasGroup.alpha = visible ? 1f : 0f;
+        gameOverCanvasGroup.interactable = visible;
+        gameOverCanvasGroup.blocksRaycasts = visible;
     }
 
     private IEnumerator CheckLeaderboardQualification()
@@ -193,12 +166,14 @@ public class GameOverUI : MonoBehaviour
         void OnConfirmed(string value) => initials = value;
 
         initialsEntryUI.OnInitialsConfirmed += OnConfirmed;
+        SetGameOverVisible(false);
         initialsEntryPanel.SetActive(true);
 
         yield return new WaitUntil(() => initials != null);
 
         initialsEntryUI.OnInitialsConfirmed -= OnConfirmed;
         initialsEntryPanel.SetActive(false);
+        SetGameOverVisible(true);
 
         var entry = new LeaderboardEntry
         {

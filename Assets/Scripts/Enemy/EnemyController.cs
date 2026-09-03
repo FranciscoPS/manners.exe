@@ -39,6 +39,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     [Header("Movement")]
     [Tooltip("Distancia a la que el enemigo se detiene alrededor del jugador. Evita que todos converjan en el mismo punto.")]
     [SerializeField] private float attackRadius = 1.5f;
+    [Tooltip("Cada cuánto (seg) se recalcula el destino del NavMeshAgent. Bajarlo hace que persigan al jugador con más precisión pero cuesta más CPU con muchos enemigos activos.")]
+    [SerializeField] private float pathUpdateInterval = 0.2f;
 
     private const float StuckCheckInterval = 5f;
     private const float StuckMoveThreshold = 0.8f;
@@ -47,6 +49,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     private bool    isDetouring       = false;
     private float   stuckTimer        = 0f;
     private Vector3 lastCheckPosition;
+
+    private float pathUpdateTimer = 0f;
 
     public float ContactDamage => contactDamage;
 
@@ -58,7 +62,12 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public void ApplySlow(float multiplier, float duration)
     {
-        slowMultiplier = Mathf.Clamp01(multiplier);
+        float clamped = Mathf.Clamp01(multiplier);
+        bool strongerSlowStillActive = Time.time < slowEndTime && slowMultiplier < clamped;
+
+        if (strongerSlowStillActive) return;
+
+        slowMultiplier = clamped;
         slowEndTime = Time.time + duration;
     }
 
@@ -122,6 +131,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         isDetouring       = false;
         stuckTimer        = 0f;
         lastCheckPosition = transform.position;
+        pathUpdateTimer   = Random.Range(0f, pathUpdateInterval);
 
         if (agent != null)
         {
@@ -196,12 +206,18 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             }
             else
             {
-                Vector3 toPlayer = player.position - transform.position;
-                toPlayer.y = 0f;
-                Vector3 destination = toPlayer.magnitude > attackRadius
-                    ? player.position - toPlayer.normalized * attackRadius
-                    : transform.position;
-                agent.SetDestination(destination);
+                pathUpdateTimer += deltaTime;
+                if (pathUpdateTimer >= pathUpdateInterval)
+                {
+                    pathUpdateTimer = 0f;
+
+                    Vector3 toPlayer = player.position - transform.position;
+                    toPlayer.y = 0f;
+                    Vector3 destination = toPlayer.magnitude > attackRadius
+                        ? player.position - toPlayer.normalized * attackRadius
+                        : transform.position;
+                    agent.SetDestination(destination);
+                }
             }
 
             if (separation.sqrMagnitude > 0.0001f)

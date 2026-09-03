@@ -20,12 +20,14 @@ public class SandboxTuning : MonoBehaviour
     }
 
     [Header("=== BALANCE INDEPENDIENTE ===")]
-    [Tooltip("GameBalanceConfig del sandbox (Assets/Configurations/Sandbox/GameBalanceConfig_Sandbox.asset). Se inyecta ANTES que cualquier otro script lea GameBalanceConfig.Instance.")]
+    [Tooltip("GameBalanceConfig del sandbox (Assets/Configurations/SANDBOX CONFIGURATIONS FOR TESTING/GameBalanceConfig_Sandbox.asset). Se inyecta ANTES que cualquier otro script lea GameBalanceConfig.Instance.")]
     [SerializeField] private GameBalanceConfig balanceOverride;
     [Tooltip("UpgradeDatabase del sandbox. Aquí es donde se prueban mejoras y sinergias nuevas sin tocar la base real.")]
     [SerializeField] private UpgradeDatabase upgradeDatabaseOverride;
     [Tooltip("SynergyDatabase del sandbox. Ajusta aquí los requisitos y números de cada sinergia sin tocar producción.")]
     [SerializeField] private SynergyDatabase synergyDatabaseOverride;
+    [Tooltip("ChestOpeningConfig del sandbox. Ajusta aquí los tiempos, colores y sacudidas de la cinemática de apertura de cofre sin tocar producción.")]
+    [SerializeField] private ChestOpeningConfig chestOpeningConfigOverride;
 
     [Header("=== PARTIDA ===")]
     [SerializeField] private float matchDurationMinutes = 3f;
@@ -98,6 +100,16 @@ public class SandboxTuning : MonoBehaviour
         else
         {
             SandboxLog.Skipped("SynergyDatabase: usando el asset de producción (Resources/SynergyDatabase).");
+        }
+
+        if (chestOpeningConfigOverride != null)
+        {
+            ChestOpeningConfig.OverrideInstance(chestOpeningConfigOverride);
+            SandboxLog.Ok($"ChestOpeningConfig sobrescrito con '{chestOpeningConfigOverride.name}'.");
+        }
+        else
+        {
+            SandboxLog.Skipped("ChestOpeningConfig: usando el asset de producción (Resources/ChestOpeningConfig).");
         }
 
         ConfigureTutorial();

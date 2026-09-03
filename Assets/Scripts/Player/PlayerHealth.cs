@@ -168,6 +168,15 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
         }
     }
 
+    public void Kill()
+    {
+        if (isDead) return;
+
+        currentHealth = 0f;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        Die();
+    }
+
     public void Heal(float amount)
     {
         if (isDead) return;

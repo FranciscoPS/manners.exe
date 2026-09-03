@@ -115,6 +115,16 @@ MonoBehaviour:
   blinkSpeed: 2
   minEmission: 0.5
   maxEmission: 2
+  bounceTarget: {fileID: 0}
+  bounceOnlyWhenAvailable: 1
+  bounce:
+    jumpHeight: 0.5
+    jumpDuration: 0.5
+    squashAmount: 0.22
+    stretchAmount: 0.18
+    anticipationDuration: 0.15
+    recoverDuration: 0.4
+    restBetweenJumps: 1
   levelUpManager: {fileID: 0}
 --- !u!114 &6981303444445375112
 MonoBehaviour:
@@ -146,7 +156,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4647345024075415104
 Transform:
   m_ObjectHideFlags: 0
@@ -282,6 +292,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
       propertyPath: m_Name
       value: MannersShop
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 86
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
