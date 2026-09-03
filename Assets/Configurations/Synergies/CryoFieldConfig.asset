@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c52178b3865447ab61ffef2e2ef10c, type: 3}
   m_Name: CryoFieldConfig
   m_EditorClassIdentifier: Assembly-CSharp::CryoFieldConfig
-  radius: 4
-  slowMultiplier: 0.5
+  radius: 10
+  slowMultiplier: 0.63
   damagePerTick: 2
   tickInterval: 1
   visualPrefabOverride: {fileID: 0}
-  visualColor: {r: 0.4, g: 0.85, b: 1, a: 0.35}
+  visualColor: {r: 0.4, g: 0.85, b: 1, a: 0.18431373}
+  activationSFX: {fileID: 0}
+  sfxVolume: 0.7

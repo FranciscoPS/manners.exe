@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: EmpPulseConfig
   m_EditorClassIdentifier: Assembly-CSharp::EmpPulseConfig
   interval: 5
-  radius: 5
+  radius: 12
+  expandDuration: 0.8
   freezeDuration: 2
   chainRadius: 2.5
   visualPrefabOverride: {fileID: 0}
-  ringColor: {r: 0.6, g: 0.9, b: 1, a: 0.5}
+  ringColor: {r: 0.9056604, g: 0.89212316, b: 0.33748665, a: 0.5}
   ringLifetime: 0.4
+  pulseSFX: {fileID: 0}
+  sfxVolume: 0.7
