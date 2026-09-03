@@ -9525,6 +9525,8 @@ MonoBehaviour:
   holdSFXRepeatCount: 3
   holdSFXPitchStart: 1
   holdSFXPitchEnd: 1.3
+  premiumFillColor: {r: 1, g: 0.95, b: 0.6, a: 0.9}
+  premiumShimmerSpeed: 6
 --- !u!114 &997920207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15699,6 +15701,8 @@ MonoBehaviour:
   holdSFXRepeatCount: 3
   holdSFXPitchStart: 1
   holdSFXPitchEnd: 1.3
+  premiumFillColor: {r: 1, g: 0.95, b: 0.6, a: 0.9}
+  premiumShimmerSpeed: 6
 --- !u!114 &1635871982
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15977,9 +15981,25 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 1750432426515630404, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 237.38806
+      objectReference: {fileID: 0}
     - target: {fileID: 2529639616437984250, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
       propertyPath: m_Name
       value: Island
+      objectReference: {fileID: 0}
+    - target: {fileID: 4353892543223825153, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 233.29701
+      objectReference: {fileID: 0}
+    - target: {fileID: 4755881030220046330, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 203.25172
+      objectReference: {fileID: 0}
+    - target: {fileID: 5059817249663244602, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 230.12856
       objectReference: {fileID: 0}
     - target: {fileID: 6280746186560285526, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
       propertyPath: m_LocalPosition.x
@@ -16020,6 +16040,26 @@ PrefabInstance:
     - target: {fileID: 6280746186560285526, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8806757393234809593, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 187.48564
+      objectReference: {fileID: 0}
+    - target: {fileID: 8806757393234809593, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 184.37592
+      objectReference: {fileID: 0}
+    - target: {fileID: 8806757393234809593, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.7071034
+      objectReference: {fileID: 0}
+    - target: {fileID: 8806757393234809593, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071103
+      objectReference: {fileID: 0}
+    - target: {fileID: 8806757393234809593, guid: 17d3338c4d6f1e9418d9decb4071a9ba, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -269.999
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -20478,6 +20518,8 @@ MonoBehaviour:
   holdSFXRepeatCount: 3
   holdSFXPitchStart: 1
   holdSFXPitchEnd: 1.3
+  premiumFillColor: {r: 1, g: 0.95, b: 0.6, a: 0.9}
+  premiumShimmerSpeed: 6
 --- !u!114 &2109390157
 MonoBehaviour:
   m_ObjectHideFlags: 0
