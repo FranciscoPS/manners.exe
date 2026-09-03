@@ -20,6 +20,9 @@ public class PremiumUpgradeVisuals : MonoBehaviour
 
     public void SetPremium(bool premium, UpgradeMode mode = UpgradeMode.LevelUp)
     {
+        if (rectTransform == null)
+            rectTransform = GetComponent<RectTransform>();
+
         if (premium)
         {
             EnablePremiumEffects(mode != UpgradeMode.Chest);

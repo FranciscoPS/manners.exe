@@ -94,7 +94,7 @@ public static class SynergyPanelSetupTools
             return;
         }
 
-        PatchPrefabLevelTexts();
+        UpdatePrefabContents();
 
         GameObject existingMenuScreen = (GameObject)managerSO.FindProperty("sinergiasMenuPanel").objectReferenceValue;
         GameObject menuScreen = EnsureMenuScreen(existingMenuScreen, creditosPanel, prefabAsset);
@@ -162,10 +162,19 @@ public static class SynergyPanelSetupTools
         Debug.Log("[SynergyPanelSetup] Progreso guardado de sinergias borrado: todas las mejoras y sinergias vuelven a '?'.");
     }
 
-    private static void PatchPrefabLevelTexts()
+    private static void UpdatePrefabContents()
     {
         GameObject root = PrefabUtility.LoadPrefabContents(PrefabPath);
 
+        SetupRows(root.transform);
+        PatchLevelTexts(root);
+
+        PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+        PrefabUtility.UnloadPrefabContents(root);
+    }
+
+    private static void PatchLevelTexts(GameObject root)
+    {
         foreach (TextMeshProUGUI tmp in root.GetComponentsInChildren<TextMeshProUGUI>(true))
         {
             if (tmp.gameObject.name != "LevelText") continue;
@@ -176,9 +185,6 @@ public static class SynergyPanelSetupTools
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
             tmp.overflowMode = TextOverflowModes.Overflow;
         }
-
-        PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
-        PrefabUtility.UnloadPrefabContents(root);
     }
 
     private static void RemoveLegacyCloseButton(Transform panel)
@@ -426,6 +432,19 @@ public static class SynergyPanelSetupTools
         }
     }
 
+    private static readonly Color RequirementBackdropColor = new Color(0.93f, 0.96f, 1f, 1f);
+    private static readonly Color ResultBackdropColor = new Color(1f, 0.95f, 0.6f, 1f);
+    private const float BackdropInset = 8f;
+    private const float IconInset = 14f;
+
+    private struct SquareParts
+    {
+        public Image icon;
+        public Image backdrop;
+        public TextMeshProUGUI unknownText;
+        public TextMeshProUGUI levelText;
+    }
+
     private static void SetupRow(Transform row, SynergyData synergy)
     {
         Transform template = row.Find("Plus_Txt");
@@ -434,9 +453,17 @@ public static class SynergyPanelSetupTools
         Transform squareB = row.Find("EmptySquare2");
         Transform squareResult = row.Find("EmptySquare3");
 
-        (Image iconA, TextMeshProUGUI unknownA, TextMeshProUGUI levelA) = SetupSquare(squareA, template, true);
-        (Image iconB, TextMeshProUGUI unknownB, TextMeshProUGUI levelB) = SetupSquare(squareB, template, true);
-        (Image iconResult, TextMeshProUGUI unknownResult, _) = SetupSquare(squareResult, template, false);
+        SquareParts a = SetupSquare(squareA, template, true, RequirementBackdropColor);
+        SquareParts b = SetupSquare(squareB, template, true, RequirementBackdropColor);
+        SquareParts result = SetupSquare(squareResult, template, false, ResultBackdropColor);
+
+        PremiumUpgradeVisuals resultVisuals = null;
+        if (squareResult != null)
+        {
+            resultVisuals = squareResult.GetComponent<PremiumUpgradeVisuals>();
+            if (resultVisuals == null)
+                resultVisuals = squareResult.gameObject.AddComponent<PremiumUpgradeVisuals>();
+        }
 
         SynergyHintRowUI rowUI = row.GetComponent<SynergyHintRowUI>();
         if (rowUI == null)
@@ -444,52 +471,89 @@ public static class SynergyPanelSetupTools
 
         SerializedObject rowSO = new SerializedObject(rowUI);
         rowSO.FindProperty("synergy").objectReferenceValue = synergy;
-        rowSO.FindProperty("iconA").objectReferenceValue = iconA;
-        rowSO.FindProperty("unknownTextA").objectReferenceValue = unknownA;
-        rowSO.FindProperty("levelTextA").objectReferenceValue = levelA;
-        rowSO.FindProperty("iconB").objectReferenceValue = iconB;
-        rowSO.FindProperty("unknownTextB").objectReferenceValue = unknownB;
-        rowSO.FindProperty("levelTextB").objectReferenceValue = levelB;
-        rowSO.FindProperty("iconResult").objectReferenceValue = iconResult;
-        rowSO.FindProperty("unknownTextResult").objectReferenceValue = unknownResult;
+        rowSO.FindProperty("iconA").objectReferenceValue = a.icon;
+        rowSO.FindProperty("backdropA").objectReferenceValue = a.backdrop;
+        rowSO.FindProperty("unknownTextA").objectReferenceValue = a.unknownText;
+        rowSO.FindProperty("levelTextA").objectReferenceValue = a.levelText;
+        rowSO.FindProperty("iconB").objectReferenceValue = b.icon;
+        rowSO.FindProperty("backdropB").objectReferenceValue = b.backdrop;
+        rowSO.FindProperty("unknownTextB").objectReferenceValue = b.unknownText;
+        rowSO.FindProperty("levelTextB").objectReferenceValue = b.levelText;
+        rowSO.FindProperty("iconResult").objectReferenceValue = result.icon;
+        rowSO.FindProperty("backdropResult").objectReferenceValue = result.backdrop;
+        rowSO.FindProperty("unknownTextResult").objectReferenceValue = result.unknownText;
+        rowSO.FindProperty("resultVisuals").objectReferenceValue = resultVisuals;
         rowSO.ApplyModifiedProperties();
 
         EditorUtility.SetDirty(rowUI);
     }
 
-    private static (Image icon, TextMeshProUGUI unknownText, TextMeshProUGUI levelText) SetupSquare(Transform square, Transform tmpTemplate, bool needsLevelText)
+    private static SquareParts SetupSquare(Transform square, Transform tmpTemplate, bool needsLevelText, Color backdropColor)
     {
-        if (square == null) return (null, null, null);
+        SquareParts parts = new SquareParts();
+        if (square == null) return parts;
 
-        Image icon = GetOrCreateIcon(square, "Icon");
-        TextMeshProUGUI unknownText = GetOrCreateTmp(square, "UnknownText", tmpTemplate, "?", Stretch);
+        parts.backdrop = GetOrCreateBackdrop(square, "IconBackdrop", backdropColor);
+        parts.icon = GetOrCreateIcon(square, "Icon");
+        parts.unknownText = GetOrCreateTmp(square, "UnknownText", tmpTemplate, "?", Stretch);
 
-        TextMeshProUGUI levelText = null;
         if (needsLevelText)
-            levelText = GetOrCreateTmp(square, "LevelText", tmpTemplate, "Nv. 0", BottomStrip);
+            parts.levelText = GetOrCreateTmp(square, "LevelText", tmpTemplate, "Nv. 0", BottomStrip);
 
-        return (icon, unknownText, levelText);
+        return parts;
+    }
+
+    private static Image GetOrCreateBackdrop(Transform parent, string name, Color color)
+    {
+        Transform existing = parent.Find(name);
+        GameObject go = existing != null ? existing.gameObject : new GameObject(name, typeof(RectTransform), typeof(Image));
+
+        if (existing == null)
+        {
+            go.transform.SetParent(parent, false);
+            go.SetActive(false);
+        }
+
+        go.transform.SetSiblingIndex(0);
+
+        RectTransform rt = (RectTransform)go.transform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = new Vector2(BackdropInset, BackdropInset);
+        rt.offsetMax = new Vector2(-BackdropInset, -BackdropInset);
+
+        Image image = go.GetComponent<Image>();
+        image.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+        image.type = Image.Type.Sliced;
+        image.color = color;
+        image.raycastTarget = false;
+
+        return image;
     }
 
     private static Image GetOrCreateIcon(Transform parent, string name)
     {
         Transform existing = parent.Find(name);
-        if (existing != null) return existing.GetComponent<Image>();
+        GameObject go = existing != null ? existing.gameObject : new GameObject(name, typeof(RectTransform), typeof(Image));
 
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(parent, false);
+        if (existing == null)
+            go.transform.SetParent(parent, false);
 
         RectTransform rt = (RectTransform)go.transform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
-        rt.offsetMin = new Vector2(6, 6);
-        rt.offsetMax = new Vector2(-6, -6);
+        rt.offsetMin = new Vector2(IconInset, IconInset);
+        rt.offsetMax = new Vector2(-IconInset, -IconInset);
 
         Image image = go.GetComponent<Image>();
-        image.sprite = null;
-        image.enabled = false;
         image.preserveAspect = true;
         image.raycastTarget = false;
+
+        if (existing == null)
+        {
+            image.sprite = null;
+            image.enabled = false;
+        }
 
         return image;
     }

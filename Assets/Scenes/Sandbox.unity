@@ -4449,6 +4449,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SandboxHotkeys
   debugMonitor: {fileID: 166476814}
   togglePanel: 94
+  synergyHintsPanelPrefab: {fileID: 0}
+  toggleSynergyHints: 22
+  clearSynergyDiscoveries: 71
   grantLevel: 95
   grantRandomUpgrade: 96
   grantRandomPremiumUpgrade: 97
@@ -4511,8 +4514,7 @@ MonoBehaviour:
   startingHealthBonus: 0
   tutorialMode: 1
   synergiesEnabled: 1
-  forceActiveSynergies:
-  - {fileID: 11400000, guid: 0b9e4cc7789804dd792e0dff26e7f7c3, type: 2}
+  forceActiveSynergies: []
   startingCoins: 0
   startingDiamonds: 0
   startingPlayerLevels: 0
@@ -5918,6 +5920,14 @@ MonoBehaviour:
   multiShotUpgradeLevelText: {fileID: 239892131}
   explosiveShotUpgradeLevelText: {fileID: 1124606293}
   knockbackUpgradeLevelText: {fileID: 133119229}
+  damageUpgradeIcon: {fileID: 0}
+  attackSpeedUpgradeIcon: {fileID: 0}
+  attackRangeUpgradeIcon: {fileID: 0}
+  moveSpeedUpgradeIcon: {fileID: 0}
+  magnetRangeUpgradeIcon: {fileID: 0}
+  multiShotUpgradeIcon: {fileID: 0}
+  explosiveShotUpgradeIcon: {fileID: 0}
+  knockbackUpgradeIcon: {fileID: 0}
 --- !u!114 &238261087
 MonoBehaviour:
   m_ObjectHideFlags: 0

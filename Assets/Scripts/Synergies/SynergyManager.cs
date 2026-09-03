@@ -151,7 +151,10 @@ public class SynergyManager : MonoBehaviour
             if (synergy == null || activeEffects.ContainsKey(synergy)) continue;
 
             if (RequirementsMet(synergy))
+            {
+                SynergyDiscovery.RecordSynergyUnlocked(synergy);
                 Activate(synergy, playerTransform);
+            }
         }
     }
 
@@ -193,7 +196,6 @@ public class SynergyManager : MonoBehaviour
         activeEffects[synergy] = instance;
 
         Debug.Log($"[SYNERGY] Desbloqueada: {synergy.synergyName}");
-        SynergyDiscovery.RecordSynergyUnlocked(synergy);
         OnSynergyActivated?.Invoke(synergy);
     }
 
