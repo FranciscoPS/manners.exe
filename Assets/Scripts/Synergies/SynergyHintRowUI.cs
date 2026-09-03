@@ -1,9 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
-public class SynergyHintRowUI : MonoBehaviour
+public class SynergyHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    private const string UndiscoveredTooltipTitle = "??? Sinergia sin descubrir";
+    private const string UndiscoveredTooltipBody = "Sube al nivel requerido las dos mejoras de esta fila para revelar qué hace.";
+
     [Header("Sinergia representada por esta fila")]
     [SerializeField] private SynergyData synergy;
 
@@ -26,6 +30,9 @@ public class SynergyHintRowUI : MonoBehaviour
     [Tooltip("Efecto premium (foil holográfico + pulso) que se enciende cuando la sinergia está desbloqueada.")]
     [SerializeField] private PremiumUpgradeVisuals resultVisuals;
 
+    private bool isUnlocked;
+    private Canvas canvas;
+
     private void OnEnable()
     {
         Refresh();
@@ -35,6 +42,27 @@ public class SynergyHintRowUI : MonoBehaviour
     {
         if (resultVisuals != null)
             resultVisuals.SetPremium(false);
+
+        HoverTooltipUI.Hide();
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        SynergyData data = ResolveSynergy();
+        if (data == null) return;
+
+        if (canvas == null)
+            canvas = GetComponentInParent<Canvas>();
+
+        if (isUnlocked)
+            HoverTooltipUI.Show(canvas, data.synergyName, data.description);
+        else
+            HoverTooltipUI.Show(canvas, UndiscoveredTooltipTitle, UndiscoveredTooltipBody);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        HoverTooltipUI.Hide();
     }
 
     public void Refresh()
@@ -54,10 +82,10 @@ public class SynergyHintRowUI : MonoBehaviour
         ApplySlot(iconA, backdropA, unknownTextA, levelTextA, upgradeA != null ? upgradeA.icon : null, reachedA > 0, reachedA, data.requiredLevelA);
         ApplySlot(iconB, backdropB, unknownTextB, levelTextB, upgradeB != null ? upgradeB.icon : null, reachedB > 0, reachedB, data.requiredLevelB);
 
-        bool unlocked = SynergyDiscovery.IsSynergyUnlocked(data)
+        isUnlocked = SynergyDiscovery.IsSynergyUnlocked(data)
             || (currentA >= data.requiredLevelA && currentB >= data.requiredLevelB);
 
-        bool revealResult = ApplySlot(iconResult, backdropResult, unknownTextResult, null, data.icon, unlocked, 0, 0);
+        bool revealResult = ApplySlot(iconResult, backdropResult, unknownTextResult, null, data.icon, isUnlocked, 0, 0);
 
         if (resultVisuals != null)
             resultVisuals.SetPremium(revealResult);

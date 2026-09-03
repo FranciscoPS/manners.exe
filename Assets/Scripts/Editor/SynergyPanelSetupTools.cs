@@ -447,6 +447,8 @@ public static class SynergyPanelSetupTools
 
     private static void SetupRow(Transform row, SynergyData synergy)
     {
+        EnsureHoverHitArea(row);
+
         Transform template = row.Find("Plus_Txt");
 
         Transform squareA = row.Find("EmptySquare1");
@@ -486,6 +488,32 @@ public static class SynergyPanelSetupTools
         rowSO.ApplyModifiedProperties();
 
         EditorUtility.SetDirty(rowUI);
+    }
+
+    private static void EnsureHoverHitArea(Transform row)
+    {
+        Transform existing = row.Find("HoverHitArea");
+        GameObject go = existing != null ? existing.gameObject : new GameObject("HoverHitArea", typeof(RectTransform), typeof(Image));
+
+        if (existing == null)
+            go.transform.SetParent(row, false);
+
+        go.transform.SetSiblingIndex(0);
+
+        RectTransform rt = (RectTransform)go.transform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        Image image = go.GetComponent<Image>();
+        image.color = Color.clear;
+        image.raycastTarget = true;
+
+        LayoutElement layoutElement = go.GetComponent<LayoutElement>();
+        if (layoutElement == null)
+            layoutElement = go.AddComponent<LayoutElement>();
+        layoutElement.ignoreLayout = true;
     }
 
     private static SquareParts SetupSquare(Transform square, Transform tmpTemplate, bool needsLevelText, Color backdropColor)
