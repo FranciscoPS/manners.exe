@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,15 +11,21 @@ public class DamageTween : MonoBehaviour
     [Tooltip("Si está activo, también tiñe los Renderer de los hijos (útil para modelos con varias partes, como la torreta de un tanque). Si no, solo tiñe el Renderer del propio GameObject.")]
     [SerializeField] private bool includeChildRenderers = false;
 
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
+
     private GameObject targetObject;
     private SpriteRenderer spriteRenderer;
     private Graphic uiGraphic;
 
-    private Material[] materialInstances;
-    private bool createdMaterialInstances = false;
+    private Renderer[] renderers;
+    private Color[] rendererOriginalColors;
+    private bool[] rendererHasBaseColor;
+    private bool[] rendererHasColor;
+    private MaterialPropertyBlock propertyBlock;
 
-    private Color[] originalColors;
     private Color originalColor = Color.white;
+    private Color currentColor = Color.white;
 
     private Tween damageTween;
     private bool isInitialized = false;
@@ -58,22 +63,28 @@ public class DamageTween : MonoBehaviour
 
         if (spriteRenderer == null && uiGraphic == null)
         {
-            Renderer[] renderers = includeChildRenderers
+            renderers = includeChildRenderers
                 ? targetObject.GetComponentsInChildren<Renderer>(true)
                 : new[] { targetObject.GetComponent<Renderer>() };
 
-            List<Material> combined = new List<Material>();
+            rendererHasBaseColor = new bool[renderers.Length];
+            rendererHasColor = new bool[renderers.Length];
+            rendererOriginalColors = new Color[renderers.Length];
+
             for (int i = 0; i < renderers.Length; i++)
             {
-                if (renderers[i] == null) continue;
-                combined.AddRange(renderers[i].materials);
+                Material shared = renderers[i] != null ? renderers[i].sharedMaterial : null;
+                if (shared == null) continue;
+
+                rendererHasBaseColor[i] = shared.HasProperty(BaseColorId);
+                rendererHasColor[i] = shared.HasProperty(ColorId);
+
+                rendererOriginalColors[i] = rendererHasBaseColor[i] ? shared.GetColor(BaseColorId)
+                    : rendererHasColor[i] ? shared.GetColor(ColorId)
+                    : shared.color;
             }
 
-            if (combined.Count > 0)
-            {
-                materialInstances = combined.ToArray();
-                createdMaterialInstances = true;
-            }
+            propertyBlock = new MaterialPropertyBlock();
         }
 
         isInitialized = true;
@@ -85,46 +96,29 @@ public class DamageTween : MonoBehaviour
         if (spriteRenderer != null)
         {
             originalColor = spriteRenderer.color;
-            originalColors = null;
+            currentColor = originalColor;
             return;
         }
 
         if (uiGraphic != null)
         {
             originalColor = uiGraphic.color;
-            originalColors = null;
+            currentColor = originalColor;
             return;
         }
 
-        if (materialInstances != null && materialInstances.Length > 0)
-        {
-            originalColors = new Color[materialInstances.Length];
-            for (int i = 0; i < materialInstances.Length; i++)
-            {
-                Material m = materialInstances[i];
-                if (m == null) { originalColors[i] = Color.white; continue; }
+        originalColor = rendererOriginalColors != null && rendererOriginalColors.Length > 0
+            ? rendererOriginalColors[0]
+            : Color.white;
 
-                if (m.HasProperty("_BaseColor"))
-                    originalColors[i] = m.GetColor("_BaseColor");
-                else if (m.HasProperty("_Color"))
-                    originalColors[i] = m.GetColor("_Color");
-                else
-                    originalColors[i] = m.color;
-            }
-
-            originalColor = originalColors.Length > 0 ? originalColors[0] : Color.white;
-            return;
-        }
-
-        originalColors = null;
-        originalColor = Color.white;
+        currentColor = originalColor;
     }
 
     public void TweenFx()
     {
         if (!isInitialized) InitializeMaterial();
 
-        if (spriteRenderer == null && uiGraphic == null && (materialInstances == null || materialInstances.Length == 0))
+        if (spriteRenderer == null && uiGraphic == null && (renderers == null || renderers.Length == 0))
             return;
 
         damageTween?.Kill(true);
@@ -132,8 +126,8 @@ public class DamageTween : MonoBehaviour
         float adjustedTweenTime = tweenTime / Mathf.Max(1, tweenLoops);
 
         damageTween = DOTween.To(
-            () => GetCurrentColor(),
-            color => SetTargetColor(color),
+            () => currentColor,
+            SetTargetColor,
             damageColor,
             adjustedTweenTime
         )
@@ -147,27 +141,10 @@ public class DamageTween : MonoBehaviour
         });
     }
 
-    private Color GetCurrentColor()
-    {
-        if (spriteRenderer != null) return spriteRenderer.color;
-        if (uiGraphic != null) return uiGraphic.color;
-        if (materialInstances != null && materialInstances.Length > 0)
-        {
-            Material m = materialInstances[0];
-            if (m != null)
-            {
-                if (m.HasProperty("_BaseColor"))
-                    return m.GetColor("_BaseColor");
-                if (m.HasProperty("_Color"))
-                    return m.GetColor("_Color");
-                return m.color;
-            }
-        }
-        return originalColor;
-    }
-
     private void SetTargetColor(Color color)
     {
+        currentColor = color;
+
         if (spriteRenderer != null)
         {
             spriteRenderer.color = color;
@@ -180,24 +157,31 @@ public class DamageTween : MonoBehaviour
             return;
         }
 
-        if (materialInstances != null && materialInstances.Length > 0)
-        {
-            for (int i = 0; i < materialInstances.Length; i++)
-            {
-                Material m = materialInstances[i];
-                if (m == null) continue;
+        ApplyColorToRenderers(color);
+    }
 
-                if (m.HasProperty("_BaseColor"))
-                    m.SetColor("_BaseColor", color);
-                if (m.HasProperty("_Color"))
-                    m.SetColor("_Color", color);
-                m.color = color;
-            }
+    private void ApplyColorToRenderers(Color color)
+    {
+        if (renderers == null) return;
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer r = renderers[i];
+            if (r == null) continue;
+
+            r.GetPropertyBlock(propertyBlock);
+
+            if (rendererHasBaseColor[i]) propertyBlock.SetColor(BaseColorId, color);
+            if (rendererHasColor[i]) propertyBlock.SetColor(ColorId, color);
+
+            r.SetPropertyBlock(propertyBlock);
         }
     }
 
     private void RestoreOriginalColors()
     {
+        currentColor = originalColor;
+
         if (spriteRenderer != null)
         {
             spriteRenderer.color = originalColor;
@@ -210,38 +194,19 @@ public class DamageTween : MonoBehaviour
             return;
         }
 
-        if (materialInstances != null && originalColors != null)
+        if (renderers == null) return;
+
+        for (int i = 0; i < renderers.Length; i++)
         {
-            int count = Mathf.Min(materialInstances.Length, originalColors.Length);
-            for (int i = 0; i < count; i++)
-            {
-                Material m = materialInstances[i];
-                if (m == null) continue;
+            Renderer r = renderers[i];
+            if (r == null) continue;
 
-                Color c = originalColors[i];
+            r.GetPropertyBlock(propertyBlock);
 
-                if (m.HasProperty("_BaseColor"))
-                    m.SetColor("_BaseColor", c);
-                if (m.HasProperty("_Color"))
-                    m.SetColor("_Color", c);
-                m.color = c;
-            }
-        }
-    }
+            if (rendererHasBaseColor[i]) propertyBlock.SetColor(BaseColorId, rendererOriginalColors[i]);
+            if (rendererHasColor[i]) propertyBlock.SetColor(ColorId, rendererOriginalColors[i]);
 
-    private void OnDestroy()
-    {
-        damageTween?.Kill();
-
-        if (createdMaterialInstances && materialInstances != null && Application.isPlaying)
-        {
-            for (int i = 0; i < materialInstances.Length; i++)
-            {
-                if (materialInstances[i] != null)
-                {
-                    Destroy(materialInstances[i]);
-                }
-            }
+            r.SetPropertyBlock(propertyBlock);
         }
     }
 }

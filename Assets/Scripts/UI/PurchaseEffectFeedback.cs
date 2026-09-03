@@ -74,12 +74,6 @@ public class PurchaseEffectFeedback : MonoBehaviour
     {
         if (rectTransform == null) return;
 
-        rectTransform.DOKill();
-
-        Sequence scaleSequence = DOTween.Sequence();
-        scaleSequence.SetUpdate(true);
-
-        scaleSequence.Append(rectTransform.DOScale(punchScale, scaleDuration / 2f).SetEase(Ease.OutBack));
-        scaleSequence.Append(rectTransform.DOScale(1f, scaleDuration / 2f).SetEase(Ease.InOutSine));
+        rectTransform.PunchScale(punchScale, scaleDuration);
     }
 }

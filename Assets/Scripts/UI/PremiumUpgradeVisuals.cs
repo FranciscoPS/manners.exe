@@ -22,7 +22,7 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     {
         if (premium)
         {
-            EnablePremiumEffects(mode == UpgradeMode.Shop);
+            EnablePremiumEffects(mode != UpgradeMode.Chest);
         }
         else
         {

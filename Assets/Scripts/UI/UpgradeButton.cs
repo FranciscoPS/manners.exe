@@ -19,9 +19,16 @@ public class UpgradeButton : MonoBehaviour
     private Image iconImage;
     private Button button;
     private CanvasGroup canvasGroup;
+    private RectTransform rectTransform;
 
     [Header("Disabled Settings")]
     [SerializeField] private float disabledAlpha = 0.5f;
+
+    [Header("Juice")]
+    [Tooltip("Duración de la animación de aparición de la card (rebote de chica a grande).")]
+    [SerializeField] private float introDuration = 0.36f;
+    [Tooltip("Fuerza del rebote al aparecer. Valores del estilo DOTween OutBack: más alto = más exagerado.")]
+    [SerializeField] private float introOvershoot = 1.3f;
 
     [Header("Component References")]
     private HoldToSelectButton holdToSelectButton;
@@ -40,6 +47,7 @@ public class UpgradeButton : MonoBehaviour
     {
         button = GetComponent<Button>();
         canvasGroup = GetComponent<CanvasGroup>();
+        rectTransform = GetComponent<RectTransform>();
 
         if (canvasGroup == null)
         {
@@ -138,6 +146,31 @@ public class UpgradeButton : MonoBehaviour
         {
             premiumVisuals.SetPremium(assignedUpgrade.isPremium, currentMode);
         }
+
+        if (holdToSelectButton != null && assignedUpgrade != null)
+        {
+            holdToSelectButton.SetPremiumStyle(assignedUpgrade.isPremium);
+        }
+    }
+
+    public void PlayIntroAnimation(float delay = 0f)
+    {
+        if (rectTransform == null)
+        {
+            rectTransform = GetComponent<RectTransform>();
+        }
+
+        rectTransform.PopIn(introDuration, introOvershoot, delay);
+    }
+
+    public void PlayOutroAnimation(float duration, float delay = 0f)
+    {
+        if (rectTransform == null)
+        {
+            rectTransform = GetComponent<RectTransform>();
+        }
+
+        rectTransform.PopOut(duration, delay: delay);
     }
 
     public void SetupChest(ChestItemData item)
@@ -168,6 +201,11 @@ public class UpgradeButton : MonoBehaviour
         if (premiumVisuals != null)
         {
             premiumVisuals.SetPremium(true, currentMode);
+        }
+
+        if (holdToSelectButton != null)
+        {
+            holdToSelectButton.SetPremiumStyle(true);
         }
     }
 

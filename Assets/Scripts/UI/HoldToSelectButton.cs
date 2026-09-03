@@ -13,10 +13,18 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
     [SerializeField] private float holdSFXPitchStart = 1.0f;
     [SerializeField] private float holdSFXPitchEnd = 1.3f;
 
+    [Header("Premium Style")]
+    [Tooltip("Color del relleno para mejoras especiales/premium: más brillante para no perderse contra el fondo arcoiris.")]
+    [SerializeField] private Color premiumFillColor = new Color(1f, 0.95f, 0.6f, 0.9f);
+    [Tooltip("Velocidad del brillo pulsante del relleno en mejoras especiales.")]
+    [SerializeField] private float premiumShimmerSpeed = 6f;
+
     private bool isHolding = false;
     private float holdTimer = 0f;
     private Button button;
     private int currentSFXPlayCount = 0;
+    private Color normalFillColor;
+    private bool isPremiumStyle;
 
     public System.Action OnHoldComplete;
 
@@ -26,6 +34,8 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
 
         if (fillOverlayImage != null)
         {
+            normalFillColor = fillOverlayImage.color;
+
             RectTransform rt = fillOverlayImage.rectTransform;
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(0f, 1f);
@@ -33,6 +43,16 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
             rt.offsetMax = Vector2.zero;
 
             fillOverlayImage.gameObject.SetActive(false);
+        }
+    }
+
+    public void SetPremiumStyle(bool premium)
+    {
+        isPremiumStyle = premium;
+
+        if (fillOverlayImage != null)
+        {
+            fillOverlayImage.color = premium ? premiumFillColor : normalFillColor;
         }
     }
 
@@ -47,6 +67,14 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
                 float fillProgress = Mathf.Clamp01(holdTimer / holdDuration);
                 RectTransform rt = fillOverlayImage.rectTransform;
                 rt.anchorMax = new Vector2(fillProgress, 1f);
+
+                if (isPremiumStyle)
+                {
+                    float shimmerT = (Mathf.Sin(holdTimer * premiumShimmerSpeed) + 1f) * 0.5f;
+                    Color shimmerColor = Color.Lerp(premiumFillColor, Color.white, shimmerT * 0.5f);
+                    shimmerColor.a = premiumFillColor.a;
+                    fillOverlayImage.color = shimmerColor;
+                }
             }
 
             int targetPlayCount = Mathf.FloorToInt((holdTimer / holdDuration) * holdSFXRepeatCount);
@@ -85,8 +113,10 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         if (fillOverlayImage != null)
         {
             fillOverlayImage.gameObject.SetActive(true);
+            fillOverlayImage.transform.SetAsLastSibling();
             RectTransform rt = fillOverlayImage.rectTransform;
             rt.anchorMax = new Vector2(0f, 1f);
+            fillOverlayImage.color = isPremiumStyle ? premiumFillColor : normalFillColor;
         }
 
         PlayHoldSFX();
