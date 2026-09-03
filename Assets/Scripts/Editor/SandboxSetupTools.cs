@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public static class SandboxSetupTools
 {
     private const string SourceScenePath = "Assets/Scenes/CityTest.unity";
-    internal const string SandboxFolder = "Assets/Configurations/Sandbox";
+    internal const string SandboxFolder = "Assets/Configurations/SANDBOX CONFIGURATIONS FOR TESTING";
     internal const string UpgradesFolder = SandboxFolder + "/Upgrades";
     internal const string EnemiesFolder = SandboxFolder + "/Enemies";
     internal const string WavesFolder = SandboxFolder + "/Waves";

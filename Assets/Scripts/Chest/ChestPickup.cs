@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 [DisallowMultipleComponent]
 public class ChestPickup : MonoBehaviour, IUpdateable
@@ -7,9 +8,17 @@ public class ChestPickup : MonoBehaviour, IUpdateable
     [Tooltip("Radio horizontal (XZ) para recoger el cofre. El cofre tiene escala 2, así que conviene 3+.")]
     [SerializeField] private float pickupRadius = 3f;
 
-    [Header("Bob (salto visual)")]
-    [SerializeField] private float bobHeight = 0.6f;
-    [SerializeField] private float bobSpeed = 4.5f;
+    [Header("Salto (squash & stretch)")]
+    [SerializeField] private SquashStretchBounceSettings bounce = new SquashStretchBounceSettings
+    {
+        jumpHeight = 0.6f,
+        jumpDuration = 0.5f,
+        squashAmount = 0.25f,
+        stretchAmount = 0.2f,
+        anticipationDuration = 0.1f,
+        recoverDuration = 0.3f,
+        restBetweenJumps = 0.15f
+    };
 
     private Transform player;
     private bool opened = false;
@@ -18,8 +27,10 @@ public class ChestPickup : MonoBehaviour, IUpdateable
     private float nextCheckTime = 0f;
     private const float CheckInterval = 0.1f;
 
-    private Vector3 basePosition;
+    private Vector3 baseScale;
+    private float baseLocalY;
     private bool baseCaptured = false;
+    private Sequence bounceTween;
 
     private ChestItemData chosenItem;
     private bool hasOpenedOnce = false;
@@ -50,6 +61,10 @@ public class ChestPickup : MonoBehaviour, IUpdateable
     {
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Unregister(this);
+
+        StopBounce();
+        if (baseCaptured)
+            SquashStretchBounce.ResetPose(transform, baseScale, baseLocalY);
     }
 
     public void OnUpdate(float deltaTime)
@@ -58,11 +73,13 @@ public class ChestPickup : MonoBehaviour, IUpdateable
 
         if (!baseCaptured)
         {
-            basePosition = transform.position;
+            baseScale = transform.localScale;
+            baseLocalY = transform.localPosition.y;
             baseCaptured = true;
         }
-        float bob = Mathf.Abs(Mathf.Sin(Time.time * bobSpeed)) * bobHeight;
-        transform.position = basePosition + Vector3.up * bob;
+
+        if (bounceTween == null && !selectionOpen)
+            bounceTween = SquashStretchBounce.PlayLoop(transform, bounce, baseScale, baseLocalY);
 
         if (player == null)
         {
@@ -91,6 +108,9 @@ public class ChestPickup : MonoBehaviour, IUpdateable
         if (opened || selectionOpen) return;
 
         selectionOpen = true;
+        StopBounce();
+        if (baseCaptured)
+            SquashStretchBounce.Settle(transform, baseScale, baseLocalY);
 
         if (hasOpenedOnce)
         {
@@ -111,7 +131,6 @@ public class ChestPickup : MonoBehaviour, IUpdateable
     public void OnSelectionClosed()
     {
         selectionOpen = false;
-
     }
 
     public void OnCollected()
@@ -122,6 +141,15 @@ public class ChestPickup : MonoBehaviour, IUpdateable
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Unregister(this);
 
+        StopBounce();
         Destroy(gameObject);
+    }
+
+    private void StopBounce()
+    {
+        if (bounceTween == null) return;
+
+        bounceTween.Kill();
+        bounceTween = null;
     }
 }

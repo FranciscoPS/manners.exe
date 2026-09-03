@@ -20,7 +20,7 @@ public class SandboxTuning : MonoBehaviour
     }
 
     [Header("=== BALANCE INDEPENDIENTE ===")]
-    [Tooltip("GameBalanceConfig del sandbox (Assets/Configurations/Sandbox/GameBalanceConfig_Sandbox.asset). Se inyecta ANTES que cualquier otro script lea GameBalanceConfig.Instance.")]
+    [Tooltip("GameBalanceConfig del sandbox (Assets/Configurations/SANDBOX CONFIGURATIONS FOR TESTING/GameBalanceConfig_Sandbox.asset). Se inyecta ANTES que cualquier otro script lea GameBalanceConfig.Instance.")]
     [SerializeField] private GameBalanceConfig balanceOverride;
     [Tooltip("UpgradeDatabase del sandbox. Aquí es donde se prueban mejoras y sinergias nuevas sin tocar la base real.")]
     [SerializeField] private UpgradeDatabase upgradeDatabaseOverride;
