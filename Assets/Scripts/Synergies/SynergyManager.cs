@@ -82,6 +82,7 @@ public class SynergyManager : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         ClearActiveEffects();
+        SynergyDiscovery.BeginRun();
         player = null;
         SubscribeToPlayerStats();
     }

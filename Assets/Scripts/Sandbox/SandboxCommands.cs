@@ -253,6 +253,26 @@ public static class SandboxCommands
         SandboxLog.Command("Panel de sinergias: visible con el progreso actual (vuelve a pulsar para ocultarlo).");
     }
 
+    public static void KillPlayer()
+    {
+        PlayerHealth health = Object.FindFirstObjectByType<PlayerHealth>();
+
+        if (health == null)
+        {
+            SandboxLog.Warn("Morir: no se encontró PlayerHealth.");
+            return;
+        }
+
+        if (health.IsDead)
+        {
+            SandboxLog.Warn("Morir: el jugador ya está muerto.");
+            return;
+        }
+
+        health.Kill();
+        SandboxLog.Command("Morir: muerte forzada (ignora invulnerabilidad). Debería abrirse la pantalla de Game Over.");
+    }
+
     public static void ClearSynergyDiscoveries()
     {
         SynergyDiscovery.Clear();

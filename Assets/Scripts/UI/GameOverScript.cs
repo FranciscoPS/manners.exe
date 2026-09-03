@@ -29,31 +29,16 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI coinsCollectedText;
     [SerializeField] private TextMeshProUGUI diamondsCollectedText;
 
-    [Header("Upgrade Levels UI")]
-    [SerializeField] private TextMeshProUGUI damageUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI attackSpeedUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI attackRangeUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI moveSpeedUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI magnetRangeUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI multiShotUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI explosiveShotUpgradeLevelText;
-    [SerializeField] private TextMeshProUGUI knockbackUpgradeLevelText;
-
-    [Header("Upgrade Icons UI")]
-    [SerializeField] private Image damageUpgradeIcon;
-    [SerializeField] private Image attackSpeedUpgradeIcon;
-    [SerializeField] private Image attackRangeUpgradeIcon;
-    [SerializeField] private Image moveSpeedUpgradeIcon;
-    [SerializeField] private Image magnetRangeUpgradeIcon;
-    [SerializeField] private Image multiShotUpgradeIcon;
-    [SerializeField] private Image explosiveShotUpgradeIcon;
-    [SerializeField] private Image knockbackUpgradeIcon;
+    [Header("Sinergias")]
+    [Tooltip("Aviso que aparece solo si en esta partida se descubrió una pista o una sinergia nueva.")]
+    [SerializeField] private TextMeshProUGUI synergyDiscoveryText;
 
     private bool isTransitioning = false;
     private bool statsUpdated = false;
 
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
+    private CanvasGroup gameOverCanvasGroup;
 
     private void Update()
     {
@@ -108,7 +93,7 @@ public class GameOverUI : MonoBehaviour
 
         if (buildingsDestroyedText != null)
         {
-            buildingsDestroyedText.text = $"Edificios destruidos : {GameSessionStats.Instance.BuildingsDestroyed}";
+            buildingsDestroyedText.text = $"Edificios destruidos: {GameSessionStats.Instance.BuildingsDestroyed}";
         }
 
         if (coinsCollectedText != null)
@@ -121,36 +106,38 @@ public class GameOverUI : MonoBehaviour
             diamondsCollectedText.text = $"Gemas recolectadas: {GameSessionStats.Instance.DiamondsCollected}";
         }
 
-        UpdateUpgradeLevels();
+        UpdateSynergyDiscovery();
     }
 
-    private void UpdateUpgradeLevels()
+    private void UpdateSynergyDiscovery()
     {
-        Dictionary<UpgradeType, int> upgradeLevels = GameSessionStats.Instance.GetUpgradeLevels();
+        if (synergyDiscoveryText == null) return;
 
-        SetUpgradeSlot(damageUpgradeLevelText, damageUpgradeIcon, upgradeLevels, UpgradeType.Damage);
-        SetUpgradeSlot(attackSpeedUpgradeLevelText, attackSpeedUpgradeIcon, upgradeLevels, UpgradeType.AttackSpeed);
-        SetUpgradeSlot(attackRangeUpgradeLevelText, attackRangeUpgradeIcon, upgradeLevels, UpgradeType.AttackRange);
-        SetUpgradeSlot(moveSpeedUpgradeLevelText, moveSpeedUpgradeIcon, upgradeLevels, UpgradeType.MoveSpeed);
-        SetUpgradeSlot(magnetRangeUpgradeLevelText, magnetRangeUpgradeIcon, upgradeLevels, UpgradeType.MagnetRange);
-        SetUpgradeSlot(multiShotUpgradeLevelText, multiShotUpgradeIcon, upgradeLevels, UpgradeType.MultiShot);
-        SetUpgradeSlot(explosiveShotUpgradeLevelText, explosiveShotUpgradeIcon, upgradeLevels, UpgradeType.ExplosiveShot);
-        SetUpgradeSlot(knockbackUpgradeLevelText, knockbackUpgradeIcon, upgradeLevels, UpgradeType.Knockback);
+        int newSynergies = SynergyDiscovery.NewSynergiesThisRun;
+        int newPieces = SynergyDiscovery.NewPiecesThisRun;
+
+        if (newSynergies > 0)
+            synergyDiscoveryText.text = newSynergies == 1 ? "¡Nueva sinergia descubierta!" : $"¡{newSynergies} sinergias nuevas descubiertas!";
+        else if (newPieces > 0)
+            synergyDiscoveryText.text = newPieces == 1 ? "¡Nueva pista de sinergia encontrada!" : $"¡{newPieces} pistas de sinergia nuevas!";
+
+        synergyDiscoveryText.gameObject.SetActive(newSynergies > 0 || newPieces > 0);
     }
 
-    private void SetUpgradeSlot(TextMeshProUGUI levelText, Image icon, Dictionary<UpgradeType, int> upgradeLevels, UpgradeType type)
+    private void SetGameOverVisible(bool visible)
     {
-        int level = upgradeLevels.ContainsKey(type) ? upgradeLevels[type] : 0;
+        if (gameOverPanel == null) return;
 
-        if (levelText != null)
-            levelText.text = level.ToString();
-
-        if (icon != null && UpgradeDatabase.Instance != null)
+        if (gameOverCanvasGroup == null)
         {
-            UpgradeData upgradeData = UpgradeDatabase.Instance.GetUpgradeData(type);
-            if (upgradeData != null && upgradeData.icon != null)
-                icon.sprite = upgradeData.icon;
+            gameOverCanvasGroup = gameOverPanel.GetComponent<CanvasGroup>();
+            if (gameOverCanvasGroup == null)
+                gameOverCanvasGroup = gameOverPanel.AddComponent<CanvasGroup>();
         }
+
+        gameOverCanvasGroup.alpha = visible ? 1f : 0f;
+        gameOverCanvasGroup.interactable = visible;
+        gameOverCanvasGroup.blocksRaycasts = visible;
     }
 
     private IEnumerator CheckLeaderboardQualification()
@@ -179,12 +166,14 @@ public class GameOverUI : MonoBehaviour
         void OnConfirmed(string value) => initials = value;
 
         initialsEntryUI.OnInitialsConfirmed += OnConfirmed;
+        SetGameOverVisible(false);
         initialsEntryPanel.SetActive(true);
 
         yield return new WaitUntil(() => initials != null);
 
         initialsEntryUI.OnInitialsConfirmed -= OnConfirmed;
         initialsEntryPanel.SetActive(false);
+        SetGameOverVisible(true);
 
         var entry = new LeaderboardEntry
         {

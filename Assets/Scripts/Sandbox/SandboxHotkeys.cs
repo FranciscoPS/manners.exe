@@ -34,6 +34,8 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
 
     [Header("Estado del jugador y del spawner")]
     [SerializeField] private Key toggleInvulnerable = Key.F8;
+    [Tooltip("Mata al jugador al instante (ignora invulnerabilidad) para abrir la pantalla de Game Over sin esperar.")]
+    [SerializeField] private Key killPlayer = Key.K;
     [SerializeField] private Key toggleSpawning = Key.F9;
     [SerializeField] private Key forceFinalRush = Key.F10;
 
@@ -90,6 +92,9 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
         if (WasPressed(keyboard, toggleInvulnerable))
             SandboxCommands.ToggleInvulnerable();
 
+        if (WasPressed(keyboard, killPlayer))
+            SandboxCommands.KillPlayer();
+
         if (WasPressed(keyboard, toggleSpawning))
             SandboxCommands.ToggleSpawning();
 
@@ -118,7 +123,7 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
     {
         return $"{togglePanel}=panel  {toggleSynergyHints}=panel de sinergias  {clearSynergyDiscoveries}=borrar progreso sinergias  {grantLevel}=+1 nivel  {grantRandomUpgrade}=mejora  {grantRandomPremiumUpgrade}=mejora premium  " +
                $"{spawnEnemyBurst}=ráfaga x{burstAmount}  {killAllEnemies}=matar todo  {addCurrency}=+{currencyPerPress} monedas/diamantes  " +
-               $"{toggleInvulnerable}=invulnerable  {toggleSpawning}=pausar spawns  {forceFinalRush}=oleada final  " +
+               $"{toggleInvulnerable}=invulnerable  {killPlayer}=morir  {toggleSpawning}=pausar spawns  {forceFinalRush}=oleada final  " +
                $"{cycleTimeScale}=time scale  {spawnChest}=cofre  {reloadSandbox}=reiniciar";
     }
 }
