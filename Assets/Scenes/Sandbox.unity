@@ -4504,14 +4504,14 @@ MonoBehaviour:
   balanceOverride: {fileID: 11400000, guid: 25c6ad9476bbc4dafbfddc8a2cac1ab6, type: 2}
   upgradeDatabaseOverride: {fileID: 11400000, guid: ba5e3bc2858e24167b54ca418e8154a5, type: 2}
   synergyDatabaseOverride: {fileID: 11400000, guid: 01fc478299b5d4065bf4dfd5b88fcfe8, type: 2}
+  chestOpeningConfigOverride: {fileID: 0}
   matchDurationMinutes: 3
   startingTimeScale: 1
   startInvulnerable: 0
   startingHealthBonus: 0
   tutorialMode: 1
   synergiesEnabled: 1
-  forceActiveSynergies:
-  - {fileID: 11400000, guid: 0b9e4cc7789804dd792e0dff26e7f7c3, type: 2}
+  forceActiveSynergies: []
   startingCoins: 0
   startingDiamonds: 0
   startingPlayerLevels: 0
@@ -5884,6 +5884,8 @@ MonoBehaviour:
   upgradeButton2: {fileID: 1635871980}
   upgradeButton3: {fileID: 2109390155}
   colorSpeed: 1
+  cardIntroStagger: 0.07
+  cardOutroDuration: 0.2
 --- !u!114 &238261086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26562,6 +26564,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeButton
   disabledAlpha: 0.5
+  introDuration: 0.36
+  introOvershoot: 1.3
 --- !u!114 &997920206
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26579,6 +26583,8 @@ MonoBehaviour:
   holdSFXRepeatCount: 3
   holdSFXPitchStart: 1
   holdSFXPitchEnd: 1.3
+  premiumFillColor: {r: 1, g: 0.95, b: 0.6, a: 0.9}
+  premiumShimmerSpeed: 6
 --- !u!114 &997920207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26591,12 +26597,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f97d31a6cf1c2524fbef204aca7bab74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PremiumUpgradeVisuals
-  backgroundImage: {fileID: 0}
-  useRainbowOverlay: 1
-  rainbowSpeed: 2
-  rainbowBrightness: 1.5
-  overlayAlpha: 0.3
-  useParticles: 1
   pulseScale: 1.08
   pulseDuration: 1.2
 --- !u!1001 &1005681360
@@ -27349,6 +27349,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyUI
   coinText: {fileID: 757180597}
   diamondText: {fileID: 969553500}
+  punchScale: 1.2
+  punchDuration: 0.3
 --- !u!114 &1019051306
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42507,6 +42509,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeButton
   disabledAlpha: 0.5
+  introDuration: 0.36
+  introOvershoot: 1.3
 --- !u!114 &1635871981
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42524,6 +42528,8 @@ MonoBehaviour:
   holdSFXRepeatCount: 3
   holdSFXPitchStart: 1
   holdSFXPitchEnd: 1.3
+  premiumFillColor: {r: 1, g: 0.95, b: 0.6, a: 0.9}
+  premiumShimmerSpeed: 6
 --- !u!114 &1635871982
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42536,12 +42542,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f97d31a6cf1c2524fbef204aca7bab74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PremiumUpgradeVisuals
-  backgroundImage: {fileID: 0}
-  useRainbowOverlay: 1
-  rainbowSpeed: 2
-  rainbowBrightness: 1.5
-  overlayAlpha: 0.3
-  useParticles: 1
   pulseScale: 1.08
   pulseDuration: 1.2
 --- !u!1001 &1643204927
@@ -55581,6 +55581,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeButton
   disabledAlpha: 0.5
+  introDuration: 0.36
+  introOvershoot: 1.3
 --- !u!114 &2109390156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55598,6 +55600,8 @@ MonoBehaviour:
   holdSFXRepeatCount: 3
   holdSFXPitchStart: 1
   holdSFXPitchEnd: 1.3
+  premiumFillColor: {r: 1, g: 0.95, b: 0.6, a: 0.9}
+  premiumShimmerSpeed: 6
 --- !u!114 &2109390157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55610,12 +55614,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f97d31a6cf1c2524fbef204aca7bab74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PremiumUpgradeVisuals
-  backgroundImage: {fileID: 0}
-  useRainbowOverlay: 1
-  rainbowSpeed: 2
-  rainbowBrightness: 1.5
-  overlayAlpha: 0.3
-  useParticles: 1
   pulseScale: 1.08
   pulseDuration: 1.2
 --- !u!1001 &2115887562
