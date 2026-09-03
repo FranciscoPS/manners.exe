@@ -39,6 +39,16 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI explosiveShotUpgradeLevelText;
     [SerializeField] private TextMeshProUGUI knockbackUpgradeLevelText;
 
+    [Header("Upgrade Icons UI")]
+    [SerializeField] private Image damageUpgradeIcon;
+    [SerializeField] private Image attackSpeedUpgradeIcon;
+    [SerializeField] private Image attackRangeUpgradeIcon;
+    [SerializeField] private Image moveSpeedUpgradeIcon;
+    [SerializeField] private Image magnetRangeUpgradeIcon;
+    [SerializeField] private Image multiShotUpgradeIcon;
+    [SerializeField] private Image explosiveShotUpgradeIcon;
+    [SerializeField] private Image knockbackUpgradeIcon;
+
     private bool isTransitioning = false;
     private bool statsUpdated = false;
 
@@ -118,52 +128,28 @@ public class GameOverUI : MonoBehaviour
     {
         Dictionary<UpgradeType, int> upgradeLevels = GameSessionStats.Instance.GetUpgradeLevels();
 
-        if (damageUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.Damage) ? upgradeLevels[UpgradeType.Damage] : 0;
-            damageUpgradeLevelText.text = level.ToString();
-        }
+        SetUpgradeSlot(damageUpgradeLevelText, damageUpgradeIcon, upgradeLevels, UpgradeType.Damage);
+        SetUpgradeSlot(attackSpeedUpgradeLevelText, attackSpeedUpgradeIcon, upgradeLevels, UpgradeType.AttackSpeed);
+        SetUpgradeSlot(attackRangeUpgradeLevelText, attackRangeUpgradeIcon, upgradeLevels, UpgradeType.AttackRange);
+        SetUpgradeSlot(moveSpeedUpgradeLevelText, moveSpeedUpgradeIcon, upgradeLevels, UpgradeType.MoveSpeed);
+        SetUpgradeSlot(magnetRangeUpgradeLevelText, magnetRangeUpgradeIcon, upgradeLevels, UpgradeType.MagnetRange);
+        SetUpgradeSlot(multiShotUpgradeLevelText, multiShotUpgradeIcon, upgradeLevels, UpgradeType.MultiShot);
+        SetUpgradeSlot(explosiveShotUpgradeLevelText, explosiveShotUpgradeIcon, upgradeLevels, UpgradeType.ExplosiveShot);
+        SetUpgradeSlot(knockbackUpgradeLevelText, knockbackUpgradeIcon, upgradeLevels, UpgradeType.Knockback);
+    }
 
-        if (attackSpeedUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.AttackSpeed) ? upgradeLevels[UpgradeType.AttackSpeed] : 0;
-            attackSpeedUpgradeLevelText.text = level.ToString();
-        }
+    private void SetUpgradeSlot(TextMeshProUGUI levelText, Image icon, Dictionary<UpgradeType, int> upgradeLevels, UpgradeType type)
+    {
+        int level = upgradeLevels.ContainsKey(type) ? upgradeLevels[type] : 0;
 
-        if (attackRangeUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.AttackRange) ? upgradeLevels[UpgradeType.AttackRange] : 0;
-            attackRangeUpgradeLevelText.text = level.ToString();
-        }
+        if (levelText != null)
+            levelText.text = level.ToString();
 
-        if (moveSpeedUpgradeLevelText != null)
+        if (icon != null && UpgradeDatabase.Instance != null)
         {
-            int level = upgradeLevels.ContainsKey(UpgradeType.MoveSpeed) ? upgradeLevels[UpgradeType.MoveSpeed] : 0;
-            moveSpeedUpgradeLevelText.text = level.ToString();
-        }
-
-        if (magnetRangeUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.MagnetRange) ? upgradeLevels[UpgradeType.MagnetRange] : 0;
-            magnetRangeUpgradeLevelText.text = level.ToString();
-        }
-
-        if (multiShotUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.MultiShot) ? upgradeLevels[UpgradeType.MultiShot] : 0;
-            multiShotUpgradeLevelText.text = level.ToString();
-        }
-
-        if (explosiveShotUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.ExplosiveShot) ? upgradeLevels[UpgradeType.ExplosiveShot] : 0;
-            explosiveShotUpgradeLevelText.text = level.ToString();
-        }
-
-        if (knockbackUpgradeLevelText != null)
-        {
-            int level = upgradeLevels.ContainsKey(UpgradeType.Knockback) ? upgradeLevels[UpgradeType.Knockback] : 0;
-            knockbackUpgradeLevelText.text = level.ToString();
+            UpgradeData upgradeData = UpgradeDatabase.Instance.GetUpgradeData(type);
+            if (upgradeData != null && upgradeData.icon != null)
+                icon.sprite = upgradeData.icon;
         }
     }
 
