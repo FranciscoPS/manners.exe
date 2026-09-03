@@ -113,6 +113,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         if (fillOverlayImage != null)
         {
             fillOverlayImage.gameObject.SetActive(true);
+            fillOverlayImage.transform.SetAsLastSibling();
             RectTransform rt = fillOverlayImage.rectTransform;
             rt.anchorMax = new Vector2(0f, 1f);
             fillOverlayImage.color = isPremiumStyle ? premiumFillColor : normalFillColor;
