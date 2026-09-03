@@ -146,6 +146,11 @@ public class UpgradeButton : MonoBehaviour
         {
             premiumVisuals.SetPremium(assignedUpgrade.isPremium, currentMode);
         }
+
+        if (holdToSelectButton != null && assignedUpgrade != null)
+        {
+            holdToSelectButton.SetPremiumStyle(assignedUpgrade.isPremium);
+        }
     }
 
     public void PlayIntroAnimation(float delay = 0f)
@@ -196,6 +201,11 @@ public class UpgradeButton : MonoBehaviour
         if (premiumVisuals != null)
         {
             premiumVisuals.SetPremium(true, currentMode);
+        }
+
+        if (holdToSelectButton != null)
+        {
+            holdToSelectButton.SetPremiumStyle(true);
         }
     }
 
