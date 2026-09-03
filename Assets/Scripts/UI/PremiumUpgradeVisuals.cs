@@ -7,6 +7,16 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     [Header("Animation Settings")]
     [SerializeField] private float pulseScale = 1.06f;
     [SerializeField] private float pulseDuration = 1.0f;
+    [Tooltip("Si está apagado, solo se muestra el foil/aura sin el pulso de escala.")]
+    [SerializeField] private bool usePulse = true;
+
+    public void SetPulseEnabled(bool value)
+    {
+        usePulse = value;
+
+        if (!usePulse)
+            StopAnimations();
+    }
 
     private RectTransform rectTransform;
     private Tween pulseTween;
@@ -56,7 +66,8 @@ public class PremiumUpgradeVisuals : MonoBehaviour
             holo?.Stop();
         }
 
-        StartPulseAnimation();
+        if (usePulse)
+            StartPulseAnimation();
     }
 
     private PokemonHoloEffect CreateHolo()

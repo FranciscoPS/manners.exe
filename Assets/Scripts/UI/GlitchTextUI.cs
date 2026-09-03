@@ -74,6 +74,19 @@ public class GlitchTextUI : MonoBehaviour
         Restore();
     }
 
+    public void SetText(string text)
+    {
+        if (target == null)
+            target = GetComponent<TextMeshProUGUI>();
+
+        if (target == null) return;
+
+        target.text = text;
+        Capture();
+        phase = Phase.Idle;
+        phaseTimer = Random.Range(idleMin, idleMax);
+    }
+
     private void Update()
     {
         if (!captured) return;
