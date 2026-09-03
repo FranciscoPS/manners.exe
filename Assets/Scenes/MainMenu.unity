@@ -17896,7 +17896,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuButtonHover
   hoverScale: 1.1
   scaleDuration: 0.15
-  changeTextOnHover: 1
+  changeTextOnHover: 0
   hoverText: "Pr\xF3ximamente"
   tmpText: {fileID: 1873243502}
   uiText: {fileID: 0}
@@ -27063,6 +27063,7 @@ GameObject:
   - component: {fileID: 1494279541}
   - component: {fileID: 1494279543}
   - component: {fileID: 1494279542}
+  - component: {fileID: 1494279544}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -27189,6 +27190,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1494279540}
   m_CullTransparentMesh: 1
+--- !u!114 &1494279544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1494279540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cf022645446445269c07d7bbbfc7539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
+  target: {fileID: 1494279542}
+  prefix: Sin
+  idleMin: 0.7
+  idleMax: 2.2
+  burstMin: 0.12
+  burstMax: 0.4
+  stepInterval: 0.06
+  doubleBurstChance: 0.35
+  doubleBurstGapMin: 0.08
+  doubleBurstGapMax: 0.2
+  scrambleChance: 0.6
+  letterReplaceChance: 0.7
+  glitchCharacters: '!@#$%&*?/\|<>[]{}01'
+  jitterX: 4
+  jitterY: 2
+  useColorFlicker: 1
+  flickerColorA: {r: 0, g: 1, b: 1, a: 1}
+  flickerColorB: {r: 1, g: 0, b: 1, a: 1}
 --- !u!1 &1494553199
 GameObject:
   m_ObjectHideFlags: 0
@@ -27627,6 +27658,7 @@ GameObject:
   - component: {fileID: 1518054752}
   - component: {fileID: 1518054754}
   - component: {fileID: 1518054753}
+  - component: {fileID: 1518054755}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -27753,6 +27785,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1518054751}
   m_CullTransparentMesh: 1
+--- !u!114 &1518054755
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1518054751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cf022645446445269c07d7bbbfc7539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
+  target: {fileID: 1518054753}
+  prefix: Sin
+  idleMin: 0.7
+  idleMax: 2.2
+  burstMin: 0.12
+  burstMax: 0.4
+  stepInterval: 0.06
+  doubleBurstChance: 0.35
+  doubleBurstGapMin: 0.08
+  doubleBurstGapMax: 0.2
+  scrambleChance: 0.6
+  letterReplaceChance: 0.7
+  glitchCharacters: '!@#$%&*?/\|<>[]{}01'
+  jitterX: 4
+  jitterY: 2
+  useColorFlicker: 1
+  flickerColorA: {r: 0, g: 1, b: 1, a: 1}
+  flickerColorB: {r: 1, g: 0, b: 1, a: 1}
 --- !u!1 &1526186110
 GameObject:
   m_ObjectHideFlags: 0
@@ -33356,6 +33418,7 @@ GameObject:
   - component: {fileID: 1873243501}
   - component: {fileID: 1873243503}
   - component: {fileID: 1873243502}
+  - component: {fileID: 1873243504}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -33482,6 +33545,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1873243500}
   m_CullTransparentMesh: 1
+--- !u!114 &1873243504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1873243500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cf022645446445269c07d7bbbfc7539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
+  target: {fileID: 1873243502}
+  prefix: Sin
+  idleMin: 0.7
+  idleMax: 2.2
+  burstMin: 0.12
+  burstMax: 0.4
+  stepInterval: 0.06
+  doubleBurstChance: 0.35
+  doubleBurstGapMin: 0.08
+  doubleBurstGapMax: 0.2
+  scrambleChance: 0.6
+  letterReplaceChance: 0.7
+  glitchCharacters: '!@#$%&*?/\|<>[]{}01'
+  jitterX: 4
+  jitterY: 2
+  useColorFlicker: 1
+  flickerColorA: {r: 0, g: 1, b: 1, a: 1}
+  flickerColorB: {r: 1, g: 0, b: 1, a: 1}
 --- !u!1 &1876986728
 GameObject:
   m_ObjectHideFlags: 0

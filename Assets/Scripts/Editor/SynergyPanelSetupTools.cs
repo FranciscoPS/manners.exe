@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Events;
@@ -18,6 +19,8 @@ public static class SynergyPanelSetupTools
     private const string MenuTitle = "Sinergias";
     private const string MenuSubtitle = "Mejora + Mejora = ?";
     private const string LegacyCloseButtonName = "CerrarButton";
+
+    private const string GlitchPrefix = "Sin";
 
     private static readonly string[] GameOverScenePaths =
     {
@@ -97,6 +100,7 @@ public static class SynergyPanelSetupTools
         managerSO.FindProperty("sinergiasMenuPanel").objectReferenceValue = menuScreen;
         managerSO.ApplyModifiedProperties();
 
+        EnsureGlitch(FindTitleText(menuScreen.transform));
         RewireMainMenuButton(mainPanel.transform, manager);
         RewireHelpButton(helpPanel.transform, manager);
 
@@ -188,20 +192,32 @@ public static class SynergyPanelSetupTools
 
     private static void ApplyTitle(Transform screen)
     {
-        Transform titlePanel = screen.Find("TitlePanel");
-        if (titlePanel == null)
+        var texts = TitleTexts(screen);
+        if (texts == null)
         {
             Debug.LogWarning("[SynergyPanelSetup] La pantalla clonada no tiene 'TitlePanel'; ajusta el título manualmente.");
             return;
         }
 
-        var texts = titlePanel
+        if (texts.Count > 0) texts[0].text = MenuTitle;
+        if (texts.Count > 1) texts[1].text = MenuSubtitle;
+    }
+
+    private static TextMeshProUGUI FindTitleText(Transform screen)
+    {
+        var texts = TitleTexts(screen);
+        return texts != null && texts.Count > 0 ? texts[0] : null;
+    }
+
+    private static List<TextMeshProUGUI> TitleTexts(Transform screen)
+    {
+        Transform titlePanel = screen.Find("TitlePanel");
+        if (titlePanel == null) return null;
+
+        return titlePanel
             .GetComponentsInChildren<TextMeshProUGUI>(true)
             .OrderByDescending(t => ((RectTransform)t.transform).anchoredPosition.y)
             .ToList();
-
-        if (texts.Count > 0) texts[0].text = MenuTitle;
-        if (texts.Count > 1) texts[1].text = MenuSubtitle;
     }
 
     private static void ReplaceContentWithPrefab(Transform screen, GameObject prefabAsset)
@@ -231,8 +247,9 @@ public static class SynergyPanelSetupTools
 
         button.gameObject.name = MenuTitle;
         button.interactable = true;
-        SetLabel(button, MenuTitle);
+        EnsureGlitch(SetLabel(button, MenuTitle));
         WireShowScreen(button, manager, MenuScreen.Sinergias);
+        DisableComingSoonHover(button);
     }
 
     private static void RewireHelpButton(Transform helpPanel, MainMenuUIManager manager)
@@ -244,8 +261,35 @@ public static class SynergyPanelSetupTools
             return;
         }
 
-        SetLabel(button, MenuTitle);
+        EnsureGlitch(SetLabel(button, MenuTitle));
         WireShowScreen(button, manager, MenuScreen.HelpSinergias);
+    }
+
+    private static void DisableComingSoonHover(Button button)
+    {
+        MenuButtonHover hover = button.GetComponent<MenuButtonHover>();
+        if (hover == null) return;
+
+        SerializedObject hoverSO = new SerializedObject(hover);
+        hoverSO.FindProperty("changeTextOnHover").boolValue = false;
+        hoverSO.ApplyModifiedProperties();
+        EditorUtility.SetDirty(hover);
+    }
+
+    private static void EnsureGlitch(TextMeshProUGUI label)
+    {
+        if (label == null) return;
+
+        GlitchTextUI glitch = label.GetComponent<GlitchTextUI>();
+        if (glitch == null)
+            glitch = label.gameObject.AddComponent<GlitchTextUI>();
+
+        SerializedObject glitchSO = new SerializedObject(glitch);
+        glitchSO.FindProperty("target").objectReferenceValue = label;
+        glitchSO.FindProperty("prefix").stringValue = GlitchPrefix;
+        glitchSO.ApplyModifiedProperties();
+
+        EditorUtility.SetDirty(glitch);
     }
 
     private static void WireShowScreen(Button button, MainMenuUIManager manager, MenuScreen screen)
@@ -255,13 +299,14 @@ public static class SynergyPanelSetupTools
         EditorUtility.SetDirty(button);
     }
 
-    private static void SetLabel(Button button, string text)
+    private static TextMeshProUGUI SetLabel(Button button, string text)
     {
         TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-        if (label == null) return;
+        if (label == null) return null;
 
         label.text = text;
         EditorUtility.SetDirty(label);
+        return label;
     }
 
     private static Button FindButtonByName(Transform root, string name)
