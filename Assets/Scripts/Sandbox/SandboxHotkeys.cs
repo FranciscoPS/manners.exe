@@ -8,6 +8,11 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
     [SerializeField] private SandboxDebugMonitor debugMonitor;
     [SerializeField] private Key togglePanel = Key.F1;
 
+    [Header("Sinergias")]
+    [Tooltip("Muestra/oculta el panel real de sinergias (Assets/Prefabs/UI/SynergyHintsPanel.prefab) para verificar visualmente el relleno progresivo con el estado actual de PlayerStatsManager.")]
+    [SerializeField] private GameObject synergyHintsPanelPrefab;
+    [SerializeField] private Key toggleSynergyHints = Key.H;
+
     [Header("Progresión")]
     [SerializeField] private Key grantLevel = Key.F2;
     [SerializeField] private Key grantRandomUpgrade = Key.F3;
@@ -56,6 +61,9 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
         if (WasPressed(keyboard, togglePanel) && debugMonitor != null)
             debugMonitor.TogglePanel();
 
+        if (WasPressed(keyboard, toggleSynergyHints))
+            SandboxCommands.ToggleSynergyHints(synergyHintsPanelPrefab);
+
         if (WasPressed(keyboard, grantLevel))
             SandboxCommands.GrantLevels(1);
 
@@ -103,7 +111,7 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
 
     public string BuildHelpText()
     {
-        return $"{togglePanel}=panel  {grantLevel}=+1 nivel  {grantRandomUpgrade}=mejora  {grantRandomPremiumUpgrade}=mejora premium  " +
+        return $"{togglePanel}=panel  {toggleSynergyHints}=panel de sinergias  {grantLevel}=+1 nivel  {grantRandomUpgrade}=mejora  {grantRandomPremiumUpgrade}=mejora premium  " +
                $"{spawnEnemyBurst}=ráfaga x{burstAmount}  {killAllEnemies}=matar todo  {addCurrency}=+{currencyPerPress} monedas/diamantes  " +
                $"{toggleInvulnerable}=invulnerable  {toggleSpawning}=pausar spawns  {forceFinalRush}=oleada final  " +
                $"{cycleTimeScale}=time scale  {spawnChest}=cofre  {reloadSandbox}=reiniciar";
