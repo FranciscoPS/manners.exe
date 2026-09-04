@@ -16,6 +16,7 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject tiendaPanel;
     [SerializeField] private GameObject personalizacionPanel;
     [SerializeField] private GameObject creditosPanel;
+    [SerializeField] private GameObject sinergiasMenuPanel;
 
     [Header("Options Subscreens")]
     [SerializeField] private GameObject helpPanel;
@@ -80,6 +81,7 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Tienda, tiendaPanel },
             { MenuScreen.Personalizacion, personalizacionPanel },
             { MenuScreen.Creditos, creditosPanel },
+            { MenuScreen.Sinergias, sinergiasMenuPanel },
             { MenuScreen.mapSelection, mapSelection },
 
             { MenuScreen.Help, helpPanel },
@@ -98,8 +100,7 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.HelpExperiencia, experienciaPanel },
             { MenuScreen.HelpEnemigos, enemigosPanel },
             { MenuScreen.HelpMejoras, mejorasPanel },
-
-            {MenuScreen.HelpSinergias, sinergiasPanel}
+            { MenuScreen.HelpSinergias, sinergiasPanel },
         };
 
         foreach (var screen in screenDictionary.Values)
@@ -629,4 +630,6 @@ public enum MenuScreen
     UpgradesPremium_MLS,
 
     HelpSinergias,
+
+    Sinergias,
 }

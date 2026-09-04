@@ -40,6 +40,8 @@ public class ChestOpeningConfig : ScriptableObject
     [Tooltip("Si está activo, el jugador puede saltarse la cinemática presionando la tecla de salto.")]
     public bool allowSkip = true;
     public Key skipKey = Key.Space;
+    [Tooltip("Texto pequeño bajo el mensaje principal que indica cómo saltar la cinemática. {0} se sustituye por el nombre de la tecla.")]
+    public string skipHintMessage = "Pulsa {0} para saltar";
 
     public float TotalDuration => anticipationDuration + burstDuration + lidOpenFallbackDuration + revealHoldDuration;
 

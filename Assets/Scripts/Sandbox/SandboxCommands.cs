@@ -5,11 +5,13 @@ using UnityEngine.SceneManagement;
 public static class SandboxCommands
 {
     private static int timeScaleIndex;
+    private static GameObject activeSynergyHintsInstance;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         timeScaleIndex = 0;
+        activeSynergyHintsInstance = null;
     }
 
     public static void SpawnBurst(int count, float radius, EnemyConfiguration enemy)
@@ -219,6 +221,69 @@ public static class SandboxCommands
         Time.timeScale = Mathf.Max(0f, steps[timeScaleIndex]);
 
         SandboxLog.Command($"Time scale: x{Time.timeScale}");
+    }
+
+    public static void ToggleSynergyHints(GameObject synergyHintsPanelPrefab)
+    {
+        if (activeSynergyHintsInstance != null)
+        {
+            Object.Destroy(activeSynergyHintsInstance);
+            activeSynergyHintsInstance = null;
+
+            SandboxLog.Command("Panel de sinergias: oculto.");
+            return;
+        }
+
+        if (synergyHintsPanelPrefab == null)
+        {
+            SandboxLog.Warn("Panel de sinergias: no hay prefab asignado (revisa 'Synergy Hints Panel Prefab' en SandboxHotkeys).");
+            return;
+        }
+
+        Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        if (canvas == null)
+        {
+            SandboxLog.Warn("Panel de sinergias: no se encontró ningún Canvas en la escena.");
+            return;
+        }
+
+        activeSynergyHintsInstance = Object.Instantiate(synergyHintsPanelPrefab, canvas.transform);
+        activeSynergyHintsInstance.SetActive(true);
+
+        SandboxLog.Command("Panel de sinergias: visible con el progreso actual (vuelve a pulsar para ocultarlo).");
+    }
+
+    public static void KillPlayer()
+    {
+        PlayerHealth health = Object.FindFirstObjectByType<PlayerHealth>();
+
+        if (health == null)
+        {
+            SandboxLog.Warn("Morir: no se encontró PlayerHealth.");
+            return;
+        }
+
+        if (health.IsDead)
+        {
+            SandboxLog.Warn("Morir: el jugador ya está muerto.");
+            return;
+        }
+
+        health.Kill();
+        SandboxLog.Command("Morir: muerte forzada (ignora invulnerabilidad). Debería abrirse la pantalla de Game Over.");
+    }
+
+    public static void ClearSynergyDiscoveries()
+    {
+        SynergyDiscovery.Clear();
+
+        if (activeSynergyHintsInstance != null)
+        {
+            foreach (SynergyHintRowUI row in activeSynergyHintsInstance.GetComponentsInChildren<SynergyHintRowUI>(true))
+                row.Refresh();
+        }
+
+        SandboxLog.Command("Progreso guardado de sinergias borrado (mejoras y sinergias descubiertas en 0).");
     }
 
     public static void ReloadSandbox()

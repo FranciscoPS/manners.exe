@@ -46,6 +46,17 @@ public class UpgradeDatabase : ScriptableObject
         instance = database;
     }
 
+    public UpgradeData GetUpgradeData(UpgradeType type)
+    {
+        for (int i = 0; i < allUpgrades.Count; i++)
+        {
+            if (allUpgrades[i] != null && allUpgrades[i].upgradeType == type)
+                return allUpgrades[i];
+        }
+
+        return null;
+    }
+
     public List<UpgradeData> GetRandomUpgrades(Dictionary<UpgradeType, int> currentUpgradeLevels, int playerLevel)
     {
         List<UpgradeData> selectedUpgrades = new List<UpgradeData>();

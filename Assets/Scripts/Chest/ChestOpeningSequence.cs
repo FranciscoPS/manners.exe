@@ -15,6 +15,7 @@ public class ChestOpeningSequence : MonoBehaviour
     private Image flashOverlay;
     private CanvasGroup promptGroup;
     private TextMeshProUGUI promptText;
+    private TextMeshProUGUI skipHintText;
     private RadiantAuraVFX aura;
 
     private bool skipRequested;
@@ -166,6 +167,34 @@ public class ChestOpeningSequence : MonoBehaviour
         promptText.fontStyle = FontStyles.Bold;
         promptText.raycastTarget = false;
         promptText.text = "";
+
+        GameObject hintObj = new GameObject("SkipHintText", typeof(RectTransform));
+        hintObj.transform.SetParent(textObj.transform, false);
+
+        RectTransform hintRect = hintObj.GetComponent<RectTransform>();
+        hintRect.anchorMin = new Vector2(0.5f, 0f);
+        hintRect.anchorMax = new Vector2(0.5f, 0f);
+        hintRect.pivot = new Vector2(0.5f, 1f);
+        hintRect.sizeDelta = new Vector2(1000f, 50f);
+        hintRect.anchoredPosition = new Vector2(0f, 6f);
+
+        skipHintText = hintObj.AddComponent<TextMeshProUGUI>();
+        skipHintText.alignment = TextAlignmentOptions.Center;
+        skipHintText.fontSize = 30;
+        skipHintText.color = new Color(0.85f, 0.88f, 0.95f, 0.9f);
+        skipHintText.raycastTarget = false;
+        skipHintText.text = "";
+    }
+
+    private static string KeyLabel(Key key)
+    {
+        switch (key)
+        {
+            case Key.Space: return "Espacio";
+            case Key.Enter: return "Enter";
+            case Key.Escape: return "Esc";
+            default: return key.ToString();
+        }
     }
 
     private IEnumerator RunSequence(GameObject chestInstance, Action onComplete)
@@ -186,6 +215,7 @@ public class ChestOpeningSequence : MonoBehaviour
         flashOverlay.color = Color.clear;
         promptGroup.alpha = 1f;
         promptText.text = config.promptMessage;
+        skipHintText.text = config.allowSkip ? string.Format(config.skipHintMessage, KeyLabel(config.skipKey)) : "";
         aura.SpinMultiplier = 0.3f;
         aura.Play();
 

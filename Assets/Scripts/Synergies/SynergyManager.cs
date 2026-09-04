@@ -82,6 +82,7 @@ public class SynergyManager : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         ClearActiveEffects();
+        SynergyDiscovery.BeginRun();
         player = null;
         SubscribeToPlayerStats();
     }
@@ -131,6 +132,7 @@ public class SynergyManager : MonoBehaviour
 
     private void HandleUpgradeApplied(UpgradeType type, int level)
     {
+        SynergyDiscovery.RecordUpgradeLevel(type, level);
         CheckAllSynergies();
     }
 
@@ -150,7 +152,10 @@ public class SynergyManager : MonoBehaviour
             if (synergy == null || activeEffects.ContainsKey(synergy)) continue;
 
             if (RequirementsMet(synergy))
+            {
+                SynergyDiscovery.RecordSynergyUnlocked(synergy);
                 Activate(synergy, playerTransform);
+            }
         }
     }
 

@@ -120,14 +120,13 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
     private Vector3? FindRandomBuildingPosition()
     {
-        BuildingsScript[] buildings = Object.FindObjectsByType<BuildingsScript>(FindObjectsSortMode.None);
-        if (buildings.Length == 0) return null;
-
+        List<BuildingsScript> buildings = BuildingsScript.ActiveBuildings;
         float rangeSqr = Config.range * Config.range;
         int inRangeCount = 0;
 
-        for (int i = 0; i < buildings.Length; i++)
+        for (int i = 0; i < buildings.Count; i++)
         {
+            if (buildings[i] == null) continue;
             if ((buildings[i].transform.position - player.position).sqrMagnitude <= rangeSqr)
                 inRangeCount++;
         }
@@ -135,8 +134,9 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         if (inRangeCount == 0) return null;
 
         int pick = Random.Range(0, inRangeCount);
-        for (int i = 0; i < buildings.Length; i++)
+        for (int i = 0; i < buildings.Count; i++)
         {
+            if (buildings[i] == null) continue;
             if ((buildings[i].transform.position - player.position).sqrMagnitude > rangeSqr) continue;
 
             if (pick == 0) return buildings[i].transform.position;
@@ -198,9 +198,30 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
             Vector3 flat = enemy.transform.position;
             flat.y = groundPoint.y;
 
-            if ((flat - groundPoint).sqrMagnitude <= radiusSqr)
+            Vector3 closestOnBeam = ClosestPointOnSegment(sweepGroundOrigin, groundPoint, flat);
+            if ((flat - closestOnBeam).sqrMagnitude <= radiusSqr)
                 enemy.TakeDamage(Config.damage);
         }
+
+        List<BuildingsScript> buildings = BuildingsScript.ActiveBuildings;
+        for (int i = 0; i < buildings.Count; i++)
+        {
+            BuildingsScript building = buildings[i];
+            if (building == null) continue;
+
+            if (building.IsSegmentWithinHitRange(sweepGroundOrigin, groundPoint, Config.impactRadius))
+                building.DestroyByHit(groundPoint);
+        }
+    }
+
+    private static Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 p)
+    {
+        Vector3 ab = b - a;
+        float sqrLen = ab.sqrMagnitude;
+        if (sqrLen < 0.0001f) return a;
+
+        float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / sqrLen);
+        return a + ab * t;
     }
 
     private EnemyHealth FindNearestEnemy()

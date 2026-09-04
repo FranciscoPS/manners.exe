@@ -1,8 +1,17 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BuildingsScript : MonoBehaviour
 {
+    public static readonly List<BuildingsScript> ActiveBuildings = new List<BuildingsScript>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ClearStatics()
+    {
+        ActiveBuildings.Clear();
+    }
+
     [Header("Destruction Settings")]
     [SerializeField] private GameObject visual;
     [SerializeField] private Transform spawnPoint;
@@ -27,11 +36,23 @@ public class BuildingsScript : MonoBehaviour
 
     private bool isDestroying = false;
     private BuildingDestroyedVisual destroyedVisual;
+    private Collider hitCollider;
     private Vector3 lastImpactDirection;
+
+    private void OnEnable()
+    {
+        ActiveBuildings.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        ActiveBuildings.Remove(this);
+    }
 
     private void Awake()
     {
         destroyedVisual = GetComponent<BuildingDestroyedVisual>();
+        hitCollider = GetComponent<Collider>();
 
         if (visual == null)
         {
@@ -60,18 +81,48 @@ public class BuildingsScript : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !isDestroying)
+        if (other.CompareTag("Player"))
         {
-            isDestroying = true;
-
-            var fader = GetComponent<BuildingFader>();
-            if (fader != null) fader.SuspendForDestruction();
-
-            lastImpactDirection =
-            (transform.position - other.transform.position).normalized;
-
-            StartCoroutine(DestroySequence());
+            DestroyByHit(other.transform.position);
         }
+    }
+
+    public bool IsSegmentWithinHitRange(Vector3 segmentStart, Vector3 segmentEnd, float margin)
+    {
+        if (isDestroying || hitCollider == null) return false;
+
+        Vector3 buildingFlat = transform.position;
+        buildingFlat.y = segmentStart.y;
+
+        Vector3 closestOnSegment = ClosestPointOnSegment(segmentStart, segmentEnd, buildingFlat);
+        Vector3 closestOnCollider = hitCollider.ClosestPoint(closestOnSegment);
+        closestOnCollider.y = closestOnSegment.y;
+
+        return (closestOnCollider - closestOnSegment).sqrMagnitude <= margin * margin;
+    }
+
+    private static Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 p)
+    {
+        Vector3 ab = b - a;
+        float sqrLen = ab.sqrMagnitude;
+        if (sqrLen < 0.0001f) return a;
+
+        float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / sqrLen);
+        return a + ab * t;
+    }
+
+    public void DestroyByHit(Vector3 sourcePosition)
+    {
+        if (isDestroying) return;
+
+        isDestroying = true;
+
+        var fader = GetComponent<BuildingFader>();
+        if (fader != null) fader.SuspendForDestruction();
+
+        lastImpactDirection = (transform.position - sourcePosition).normalized;
+
+        StartCoroutine(DestroySequence());
     }
 
     private IEnumerator DestroySequence()
