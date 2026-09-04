@@ -22,14 +22,20 @@ public class LaserBeamConfig : SynergyEffectConfig
     public float extendDistance = 4f;
 
     [Header("Visual")]
+    [Tooltip("Prefab del VFX del rayo (Assets/Prefabs/VFX/LaserBeam.prefab). Se conservan su curva de grosor, su gradiente de color y su Particle System: una copia brilla en el origen del rayo y otra en el punto de impacto. Si se deja vacío, el rayo se construye por código con 'Beam Material Override' o con un unlit de 'Beam Color'.")]
+    public GameObject visualPrefabOverride;
+    [Tooltip("Material del LineRenderer. Con prefab asignado sustituye al material que trae el prefab; sin prefab se usa directo. 'LaserBeam_Mat' (shader Custom/LaserBeam) repite la textura por unidad de largo para conservar el look del diseño a cualquier distancia; el 'RayoLaser_Mat' original la estira a lo largo de todo el rayo.")]
+    public Material beamMaterialOverride;
     [Tooltip("Altura sobre el jugador desde la que sale el rayo. El origen del rayo no se mueve; solo el punto de impacto en el piso se desliza hacia afuera.")]
     public float beamOriginHeight = 1.6f;
-    [Tooltip("Color del rayo. Solo se usa si 'Beam Material Override' está vacío.")]
+    [Tooltip("Color del rayo. Solo se usa si no hay prefab ni 'Beam Material Override'.")]
     public Color beamColor = new Color(1f, 0.2f, 0.2f);
-    [Tooltip("Grosor visual de la línea (no afecta a quién golpea; eso lo decide 'Impact Radius').")]
-    public float lineWidth = 0.15f;
-    [Tooltip("Si se asigna, se usa este material en el LineRenderer en vez del material unlit + color por defecto. Ideal para un shader de energía con textura o scroll de UV.")]
-    public Material beamMaterialOverride;
+    [Tooltip("Grosor visual del rayo (no afecta a quién golpea; eso lo decide 'Impact Radius'). Con prefab asignado multiplica su curva de grosor.")]
+    public float lineWidth = 0.5f;
+    [Tooltip("Segundos que tarda el rayo en alcanzar su grosor completo al aparecer.")]
+    public float beamFadeIn = 0.06f;
+    [Tooltip("Segundos del final del barrido durante los que el rayo se adelgaza hasta desaparecer.")]
+    public float beamFadeOut = 0.2f;
 
     [Header("Audio")]
     [Tooltip("Sonido que se reproduce cada vez que se dispara un barrido. Opcional.")]
