@@ -283,6 +283,9 @@ public static class SandboxCommands
                 row.Refresh();
         }
 
+        if (SynergyHudPanel.Instance != null)
+            SynergyHudPanel.Instance.ResyncDiscovery();
+
         SandboxLog.Command("Progreso guardado de sinergias borrado (mejoras y sinergias descubiertas en 0).");
     }
 

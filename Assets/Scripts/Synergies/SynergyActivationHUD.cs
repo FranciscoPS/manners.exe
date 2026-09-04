@@ -9,8 +9,12 @@ using TMPro;
 
 public class SynergyActivationHUD : MonoBehaviour
 {
+    private const float BannerIconSize = 96f;
+
     private static SynergyActivationHUD instance;
     private static bool isQuitting;
+
+    public static bool Exists => instance != null;
 
     [Header("Tipografía")]
     [Tooltip("Nombre (o inicio del nombre) del TMP_FontAsset del juego a usar. Se busca entre las fuentes ya cargadas por la escena.")]
@@ -68,8 +72,15 @@ public class SynergyActivationHUD : MonoBehaviour
     private TMP_FontAsset resolvedFont;
 
     private readonly Dictionary<SynergyData, RectTransform> cells = new Dictionary<SynergyData, RectTransform>();
+    private readonly HashSet<SynergyData> announced = new HashSet<SynergyData>();
     private readonly Queue<SynergyData> pending = new Queue<SynergyData>();
+    private SynergyData current;
     private Coroutine playing;
+
+    public static bool WillAnnounce(SynergyData synergy)
+    {
+        return instance != null && synergy != null && (instance.current == synergy || instance.pending.Contains(synergy));
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -155,13 +166,17 @@ public class SynergyActivationHUD : MonoBehaviour
 
     private void OnSynergyActivated(SynergyData synergy)
     {
-        if (synergy == null || cells.ContainsKey(synergy) || pending.Contains(synergy)) return;
+        if (synergy == null || announced.Contains(synergy)) return;
+
+        announced.Add(synergy);
         pending.Enqueue(synergy);
     }
 
     private void OnSynergyDeactivated(SynergyData synergy)
     {
         if (synergy == null) return;
+
+        announced.Remove(synergy);
 
         if (cells.TryGetValue(synergy, out RectTransform cell))
         {
@@ -179,6 +194,8 @@ public class SynergyActivationHUD : MonoBehaviour
         }
 
         pending.Clear();
+        announced.Clear();
+        current = null;
 
         foreach (KeyValuePair<SynergyData, RectTransform> pair in cells)
         {
@@ -288,6 +305,7 @@ public class SynergyActivationHUD : MonoBehaviour
 
     private IEnumerator PlayAnnouncement(SynergyData synergy)
     {
+        current = synergy;
         banner.gameObject.SetActive(true);
         banner.localScale = Vector3.one;
 
@@ -310,18 +328,52 @@ public class SynergyActivationHUD : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(iconHold);
 
+        SynergyHudPanel panel = SynergyHudPanel.Instance;
+        RectTransform slot = panel != null ? panel.GetResultSlot(synergy) : null;
+
+        if (slot != null)
+            yield return FlyIconToPanel(synergy, panel, slot);
+        else
+            yield return FlyIconToStrip(synergy);
+
+        current = null;
+        playing = null;
+    }
+
+    private IEnumerator FlyIconToPanel(SynergyData synergy, SynergyHudPanel panel, RectTransform slot)
+    {
+        Canvas.ForceUpdateCanvases();
+
+        float slotSize = Mathf.Max(1f, slot.rect.width);
+        RectTransform iconRect = panel.GetResultIconRect(synergy);
+        float iconSize = iconRect != null ? iconRect.rect.width : slotSize;
+
+        RectTransform ghost = CreateGhost(synergy.icon, slotSize);
+        ghost.position = bannerIconRect.position;
+        ghost.localScale = Vector3.one * (BannerIconSize / slotSize);
+
+        bannerIconRect.gameObject.SetActive(false);
+
+        Sequence flight = DOTween.Sequence().SetUpdate(true);
+        flight.Join(ghost.DOMove(ToOverlayPosition(slot), iconFlight).SetEase(Ease.InOutCubic));
+        flight.Join(ghost.DOScale(iconSize / slotSize, iconFlight));
+        yield return flight.WaitForCompletion();
+
+        Destroy(ghost.gameObject);
+        banner.gameObject.SetActive(false);
+
+        panel.Land(synergy);
+    }
+
+    private IEnumerator FlyIconToStrip(SynergyData synergy)
+    {
         RectTransform cell = CreateCell(synergy);
         cell.localScale = Vector3.zero;
         Canvas.ForceUpdateCanvases();
 
-        RectTransform ghost = CreateRect("IconGhost", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(cellSize, cellSize));
-        Image ghostImage = ghost.gameObject.AddComponent<Image>();
-        ghostImage.preserveAspect = true;
-        ghostImage.raycastTarget = false;
-        ghostImage.sprite = synergy.icon;
-        ghostImage.enabled = synergy.icon != null;
+        RectTransform ghost = CreateGhost(synergy.icon, cellSize);
         ghost.position = bannerIconRect.position;
-        ghost.localScale = Vector3.one * (96f / cellSize);
+        ghost.localScale = Vector3.one * (BannerIconSize / cellSize);
 
         bannerIconRect.gameObject.SetActive(false);
 
@@ -344,8 +396,31 @@ public class SynergyActivationHUD : MonoBehaviour
             visuals.SetPulseEnabled(false);
             visuals.SetPremium(true);
         }
+    }
 
-        playing = null;
+    private RectTransform CreateGhost(Sprite sprite, float size)
+    {
+        RectTransform ghost = CreateRect("IconGhost", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
+
+        Image ghostImage = ghost.gameObject.AddComponent<Image>();
+        ghostImage.preserveAspect = true;
+        ghostImage.raycastTarget = false;
+        ghostImage.sprite = sprite;
+        ghostImage.enabled = sprite != null;
+
+        return ghost;
+    }
+
+    private Vector3 ToOverlayPosition(RectTransform target)
+    {
+        Canvas targetCanvas = target.GetComponentInParent<Canvas>();
+        Canvas rootCanvas = targetCanvas != null ? targetCanvas.rootCanvas : null;
+        Camera targetCamera = rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? rootCanvas.worldCamera : null;
+
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(targetCamera, target.position);
+        RectTransformUtility.ScreenPointToWorldPointInRectangle((RectTransform)canvas.transform, screenPoint, null, out Vector3 world);
+
+        return world;
     }
 
     private IEnumerator PlayTextPhase(TextMeshProUGUI text, CanvasGroup group, GlitchTextUI glitch, string content, float hold)

@@ -3,6 +3,12 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 
+public enum SynergyResultDisplayMode
+{
+    Collection,
+    Hud
+}
+
 public class SynergyHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     private const string UndiscoveredTooltipTitle = "??? Sinergia sin descubrir";
@@ -30,8 +36,20 @@ public class SynergyHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerExi
     [Tooltip("Efecto premium (foil holográfico + pulso) que se enciende cuando la sinergia está desbloqueada.")]
     [SerializeField] private PremiumUpgradeVisuals resultVisuals;
 
+    [Header("Cuadro de resultado")]
+    [Tooltip("Collection: se revela y brilla en cuanto la sinergia está desbloqueada (menú principal, Game Over). Hud: el panel miniatura del HUD decide cuándo revelarla (al aterrizar la animación de activación) y la muestra atenuada si solo se conoce de partidas anteriores.")]
+    [SerializeField] private SynergyResultDisplayMode resultDisplay = SynergyResultDisplayMode.Collection;
+    [Tooltip("Tinte del icono de resultado en modo Hud cuando la sinergia se conoce de otra partida pero todavía no está activa en esta.")]
+    [SerializeField] private Color knownInactiveTint = new Color(1f, 1f, 1f, 0.45f);
+
     private bool isUnlocked;
+    private bool hudKnown;
+    private bool hudActive;
     private Canvas canvas;
+
+    public SynergyData Synergy => ResolveSynergy();
+    public RectTransform ResultSlot => iconResult != null ? iconResult.transform.parent as RectTransform : null;
+    public RectTransform ResultIconRect => iconResult != null ? iconResult.rectTransform : null;
 
     private void OnEnable()
     {
@@ -65,6 +83,13 @@ public class SynergyHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerExi
         HoverTooltipUI.Hide();
     }
 
+    public void SetHudState(bool known, bool active)
+    {
+        hudKnown = known;
+        hudActive = active;
+        Refresh();
+    }
+
     public void Refresh()
     {
         SynergyData data = ResolveSynergy();
@@ -82,13 +107,28 @@ public class SynergyHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerExi
         ApplySlot(iconA, backdropA, unknownTextA, levelTextA, upgradeA != null ? upgradeA.icon : null, reachedA > 0, reachedA, data.requiredLevelA);
         ApplySlot(iconB, backdropB, unknownTextB, levelTextB, upgradeB != null ? upgradeB.icon : null, reachedB > 0, reachedB, data.requiredLevelB);
 
-        isUnlocked = SynergyDiscovery.IsSynergyUnlocked(data)
-            || (currentA >= data.requiredLevelA && currentB >= data.requiredLevelB);
+        if (resultDisplay == SynergyResultDisplayMode.Hud)
+        {
+            isUnlocked = hudKnown || hudActive;
 
-        bool revealResult = ApplySlot(iconResult, backdropResult, unknownTextResult, null, data.icon, isUnlocked, 0, 0);
+            bool revealResult = ApplySlot(iconResult, backdropResult, unknownTextResult, null, data.icon, isUnlocked, 0, 0);
 
-        if (resultVisuals != null)
-            resultVisuals.SetPremium(revealResult);
+            if (iconResult != null)
+                iconResult.color = hudActive ? Color.white : knownInactiveTint;
+
+            if (resultVisuals != null)
+                resultVisuals.SetPremium(revealResult && hudActive);
+        }
+        else
+        {
+            isUnlocked = SynergyDiscovery.IsSynergyUnlocked(data)
+                || (currentA >= data.requiredLevelA && currentB >= data.requiredLevelB);
+
+            bool revealResult = ApplySlot(iconResult, backdropResult, unknownTextResult, null, data.icon, isUnlocked, 0, 0);
+
+            if (resultVisuals != null)
+                resultVisuals.SetPremium(revealResult);
+        }
     }
 
     private SynergyData ResolveSynergy()
