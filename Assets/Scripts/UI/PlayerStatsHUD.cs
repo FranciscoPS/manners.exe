@@ -57,7 +57,7 @@ public class PlayerStatsHUD : MonoBehaviour
         float damage = PlayerStatsManager.Instance.GetModifiedDamage();
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.Damage);
 
-        damageText.text = FormatStatLine("Daño", damage.ToString("F1"), level);
+        damageText.text = FormatStatLine("DaÃ±o", damage.ToString("F1"), level);
     }
 
     private void UpdateAttackSpeed()
@@ -110,7 +110,7 @@ public class PlayerStatsHUD : MonoBehaviour
         float magnetRange = PlayerStatsManager.Instance.GetModifiedMagnetRange();
         int level = PlayerStatsManager.Instance.GetUpgradeLevel(UpgradeType.MagnetRange);
 
-        magnetRangeText.text = FormatStatLine("Rango magnético", magnetRange.ToString("F1"), level);
+        magnetRangeText.text = FormatStatLine("Rango magnÃ©tico", magnetRange.ToString("F1"), level);
     }
 
     private void UpdateMultiShot()

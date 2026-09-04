@@ -214,7 +214,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 
             if (active)
             {
-                row.value.text = "✔ ACTIVA";
+                row.value.text = "• ACTIVA";
                 row.value.color = ColorActive;
                 row.label.color = Color.white;
             }

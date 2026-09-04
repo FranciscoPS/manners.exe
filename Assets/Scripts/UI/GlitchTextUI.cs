@@ -111,8 +111,8 @@ public class GlitchTextUI : MonoBehaviour
 
     private void Capture()
     {
-        originalText = target.text;
-        lockedCount = originalText.StartsWith(prefix) ? prefix.Length : 0;
+        originalText = target.text ?? string.Empty;
+        lockedCount = !string.IsNullOrEmpty(prefix) && originalText.StartsWith(prefix) ? prefix.Length : 0;
         baseAnchoredPosition = target.rectTransform.anchoredPosition;
         baseColor = target.color;
         captured = true;
