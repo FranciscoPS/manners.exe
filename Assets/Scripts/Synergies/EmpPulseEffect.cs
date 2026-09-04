@@ -159,7 +159,11 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     {
         if (Config.visualPrefabOverride != null)
         {
-            Instantiate(Config.visualPrefabOverride, player.position, Quaternion.identity);
+            GameObject visual = Instantiate(Config.visualPrefabOverride, player.position, Quaternion.identity);
+            EmpPulseVisual pulseVisual = visual.GetComponent<EmpPulseVisual>();
+            if (pulseVisual != null)
+                pulseVisual.Play(player, Config.radius, Config.expandDuration);
+
             proceduralVisual = null;
             return;
         }

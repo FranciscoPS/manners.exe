@@ -382,8 +382,6 @@ public class SynergyActivationHUD : MonoBehaviour
         RectTransform cell = CreateRect(synergy.name, strip, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(cellSize, cellSize));
 
         Image backdrop = cell.gameObject.AddComponent<Image>();
-        backdrop.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-        backdrop.type = Image.Type.Sliced;
         backdrop.color = cellBackdropColor;
         backdrop.raycastTarget = false;
 
