@@ -11,6 +11,8 @@ public class EnemyConfiguration : ScriptableObject
     public float maxHealth = 30f;
     public float moveSpeed = 3f;
     public float contactDamage = 10f;
+    [Tooltip("Resistencia a control (0-1). Acorta stuns/congelamientos y acerca los slows a la velocidad normal. 0.5 = un stun dura la mitad y un slow del 50% pasa a ser del 25%. 1 = inmune.")]
+    [Range(0f, 1f)] public float controlResistance = 0f;
 
     [Header("Experience Drop")]
     public OrbConfiguration orbConfig;
@@ -34,7 +36,7 @@ public class EnemyConfiguration : ScriptableObject
         EnemyController controller = enemyObject.GetComponent<EnemyController>();
         if (controller != null)
         {
-            controller.SetStats(moveSpeed, contactDamage);
+            controller.SetStats(moveSpeed, contactDamage, controlResistance);
         }
 
         EnemyHealth health = enemyObject.GetComponent<EnemyHealth>();

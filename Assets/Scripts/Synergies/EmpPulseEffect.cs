@@ -13,6 +13,8 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
     private readonly List<EnemyHealth> frozenBuffer = new List<EnemyHealth>();
     private readonly HashSet<EnemyHealth> frozenSet = new HashSet<EnemyHealth>();
+    private readonly EnemyProximityGrid chainGrid = new EnemyProximityGrid();
+    private readonly List<EnemyHealth> chainNeighbors = new List<EnemyHealth>();
 
     public bool IsActive => isActiveAndEnabled;
 
@@ -122,26 +124,29 @@ public class EmpPulseEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
     private void PropagateChain()
     {
-        List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
-        float chainRadiusSqr = Config.chainRadius * Config.chainRadius;
+        if (Config.maxChainHops <= 0 || frozenBuffer.Count == 0) return;
 
-        int cursor = 0;
-        while (cursor < frozenBuffer.Count)
+        chainGrid.Build(EnemyHealth.ActiveEnemies, Config.chainRadius);
+
+        int hopStart = 0;
+        int hopEnd = frozenBuffer.Count;
+
+        for (int hop = 0; hop < Config.maxChainHops && hopStart < hopEnd; hop++)
         {
-            EnemyHealth source = frozenBuffer[cursor];
-            cursor++;
-            if (source == null) continue;
-
-            Vector3 sourcePosition = source.transform.position;
-
-            for (int i = 0; i < enemies.Count; i++)
+            for (int s = hopStart; s < hopEnd; s++)
             {
-                EnemyHealth candidate = enemies[i];
-                if (candidate == null || frozenSet.Contains(candidate)) continue;
+                EnemyHealth source = frozenBuffer[s];
+                if (source == null) continue;
 
-                if ((candidate.transform.position - sourcePosition).sqrMagnitude <= chainRadiusSqr)
-                    Freeze(candidate);
+                chainNeighbors.Clear();
+                chainGrid.CollectWithin(source.transform.position, Config.chainRadius, chainNeighbors);
+
+                for (int i = 0; i < chainNeighbors.Count; i++)
+                    Freeze(chainNeighbors[i]);
             }
+
+            hopStart = hopEnd;
+            hopEnd = frozenBuffer.Count;
         }
     }
 
