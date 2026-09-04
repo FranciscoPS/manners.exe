@@ -5,13 +5,15 @@ using UnityEngine.InputSystem;
 public class ChestOpeningConfig : ScriptableObject
 {
     [Header("=== TIEMPOS (segundos) ===")]
-    [Tooltip("Anticipación: el cofre tiembla, el fondo se oscurece y los rayos aparecen lentamente.")]
-    public float anticipationDuration = 1.6f;
+    [Tooltip("Con cofre 3D la cinemática dura exactamente lo que dura su clip de animación (ChestANIM), reproducido completo a velocidad normal. Este valor indica cuántos segundos antes de que termine ese clip se revela el objeto (aparece la carta) y la cinemática empieza a desvanecerse sobre ella.")]
+    public float revealLeadTime = 1f;
     [Tooltip("Duración del destello blanco y la sacudida fuerte de cámara en el momento del estallido.")]
     public float burstDuration = 0.35f;
-    [Tooltip("Duración de reserva de la apertura si no hay cofre 3D disponible (prefab ausente o showcase desactivado).")]
+    [Tooltip("Solo sin cofre 3D (prefab ausente o showcase desactivado): anticipación en la que el fondo se oscurece y los rayos aparecen lentamente.")]
+    public float anticipationDuration = 1.6f;
+    [Tooltip("Solo sin cofre 3D: duración de reserva de la apertura.")]
     public float lidOpenFallbackDuration = 1.2f;
-    [Tooltip("Cuánto se mantienen los rayos a máxima velocidad después de que el cofre 3D llega a su pose final congelada, antes de mostrar la carta del objeto.")]
+    [Tooltip("Solo sin cofre 3D: cuánto se mantienen los rayos a máxima velocidad antes de mostrar la carta del objeto.")]
     public float revealHoldDuration = 1.85f;
 
     [Header("=== CÁMARA ===")]
@@ -50,10 +52,8 @@ public class ChestOpeningConfig : ScriptableObject
     public GameObject showcasePrefab;
     [Tooltip("Animator Controller con la animación de apertura (ChestANIM). Solo se usa si el prefab no trae uno asignado.")]
     public RuntimeAnimatorController showcaseController;
-    [Tooltip("Segundo del clip en que el cofre se aplasta y salta abriéndose. La anticipación reproduce el clip desde 0 hasta aquí (acelerado o frenado para durar 'anticipationDuration') y el destello dispara justo en este instante.")]
+    [Tooltip("Segundo del clip (a velocidad real) en que el cofre se aplasta y salta abriéndose: ahí se disparan el destello, la sacudida fuerte y las partículas. Hasta ese instante corre la anticipación (oscurecido, rayos y temblores) y después el clip sigue hasta su final.")]
     public float showcaseBurstClipTime = 2.45f;
-    [Tooltip("Segundo del clip en que se congela la pose final (cofre abierto en el aire mirando al frente). 0 = reproducir el clip completo.")]
-    public float showcaseFreezeClipTime = 4.95f;
     [Tooltip("Ángulo de visión de la cámara del cofre. Más bajo = menos perspectiva.")]
     public float showcaseFieldOfView = 35f;
     [Tooltip("Inclinación de la cámara en grados (positivo = mira hacia abajo).")]
@@ -71,8 +71,6 @@ public class ChestOpeningConfig : ScriptableObject
     [Range(0.25f, 2f)]
     [Tooltip("Resolución de la textura del cofre respecto a su tamaño en pantalla. 1 = misma resolución; menos = más barato; más = bordes más suaves.")]
     public float showcaseRenderScale = 1f;
-
-    public float TotalDuration => anticipationDuration + burstDuration + lidOpenFallbackDuration + revealHoldDuration;
 
     private static ChestOpeningConfig instance;
 

@@ -22,8 +22,8 @@ public class ChestShowcase : MonoBehaviour
     private bool loadFailed;
 
     public bool IsActive => renderTexture != null;
+    public float ClipLength => clipLength;
     public float BurstTime { get; private set; }
-    public float FreezeTime { get; private set; }
 
     public static ChestShowcase Create(Transform parent, RawImage view)
     {
@@ -42,9 +42,6 @@ public class ChestShowcase : MonoBehaviour
         if (!config.showcaseEnabled || !EnsureChest(config)) return false;
 
         BurstTime = Mathf.Clamp(config.showcaseBurstClipTime, 0f, clipLength);
-        FreezeTime = config.showcaseFreezeClipTime <= 0f
-            ? clipLength
-            : Mathf.Clamp(config.showcaseFreezeClipTime, BurstTime, clipLength);
 
         chestInstance.SetActive(true);
         Seek(0f, 0f);

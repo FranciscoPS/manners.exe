@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db14648147dfb484287c4e42d996619c, type: 3}
   m_Name: ChestOpeningConfig
   m_EditorClassIdentifier: Assembly-CSharp::ChestOpeningConfig
-  anticipationDuration: 1.6
+  revealLeadTime: 1
+  anticipationDuration: 2
   burstDuration: 0.35
   lidOpenFallbackDuration: 1.2
   revealHoldDuration: 1.85
@@ -32,7 +33,6 @@ MonoBehaviour:
   showcasePrefab: {fileID: 8478753896111193994, guid: 2b9eb487d6d09428fa2d2a2f6365cca0, type: 3}
   showcaseController: {fileID: 9100000, guid: a379bc2be957d415691f1b04e7c9bf56, type: 2}
   showcaseBurstClipTime: 2.45
-  showcaseFreezeClipTime: 3
   showcaseFieldOfView: 35
   showcaseCameraPitch: 12
   showcaseCameraYaw: 180
