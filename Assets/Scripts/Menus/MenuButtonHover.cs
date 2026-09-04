@@ -15,6 +15,7 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
     [SerializeField] private string hoverText = "Próximamente";
     [SerializeField] private TextMeshProUGUI tmpText;
     [SerializeField] private Text uiText;
+    [SerializeField] private TextMeshProUGUI replacementText;
 
     private RectTransform rectTransform;
     private Vector3 originalScale;
@@ -65,14 +66,22 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
         rectTransform.DOScale(originalScale * hoverScale, scaleDuration).SetUpdate(true).SetEase(Ease.OutBack);
         MusicManager.Instance?.PlayUISound(MusicManager.Instance.hoverSFX);
 
-        if (changeTextOnHover && hasText)
+        if (changeTextOnHover)
         {
-            if (tmpText != null)
-                tmpText.text = hoverText;
-            else if (uiText != null)
-                uiText.text = hoverText;
+            if (replacementText != null)
+            {
+                replacementText.gameObject.SetActive(true);
+                textChanged = true;
+            }
+            else if (hasText)
+            {
+                if (tmpText != null)
+                    tmpText.text = hoverText;
+                else if (uiText != null)
+                    uiText.text = hoverText;
 
-            textChanged = true;
+                textChanged = true;
+            }
         }
     }
 
@@ -94,10 +103,17 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private void RestoreOriginalText()
     {
-        if (tmpText != null)
-            tmpText.text = originalText;
-        else if (uiText != null)
-            uiText.text = originalText;
+        if (replacementText != null)
+        {
+            replacementText.gameObject.SetActive(false);
+        }
+        else
+        {
+            if (tmpText != null)
+                tmpText.text = originalText;
+            else if (uiText != null)
+                uiText.text = originalText;
+        }
 
         textChanged = false;
     }
