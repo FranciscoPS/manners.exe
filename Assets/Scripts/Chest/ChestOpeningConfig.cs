@@ -5,8 +5,10 @@ using UnityEngine.InputSystem;
 public class ChestOpeningConfig : ScriptableObject
 {
     [Header("=== TIEMPOS (segundos) ===")]
-    [Tooltip("Con cofre 3D la cinemática dura exactamente lo que dura su clip de animación (ChestANIM), reproducido completo a velocidad normal. Este valor indica cuántos segundos antes de que termine ese clip se revela el objeto (aparece la carta) y la cinemática empieza a desvanecerse sobre ella.")]
+    [Tooltip("Con cofre 3D la cinemática sigue el clip de animación del cofre (ChestANIM) a velocidad normal. Este valor indica cuántos segundos antes de que termine ese clip se corta: el cofre, el oscurecido y los rayos desaparecen con el fundido corto de abajo y justo después aparece la carta del objeto.")]
     public float revealLeadTime = 1f;
+    [Tooltip("Duración del fundido final (cofre, oscurecido, rayos y texto) justo antes de que aparezca la carta. 0 = desaparece de golpe.")]
+    public float fadeOutDuration = 0.4f;
     [Tooltip("Duración del destello blanco y la sacudida fuerte de cámara en el momento del estallido.")]
     public float burstDuration = 0.35f;
     [Tooltip("Solo sin cofre 3D (prefab ausente o showcase desactivado): anticipación en la que el fondo se oscurece y los rayos aparecen lentamente.")]

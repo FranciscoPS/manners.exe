@@ -21,7 +21,6 @@ public class ChestOpeningSequence : MonoBehaviour
     private ChestShowcase showcase;
 
     private bool skipRequested;
-    private bool revealed;
     private float promptHue;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -232,7 +231,6 @@ public class ChestOpeningSequence : MonoBehaviour
 
         Time.timeScale = 0f;
         skipRequested = false;
-        revealed = false;
         promptHue = UnityEngine.Random.value;
 
         canvasRoot.SetActive(true);
@@ -251,31 +249,27 @@ public class ChestOpeningSequence : MonoBehaviour
 
         PlayClip(config.buildupSFX, config.sfxVolume);
 
-        bool clipDriven = showcase.IsActive && showcase.ClipLength > 0.05f;
-
-        if (clipDriven)
-            yield return RunClipTimeline(config, chestAnimator, chestPosition, onComplete);
+        if (showcase.IsActive && showcase.ClipLength > 0.05f)
+            yield return RunClipTimeline(config, chestPosition);
         else
             yield return RunFallbackTimeline(config, chestPosition);
 
         FinishInstantly(chestAnimator);
 
-        if (skipRequested || !clipDriven)
-            yield return RunFadeOutPhase(config, skipRequested ? 0.15f : 0.4f);
+        yield return RunFadeOutPhase(config, skipRequested ? 0.15f : Mathf.Max(0f, config.fadeOutDuration));
 
         canvasRoot.SetActive(false);
         aura.Stop();
         showcase.End();
 
-        Reveal(chestAnimator, onComplete);
+        onComplete?.Invoke();
     }
 
-    private IEnumerator RunClipTimeline(ChestOpeningConfig config, Animator chestAnimator, Vector3 chestPosition, Action onComplete)
+    private IEnumerator RunClipTimeline(ChestOpeningConfig config, Vector3 chestPosition)
     {
         float clipLength = showcase.ClipLength;
         float burstAt = Mathf.Clamp(showcase.BurstTime, 0f, clipLength);
-        float revealAt = Mathf.Clamp(clipLength - config.revealLeadTime, burstAt, clipLength);
-        float fadeDuration = Mathf.Max(0.01f, clipLength - revealAt);
+        float cutAt = Mathf.Clamp(clipLength - config.revealLeadTime, burstAt, clipLength);
 
         showcase.Seek(0f, 1f);
 
@@ -283,9 +277,9 @@ public class ChestOpeningSequence : MonoBehaviour
         float nextShake = 0f;
         bool burst = false;
 
-        while (elapsed < clipLength)
+        while (elapsed < cutAt)
         {
-            if (!revealed && CheckSkip(config)) yield break;
+            if (CheckSkip(config)) yield break;
 
             if (!burst)
             {
@@ -311,17 +305,9 @@ public class ChestOpeningSequence : MonoBehaviour
                 UpdatePromptPulse(1f);
             }
 
-            if (!revealed && elapsed >= revealAt)
-                Reveal(chestAnimator, onComplete);
-
-            if (revealed)
-                ApplyFadeOut(config, Mathf.Clamp01((elapsed - revealAt) / fadeDuration));
-
             elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
-
-        ApplyFadeOut(config, 1f);
     }
 
     private IEnumerator RunFallbackTimeline(ChestOpeningConfig config, Vector3 chestPosition)
@@ -395,26 +381,6 @@ public class ChestOpeningSequence : MonoBehaviour
         flashOverlay.color = new Color(config.flashColor.r, config.flashColor.g, config.flashColor.b, flashT);
     }
 
-    private void ApplyFadeOut(ChestOpeningConfig config, float t)
-    {
-        dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, config.dimColor.a * (1f - t));
-        promptGroup.alpha = 1f - t;
-        auraGroup.alpha = 1f - t;
-        aura.SpinMultiplier = Mathf.Lerp(3f, 1f, t);
-
-        if (showcase.IsActive)
-            showcase.SetAlpha(1f - t);
-    }
-
-    private void Reveal(Animator chestAnimator, Action onComplete)
-    {
-        if (revealed) return;
-
-        revealed = true;
-        SnapWorldChestOpen(chestAnimator);
-        onComplete?.Invoke();
-    }
-
     private IEnumerator RunFadeOutPhase(ChestOpeningConfig config, float duration)
     {
         float startDim = dimOverlay.color.a;
@@ -456,7 +422,7 @@ public class ChestOpeningSequence : MonoBehaviour
     {
         SnapWorldChestOpen(chestAnimator);
 
-        if (showcase.IsActive)
+        if (showcase.IsActive && skipRequested)
             showcase.Seek(showcase.ClipLength, 0f);
 
         flashOverlay.color = Color.clear;
