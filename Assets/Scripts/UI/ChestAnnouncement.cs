@@ -92,7 +92,7 @@ public class ChestAnnouncement : MonoBehaviour
 
         text = textObj.AddComponent<TextMeshProUGUI>();
         text.alignment = TextAlignmentOptions.Center;
-        text.enableWordWrapping = true;
+        text.textWrappingMode = TextWrappingModes.Normal;
         text.fontSize = fontSize;
         text.color = textColor;
         text.fontStyle = FontStyles.Bold;

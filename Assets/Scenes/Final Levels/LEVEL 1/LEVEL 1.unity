@@ -11319,13 +11319,32 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 602986970}
   m_CullTransparentMesh: 1
+--- !u!1 &615039317
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 615039318}
+  - component: {fileID: 615039321}
+  - component: {fileID: 615039320}
+  - component: {fileID: 615039319}
+  m_Layer: 5
+  m_Name: SinergiasTitle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!224 &615039318
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 615913266}
+  m_GameObject: {fileID: 615039317}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -11344,7 +11363,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 615913266}
+  m_GameObject: {fileID: 615039317}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4cf022645446445269c07d7bbbfc7539, type: 3}
@@ -11374,7 +11393,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 615913266}
+  m_GameObject: {fileID: 615039317}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
@@ -11466,7 +11485,7 @@ CanvasRenderer:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 615913266}
+  m_GameObject: {fileID: 615039317}
   m_CullTransparentMesh: 1
 --- !u!1 &615913266
 GameObject:
@@ -11476,14 +11495,11 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 615039318}
-  - component: {fileID: 615039321}
-  - component: {fileID: 615039320}
-  - component: {fileID: 615039319}
+  - component: {fileID: 615913267}
   - component: {fileID: 615913269}
   - component: {fileID: 615913268}
   m_Layer: 5
-  m_Name: SinergiasTitle
+  m_Name: Enemigos
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -41270,6 +41286,7 @@ RectTransform:
   m_Children:
   - {fileID: 809262127}
   - {fileID: 1361455935}
+  - {fileID: 615913267}
   - {fileID: 984507741}
   - {fileID: 215934751}
   m_Father: {fileID: 1327963813}

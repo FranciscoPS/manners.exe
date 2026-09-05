@@ -88,6 +88,7 @@ public class ChestPickup : MonoBehaviour, IUpdateable
         }
 
         if (Time.time < nextCheckTime) return;
+        if (LevelUpManager.Instance != null && LevelUpManager.Instance.IsLevelUpActive()) return;
         nextCheckTime = Time.time + CheckInterval;
 
         float dx = transform.position.x - player.position.x;
@@ -114,18 +115,23 @@ public class ChestPickup : MonoBehaviour, IUpdateable
 
         if (hasOpenedOnce)
         {
-            if (LevelUpManager.Instance != null)
-                LevelUpManager.Instance.ShowChestSelection(chosenItem);
+            ShowSelection();
             return;
         }
 
         hasOpenedOnce = true;
+        ChestOpeningSequence.Play(chosenItem, gameObject, ShowSelection);
+    }
 
-        ChestOpeningSequence.Play(chosenItem, gameObject, () =>
-        {
-            if (LevelUpManager.Instance != null)
-                LevelUpManager.Instance.ShowChestSelection(chosenItem);
-        });
+    private void ShowSelection()
+    {
+        if (opened) return;
+
+        bool shown = LevelUpManager.Instance != null && LevelUpManager.Instance.ShowChestSelection(chosenItem);
+        if (shown) return;
+
+        selectionOpen = false;
+        lastWasInRange = false;
     }
 
     public void OnSelectionClosed()
