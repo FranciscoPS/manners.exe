@@ -159,7 +159,7 @@ public class OvertimeAlert : MonoBehaviour
         textObj.transform.SetParent(canvasObj.transform, false);
         text = textObj.AddComponent<TextMeshProUGUI>();
         text.alignment = TextAlignmentOptions.Center;
-        text.enableWordWrapping = false;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
         text.fontSize = fontSize;
         text.color = textColor;
         text.fontStyle = FontStyles.Bold;

@@ -356,12 +356,12 @@ public class LevelUpManager : MonoBehaviour
         GameEvents.TriggerShopOpened();
     }
 
-    public void ShowChestSelection(ChestItemData chestItem = null)
+    public bool ShowChestSelection(ChestItemData chestItem = null)
     {
         Debug.Log("ShowChestSelection ejecutado");
 
         if (levelUpActive)
-            return;
+            return false;
 
         levelUpActive = true;
         currentMode = UpgradeMode.Chest;
@@ -392,6 +392,8 @@ public class LevelUpManager : MonoBehaviour
 
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
+
+        return true;
     }
 
     private void GenerateChestOptions(ChestItemData chestItem = null)

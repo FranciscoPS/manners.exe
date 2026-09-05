@@ -30,7 +30,6 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     private Transform cachedPlayer;
     private float lastSpawnAngle = -999f;
     private GameObject activeChest;
-    private float timer;
 
     public static ChestSpawner Instance => instance;
 
@@ -89,7 +88,6 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
             }
 
             instance.activeChest = null;
-            instance.timer = 0f;
         }
     }
 
