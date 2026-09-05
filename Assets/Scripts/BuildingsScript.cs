@@ -24,8 +24,8 @@ public class BuildingsScript : MonoBehaviour
     [Header("Destruction VFX")]
     [SerializeField] private GameObject destructionVFXPrefab;
     [SerializeField] private float vfxScale = 1f;
-    [Tooltip("Los props (no-edificios) se destruyen con un fundido simple, sin nube de escombros ni pedazos físicos volando.")]
-    [SerializeField] private bool isProp = false;
+    [Tooltip("Si está apagado, no se genera la nube de escombros (VFX) al destruirse. No afecta a los pedazos físicos, que se siguen rompiendo igual.")]
+    [SerializeField] private bool displayVfxExplosion = true;
 
     [Header("Destruction Feedback")]
     [SerializeField] private float shakeForce = 0.5f;
@@ -145,12 +145,12 @@ public class BuildingsScript : MonoBehaviour
             MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.buildingDestroySFX, SFXDatabase.Instance.buildingDestroyVolume);
         }
 
-        if (!isProp)
+        if (displayVfxExplosion)
         {
             SpawnDestructionVFX();
         }
 
-        if (!isProp && destroyedVisual != null && destroyedVisual.UseDestroyedVisual)
+        if (destroyedVisual != null && destroyedVisual.UseDestroyedVisual)
         {
             destroyedVisual.DestroyBuilding(lastImpactDirection);
         }
