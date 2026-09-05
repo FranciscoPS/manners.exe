@@ -96,6 +96,11 @@ public class CryoFieldEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         {
             GameObject visual = Instantiate(Config.visualPrefabOverride, transform);
             visual.transform.localPosition = Vector3.zero;
+
+            CryoFieldVisual fieldVisual = visual.GetComponent<CryoFieldVisual>();
+            if (fieldVisual != null)
+                fieldVisual.Play(Config.radius);
+
             return;
         }
 

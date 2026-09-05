@@ -11,6 +11,7 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     private LineRenderer line;
     private Transform visualRoot;
     private ParticleSystem impactGlow;
+    private LaserImpactVisual impactVisual;
     private MaterialPropertyBlock beamProperties;
     private float baseWidth;
 
@@ -122,6 +123,12 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         line.widthMultiplier = 0f;
         UpdateBeamPositions(sweepStartDistance);
 
+        if (impactVisual != null)
+            impactVisual.SetIntensity(0f);
+
+        if (Config.fireShake > 0f && CameraShakeManager.Instance != null)
+            CameraShakeManager.Instance.Shake(Config.fireShake);
+
         if (Config.fireSFX != null && MusicManager.Instance != null)
             MusicManager.Instance.PlaySFXOneShot(Config.fireSFX, Config.sfxVolume);
     }
@@ -166,8 +173,12 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         float t = Config.sweepDuration > 0f ? Mathf.Clamp01(sweepTimer / Config.sweepDuration) : 1f;
         float currentDistance = Mathf.Lerp(sweepStartDistance, sweepEndDistance, t);
 
-        line.widthMultiplier = baseWidth * BeamEnvelope();
+        float envelope = BeamEnvelope();
+        line.widthMultiplier = baseWidth * envelope * IgnitionKick() * WidthPulse();
         Vector3 groundPoint = UpdateBeamPositions(currentDistance);
+
+        if (impactVisual != null)
+            impactVisual.SetIntensity(envelope);
 
         damageTickTimer -= deltaTime;
         if (damageTickTimer <= 0f)
@@ -190,6 +201,19 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         return Mathf.Min(fadeIn, fadeOut);
     }
 
+    private float IgnitionKick()
+    {
+        if (Config.ignitionDuration <= 0f || Config.ignitionKick <= 0f) return 1f;
+
+        float remaining = 1f - Mathf.Clamp01(sweepTimer / Config.ignitionDuration);
+        return 1f + Config.ignitionKick * remaining * remaining;
+    }
+
+    private float WidthPulse()
+    {
+        return 1f + Config.pulseAmount * Mathf.Sin(sweepTimer * 2f * Mathf.PI * Config.pulseFrequency);
+    }
+
     private Vector3 UpdateBeamPositions(float distance)
     {
         Vector3 groundPoint = sweepGroundOrigin + sweepDirection * distance;
@@ -208,6 +232,9 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         if (impactGlow != null)
             impactGlow.transform.position = groundPoint + Vector3.up * ImpactGlowLift;
 
+        if (impactVisual != null)
+            impactVisual.Follow(new Vector3(groundPoint.x, player.position.y + Config.groundOffset, groundPoint.z));
+
         return groundPoint;
     }
 
@@ -220,6 +247,9 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
         if (impactGlow != null)
             impactGlow.gameObject.SetActive(active);
+
+        if (impactVisual != null)
+            impactVisual.SetVisible(active);
     }
 
     private void DamageNear(Vector3 groundPoint)
@@ -303,6 +333,13 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         GameObject visual = Instantiate(Config.visualPrefabOverride, transform);
         visual.name = Config.visualPrefabOverride.name;
         visualRoot = visual.transform;
+
+        impactVisual = visual.GetComponentInChildren<LaserImpactVisual>(true);
+        if (impactVisual != null)
+        {
+            impactVisual.transform.SetParent(transform, false);
+            impactVisual.Configure(Config.impactRadius);
+        }
 
         line = visual.GetComponentInChildren<LineRenderer>(true);
         if (line == null)
