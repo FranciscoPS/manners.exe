@@ -8,7 +8,7 @@ using System.Collections.Generic;
 [Serializable]
 public class MusicLoopSection
 {
-    [Tooltip("Loop que se repite. El último loop de la lista suena para siempre (incluido overtime).")]
+    [Tooltip("Loop que se repite. El último loop de la lista suena hasta que se acaba el tiempo de partida (y para siempre si la escena no tiene overtime configurado).")]
     public AudioClip loopClip;
     [Tooltip("Puente que suena UNA vez DESPUÉS de este loop, antes del siguiente loop. Dejar vacío en el último loop.")]
     public AudioClip bridgeClip;
@@ -22,10 +22,16 @@ public class MusicLoopSection
 public class SceneMusicConfig
 {
     public int sceneIndex;
+    [Tooltip("Carpeta con los clips de esta escena (ej. Assets/Music/TrejoMusic/Ciudad). 'Tools > Manners > Música > Asignar loops por nombre' llena los campos de abajo leyendo los nombres de los archivos: '<prefijo> intro', '<prefijo> loopN', '<prefijo> puenteN' y '<prefijo> outro'. Si se deja vacío, se deduce de la carpeta de los clips ya asignados.")]
+    public string clipFolder;
     [Tooltip("Opcional. Suena una vez al inicio y luego pasa a los loops.")]
     public AudioClip introClip;
-    [Tooltip("Loops y puentes en orden: loop1, puente1, loop2, puente2, loop3... El último loop suena para siempre. Si está vacío se usa el 'loopClip' de abajo.")]
+    [Tooltip("Loops y puentes en orden: loop1, puente1, loop2, puente2, loop3... El último loop suena hasta que se acaba el tiempo de partida. Si está vacío se usa el 'loopClip' de abajo.")]
     public MusicLoopSection[] loopSections;
+    [Tooltip("Puente que suena UNA vez en el instante en que se acaba el tiempo de partida (inicio del overtime); el loop que esté sonando se apaga con un fundido corto. Opcional.")]
+    public AudioClip overtimeBridgeClip;
+    [Tooltip("Loop que suena para siempre después del puente de overtime (o directo al acabarse el tiempo, si no hay puente). Si se deja vacío, tras el puente vuelve el último loop normal.")]
+    public AudioClip overtimeLoopClip;
     [Tooltip("LEGADO: loop infinito simple. Solo se usa si 'loopSections' está vacío.")]
     public AudioClip loopClip;
 }
@@ -60,10 +66,21 @@ public class MusicManager : MonoBehaviour
     [Tooltip("Duración (segundos) usada para repartir las repeticiones de los loops. Si hay GameTimeManager se usa su duración de partida; si no, este valor (600 = 10 min).")]
     [SerializeField] private float fallbackMatchDurationSeconds = 600f;
 
+    [Header("Overtime")]
+    [Tooltip("Segundos del fundido con el que se apaga el loop en curso cuando se acaba el tiempo de partida. El puente de overtime entra de inmediato, encima del fundido, para que el corte se sienta como un bajón.")]
+    [SerializeField] private float overtimeFadeSeconds = 1.2f;
+
     private AudioSource introSource;
     private AudioSource loopSource;
+    private AudioSource overtimeSource;
     private AudioSource[] musicSources;
+    private AudioSource[] allMusicSources;
+    private readonly HashSet<AudioSource> fadingOutSources = new HashSet<AudioSource>();
     private Coroutine musicSequenceCoroutine;
+    private Coroutine overtimeCoroutine;
+    private SceneMusicConfig activeConfig;
+    private AudioClip lastRegularLoop;
+    private bool overtimeStarted;
     private AudioSource menuSource;
     private AudioSource sfxLoopSource;
     private AudioSource sfxOneShotSource;
@@ -73,6 +90,7 @@ public class MusicManager : MonoBehaviour
     private const string MUSIC_VOLUME_KEY = "MusicVolume";
     private const string SFX_VOLUME_KEY = "SFXVolume";
     private const string MASTER_VOLUME_KEY = "MasterVolume";
+    private const double ScheduleLead = 0.5;
 
     private void Awake()
     {
@@ -90,6 +108,7 @@ public class MusicManager : MonoBehaviour
         LoadVolumeSettings();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
+        GameEvents.OnMatchTimeExpired += HandleMatchTimeExpired;
 
         if (playOnAwake)
         {
@@ -102,8 +121,8 @@ public class MusicManager : MonoBehaviour
 
     private void OnDestroy()
     {
-
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        GameEvents.OnMatchTimeExpired -= HandleMatchTimeExpired;
         if (Instance == this)
         {
             Instance = null;
@@ -122,28 +141,18 @@ public class MusicManager : MonoBehaviour
         else
         {
             StopMenuMusic();
-            if (!IsPlaying())
-                PlayMusic();
+            PlayMusic();
         }
     }
 
     private void SetupAudioSource()
     {
-        introSource = gameObject.AddComponent<AudioSource>();
-        introSource.loop = false;
-        introSource.playOnAwake = false;
-        introSource.volume = musicVolume;
-        introSource.spatialBlend = 0f;
-        introSource.priority = 0;
-
-        loopSource = gameObject.AddComponent<AudioSource>();
-        loopSource.loop = false;
-        loopSource.playOnAwake = false;
-        loopSource.volume = musicVolume;
-        loopSource.spatialBlend = 0f;
-        loopSource.priority = 0;
+        introSource = CreateMusicSource();
+        loopSource = CreateMusicSource();
+        overtimeSource = CreateMusicSource();
 
         musicSources = new AudioSource[] { introSource, loopSource };
+        allMusicSources = new AudioSource[] { introSource, loopSource, overtimeSource };
 
         menuSource = gameObject.AddComponent<AudioSource>();
         menuSource.loop = true;
@@ -167,26 +176,26 @@ public class MusicManager : MonoBehaviour
         sfxOneShotSource.priority = 128;
     }
 
+    private AudioSource CreateMusicSource()
+    {
+        AudioSource source = gameObject.AddComponent<AudioSource>();
+        source.loop = false;
+        source.playOnAwake = false;
+        source.volume = musicVolume;
+        source.spatialBlend = 0f;
+        source.priority = 0;
+        return source;
+    }
+
     private void LoadVolumeSettings()
     {
-
         float masterVolume = PlayerPrefs.GetFloat(MASTER_VOLUME_KEY, 1f);
         AudioListener.volume = masterVolume;
 
         musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, musicVolume);
         sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_KEY, sfxVolume);
 
-        if (introSource != null)
-        {
-            introSource.DOKill();
-            introSource.volume = musicVolume;
-        }
-
-        if (loopSource != null)
-        {
-            loopSource.DOKill();
-            loopSource.volume = musicVolume;
-        }
+        ApplyMusicVolumeImmediate(musicVolume);
 
         if (menuSource != null)
         {
@@ -249,7 +258,6 @@ public class MusicManager : MonoBehaviour
 
     public void PlayMusic()
     {
-
         if (SceneManager.GetActiveScene().buildIndex == mainMenuSceneIndex)
             return;
 
@@ -258,8 +266,8 @@ public class MusicManager : MonoBehaviour
             return;
 
         StopMusicSequence();
-        introSource.Stop();
-        loopSource.Stop();
+        StopOvertimeRoutine();
+        StopAllMusicSources();
 
         var sections = new List<MusicLoopSection>();
         if (config.loopSections != null)
@@ -268,7 +276,81 @@ public class MusicManager : MonoBehaviour
                 if (s != null && s.loopClip != null) sections.Add(s);
         }
 
+        activeConfig = config;
+        overtimeStarted = false;
+        lastRegularLoop = sections.Count > 0 ? sections[sections.Count - 1].loopClip : config.loopClip;
+
         musicSequenceCoroutine = StartCoroutine(MusicSequenceRoutine(config.introClip, sections, config.loopClip));
+    }
+
+    private void HandleMatchTimeExpired()
+    {
+        if (activeConfig == null || overtimeStarted) return;
+        if (activeConfig.overtimeBridgeClip == null && activeConfig.overtimeLoopClip == null) return;
+
+        overtimeStarted = true;
+        StopMusicSequence();
+        overtimeCoroutine = StartCoroutine(OvertimeRoutine(activeConfig));
+    }
+
+    private IEnumerator OvertimeRoutine(SceneMusicConfig config)
+    {
+        FadeOutRegularSources();
+
+        AudioClip bridge = config.overtimeBridgeClip;
+        AudioClip loop = config.overtimeLoopClip != null ? config.overtimeLoopClip : lastRegularLoop;
+        double startDsp = AudioSettings.dspTime + 0.05;
+
+        if (bridge == null)
+        {
+            if (loop != null)
+                PlayClipScheduled(overtimeSource, loop, true, startDsp);
+            yield break;
+        }
+
+        PlayClipScheduled(overtimeSource, bridge, false, startDsp);
+        if (loop == null) yield break;
+
+        double loopStartDsp = startDsp + ClipLength(bridge);
+        float fadeSettled = Time.unscaledTime + overtimeFadeSeconds + 0.1f;
+        while (Time.unscaledTime < fadeSettled && AudioSettings.dspTime < loopStartDsp - ScheduleLead)
+            yield return null;
+
+        AudioSource loopTarget = FreeRegularSource();
+        PlayClipScheduled(loopTarget, loop, true, Math.Max(loopStartDsp, AudioSettings.dspTime + 0.05));
+    }
+
+    private void FadeOutRegularSources()
+    {
+        for (int i = 0; i < musicSources.Length; i++)
+        {
+            AudioSource source = musicSources[i];
+            source.DOKill();
+            if (!source.isPlaying) continue;
+
+            fadingOutSources.Add(source);
+            source.DOFade(0f, overtimeFadeSeconds).SetUpdate(true).OnComplete(() =>
+            {
+                source.Stop();
+                fadingOutSources.Remove(source);
+                source.volume = CurrentMusicVolume();
+            });
+        }
+    }
+
+    private AudioSource FreeRegularSource()
+    {
+        for (int i = 0; i < musicSources.Length; i++)
+        {
+            if (!musicSources[i].isPlaying && !fadingOutSources.Contains(musicSources[i]))
+                return musicSources[i];
+        }
+
+        AudioSource fallback = musicSources[0];
+        fallback.DOKill();
+        fallback.Stop();
+        fadingOutSources.Remove(fallback);
+        return fallback;
     }
 
     private static double ClipLength(AudioClip clip)
@@ -344,8 +426,6 @@ public class MusicManager : MonoBehaviour
 
     private IEnumerator MusicSequenceRoutine(AudioClip introClip, List<MusicLoopSection> sections, AudioClip legacyLoop)
     {
-        const double LEAD = 0.5;
-
         int srcIndex = 0;
         AudioSource cur = musicSources[srcIndex];
 
@@ -356,7 +436,7 @@ public class MusicManager : MonoBehaviour
             {
                 PlayClipNow(cur, introClip, false);
                 double iLen = ClipLength(introClip);
-                while (cur.isPlaying && (iLen - cur.time) > LEAD) yield return null;
+                while (cur.isPlaying && (iLen - cur.time) > ScheduleLead) yield return null;
                 double iEnd = AudioSettings.dspTime + Math.Max(0.05, iLen - cur.time);
                 PlayClipScheduled(musicSources[1 - srcIndex], legacyLoop, true, iEnd);
             }
@@ -374,7 +454,7 @@ public class MusicManager : MonoBehaviour
         {
             PlayClipNow(cur, introClip, false);
             double introLen = ClipLength(introClip);
-            while (cur.isPlaying && (introLen - cur.time) > LEAD)
+            while (cur.isPlaying && (introLen - cur.time) > ScheduleLead)
                 yield return null;
             double endDsp = AudioSettings.dspTime + Math.Max(0.05, introLen - cur.time);
             AudioSource other = musicSources[1 - srcIndex];
@@ -395,7 +475,6 @@ public class MusicManager : MonoBehaviour
 
             if (s.repeatCount > 0)
             {
-
                 int completed = 0;
                 float lastT = cur.time;
                 while (completed < s.repeatCount)
@@ -408,7 +487,6 @@ public class MusicManager : MonoBehaviour
             }
             else
             {
-
                 double threshold = start[i + 1];
                 while (CurrentGameTime() < threshold)
                     yield return null;
@@ -419,7 +497,7 @@ public class MusicManager : MonoBehaviour
             {
                 if (Time.timeScale == 0f || !cur.isPlaying) { yield return null; continue; }
                 remaining = clipLen - cur.time;
-                if (remaining >= LEAD) break;
+                if (remaining >= ScheduleLead) break;
                 yield return null;
             }
 
@@ -446,18 +524,18 @@ public class MusicManager : MonoBehaviour
             }
             else
             {
-
                 PlayClipScheduled(bridgeSrc, nextLoop, true, boundaryDsp);
                 while (AudioSettings.dspTime < boundaryDsp) yield return null;
                 srcIndex = 1 - srcIndex;
                 cur = bridgeSrc;
             }
         }
-
     }
 
     private void PlayClipNow(AudioSource src, AudioClip clip, bool loop)
     {
+        src.DOKill();
+        fadingOutSources.Remove(src);
         src.Stop();
         src.clip = clip;
         src.loop = loop;
@@ -467,6 +545,8 @@ public class MusicManager : MonoBehaviour
 
     private void PlayClipScheduled(AudioSource src, AudioClip clip, bool loop, double dspStart)
     {
+        src.DOKill();
+        fadingOutSources.Remove(src);
         src.Stop();
         src.clip = clip;
         src.loop = loop;
@@ -483,31 +563,83 @@ public class MusicManager : MonoBehaviour
         }
     }
 
+    private void StopOvertimeRoutine()
+    {
+        if (overtimeCoroutine != null)
+        {
+            StopCoroutine(overtimeCoroutine);
+            overtimeCoroutine = null;
+        }
+    }
+
+    private void StopAllMusicSources()
+    {
+        if (allMusicSources == null) return;
+
+        for (int i = 0; i < allMusicSources.Length; i++)
+        {
+            allMusicSources[i].DOKill();
+            allMusicSources[i].Stop();
+            allMusicSources[i].volume = CurrentMusicVolume();
+        }
+
+        fadingOutSources.Clear();
+    }
+
     public void StopMusic()
     {
         StopMusicSequence();
-        introSource.Stop();
-        loopSource.Stop();
+        StopOvertimeRoutine();
+        StopAllMusicSources();
+        activeConfig = null;
+        overtimeStarted = false;
     }
 
     public void PauseMusic()
     {
-        introSource.Pause();
-        loopSource.Pause();
+        if (allMusicSources == null) return;
+        for (int i = 0; i < allMusicSources.Length; i++)
+            allMusicSources[i].Pause();
     }
 
     public void ResumeMusic()
     {
-        introSource.UnPause();
-        loopSource.UnPause();
+        if (allMusicSources == null) return;
+        for (int i = 0; i < allMusicSources.Length; i++)
+            allMusicSources[i].UnPause();
+    }
+
+    private void ApplyMusicVolumeImmediate(float volume)
+    {
+        if (allMusicSources == null) return;
+
+        for (int i = 0; i < allMusicSources.Length; i++)
+        {
+            AudioSource source = allMusicSources[i];
+            if (fadingOutSources.Contains(source)) continue;
+            source.DOKill();
+            source.volume = volume;
+        }
+    }
+
+    private void FadeMusicVolume(float target)
+    {
+        if (allMusicSources == null) return;
+
+        for (int i = 0; i < allMusicSources.Length; i++)
+        {
+            AudioSource source = allMusicSources[i];
+            if (fadingOutSources.Contains(source)) continue;
+            source.DOKill();
+            source.DOFade(target, volumeFadeDuration).SetUpdate(true);
+        }
     }
 
     public void SetVolume(float volume)
     {
         musicVolume = Mathf.Clamp01(volume);
-        if (introSource != null) { introSource.DOKill(); introSource.volume = musicVolume; }
-        if (loopSource  != null) { loopSource.DOKill();  loopSource.volume  = musicVolume; }
-        if (menuSource  != null) { menuSource.DOKill();  menuSource.volume   = musicVolume; }
+        ApplyMusicVolumeImmediate(musicVolume);
+        if (menuSource != null) { menuSource.DOKill(); menuSource.volume = musicVolume; }
         isVolumeReduced = false;
         savedMusicVolume = musicVolume;
     }
@@ -524,8 +656,15 @@ public class MusicManager : MonoBehaviour
 
     public bool IsPlaying()
     {
-        return (introSource != null && introSource.isPlaying) ||
-               (loopSource  != null && loopSource.isPlaying);
+        if (allMusicSources == null) return false;
+
+        for (int i = 0; i < allMusicSources.Length; i++)
+        {
+            if (allMusicSources[i] != null && allMusicSources[i].isPlaying)
+                return true;
+        }
+
+        return false;
     }
 
     public void PlaySFXLoop(AudioClip sfx)
@@ -603,16 +742,13 @@ public class MusicManager : MonoBehaviour
         if (isVolumeReduced) return;
         isVolumeReduced = true;
         savedMusicVolume = musicVolume;
-        float targetVolume = savedMusicVolume * reducedVolumeMultiplier;
-        if (introSource != null) { introSource.DOKill(); introSource.DOFade(targetVolume, volumeFadeDuration).SetUpdate(true); }
-        if (loopSource  != null) { loopSource.DOKill();  loopSource.DOFade(targetVolume,  volumeFadeDuration).SetUpdate(true); }
+        FadeMusicVolume(savedMusicVolume * reducedVolumeMultiplier);
     }
 
     public void RestoreVolume()
     {
         if (!isVolumeReduced) return;
         isVolumeReduced = false;
-        if (introSource != null) { introSource.DOKill(); introSource.DOFade(savedMusicVolume, volumeFadeDuration).SetUpdate(true); }
-        if (loopSource  != null) { loopSource.DOKill();  loopSource.DOFade(savedMusicVolume,  volumeFadeDuration).SetUpdate(true); }
+        FadeMusicVolume(savedMusicVolume);
     }
 }

@@ -35231,6 +35231,7 @@ MonoBehaviour:
   menuMusic: {fileID: 8300000, guid: 7f25f5c293a36434a9d8cc0ee382e145, type: 3}
   sceneMusicConfigs:
   - sceneIndex: 1
+    clipFolder: Assets/Music/TrejoMusic/Ciudad
     introClip: {fileID: 8300000, guid: c422bafbf743c624e895f2fb4abed1cd, type: 3}
     loopSections:
     - loopClip: {fileID: 8300000, guid: 359eef496d7e12d4a83d92b1f1e21d3f, type: 3}
@@ -35242,11 +35243,18 @@ MonoBehaviour:
       repeatCount: 0
       startAtSeconds: 0
     - loopClip: {fileID: 8300000, guid: 7deb0ff04c2d6ed4a9e8e642c65eb6ab, type: 3}
+      bridgeClip: {fileID: 8300000, guid: 87b6051ba71fc4785b554cf4e17d2523, type: 3}
+      repeatCount: 0
+      startAtSeconds: 0
+    - loopClip: {fileID: 8300000, guid: e90abab0aec254cadaea243e14efbc4c, type: 3}
       bridgeClip: {fileID: 0}
       repeatCount: 0
       startAtSeconds: 0
+    overtimeBridgeClip: {fileID: 8300000, guid: ead9fd8097e234c8193d2c83b2f880f7, type: 3}
+    overtimeLoopClip: {fileID: 8300000, guid: 3160260cd312c4f84bf719a6b8238210, type: 3}
     loopClip: {fileID: 0}
   - sceneIndex: 2
+    clipFolder: Assets/Music/TrejoMusic/Desierto
     introClip: {fileID: 8300000, guid: 6b4a29a258cbe7b4fae49d899fba2956, type: 3}
     loopSections:
     - loopClip: {fileID: 8300000, guid: 415a9feedb3c2f443aece13e9cdfb647, type: 3}
@@ -35261,6 +35269,31 @@ MonoBehaviour:
       bridgeClip: {fileID: 0}
       repeatCount: 0
       startAtSeconds: 0
+    overtimeBridgeClip: {fileID: 8300000, guid: f73e98490e60b6944b7b2b2d32cde027, type: 3}
+    overtimeLoopClip: {fileID: 0}
+    loopClip: {fileID: 0}
+  - sceneIndex: 3
+    clipFolder: Assets/Music/TrejoMusic/Ciudad
+    introClip: {fileID: 8300000, guid: c422bafbf743c624e895f2fb4abed1cd, type: 3}
+    loopSections:
+    - loopClip: {fileID: 8300000, guid: 359eef496d7e12d4a83d92b1f1e21d3f, type: 3}
+      bridgeClip: {fileID: 8300000, guid: 30fa663e7ba7fcf48930c96b16be4164, type: 3}
+      repeatCount: 0
+      startAtSeconds: 0
+    - loopClip: {fileID: 8300000, guid: 6cd4e61e2d3684044ba60688cd4e85e3, type: 3}
+      bridgeClip: {fileID: 8300000, guid: 923bcb7fcb5e5a94e948a4e6aa51715f, type: 3}
+      repeatCount: 0
+      startAtSeconds: 0
+    - loopClip: {fileID: 8300000, guid: 7deb0ff04c2d6ed4a9e8e642c65eb6ab, type: 3}
+      bridgeClip: {fileID: 8300000, guid: 87b6051ba71fc4785b554cf4e17d2523, type: 3}
+      repeatCount: 0
+      startAtSeconds: 0
+    - loopClip: {fileID: 8300000, guid: e90abab0aec254cadaea243e14efbc4c, type: 3}
+      bridgeClip: {fileID: 0}
+      repeatCount: 0
+      startAtSeconds: 0
+    overtimeBridgeClip: {fileID: 8300000, guid: ead9fd8097e234c8193d2c83b2f880f7, type: 3}
+    overtimeLoopClip: {fileID: 8300000, guid: 3160260cd312c4f84bf719a6b8238210, type: 3}
     loopClip: {fileID: 0}
   musicVolume: 0.5
   playOnAwake: 1
@@ -35271,6 +35304,7 @@ MonoBehaviour:
   volumeFadeDuration: 0.5
   mainMenuSceneIndex: 0
   fallbackMatchDurationSeconds: 600
+  overtimeFadeSeconds: 1.2
 --- !u!4 &1929732215
 Transform:
   m_ObjectHideFlags: 0
