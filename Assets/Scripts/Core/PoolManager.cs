@@ -445,6 +445,46 @@ public class PoolManager : MonoBehaviour
         PrewarmImmediate(pool, count);
     }
 
+    public void EnsureCapacityOverFrames(PoolType poolType, int totalInstances)
+    {
+        if (!pools.TryGetValue(poolType, out Pool pool))
+            return;
+
+        if (prewarmSpreadOverFrames && Application.isPlaying)
+            StartCoroutine(EnsureCapacityRoutine(pool, totalInstances));
+        else
+            EnsureCapacityImmediate(pool, totalInstances);
+    }
+
+    private void EnsureCapacityImmediate(Pool pool, int totalInstances)
+    {
+        while (pool.totalCount < totalInstances)
+        {
+            GameObject obj = CreateInstance(pool);
+            if (obj == null) break;
+            pool.inactive.Push(obj);
+        }
+    }
+
+    private IEnumerator EnsureCapacityRoutine(Pool pool, int totalInstances)
+    {
+        int budget = Mathf.Max(1, prewarmObjectsPerFrame);
+        int createdThisFrame = 0;
+
+        while (pool.totalCount < totalInstances)
+        {
+            GameObject obj = CreateInstance(pool);
+            if (obj == null) break;
+            pool.inactive.Push(obj);
+
+            if (++createdThisFrame >= budget)
+            {
+                createdThisFrame = 0;
+                yield return null;
+            }
+        }
+    }
+
     public void ClearPool(PoolType poolType)
     {
         if (!pools.TryGetValue(poolType, out Pool pool)) return;

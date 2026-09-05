@@ -37,6 +37,7 @@ public static class SandboxDiffTool
         public string productionValue;
         public string sandboxValue;
         public bool isArray;
+        public bool isReference;
         public bool selected = true;
     }
 
@@ -52,6 +53,9 @@ public static class SandboxDiffTool
     private const string ProductionUpgradeDatabasePath = "Assets/Resources/UpgradeDatabase.asset";
     private const string ProductionSynergyDatabasePath = "Assets/Resources/SynergyDatabase.asset";
     private const string ProductionChestOpeningConfigPath = "Assets/Resources/ChestOpeningConfig.asset";
+    private const string ProductionSynergiesFolder = "Assets/Configurations/Synergies";
+    private const string ProductionConfigurationsFolder = "Assets/Configurations/";
+    private const string ProductionResourcesFolder = "Assets/Resources/";
 
     public static DiffResult Compare()
     {
@@ -61,7 +65,7 @@ public static class SandboxDiffTool
         result.pairs.Sort((a, b) => string.CompareOrdinal(a.label, b.label));
 
         for (int i = 0; i < result.pairs.Count; i++)
-            CollectDiffs(result.pairs[i], result.entries);
+            CollectDiffs(result, result.pairs[i]);
 
         return result;
     }
@@ -85,6 +89,7 @@ public static class SandboxDiffTool
         }
 
         int applied = 0;
+        int skipped = 0;
 
         foreach (KeyValuePair<AssetPair, List<DiffEntry>> group in byPair)
         {
@@ -102,10 +107,25 @@ public static class SandboxDiffTool
                 SerializedProperty sourceProperty = sourceSO.FindProperty(entry.propertyPath);
                 if (sourceProperty == null) continue;
 
-                targetSO.CopyFromSerializedProperty(sourceProperty);
+                if (entry.isReference)
+                {
+                    Object resolved = ResolveReference(sourceProperty.objectReferenceValue, referenceMap, direction, out string problem);
+                    if (problem != null)
+                    {
+                        Debug.LogWarning($"[SandboxSync] {group.Key.label}.{entry.displayName} no se copió: {problem}");
+                        skipped++;
+                        continue;
+                    }
 
-                if (entry.isArray)
-                    RemapReferences(targetSO.FindProperty(entry.propertyPath), referenceMap);
+                    targetSO.FindProperty(entry.propertyPath).objectReferenceValue = resolved;
+                }
+                else
+                {
+                    targetSO.CopyFromSerializedProperty(sourceProperty);
+
+                    if (entry.isArray)
+                        skipped += RemapReferences(group.Key.label, targetSO.FindProperty(entry.propertyPath), referenceMap, direction);
+                }
 
                 changed = true;
                 applied++;
@@ -121,6 +141,9 @@ public static class SandboxDiffTool
         if (applied > 0)
             AssetDatabase.SaveAssets();
 
+        if (skipped > 0)
+            Debug.LogWarning($"[SandboxSync] {skipped} referencia(s) se dejaron sin copiar porque apuntan a assets exclusivos del otro lado sin contraparte (detalle arriba).");
+
         return applied;
     }
 
@@ -130,7 +153,7 @@ public static class SandboxDiffTool
             return "[SandboxDiff] Sin diferencias: los assets del sandbox coinciden con los de producción en todos los valores rastreados.";
 
         StringBuilder report = new StringBuilder(2048);
-        report.AppendLine($"[SandboxDiff] {result.entries.Count} valor(es) distinto(s) entre sandbox y producción (formato: producción → sandbox). Solo compara números, texto, bool, color, enum y vectores; no compara referencias a otros assets (prefabs, sprites, etc.):");
+        report.AppendLine($"[SandboxDiff] {result.entries.Count} valor(es) distinto(s) entre sandbox y producción (formato: producción → sandbox). Compara números, texto, bool, color, enum, vectores, tamaños de listas y referencias a otros assets (prefabs, materiales, sprites, clips); una referencia a la copia sandbox de un asset cuenta como igual a la referencia a su original de producción:");
 
         for (int i = 0; i < result.entries.Count; i++)
         {
@@ -160,22 +183,15 @@ public static class SandboxDiffTool
                 AddPair(result, $"UpgradeData/{pair.Key.name}", pair.Key, pair.Value);
         }
 
-        SynergyDatabase productionSynergyDb = Load<SynergyDatabase>(ProductionSynergyDatabasePath);
-        AddPair(result, "SynergyDatabase", productionSynergyDb, Load<SynergyDatabase>(SandboxSetupTools.SynergyDatabasePath));
+        AddPair(result, "SynergyDatabase",
+            Load<SynergyDatabase>(ProductionSynergyDatabasePath),
+            Load<SynergyDatabase>(SandboxSetupTools.SynergyDatabasePath));
 
-        if (productionSynergyDb != null)
-        {
-            foreach (KeyValuePair<SynergyData, SynergyData> pair in MapByFilename(productionSynergyDb.allSynergies, SandboxSetupTools.SynergiesFolder))
-            {
-                AddPair(result, $"SynergyData/{pair.Key.name}", pair.Key, pair.Value);
+        foreach (SynergyData synergy in LoadAllInFolder<SynergyData>(ProductionSynergiesFolder))
+            AddPair(result, $"SynergyData/{synergy.name}", synergy, LoadCounterpart<SynergyData>(synergy, SandboxSetupTools.SynergiesFolder));
 
-                if (pair.Key.effectConfig == null) continue;
-
-                string sourcePath = AssetDatabase.GetAssetPath(pair.Key.effectConfig);
-                string targetPath = $"{SandboxSetupTools.SynergiesFolder}/{Path.GetFileName(sourcePath)}";
-                AddPair(result, $"SynergyEffectConfig/{pair.Key.effectConfig.name}", pair.Key.effectConfig, Load<SynergyEffectConfig>(targetPath));
-            }
-        }
+        foreach (SynergyEffectConfig config in LoadAllInFolder<SynergyEffectConfig>(ProductionSynergiesFolder))
+            AddPair(result, $"SynergyEffectConfig/{config.name}", config, LoadCounterpart<SynergyEffectConfig>(config, SandboxSetupTools.SynergiesFolder));
 
         foreach (KeyValuePair<EnemyConfiguration, EnemyConfiguration> pair in SandboxSetupTools.LoadEnemyMap())
             AddPair(result, $"EnemyConfiguration/{pair.Key.name}", pair.Key, pair.Value);
@@ -198,6 +214,28 @@ public static class SandboxDiffTool
         return AssetDatabase.LoadAssetAtPath<T>(path);
     }
 
+    private static List<T> LoadAllInFolder<T>(string folder) where T : Object
+    {
+        List<T> assets = new List<T>();
+        if (!AssetDatabase.IsValidFolder(folder)) return assets;
+
+        string[] guids = AssetDatabase.FindAssets($"t:{typeof(T).Name}", new[] { folder });
+        for (int i = 0; i < guids.Length; i++)
+        {
+            T asset = AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guids[i]));
+            if (asset != null) assets.Add(asset);
+        }
+
+        assets.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
+        return assets;
+    }
+
+    private static T LoadCounterpart<T>(Object source, string folder) where T : Object
+    {
+        string fileName = Path.GetFileName(AssetDatabase.GetAssetPath(source));
+        return AssetDatabase.LoadAssetAtPath<T>($"{folder}/{fileName}");
+    }
+
     private static Dictionary<T, T> MapByFilename<T>(IList<T> productionList, string sandboxFolder) where T : Object
     {
         Dictionary<T, T> map = new Dictionary<T, T>();
@@ -208,17 +246,14 @@ public static class SandboxDiffTool
             T source = productionList[i];
             if (source == null) continue;
 
-            string sourcePath = AssetDatabase.GetAssetPath(source);
-            string targetPath = $"{sandboxFolder}/{Path.GetFileName(sourcePath)}";
-            T sandboxCopy = AssetDatabase.LoadAssetAtPath<T>(targetPath);
-
+            T sandboxCopy = LoadCounterpart<T>(source, sandboxFolder);
             if (sandboxCopy != null) map[source] = sandboxCopy;
         }
 
         return map;
     }
 
-    private static void CollectDiffs(AssetPair pair, List<DiffEntry> entries)
+    private static void CollectDiffs(DiffResult result, AssetPair pair)
     {
         SerializedObject productionSO = new SerializedObject(pair.production);
         SerializedObject sandboxSO = new SerializedObject(pair.sandbox);
@@ -230,18 +265,35 @@ public static class SandboxDiffTool
         {
             enterChildren = false;
 
-            if (property.name == "m_Script" || property.propertyType == SerializedPropertyType.ObjectReference)
+            if (property.name == "m_Script")
                 continue;
 
             SerializedProperty other = sandboxSO.FindProperty(property.propertyPath);
             if (other == null || other.propertyType != property.propertyType)
                 continue;
 
+            if (property.propertyType == SerializedPropertyType.ObjectReference)
+            {
+                if (!ReferencesDiffer(result, property.objectReferenceValue, other.objectReferenceValue))
+                    continue;
+
+                result.entries.Add(new DiffEntry
+                {
+                    pair = pair,
+                    propertyPath = property.propertyPath,
+                    displayName = DisplayName(property.propertyPath),
+                    productionValue = FormatReference(property.objectReferenceValue),
+                    sandboxValue = FormatReference(other.objectReferenceValue),
+                    isReference = true
+                });
+                continue;
+            }
+
             if (property.isArray && property.propertyType != SerializedPropertyType.String)
             {
                 if (property.arraySize != other.arraySize)
                 {
-                    entries.Add(new DiffEntry
+                    result.entries.Add(new DiffEntry
                     {
                         pair = pair,
                         propertyPath = property.propertyPath,
@@ -266,7 +318,7 @@ public static class SandboxDiffTool
             if (property.propertyType == SerializedPropertyType.ArraySize || !ValuesDiffer(property, other))
                 continue;
 
-            entries.Add(new DiffEntry
+            result.entries.Add(new DiffEntry
             {
                 pair = pair,
                 propertyPath = property.propertyPath,
@@ -277,10 +329,48 @@ public static class SandboxDiffTool
         }
     }
 
-    private static void RemapReferences(SerializedProperty root, Dictionary<Object, Object> map)
+    private static bool ReferencesDiffer(DiffResult result, Object production, Object sandbox)
     {
-        if (root == null) return;
+        if (production == sandbox) return false;
+        if (production == null || sandbox == null) return true;
 
+        return !(result.productionToSandbox.TryGetValue(production, out Object mapped) && mapped == sandbox);
+    }
+
+    private static Object ResolveReference(Object source, Dictionary<Object, Object> map, SyncDirection direction, out string problem)
+    {
+        problem = null;
+        if (source == null) return null;
+        if (map.TryGetValue(source, out Object mapped)) return mapped;
+
+        string path = AssetDatabase.GetAssetPath(source);
+        if (IsExclusiveToSourceSide(path, direction))
+        {
+            string side = direction == SyncDirection.SandboxToProduction ? "del sandbox" : "de producción";
+            problem = $"'{path}' es un asset exclusivo {side} sin copia en el otro lado. Crea primero su contraparte (Tools > Manners > Sandbox > 1) y vuelve a sincronizar.";
+            return null;
+        }
+
+        return source;
+    }
+
+    private static bool IsExclusiveToSourceSide(string path, SyncDirection direction)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+
+        bool insideSandbox = path.StartsWith(SandboxSetupTools.SandboxFolder + "/");
+        if (direction == SyncDirection.SandboxToProduction)
+            return insideSandbox;
+
+        if (insideSandbox) return false;
+        return path.StartsWith(ProductionConfigurationsFolder) || path.StartsWith(ProductionResourcesFolder);
+    }
+
+    private static int RemapReferences(string label, SerializedProperty root, Dictionary<Object, Object> map, SyncDirection direction)
+    {
+        if (root == null) return 0;
+
+        int skipped = 0;
         SerializedProperty iterator = root.Copy();
         SerializedProperty end = iterator.GetEndProperty();
 
@@ -288,15 +378,30 @@ public static class SandboxDiffTool
         {
             if (iterator.propertyType != SerializedPropertyType.ObjectReference) continue;
 
-            Object current = iterator.objectReferenceValue;
-            if (current != null && map.TryGetValue(current, out Object mapped))
-                iterator.objectReferenceValue = mapped;
+            Object resolved = ResolveReference(iterator.objectReferenceValue, map, direction, out string problem);
+            if (problem != null)
+            {
+                Debug.LogWarning($"[SandboxSync] {label}.{DisplayName(iterator.propertyPath)} quedó vacío: {problem}");
+                skipped++;
+            }
+
+            iterator.objectReferenceValue = resolved;
         }
+
+        return skipped;
     }
 
     private static string DisplayName(string propertyPath)
     {
         return propertyPath.Replace(".Array.data[", "[");
+    }
+
+    private static string FormatReference(Object reference)
+    {
+        if (reference == null) return "(ninguno)";
+
+        string path = AssetDatabase.GetAssetPath(reference);
+        return string.IsNullOrEmpty(path) ? reference.name : Path.GetFileName(path);
     }
 
     private static bool ValuesDiffer(SerializedProperty a, SerializedProperty b)

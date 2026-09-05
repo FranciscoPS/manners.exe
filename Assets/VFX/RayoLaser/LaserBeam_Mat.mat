@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: LaserBeam_Mat
+  m_Shader: {fileID: 4800000, guid: 25177769fc5f4525b3bc3c110403e733, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTexture:
+        m_Texture: {fileID: 2800000, guid: e634f2957c9aeb8458f1d28afe4debb4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Mask:
+        m_Texture: {fileID: 2800000, guid: 8c61cff2f54d116469321de617c0235f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BeamLength: 1.65
+    - _BodySoftness: 0.22
+    - _BodyWidth: 0.62
+    - _CoreSharpness: 2.5
+    - _CoreWidth: 0.3
+    - _DissolveAmount: 0.9
+    - _EdgeJitter: 0.12
+    - _EdgeJitterScale: 6
+    - _EdgeJitterSpeed: 9
+    - _HaloPower: 2.2
+    - _HaloStrength: 0.55
+    - _Intensity: 1.1
+    - _NoiseAmount: 0.1
+    - _NoisePower: 1
+    - _NoiseScale: 32
+    - _PulseAmount: 0.12
+    - _PulseFrequency: 7
+    - _StreakScale: 3
+    - _StreakSpeed: 4
+    - _StreakStrength: 1.2
+    - _StreakThreshold: 0.62
+    - _SurgeAmount: 0.08
+    - _SurgeFrequency: 1.3
+    - _TilesPerUnit: 0.52
+    m_Colors:
+    - _Color: {r: 9.349819, g: 0.4145987, b: 0, a: 1}
+    - _CoreColor: {r: 5, g: 4, b: 2.8, a: 1}
+    - _MainSpeed: {r: -0.5, g: 0, b: 0, a: 0}
+    - _NoiseSpeed: {r: -5, g: 0, b: 0, a: 0}
+    - _StreakColor: {r: 6, g: 4.2, b: 2.6, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

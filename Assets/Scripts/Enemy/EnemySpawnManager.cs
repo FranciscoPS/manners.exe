@@ -52,8 +52,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private float finalRushTierInterval = 30f;
     [Tooltip("Vida de los enemigos en el primer escalon (nivel 0). Empieza en la vida normal.")]
     [SerializeField] private float finalRushBaseHealth = 30f;
-    [Tooltip("Multiplicador EXPONENCIAL de vida por escalon: vida = base * mult^escalon. Ej 4 -> 30,120,480,1920...")]
-    [SerializeField] private float finalRushHealthTierMultiplier = 4f;
+    [Tooltip("Multiplicador EXPONENCIAL de vida por escalon: vida = base * mult^escalon. Ej 1.3 -> 200, 260, 338, 439... Con 4 nada muere a partir del tercer escalon y la horda solo crece.")]
+    [SerializeField] private float finalRushHealthTierMultiplier = 1.3f;
     [Tooltip("Velocidad de los enemigos en el primer escalon (nivel 0).")]
     [SerializeField] private float finalRushBaseSpeed = 6f;
     [Tooltip("Cuanta velocidad se suma por cada escalon.")]
@@ -64,6 +64,23 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private float finalRushBaseContactDamage = 12f;
     [Tooltip("Cuanto dano de contacto se suma por cada escalon (sube con el tiempo).")]
     [SerializeField] private float finalRushContactDamagePerTier = 18f;
+
+    [Header("Final Rush - Techo de enemigos")]
+    [Tooltip("Máximo de enemigos activos al EMPEZAR el overtime. El techo sube desde aquí hasta el máximo final. Nunca baja del Max Concurrent Enemies normal, para que las primeras ráfagas salgan aunque la partida termine con la escena llena.")]
+    [SerializeField] private int finalRushMaxConcurrentStart = 300;
+    [Tooltip("Máximo de enemigos activos al terminar la rampa del techo. Es el tamaño máximo de la horda en overtime; las ráfagas se recortan para no pasarlo.")]
+    [SerializeField] private int finalRushMaxConcurrentEnd = 2000;
+    [Tooltip("Segundos de overtime que tarda el techo en subir del inicial al final. 180 = la horda máxima se alcanza al minuto 3.")]
+    [SerializeField] private float finalRushCapRampSeconds = 180f;
+    [Tooltip("Cuántos enemigos de una ráfaga se spawnean por frame. Reparte las ráfagas grandes en varios frames para evitar tirones.")]
+    [SerializeField] private int finalRushSpawnsPerFrame = 24;
+
+    [Header("Final Rush - Resistencia a control")]
+    [Tooltip("Resistencia a control (stun/slow) que ganan los enemigos por cada escalon. 0.05 = +5% por escalon: al minuto (escalon 6) los stuns duran un 30% menos.")]
+    [SerializeField] private float finalRushControlResistancePerTier = 0.05f;
+    [Range(0f, 1f)]
+    [Tooltip("Resistencia máxima que pueden alcanzar. 0.85 = los stuns duran el 15% y los slows casi no se notan.")]
+    [SerializeField] private float finalRushMaxControlResistance = 0.85f;
 
     [Header("TEST")]
     [Tooltip("TEST: dispara la oleada final inmediatamente al iniciar la partida (quitar antes de publicar).")]
@@ -172,6 +189,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             yield break;
         }
 
+        PoolManager.Instance?.EnsureCapacityOverFrames(buffed.enemyPoolType, finalRushMaxConcurrentEnd);
+
         float startTime = Time.time;
         int lastTier = -1;
 
@@ -185,26 +204,56 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedPerTier * tier);
 
             buffed.contactDamage = finalRushBaseContactDamage + finalRushContactDamagePerTier * tier;
+            buffed.controlResistance = Mathf.Min(finalRushMaxControlResistance, finalRushControlResistancePerTier * tier);
 
             int perSpawnPoint = finalRushBurstPerSpawnPoint + finalRushBurstGrowthPerTier * tier;
 
             float burstInterval = Mathf.Max(finalRushBurstIntervalMin,
                 finalRushBurstInterval - finalRushBurstIntervalReductionPerTier * tier);
 
+            int cap = CurrentFinalRushCap(elapsed);
+
             if (tier != lastTier)
             {
                 lastTier = tier;
                 PerformanceMonitor.Instance?.LogEvent(
                     $"[FINAL RUSH] Escalon {tier}: vida={buffed.maxHealth:F0} vel={buffed.moveSpeed:F1} " +
+                    $"res={buffed.controlResistance:P0} techo={cap} " +
                     $"x{perSpawnPoint}/punto cada {burstInterval:F1}s");
             }
 
-            for (int p = 0; p < allSpawnPoints.Count; p++)
-            {
-                allSpawnPoints[p].ForceSpawn(perSpawnPoint, buffed);
-            }
+            int burstSize = Mathf.Min(perSpawnPoint * allSpawnPoints.Count, cap - EnemyHealth.ActiveEnemyCount);
+            yield return StartCoroutine(SpawnBurstOverFrames(burstSize, buffed));
 
             yield return new WaitForSeconds(burstInterval);
+        }
+    }
+
+    private int CurrentFinalRushCap(float elapsed)
+    {
+        float progress = finalRushCapRampSeconds > 0f ? Mathf.Clamp01(elapsed / finalRushCapRampSeconds) : 1f;
+        int ramped = Mathf.RoundToInt(Mathf.Lerp(finalRushMaxConcurrentStart, finalRushMaxConcurrentEnd, progress));
+        return Mathf.Max(maxConcurrentEnemies, ramped);
+    }
+
+    private IEnumerator SpawnBurstOverFrames(int count, EnemyConfiguration config)
+    {
+        if (allSpawnPoints.Count == 0) yield break;
+
+        int perFrame = Mathf.Max(1, finalRushSpawnsPerFrame);
+        int pointIndex = 0;
+
+        while (count > 0)
+        {
+            int thisFrame = Mathf.Min(perFrame, count);
+            for (int i = 0; i < thisFrame; i++)
+            {
+                allSpawnPoints[pointIndex % allSpawnPoints.Count].ForceSpawn(1, config);
+                pointIndex++;
+            }
+
+            count -= thisFrame;
+            yield return null;
         }
     }
 

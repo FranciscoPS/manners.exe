@@ -14,6 +14,8 @@ public class EmpPulseConfig : SynergyEffectConfig
     public float freezeDuration = 2f;
     [Tooltip("Distancia a la que el congelamiento se contagia de un enemigo ya congelado a otro cercano, al terminar la expansión. El contagio no se acumula: aplica el mismo Freeze Duration, no lo suma.")]
     public float chainRadius = 2.5f;
+    [Tooltip("Cuántos 'saltos' puede dar el contagio desde los enemigos alcanzados por el círculo. 1 = solo vecinos directos; 3 = vecinos de vecinos de vecinos. 0 = sin contagio. Evita que en una horda densa el pulso congele el mapa entero.")]
+    [Min(0)] public int maxChainHops = 3;
 
     [Header("Visual")]
     [Tooltip("Si se asigna, se instancia este prefab (VFX o modelo) en cada pulso en vez del círculo generado por código. Con un prefab propio, tú controlas su propia animación de expansión; 'Ring Lifetime' se ignora en ese caso.")]

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: EmpRing_Mat
+  m_Shader: {fileID: 4800000, guid: 2c7f9e1b6a3d4f8e8b5c0d1a9e6f3b72, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _ArcTex:
+        m_Texture: {fileID: 2800000, guid: 7be6e41558373ec42a7eeb43180f606c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ArcJitter: 0.09
+    - _ArcSegments: 18
+    - _ArcStrength: 1.4
+    - _Extent: 1.35
+    - _Fade: 1
+    - _FillOpacity: 0.3
+    - _FillStrength: 0.4
+    - _FlashDecay: 2.5
+    - _FlashSize: 0.18
+    - _FlashStrength: 1.6
+    - _FlickerRate: 24
+    - _GlowWidth: 0.14
+    - _Progress: 0.6
+    - _RingWidth: 0.025
+    - _RippleDecay: 0.12
+    - _RippleFrequency: 22
+    - _RippleStrength: 0.8
+    - _VeinFlickerRate: 18
+    - _VeinScale: 1.6
+    - _VeinStrength: 1.2
+    - _WaveCount: 3
+    - _WaveDelay: 0.2
+    - _WaveFalloff: 0.25
+    m_Colors:
+    - _Color: {r: 0.43527526, g: 0.3569257, b: 0.078349546, a: 1}
+    - _CoreColor: {r: 2.6, g: 2.3, b: 1.3, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

@@ -35,6 +35,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     private float slowMultiplier = 1f;
     private float slowEndTime = -1f;
+    private float controlResistance = 0f;
 
     [Header("Movement")]
     [Tooltip("Distancia a la que el enemigo se detiene alrededor del jugador. Evita que todos converjan en el mismo punto.")]
@@ -62,13 +63,14 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public void ApplySlow(float multiplier, float duration)
     {
-        float clamped = Mathf.Clamp01(multiplier);
-        bool strongerSlowStillActive = Time.time < slowEndTime && slowMultiplier < clamped;
+        float resisted = Mathf.Lerp(Mathf.Clamp01(multiplier), 1f, controlResistance);
+        float resistedDuration = duration * (1f - controlResistance);
+        bool strongerSlowStillActive = Time.time < slowEndTime && slowMultiplier < resisted;
 
         if (strongerSlowStillActive) return;
 
-        slowMultiplier = clamped;
-        slowEndTime = Time.time + duration;
+        slowMultiplier = resisted;
+        slowEndTime = Time.time + resistedDuration;
     }
 
     private float CurrentSpeedMultiplier()
@@ -76,10 +78,11 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         return Time.time < slowEndTime ? slowMultiplier : 1f;
     }
 
-    public void SetStats(float newMoveSpeed, float newContactDamage)
+    public void SetStats(float newMoveSpeed, float newContactDamage, float newControlResistance)
     {
         moveSpeed = newMoveSpeed;
         contactDamage = newContactDamage;
+        controlResistance = Mathf.Clamp01(newControlResistance);
 
         if (agent != null)
         {

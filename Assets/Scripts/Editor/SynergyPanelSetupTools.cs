@@ -55,6 +55,32 @@ public static class SynergyPanelSetupTools
 
     private static readonly Color DiscoveryBannerColor = new Color(1f, 0.95f, 0.6f, 1f);
 
+    private const string HudPrefabPath = PrefabFolder + "/SynergyHudPanel.prefab";
+    private const string HudInstanceName = "SynergyHudPanel";
+    private const string HudHeaderName = "Title";
+    private const string HudHeaderText = "Sinergias";
+
+    private const float HudPanelWidth = 200f;
+    private const float HudPanelPadding = 8f;
+    private const float HudHeaderHeight = 18f;
+    private const float HudHeaderFontSize = 14f;
+    private const float HudHeaderGap = 4f;
+    private const float HudSquareSize = 44f;
+    private const float HudGlyphWidth = 14f;
+    private const float HudColumnGap = 4f;
+    private const float HudLevelTextHeight = 12f;
+    private const float HudLevelTextExtraWidth = 20f;
+    private const float HudRowSpacing = 6f;
+    private const float HudBackdropInset = 5f;
+    private const float HudIconInset = 7f;
+    private const float HudUnknownFontSize = 22f;
+    private const float HudGlyphFontSize = 18f;
+    private const float HudLevelFontMin = 7f;
+    private const float HudLevelFontMax = 11f;
+    private const float HudGapBelowMinimap = 20f;
+    private static readonly Vector2 HudFallbackPosition = new Vector2(80f, -405f);
+    private static readonly Color HudPanelColor = new Color(1f, 1f, 1f, 0.627f);
+
     [MenuItem("Tools/Manners/Synergies/2. Configurar pantallas de sinergias en el menu", false, 21)]
     public static void ConfigureSynergyScreens()
     {
@@ -166,6 +192,51 @@ public static class SynergyPanelSetupTools
             EditorSceneManager.OpenScene(originalScenePath, OpenSceneMode.Single);
 
         Debug.Log("[SynergyPanelSetup] Game Over rediseñado en todas las escenas: stats a la izquierda, panel de sinergias a la derecha con aviso de descubrimiento, QR y mejoras eliminados, diálogo de récord reencuadrado.");
+    }
+
+    [MenuItem("Tools/Manners/Synergies/4. Colocar panel miniatura de sinergias en el HUD de la escena abierta", false, 23)]
+    public static void PlaceHudPanelInOpenScene()
+    {
+        Scene scene = EditorSceneManager.GetActiveScene();
+
+        LevelUpManager levelUpManager = Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
+        Canvas canvas = levelUpManager != null ? levelUpManager.GetComponentInParent<Canvas>() : null;
+        if (canvas == null)
+        {
+            Debug.LogError("[SynergyPanelSetup] La escena abierta no tiene un Canvas con LevelUpManager; abre una escena de nivel (Sandbox, LEVEL 1, CityTest o MilitaryBase).");
+            return;
+        }
+
+        GameObject prefab = EnsureHudPrefab();
+        if (prefab == null) return;
+
+        Transform canvasTransform = canvas.transform;
+        Transform existing = canvasTransform.Find(HudInstanceName);
+        GameObject instance = existing != null ? existing.gameObject : (GameObject)PrefabUtility.InstantiatePrefab(prefab, canvasTransform);
+        instance.name = HudInstanceName;
+        instance.SetActive(true);
+
+        GameObject levelUpPanel = new SerializedObject(levelUpManager).FindProperty("levelUpPanel").objectReferenceValue as GameObject;
+        instance.transform.SetAsLastSibling();
+        if (levelUpPanel != null && levelUpPanel.transform.parent == canvasTransform)
+            instance.transform.SetSiblingIndex(levelUpPanel.transform.GetSiblingIndex() + 1);
+        else
+            Debug.LogWarning("[SynergyPanelSetup] LevelUpPanel no es hijo directo del Canvas; el panel quedó al final del Canvas (revisa que quede por encima del overlay de level-up y por debajo de Pausa/Game Over).");
+
+        PositionHudPanelUnderMinimap((RectTransform)instance.transform, canvasTransform);
+
+        EditorUtility.SetDirty(instance);
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+
+        Debug.Log($"[SynergyPanelSetup] Panel miniatura '{HudInstanceName}' colocado en '{scene.name}' debajo del minimapa, justo después de LevelUpPanel en el Canvas (visible al elegir mejoras, oculto bajo Pausa y Game Over).");
+    }
+
+    [MenuItem("Tools/Manners/Synergies/Regenerar prefab del panel miniatura (HUD)", false, 24)]
+    public static void RebuildHudPrefab()
+    {
+        if (CreateHudPrefab() != null)
+            Debug.Log($"[SynergyPanelSetup] Prefab '{HudPrefabPath}' regenerado sobre el mismo asset (mismo GUID). Vuelve a correr el paso 4 en cada escena de nivel para reposicionar su instancia bajo el minimapa.");
     }
 
     [MenuItem("Tools/Manners/Synergies/Borrar progreso guardado de sinergias", false, 40)]
@@ -869,5 +940,255 @@ public static class SynergyPanelSetupTools
         rt.anchoredPosition = new Vector2(0f, -2f);
         rt.sizeDelta = new Vector2(0f, 18f);
         rt.localScale = Vector3.one;
+    }
+
+    private static GameObject EnsureHudPrefab()
+    {
+        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(HudPrefabPath);
+        return existing != null ? existing : CreateHudPrefab();
+    }
+
+    private static GameObject CreateHudPrefab()
+    {
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath) == null)
+        {
+            Debug.LogError($"[SynergyPanelSetup] No existe '{PrefabPath}'. Ejecuta primero el paso 2 en MainMenu para generar el panel grande de sinergias.");
+            return null;
+        }
+
+        GameObject source = PrefabUtility.LoadPrefabContents(PrefabPath);
+        GameObject root = BuildHudPanel(source);
+        PrefabUtility.UnloadPrefabContents(source);
+
+        EditorAssetUtility.EnsureFolder(PrefabFolder);
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, HudPrefabPath);
+        Object.DestroyImmediate(root);
+
+        Debug.Log($"[SynergyPanelSetup] Prefab del panel miniatura creado en '{HudPrefabPath}' a partir de las filas de '{PrefabPath}'.");
+        return prefab;
+    }
+
+    private static GameObject BuildHudPanel(GameObject source)
+    {
+        float rowWidth = HudSquareSize * 3f + HudGlyphWidth * 2f + HudColumnGap * 4f;
+        float rowHeight = HudSquareSize + HudLevelTextHeight;
+        float contentTop = HudPanelPadding + HudHeaderHeight + HudHeaderGap;
+        float panelHeight = contentTop + rowHeight * RowToSynergyAsset.Length + HudRowSpacing * (RowToSynergyAsset.Length - 1) + HudPanelPadding;
+
+        GameObject root = new GameObject(HudInstanceName, typeof(RectTransform), typeof(Image), typeof(SynergyHudPanel));
+
+        RectTransform rootRect = (RectTransform)root.transform;
+        rootRect.anchorMin = new Vector2(0f, 1f);
+        rootRect.anchorMax = new Vector2(0f, 1f);
+        rootRect.pivot = new Vector2(0f, 1f);
+        rootRect.anchoredPosition = HudFallbackPosition;
+        rootRect.sizeDelta = new Vector2(HudPanelWidth, panelHeight);
+
+        Image sourceBackground = source.GetComponent<Image>();
+        Image background = root.GetComponent<Image>();
+        background.sprite = sourceBackground != null ? sourceBackground.sprite : null;
+        background.type = Image.Type.Simple;
+        background.color = HudPanelColor;
+        background.raycastTarget = false;
+
+        BuildHudHeader(rootRect, FindDeep(source.transform, "Plus_Txt"));
+
+        for (int i = 0; i < RowToSynergyAsset.Length; i++)
+        {
+            Transform sourceRow = source.transform.Find(RowToSynergyAsset[i].rowName);
+            if (sourceRow == null)
+            {
+                Debug.LogWarning($"[SynergyPanelSetup] No se encontró la fila '{RowToSynergyAsset[i].rowName}' en '{PrefabPath}'; el panel miniatura quedará sin esa sinergia.");
+                continue;
+            }
+
+            GameObject row = Object.Instantiate(sourceRow.gameObject, rootRect);
+            row.name = sourceRow.name;
+            row.SetActive(true);
+
+            RectTransform rowRect = (RectTransform)row.transform;
+            rowRect.anchorMin = new Vector2(0f, 1f);
+            rowRect.anchorMax = new Vector2(0f, 1f);
+            rowRect.pivot = new Vector2(0f, 1f);
+            rowRect.localScale = Vector3.one;
+            rowRect.sizeDelta = new Vector2(rowWidth, rowHeight);
+            rowRect.anchoredPosition = new Vector2((HudPanelWidth - rowWidth) * 0.5f, -(contentTop + i * (rowHeight + HudRowSpacing)));
+
+            LayoutHudRow(rowRect);
+        }
+
+        return root;
+    }
+
+    private static void BuildHudHeader(RectTransform root, Transform template)
+    {
+        TextMeshProUGUI header = GetOrCreateTmp(root, HudHeaderName, template, HudHeaderText, rt =>
+        {
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0f, -HudPanelPadding);
+            rt.sizeDelta = new Vector2(0f, HudHeaderHeight);
+            rt.localScale = Vector3.one;
+        });
+
+        if (header == null) return;
+
+        header.enableAutoSizing = false;
+        header.fontSize = HudHeaderFontSize;
+        header.alignment = TextAlignmentOptions.Center;
+        header.textWrappingMode = TextWrappingModes.NoWrap;
+        header.overflowMode = TextOverflowModes.Overflow;
+        header.raycastTarget = false;
+    }
+
+    private static void LayoutHudRow(RectTransform row)
+    {
+        HorizontalLayoutGroup layout = row.GetComponent<HorizontalLayoutGroup>();
+        if (layout != null)
+            Object.DestroyImmediate(layout);
+
+        Image rowImage = row.GetComponent<Image>();
+        if (rowImage != null)
+            rowImage.raycastTarget = false;
+
+        float centerY = -HudSquareSize * 0.5f;
+        float x = 0f;
+
+        x = PlaceHudSquare(row, "EmptySquare1", x, centerY, true);
+        x = PlaceHudGlyph(row, "Plus_Txt", x, centerY);
+        x = PlaceHudSquare(row, "EmptySquare2", x, centerY, true);
+        x = PlaceHudGlyph(row, "Equal_Txt", x, centerY);
+        PlaceHudSquare(row, "EmptySquare3", x, centerY, false);
+
+        Transform hitArea = row.Find("HoverHitArea");
+        if (hitArea != null)
+            Stretch((RectTransform)hitArea);
+
+        SynergyHintRowUI rowUI = row.GetComponent<SynergyHintRowUI>();
+        if (rowUI != null)
+        {
+            SerializedObject rowSO = new SerializedObject(rowUI);
+            rowSO.FindProperty("resultDisplay").enumValueIndex = (int)SynergyResultDisplayMode.Hud;
+            rowSO.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
+    private static float PlaceHudSquare(RectTransform row, string name, float x, float centerY, bool hasLevelText)
+    {
+        Transform square = row.Find(name);
+        if (square == null) return x + HudSquareSize + HudColumnGap;
+
+        RectTransform rect = (RectTransform)square;
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(HudSquareSize, HudSquareSize);
+        rect.anchoredPosition = new Vector2(x + HudSquareSize * 0.5f, centerY);
+        rect.localScale = Vector3.one;
+
+        Image squareImage = square.GetComponent<Image>();
+        if (squareImage != null)
+            squareImage.raycastTarget = false;
+
+        SetInset(square.Find("IconBackdrop"), HudBackdropInset);
+        SetInset(square.Find("Icon"), HudIconInset);
+
+        Transform unknown = square.Find("UnknownText");
+        TextMeshProUGUI unknownText = unknown != null ? unknown.GetComponent<TextMeshProUGUI>() : null;
+        if (unknownText != null)
+        {
+            unknownText.enableAutoSizing = false;
+            unknownText.fontSize = HudUnknownFontSize;
+        }
+
+        Transform level = hasLevelText ? square.Find("LevelText") : null;
+        TextMeshProUGUI levelText = level != null ? level.GetComponent<TextMeshProUGUI>() : null;
+        if (levelText != null)
+        {
+            RectTransform levelRect = levelText.rectTransform;
+            levelRect.anchorMin = new Vector2(0f, 0f);
+            levelRect.anchorMax = new Vector2(1f, 0f);
+            levelRect.pivot = new Vector2(0.5f, 1f);
+            levelRect.anchoredPosition = new Vector2(0f, -1f);
+            levelRect.sizeDelta = new Vector2(HudLevelTextExtraWidth, HudLevelTextHeight);
+            levelRect.localScale = Vector3.one;
+
+            levelText.enableAutoSizing = true;
+            levelText.fontSizeMin = HudLevelFontMin;
+            levelText.fontSizeMax = HudLevelFontMax;
+            levelText.textWrappingMode = TextWrappingModes.NoWrap;
+            levelText.overflowMode = TextOverflowModes.Overflow;
+        }
+
+        PremiumUpgradeVisuals visuals = square.GetComponent<PremiumUpgradeVisuals>();
+        if (visuals != null)
+        {
+            SerializedObject visualsSO = new SerializedObject(visuals);
+            visualsSO.FindProperty("usePulse").boolValue = false;
+            visualsSO.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        return x + HudSquareSize + HudColumnGap;
+    }
+
+    private static float PlaceHudGlyph(RectTransform row, string name, float x, float centerY)
+    {
+        Transform glyph = row.Find(name);
+        if (glyph == null) return x + HudGlyphWidth + HudColumnGap;
+
+        RectTransform rect = (RectTransform)glyph;
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(HudGlyphWidth, HudSquareSize);
+        rect.anchoredPosition = new Vector2(x + HudGlyphWidth * 0.5f, centerY);
+        rect.localScale = Vector3.one;
+
+        TextMeshProUGUI tmp = glyph.GetComponent<TextMeshProUGUI>();
+        if (tmp != null)
+        {
+            tmp.enableAutoSizing = false;
+            tmp.fontSize = HudGlyphFontSize;
+            tmp.raycastTarget = false;
+        }
+
+        return x + HudGlyphWidth + HudColumnGap;
+    }
+
+    private static void SetInset(Transform child, float inset)
+    {
+        if (child == null) return;
+
+        RectTransform rt = (RectTransform)child;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = new Vector2(inset, inset);
+        rt.offsetMax = new Vector2(-inset, -inset);
+        rt.localScale = Vector3.one;
+    }
+
+    private static void PositionHudPanelUnderMinimap(RectTransform panel, Transform canvas)
+    {
+        MinimapSystem minimap = Object.FindFirstObjectByType<MinimapSystem>(FindObjectsInactive.Include);
+        RectTransform minimapRect = minimap != null ? minimap.transform as RectTransform : null;
+
+        panel.pivot = new Vector2(0f, 1f);
+        panel.localScale = Vector3.one;
+
+        if (minimapRect == null || minimapRect.parent != canvas || minimapRect.anchorMin != minimapRect.anchorMax)
+        {
+            panel.anchorMin = new Vector2(0f, 1f);
+            panel.anchorMax = new Vector2(0f, 1f);
+            panel.anchoredPosition = HudFallbackPosition;
+            Debug.LogWarning("[SynergyPanelSetup] No se encontró un MinimapRoot hijo directo del Canvas; el panel miniatura quedó en la posición por defecto (esquina superior izquierda). Muévelo a mano si hace falta.");
+            return;
+        }
+
+        panel.anchorMin = minimapRect.anchorMin;
+        panel.anchorMax = minimapRect.anchorMax;
+        panel.anchoredPosition = new Vector2(
+            minimapRect.anchoredPosition.x - minimapRect.sizeDelta.x * minimapRect.pivot.x,
+            minimapRect.anchoredPosition.y - minimapRect.sizeDelta.y * minimapRect.pivot.y - HudGapBelowMinimap);
     }
 }

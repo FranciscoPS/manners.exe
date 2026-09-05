@@ -3,9 +3,17 @@ using UnityEngine;
 
 public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 {
+    private static readonly int BeamLengthId = Shader.PropertyToID("_BeamLength");
+    private const float ImpactGlowLift = 0.05f;
+
     private LaserBeamConfig config;
     private Transform player;
     private LineRenderer line;
+    private Transform visualRoot;
+    private ParticleSystem impactGlow;
+    private LaserImpactVisual impactVisual;
+    private MaterialPropertyBlock beamProperties;
+    private float baseWidth;
 
     private float cooldownTimer;
     private bool sweeping;
@@ -110,9 +118,16 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         sweeping = true;
         sweepTimer = 0f;
         damageTickTimer = 0f;
-        line.enabled = true;
 
+        SetVisualActive(true);
+        line.widthMultiplier = 0f;
         UpdateBeamPositions(sweepStartDistance);
+
+        if (impactVisual != null)
+            impactVisual.SetIntensity(0f);
+
+        if (Config.fireShake > 0f && CameraShakeManager.Instance != null)
+            CameraShakeManager.Instance.Shake(Config.fireShake);
 
         if (Config.fireSFX != null && MusicManager.Instance != null)
             MusicManager.Instance.PlaySFXOneShot(Config.fireSFX, Config.sfxVolume);
@@ -158,7 +173,12 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         float t = Config.sweepDuration > 0f ? Mathf.Clamp01(sweepTimer / Config.sweepDuration) : 1f;
         float currentDistance = Mathf.Lerp(sweepStartDistance, sweepEndDistance, t);
 
+        float envelope = BeamEnvelope();
+        line.widthMultiplier = baseWidth * envelope * IgnitionKick() * WidthPulse();
         Vector3 groundPoint = UpdateBeamPositions(currentDistance);
+
+        if (impactVisual != null)
+            impactVisual.SetIntensity(envelope);
 
         damageTickTimer -= deltaTime;
         if (damageTickTimer <= 0f)
@@ -170,19 +190,66 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         if (t >= 1f)
         {
             sweeping = false;
-            line.enabled = false;
+            SetVisualActive(false);
         }
+    }
+
+    private float BeamEnvelope()
+    {
+        float fadeIn = Mathf.Clamp01(sweepTimer / Mathf.Max(0.001f, Config.beamFadeIn));
+        float fadeOut = Mathf.Clamp01((Config.sweepDuration - sweepTimer) / Mathf.Max(0.001f, Config.beamFadeOut));
+        return Mathf.Min(fadeIn, fadeOut);
+    }
+
+    private float IgnitionKick()
+    {
+        if (Config.ignitionDuration <= 0f || Config.ignitionKick <= 0f) return 1f;
+
+        float remaining = 1f - Mathf.Clamp01(sweepTimer / Config.ignitionDuration);
+        return 1f + Config.ignitionKick * remaining * remaining;
+    }
+
+    private float WidthPulse()
+    {
+        return 1f + Config.pulseAmount * Mathf.Sin(sweepTimer * 2f * Mathf.PI * Config.pulseFrequency);
     }
 
     private Vector3 UpdateBeamPositions(float distance)
     {
         Vector3 groundPoint = sweepGroundOrigin + sweepDirection * distance;
         Vector3 origin = player.position + Vector3.up * Config.beamOriginHeight;
+        Vector3 beam = groundPoint - origin;
 
         line.SetPosition(0, origin);
         line.SetPosition(1, groundPoint);
 
+        beamProperties.SetFloat(BeamLengthId, beam.magnitude);
+        line.SetPropertyBlock(beamProperties);
+
+        if (visualRoot != null)
+            visualRoot.SetPositionAndRotation(origin, beam.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(beam) : visualRoot.rotation);
+
+        if (impactGlow != null)
+            impactGlow.transform.position = groundPoint + Vector3.up * ImpactGlowLift;
+
+        if (impactVisual != null)
+            impactVisual.Follow(new Vector3(groundPoint.x, player.position.y + Config.groundOffset, groundPoint.z));
+
         return groundPoint;
+    }
+
+    private void SetVisualActive(bool active)
+    {
+        if (visualRoot != null)
+            visualRoot.gameObject.SetActive(active);
+        else if (line != null)
+            line.enabled = active;
+
+        if (impactGlow != null)
+            impactGlow.gameObject.SetActive(active);
+
+        if (impactVisual != null)
+            impactVisual.SetVisible(active);
     }
 
     private void DamageNear(Vector3 groundPoint)
@@ -248,21 +315,83 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
     private void BuildVisual()
     {
-        line = gameObject.AddComponent<LineRenderer>();
+        if (Config.visualPrefabOverride != null)
+            BuildPrefabVisual();
+        else
+            BuildDefaultVisual();
+
         line.positionCount = 2;
-        line.startWidth = Config.lineWidth;
-        line.endWidth = Config.lineWidth;
         line.useWorldSpace = true;
-        line.enabled = false;
+        baseWidth = line.widthMultiplier;
+        beamProperties = new MaterialPropertyBlock();
+
+        SetVisualActive(false);
+    }
+
+    private void BuildPrefabVisual()
+    {
+        GameObject visual = Instantiate(Config.visualPrefabOverride, transform);
+        visual.name = Config.visualPrefabOverride.name;
+        visualRoot = visual.transform;
+
+        impactVisual = visual.GetComponentInChildren<LaserImpactVisual>(true);
+        if (impactVisual != null)
+        {
+            impactVisual.transform.SetParent(transform, false);
+            impactVisual.Configure(Config.impactRadius);
+        }
+
+        line = visual.GetComponentInChildren<LineRenderer>(true);
+        if (line == null)
+        {
+            line = visual.AddComponent<LineRenderer>();
+            ApplyDefaultLineStyle();
+        }
+
+        line.widthMultiplier = Config.lineWidth;
 
         if (Config.beamMaterialOverride != null)
         {
-            line.material = Config.beamMaterialOverride;
+            line.sharedMaterial = Config.beamMaterialOverride;
+            line.textureMode = LineTextureMode.Stretch;
+            line.textureScale = Vector2.one;
+        }
+
+        ParticleSystem originGlow = visual.GetComponentInChildren<ParticleSystem>(true);
+        if (originGlow != null)
+        {
+            impactGlow = Instantiate(originGlow, transform);
+            impactGlow.name = "ImpactGlow";
+        }
+    }
+
+    private void BuildDefaultVisual()
+    {
+        line = gameObject.AddComponent<LineRenderer>();
+        ApplyDefaultLineStyle();
+    }
+
+    private void ApplyDefaultLineStyle()
+    {
+        line.widthCurve = new AnimationCurve(new Keyframe(0f, 0.9f), new Keyframe(1f, 0.6f));
+        line.widthMultiplier = Config.lineWidth;
+        line.alignment = LineAlignment.View;
+        line.textureMode = LineTextureMode.Stretch;
+        line.textureScale = Vector2.one;
+        line.numCapVertices = 4;
+        line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        line.receiveShadows = false;
+
+        if (Config.beamMaterialOverride != null)
+        {
+            line.sharedMaterial = Config.beamMaterialOverride;
+            line.startColor = Color.white;
+            line.endColor = Color.white;
         }
         else
         {
             line.material = new Material(SynergyVisualUtility.FindUnlitShader());
-            line.startColor = Config.beamColor;
+            line.startColor = Color.Lerp(Config.beamColor, Color.white, 0.5f);
             line.endColor = Config.beamColor;
         }
     }

@@ -84,7 +84,7 @@ public class SandboxSyncWindow : EditorWindow
         {
             EditorGUILayout.HelpBox(
                 $"Sin diferencias: los {result.pairs.Count} assets del sandbox coinciden con producción en todos los valores rastreados " +
-                "(números, texto, bool, color, enum, vectores y tamaños de listas; las referencias a otros assets no se comparan).",
+                "(números, texto, bool, color, enum, vectores, tamaños de listas y referencias a otros assets como prefabs de VFX, materiales, sprites y clips).",
                 MessageType.Info);
             return;
         }

@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CryoDome_Mat
+  m_Shader: {fileID: 4800000, guid: 6731a178e9e54fd0b247b52ad4271110, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3001
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _BandHeightScale: 4
+    - _BandScale: 6
+    - _BandSpeed: 0.12
+    - _BandStrength: 0.6
+    - _BaseFogHeight: 0.22
+    - _BaseFogStrength: 0.8
+    - _BreathAmount: 0.3
+    - _BreathSpeed: 0.55
+    - _CellScale: 8
+    - _CrackStrength: 0.35
+    - _CrackWidth: 0.05
+    - _FresnelPower: 3
+    - _FresnelStrength: 1.2
+    - _Opacity: 0.1
+    - _TopClarity: 0.75
+    m_Colors:
+    - _Color: {r: 0.19711046, g: 0.6307534, b: 0.7490197, a: 1}
+    - _RimColor: {r: 1.482506, g: 3.4591804, b: 3.953349, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

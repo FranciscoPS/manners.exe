@@ -6,16 +6,16 @@ using System.Collections.Generic;
 public class SkinsPanel : MonoBehaviour
 {
     [Header("Asignaciones (Inspector)")]
-    [Tooltip("Imagen que se actualizar· con el sprite del primer grupo de botones.")]
+    [Tooltip("Imagen que se actualizar√° con el sprite del primer grupo de botones.")]
     [SerializeField] private Image targetImageA;
 
-    [Tooltip("Imagen que se actualizar· con el sprite del segundo grupo de botones.")]
+    [Tooltip("Imagen que se actualizar√° con el sprite del segundo grupo de botones.")]
     [SerializeField] private Image targetImageB;
 
-    [Tooltip("Botones cuyo sprite se copiar· a Target Image A al pulsarlos.")]
+    [Tooltip("Botones cuyo sprite se copiar√° a Target Image A al pulsarlos.")]
     [SerializeField] private Button[] sourceButtonsA = new Button[0];
 
-    [Tooltip("Botones cuyo sprite se copiar· a Target Image B al pulsarlos.")]
+    [Tooltip("Botones cuyo sprite se copiar√° a Target Image B al pulsarlos.")]
     [SerializeField] private Button[] sourceButtonsB = new Button[0];
 
     private readonly Dictionary<Button, UnityAction> buttonHandlers = new Dictionary<Button, UnityAction>();

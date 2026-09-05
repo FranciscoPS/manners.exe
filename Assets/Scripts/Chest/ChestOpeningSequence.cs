@@ -17,6 +17,8 @@ public class ChestOpeningSequence : MonoBehaviour
     private TextMeshProUGUI promptText;
     private TextMeshProUGUI skipHintText;
     private RadiantAuraVFX aura;
+    private CanvasGroup auraGroup;
+    private ChestShowcase showcase;
 
     private bool skipRequested;
     private float promptHue;
@@ -100,6 +102,10 @@ public class ChestOpeningSequence : MonoBehaviour
         auraRect.sizeDelta = new Vector2(1650f, 1650f);
         auraRect.anchoredPosition = Vector2.zero;
 
+        auraGroup = auraObj.AddComponent<CanvasGroup>();
+        auraGroup.blocksRaycasts = false;
+        auraGroup.interactable = false;
+
         aura = auraObj.AddComponent<RadiantAuraVFX>();
         aura.SizeMultiplier = 1f;
         aura.RaySegments = 18;
@@ -107,6 +113,7 @@ public class ChestOpeningSequence : MonoBehaviour
         aura.HoleSoftness = 0.35f;
         aura.Initialize(auraRect);
 
+        BuildChestView();
         BuildPromptText();
 
         flashOverlay = CreateFullscreenImage("FlashOverlay", Color.clear);
@@ -145,6 +152,22 @@ public class ChestOpeningSequence : MonoBehaviour
         Image img = go.GetComponent<Image>();
         img.color = color;
         return img;
+    }
+
+    private void BuildChestView()
+    {
+        GameObject viewObj = new GameObject("ChestView", typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
+        viewObj.transform.SetParent(canvasRoot.transform, false);
+
+        RectTransform viewRect = viewObj.GetComponent<RectTransform>();
+        viewRect.anchorMin = viewRect.anchorMax = new Vector2(0.5f, 0.5f);
+        viewRect.pivot = new Vector2(0.5f, 0.5f);
+        viewRect.anchoredPosition = Vector2.zero;
+
+        RawImage chestView = viewObj.GetComponent<RawImage>();
+        chestView.raycastTarget = false;
+
+        showcase = ChestShowcase.Create(transform, chestView);
     }
 
     private void BuildPromptText()
@@ -214,32 +237,80 @@ public class ChestOpeningSequence : MonoBehaviour
         dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, 0f);
         flashOverlay.color = Color.clear;
         promptGroup.alpha = 1f;
+        auraGroup.alpha = 1f;
         promptText.text = config.promptMessage;
         skipHintText.text = config.allowSkip ? string.Format(config.skipHintMessage, KeyLabel(config.skipKey)) : "";
         aura.SpinMultiplier = 0.3f;
         aura.Play();
+        showcase.TryBegin(config);
+
+        if (showcase.IsActive)
+            showcase.SetAlpha(1f);
 
         PlayClip(config.buildupSFX, config.sfxVolume);
 
-        yield return RunAnticipationPhase(config);
-
-        if (!skipRequested)
-            yield return RunBurstPhase(config, chestAnimator, chestPosition);
-
-        if (!skipRequested)
-            yield return RunRevealPhase(config, chestAnimator);
+        if (showcase.IsActive && showcase.ClipLength > 0.05f)
+            yield return RunClipTimeline(config, chestPosition);
+        else
+            yield return RunFallbackTimeline(config, chestPosition);
 
         FinishInstantly(chestAnimator);
 
-        yield return RunFadeOutPhase(config, skipRequested ? 0.15f : 0.4f);
+        yield return RunFadeOutPhase(config, skipRequested ? 0.15f : Mathf.Max(0f, config.fadeOutDuration));
 
         canvasRoot.SetActive(false);
         aura.Stop();
+        showcase.End();
 
         onComplete?.Invoke();
     }
 
-    private IEnumerator RunAnticipationPhase(ChestOpeningConfig config)
+    private IEnumerator RunClipTimeline(ChestOpeningConfig config, Vector3 chestPosition)
+    {
+        float clipLength = showcase.ClipLength;
+        float burstAt = Mathf.Clamp(showcase.BurstTime, 0f, clipLength);
+        float cutAt = Mathf.Clamp(clipLength - config.revealLeadTime, burstAt, clipLength);
+
+        showcase.Seek(0f, 1f);
+
+        float elapsed = 0f;
+        float nextShake = 0f;
+        bool burst = false;
+
+        while (elapsed < cutAt)
+        {
+            if (CheckSkip(config)) yield break;
+
+            if (!burst)
+            {
+                float t = Mathf.Clamp01(elapsed / Mathf.Max(0.01f, burstAt));
+                UpdateAnticipation(config, t);
+
+                if (elapsed >= nextShake)
+                {
+                    CameraShakeManager.Instance?.Shake(config.anticipationShakeForce);
+                    nextShake = elapsed + config.anticipationShakeInterval;
+                }
+
+                if (elapsed >= burstAt)
+                {
+                    burst = true;
+                    TriggerBurst(config, chestPosition);
+                }
+            }
+
+            if (burst)
+            {
+                UpdateFlash(config, (elapsed - burstAt) / Mathf.Max(0.01f, config.burstDuration));
+                UpdatePromptPulse(1f);
+            }
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator RunFallbackTimeline(ChestOpeningConfig config, Vector3 chestPosition)
     {
         float elapsed = 0f;
         float nextShake = 0f;
@@ -248,10 +319,7 @@ public class ChestOpeningSequence : MonoBehaviour
         {
             if (CheckSkip(config)) yield break;
 
-            float t = elapsed / Mathf.Max(0.01f, config.anticipationDuration);
-            dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, config.dimColor.a * t);
-            aura.SpinMultiplier = Mathf.Lerp(0.3f, 1f, t);
-            UpdatePromptPulse(t);
+            UpdateAnticipation(config, elapsed / Mathf.Max(0.01f, config.anticipationDuration));
 
             if (elapsed >= nextShake)
             {
@@ -263,86 +331,72 @@ public class ChestOpeningSequence : MonoBehaviour
             yield return null;
         }
 
-        dimOverlay.color = config.dimColor;
-    }
+        UpdateAnticipation(config, 1f);
+        TriggerBurst(config, chestPosition);
 
-    private IEnumerator RunBurstPhase(ChestOpeningConfig config, Animator chestAnimator, Vector3 chestPosition)
-    {
-        CameraShakeManager.Instance?.Shake(config.burstShakeForce);
-        PlayClip(config.burstSFX, config.sfxVolume);
-        SpawnWorldBurst(chestPosition);
-
-        if (chestAnimator != null)
-        {
-            int stateHash = chestAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
-            chestAnimator.Play(stateHash, 0, 0f);
-            chestAnimator.speed = 1f;
-        }
-
-        aura.SpinMultiplier = 3f;
-
-        float elapsed = 0f;
+        elapsed = 0f;
         while (elapsed < config.burstDuration)
         {
             if (CheckSkip(config)) yield break;
 
-            float t = elapsed / Mathf.Max(0.01f, config.burstDuration);
-            float flashT = 1f - Mathf.Abs(t * 2f - 1f);
-            flashOverlay.color = new Color(config.flashColor.r, config.flashColor.g, config.flashColor.b, flashT);
+            UpdateFlash(config, elapsed / Mathf.Max(0.01f, config.burstDuration));
 
             elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
 
         flashOverlay.color = Color.clear;
-    }
 
-    private IEnumerator RunRevealPhase(ChestOpeningConfig config, Animator chestAnimator)
-    {
-        float lidLength = config.lidOpenFallbackDuration;
-
-        if (chestAnimator != null)
-        {
-            yield return null;
-            AnimatorStateInfo info = chestAnimator.GetCurrentAnimatorStateInfo(0);
-            if (info.length > 0.01f)
-                lidLength = info.length;
-        }
-
-        float holdDuration = Mathf.Max(0f, lidLength) + config.revealHoldDuration;
-        float elapsed = 0f;
-        bool frozeAnimator = false;
-
+        float holdDuration = Mathf.Max(0f, config.lidOpenFallbackDuration) + config.revealHoldDuration;
+        elapsed = 0f;
         while (elapsed < holdDuration)
         {
             if (CheckSkip(config)) yield break;
-
-            if (!frozeAnimator && chestAnimator != null && elapsed >= lidLength)
-            {
-                chestAnimator.speed = 0f;
-                frozeAnimator = true;
-            }
 
             UpdatePromptPulse(1f);
 
             elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
+    }
 
-        if (chestAnimator != null)
-            chestAnimator.speed = 0f;
+    private void UpdateAnticipation(ChestOpeningConfig config, float t)
+    {
+        dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, config.dimColor.a * t);
+        aura.SpinMultiplier = Mathf.Lerp(0.3f, 1f, t);
+        UpdatePromptPulse(t);
+    }
+
+    private void TriggerBurst(ChestOpeningConfig config, Vector3 chestPosition)
+    {
+        CameraShakeManager.Instance?.Shake(config.burstShakeForce);
+        PlayClip(config.burstSFX, config.sfxVolume);
+        SpawnWorldBurst(chestPosition);
+        aura.SpinMultiplier = 3f;
+    }
+
+    private void UpdateFlash(ChestOpeningConfig config, float t)
+    {
+        float flashT = t < 1f ? 1f - Mathf.Abs(t * 2f - 1f) : 0f;
+        flashOverlay.color = new Color(config.flashColor.r, config.flashColor.g, config.flashColor.b, flashT);
     }
 
     private IEnumerator RunFadeOutPhase(ChestOpeningConfig config, float duration)
     {
         float startDim = dimOverlay.color.a;
+        float startPrompt = promptGroup.alpha;
+        float startAura = auraGroup.alpha;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             float t = elapsed / duration;
             dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, Mathf.Lerp(startDim, 0f, t));
-            promptGroup.alpha = Mathf.Lerp(1f, 0f, t);
+            promptGroup.alpha = Mathf.Lerp(startPrompt, 0f, t);
+            auraGroup.alpha = Mathf.Lerp(startAura, 0f, t);
+
+            if (showcase.IsActive)
+                showcase.SetAlpha(1f - t);
 
             elapsed += Time.unscaledDeltaTime;
             yield return null;
@@ -350,6 +404,7 @@ public class ChestOpeningSequence : MonoBehaviour
 
         dimOverlay.color = Color.clear;
         promptGroup.alpha = 0f;
+        auraGroup.alpha = 0f;
     }
 
     private void UpdatePromptPulse(float intensity)
@@ -365,17 +420,24 @@ public class ChestOpeningSequence : MonoBehaviour
 
     private void FinishInstantly(Animator chestAnimator)
     {
-        if (chestAnimator != null)
-        {
-            int stateHash = chestAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
-            chestAnimator.speed = 1f;
-            chestAnimator.Play(stateHash, 0, 1f);
-            chestAnimator.Update(0f);
-            chestAnimator.speed = 0f;
-        }
+        SnapWorldChestOpen(chestAnimator);
+
+        if (showcase.IsActive && skipRequested)
+            showcase.Seek(showcase.ClipLength, 0f);
 
         flashOverlay.color = Color.clear;
         aura.SpinMultiplier = 1f;
+    }
+
+    private static void SnapWorldChestOpen(Animator chestAnimator)
+    {
+        if (chestAnimator == null) return;
+
+        int stateHash = chestAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+        chestAnimator.speed = 1f;
+        chestAnimator.Play(stateHash, 0, 1f);
+        chestAnimator.Update(0f);
+        chestAnimator.speed = 0f;
     }
 
     private bool CheckSkip(ChestOpeningConfig config)
