@@ -86,6 +86,11 @@ public class MusicManager : MonoBehaviour
     private AudioSource sfxOneShotSource;
     private float savedMusicVolume;
     private bool isVolumeReduced = false;
+    private bool musicPaused;
+    private double webClipStartDsp;
+    private double webPauseStartDsp;
+
+    private bool UseSequentialPlayback => Application.platform == RuntimePlatform.WebGLPlayer;
 
     private const string MUSIC_VOLUME_KEY = "MusicVolume";
     private const string SFX_VOLUME_KEY = "SFXVolume";
@@ -280,7 +285,10 @@ public class MusicManager : MonoBehaviour
         overtimeStarted = false;
         lastRegularLoop = sections.Count > 0 ? sections[sections.Count - 1].loopClip : config.loopClip;
 
-        musicSequenceCoroutine = StartCoroutine(MusicSequenceRoutine(config.introClip, sections, config.loopClip));
+        musicPaused = false;
+        musicSequenceCoroutine = StartCoroutine(UseSequentialPlayback
+            ? WebMusicSequenceRoutine(config.introClip, sections, config.loopClip)
+            : MusicSequenceRoutine(config.introClip, sections, config.loopClip));
     }
 
     private void HandleMatchTimeExpired()
@@ -290,7 +298,112 @@ public class MusicManager : MonoBehaviour
 
         overtimeStarted = true;
         StopMusicSequence();
-        overtimeCoroutine = StartCoroutine(OvertimeRoutine(activeConfig));
+        overtimeCoroutine = StartCoroutine(UseSequentialPlayback
+            ? WebOvertimeRoutine(activeConfig)
+            : OvertimeRoutine(activeConfig));
+    }
+
+    // Web Audio decodes clips asynchronously. Do not treat an unstarted source's
+    // isPlaying/time as the end of its intro, or queue multiple future sources.
+    // A single source owns the regular sequence; browser-native looping remains
+    // enabled until a transition, so repeated loops do not depend on frame rate.
+    private IEnumerator WebMusicSequenceRoutine(AudioClip introClip, List<MusicLoopSection> sections, AudioClip legacyLoop)
+    {
+        AudioSource source = loopSource;
+        AudioClip firstLoop = sections.Count > 0 ? sections[0].loopClip : legacyLoop;
+        RequestAudioData(firstLoop);
+
+        if (introClip != null)
+        {
+            yield return StartWebClip(source, introClip, false);
+            if (source.clip != introClip) yield break;
+            yield return WaitForWebClipEnd(ClipLength(introClip));
+        }
+
+        if (sections.Count == 0)
+        {
+            if (legacyLoop != null) yield return StartWebClip(source, legacyLoop, true);
+            yield break;
+        }
+
+        double[] starts = ComputeLoopStartTimes(introClip, sections);
+        for (int i = 0; i < sections.Count; i++)
+        {
+            MusicLoopSection section = sections[i];
+            yield return StartWebClip(source, section.loopClip, true);
+            if (source.clip != section.loopClip) yield break;
+            if (i == sections.Count - 1) yield break;
+
+            RequestAudioData(section.bridgeClip);
+            RequestAudioData(sections[i + 1].loopClip);
+            double length = ClipLength(section.loopClip);
+            double boundary;
+            if (section.repeatCount > 0)
+            {
+                boundary = length * section.repeatCount;
+            }
+            else
+            {
+                while (CurrentGameTime() < starts[i + 1]) yield return null;
+                boundary = (Math.Floor(WebClipElapsed / length) + 1) * length;
+            }
+
+            yield return WaitForWebClipEnd(boundary);
+            if (section.bridgeClip != null)
+            {
+                yield return StartWebClip(source, section.bridgeClip, false);
+                if (source.clip != section.bridgeClip) yield break;
+                yield return WaitForWebClipEnd(ClipLength(section.bridgeClip));
+            }
+        }
+    }
+
+    private IEnumerator WebOvertimeRoutine(SceneMusicConfig config)
+    {
+        AudioClip bridge = config.overtimeBridgeClip;
+        AudioClip loop = config.overtimeLoopClip != null ? config.overtimeLoopClip : lastRegularLoop;
+        RequestAudioData(loop);
+        // Keep the authored short overtime crossfade. The bridge and its loop
+        // share one source and cannot overlap each other.
+        FadeOutRegularSources();
+        if (bridge != null)
+        {
+            yield return StartWebClip(overtimeSource, bridge, false);
+            if (overtimeSource.clip != bridge) yield break;
+            yield return WaitForWebClipEnd(ClipLength(bridge));
+        }
+        if (loop != null) yield return StartWebClip(overtimeSource, loop, true);
+    }
+
+    private static void RequestAudioData(AudioClip clip)
+    {
+        if (clip != null && clip.loadState == AudioDataLoadState.Unloaded)
+            clip.LoadAudioData();
+    }
+
+    private IEnumerator StartWebClip(AudioSource source, AudioClip clip, bool loop)
+    {
+        RequestAudioData(clip);
+        while (clip.loadState == AudioDataLoadState.Loading) yield return null;
+        if (clip.loadState != AudioDataLoadState.Loaded || ClipLength(clip) <= 0)
+        {
+            source.Stop();
+            source.clip = null;
+            Debug.LogError($"[MusicManager] No se pudo cargar el clip de música '{clip.name}'.", this);
+            yield break;
+        }
+        while (musicPaused || AudioListener.pause) yield return null;
+        PlayClipNow(source, clip, loop);
+        webClipStartDsp = AudioSettings.dspTime;
+    }
+
+    private double WebClipElapsed => Math.Max(0,
+        (musicPaused ? webPauseStartDsp : AudioSettings.dspTime) - webClipStartDsp);
+
+    private IEnumerator WaitForWebClipEnd(double duration)
+    {
+        while (musicPaused || AudioListener.pause || WebClipElapsed < duration)
+            yield return null;
     }
 
     private IEnumerator OvertimeRoutine(SceneMusicConfig config)
@@ -355,8 +468,8 @@ public class MusicManager : MonoBehaviour
 
     private static double ClipLength(AudioClip clip)
     {
-        if (clip == null || clip.frequency <= 0) return 0.0;
-        return (double)clip.samples / clip.frequency;
+        // The browser can resample decoded data to the device's sample rate.
+        return clip != null ? clip.length : 0.0;
     }
 
     private float GetMatchDurationSeconds()
@@ -593,18 +706,23 @@ public class MusicManager : MonoBehaviour
         StopAllMusicSources();
         activeConfig = null;
         overtimeStarted = false;
+        musicPaused = false;
     }
 
     public void PauseMusic()
     {
-        if (allMusicSources == null) return;
+        if (allMusicSources == null || musicPaused) return;
+        musicPaused = true;
+        webPauseStartDsp = AudioSettings.dspTime;
         for (int i = 0; i < allMusicSources.Length; i++)
             allMusicSources[i].Pause();
     }
 
     public void ResumeMusic()
     {
-        if (allMusicSources == null) return;
+        if (allMusicSources == null || !musicPaused) return;
+        webClipStartDsp += AudioSettings.dspTime - webPauseStartDsp;
+        musicPaused = false;
         for (int i = 0; i < allMusicSources.Length; i++)
             allMusicSources[i].UnPause();
     }
