@@ -22,6 +22,8 @@ public class WebGLOptimizer : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool showDebugInfo = true;
+    private RenderPipelineAsset previousQualityPipeline;
+    private UniversalRenderPipelineAsset runtimePipeline;
 
     private void Awake()
     {
@@ -39,6 +41,17 @@ public class WebGLOptimizer : MonoBehaviour
 
     public void ApplyWebGLOptimizations()
     {
+        if (runtimePipeline == null)
+        {
+            previousQualityPipeline = QualitySettings.renderPipeline;
+            var source = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+            if (source != null)
+            {
+                runtimePipeline = Instantiate(source);
+                runtimePipeline.name = source.name + " (Web runtime)";
+                QualitySettings.renderPipeline = runtimePipeline;
+            }
+        }
 
         if (disableShadows)
         {
@@ -48,7 +61,7 @@ public class WebGLOptimizer : MonoBehaviour
             var urpAsset = QualitySettings.renderPipeline as UniversalRenderPipelineAsset;
             if (urpAsset != null)
             {
-
+                urpAsset.shadowDistance = 0f;
             }
 
         }
@@ -56,7 +69,7 @@ public class WebGLOptimizer : MonoBehaviour
         if (disableRealtimeLights)
         {
             QualitySettings.pixelLightCount = 0;
-
+            if (runtimePipeline != null) runtimePipeline.maxAdditionalLightsCount = 0;
         }
 
         if (capFrameRate)
@@ -72,7 +85,7 @@ public class WebGLOptimizer : MonoBehaviour
             var urpAsset = QualitySettings.renderPipeline as UniversalRenderPipelineAsset;
             if (urpAsset != null)
             {
-
+                urpAsset.msaaSampleCount = 1;
             }
 
         }
@@ -104,7 +117,16 @@ public class WebGLOptimizer : MonoBehaviour
 
         if (showDebugInfo)
         {
+            Debug.Log($"[WebGL] GPU={SystemInfo.graphicsDeviceName}; API={SystemInfo.graphicsDeviceType}; pipeline={runtimePipeline?.name}");
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (runtimePipeline == null) return;
+        if (QualitySettings.renderPipeline == runtimePipeline)
+            QualitySettings.renderPipeline = previousQualityPipeline;
+        Destroy(runtimePipeline);
     }
 
     public void DisableAllLightShadows()

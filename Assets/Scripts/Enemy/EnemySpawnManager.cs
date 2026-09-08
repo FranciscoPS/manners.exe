@@ -189,7 +189,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             yield break;
         }
 
-        PoolManager.Instance?.EnsureCapacityOverFrames(buffed.enemyPoolType, finalRushMaxConcurrentEnd);
+        PoolManager.Instance?.EnsureCapacityOverFrames(buffed.enemyPoolType, CurrentFinalRushCap(0f));
 
         float startTime = Time.time;
         int lastTier = -1;
@@ -490,10 +490,17 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private IEnumerator ScatterClusteredEnemies()
     {
         Transform playerTransform = null;
+        var enemies = new List<EnemyHealth>(512);
+        var alreadyScattered = new HashSet<EnemyHealth>();
+        var cluster = new List<EnemyHealth>(64);
+        var candidates = new List<EnemyHealth>(64);
+        var safeSpawnPoints = new List<SpawnPoint>();
+        var grid = new EnemyProximityGrid();
+        var interval = new WaitForSeconds(ScatterCheckInterval);
 
         while (true)
         {
-            yield return new WaitForSeconds(ScatterCheckInterval);
+            yield return interval;
 
             if (playerTransform == null)
                 playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
@@ -503,38 +510,46 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             if (allSpawnPoints.Count == 0) continue;
 
             Camera cam = Camera.main;
-            var enemies = new List<EnemyHealth>(EnemyHealth.ActiveEnemies);
+            enemies.Clear();
+            enemies.AddRange(EnemyHealth.ActiveEnemies);
             int count = enemies.Count;
             if (count < ScatterThresholdOffScreen) continue;
 
-            var alreadyScattered = new HashSet<EnemyHealth>();
+            alreadyScattered.Clear();
+            grid.Build(enemies, ScatterClusterRadius);
             int totalScattered = 0;
 
             for (int i = 0; i < count; i++)
             {
-                if (enemies[i] == null || alreadyScattered.Contains(enemies[i])) continue;
-
-                Vector3 pos = enemies[i].transform.position;
-                var cluster = new List<EnemyHealth>();
-
-                for (int j = 0; j < count; j++)
+                // Bound each scan slice, including dense clusters with no eligible warps.
+                if (i > 0 && i % 16 == 0)
                 {
-                    if (i == j || enemies[j] == null || alreadyScattered.Contains(enemies[j])) continue;
-                    if (Vector3.Distance(pos, enemies[j].transform.position) <= ScatterClusterRadius)
-                        cluster.Add(enemies[j]);
+                    yield return null;
+                    if (isSpawningWave) break;
+                    grid.Build(enemies, ScatterClusterRadius);
                 }
+                var center = enemies[i];
+                if (center == null || !center.gameObject.activeInHierarchy || alreadyScattered.Contains(center)) continue;
 
+                cluster.Clear();
+                grid.CollectWithin(center.transform.position, ScatterClusterRadius, cluster);
+                for (int j = cluster.Count - 1; j >= 0; j--)
+                {
+                    var member = cluster[j];
+                    if (member == center || member == null || !member.gameObject.activeInHierarchy || alreadyScattered.Contains(member))
+                        cluster.RemoveAt(j);
+                }
                 if (cluster.Count < ScatterThresholdOffScreen) continue;
 
                 bool extremePileup = cluster.Count >= ScatterThresholdOnScreen;
 
-                var candidates = new List<EnemyHealth>();
+                candidates.Clear();
                 foreach (var e in cluster)
                 {
                     if (e == null) continue;
 
                     if (playerTransform != null &&
-                        Vector3.Distance(e.transform.position, playerTransform.position) < ScatterMinPlayerDist)
+                        (e.transform.position - playerTransform.position).sqrMagnitude < ScatterMinPlayerDist * ScatterMinPlayerDist)
                         continue;
 
                     bool onScreen = false;
@@ -553,17 +568,20 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 int toScatter = Mathf.Max(0, candidates.Count - (ScatterMaxPerCluster - 1));
                 if (toScatter == 0) continue;
 
-                Debug.Log($"[Scatter] Cluster {cluster.Count} (extremo={extremePileup}) — candidatos {candidates.Count} — dispersando {toScatter}");
+                LogDebug($"[Scatter] Cluster {cluster.Count} (extremo={extremePileup}) — candidatos {candidates.Count} — dispersando {toScatter}");
 
-                var safeSpawnPoints = playerTransform != null
-                    ? allSpawnPoints.FindAll(sp =>
-                        Vector3.Distance(sp.transform.position, playerTransform.position) >= ScatterMinPlayerDist)
-                    : allSpawnPoints;
-                if (safeSpawnPoints.Count == 0) safeSpawnPoints = allSpawnPoints;
-
+                safeSpawnPoints.Clear();
+                foreach (var point in allSpawnPoints)
+                {
+                    if (point != null && (playerTransform == null ||
+                        (point.transform.position - playerTransform.position).sqrMagnitude >= ScatterMinPlayerDist * ScatterMinPlayerDist))
+                        safeSpawnPoints.Add(point);
+                }
+                if (safeSpawnPoints.Count == 0) continue;
                 for (int k = 0; k < toScatter; k++)
                 {
-                    if (candidates[k] == null) continue;
+                    if (k > 0 && k % 16 == 0) yield return null;
+                    if (candidates[k] == null || !candidates[k].gameObject.activeInHierarchy) continue;
                     SpawnPoint target = safeSpawnPoints[Random.Range(0, safeSpawnPoints.Count)];
                     EnemyController ctrl = candidates[k].GetComponent<EnemyController>();
                     if (ctrl != null)
@@ -576,7 +594,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             }
 
             if (totalScattered > 0)
-                Debug.Log($"[Scatter] Dispersados: {totalScattered}");
+                LogDebug($"[Scatter] Dispersados: {totalScattered}");
         }
     }
 

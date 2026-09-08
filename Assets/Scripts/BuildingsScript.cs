@@ -40,6 +40,18 @@ public class BuildingsScript : MonoBehaviour
     private BuildingDestroyedVisual destroyedVisual;
     private Collider hitCollider;
     private Vector3 lastImpactDirection;
+    private readonly List<Material> fadeMats = new List<Material>();
+
+    private void OnDestroy()
+    {
+        foreach (Material material in fadeMats)
+        {
+            if (material == null) continue;
+            if (Application.isPlaying) Destroy(material);
+            else DestroyImmediate(material);
+        }
+        fadeMats.Clear();
+    }
 
     private void OnEnable()
     {
@@ -223,19 +235,7 @@ public class BuildingsScript : MonoBehaviour
             yield break;
         }
 
-        var fadeMats = new System.Collections.Generic.List<Material>(renderers.Length * 2);
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            var origMats = renderers[i].materials;
-            var instMats = new Material[origMats.Length];
-            for (int j = 0; j < origMats.Length; j++)
-            {
-                instMats[j] = new Material(origMats[j]);
-                SetupTransparentMaterial(instMats[j]);
-                fadeMats.Add(instMats[j]);
-            }
-            renderers[i].materials = instMats;
-        }
+        CreateFadeMaterials(renderers);
 
         float fadeElapsed = 0f;
         while (fadeElapsed < fadeOutDuration)
@@ -276,6 +276,23 @@ public class BuildingsScript : MonoBehaviour
 
         for (int m = 0; m < fadeMats.Count; m++)
             SetMaterialAlpha(fadeMats[m], 0f);
+    }
+
+    private void CreateFadeMaterials(Renderer[] renderers)
+    {
+        foreach (var renderer in renderers)
+        {
+            var source = renderer.sharedMaterials;
+            var instances = new Material[source.Length];
+            for (int j = 0; j < source.Length; j++)
+            {
+                if (source[j] == null) continue;
+                instances[j] = new Material(source[j]);
+                SetupTransparentMaterial(instances[j]);
+                fadeMats.Add(instances[j]);
+            }
+            renderer.sharedMaterials = instances;
+        }
     }
 
     private void SetupTransparentMaterial(Material mat)

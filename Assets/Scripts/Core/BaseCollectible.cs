@@ -56,6 +56,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     protected bool isBlinking = false;
     protected Color originalColor;
     protected Material materialInstance;
+    private Material materialTemplate;
 
     protected float nextUpdateTime;
     protected float updateOffset;
@@ -111,7 +112,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     {
         if (objectRenderer != null && materialInstance == null)
         {
-            materialInstance = objectRenderer.material;
+            EnsureMaterial(objectRenderer.sharedMaterial);
+            if (materialInstance == null) return;
 
             if (materialInstance.HasProperty("_RandomOffset"))
                 materialInstance.SetFloat("_RandomOffset", Random.Range(0f, 100f));
@@ -126,6 +128,31 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
                     originalColor = materialInstance.color;
             }
         }
+    }
+
+    protected void EnsureMaterial(Material template)
+    {
+        if (template == null || objectRenderer == null) return;
+        if (materialInstance != null && (template == materialTemplate || template == materialInstance)) return;
+
+        ReleaseMaterial();
+        materialTemplate = template;
+        materialInstance = new Material(template);
+        objectRenderer.sharedMaterial = materialInstance;
+    }
+
+    private void ReleaseMaterial()
+    {
+        if (materialInstance == null) return;
+        if (Application.isPlaying) Destroy(materialInstance);
+        else DestroyImmediate(materialInstance);
+        materialInstance = null;
+        materialTemplate = null;
+    }
+
+    protected virtual void OnDestroy()
+    {
+        ReleaseMaterial();
     }
 
     protected virtual void SetupPhysics()
@@ -284,7 +311,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         if (meshFilter != null && mesh != null)
         {
-            meshFilter.mesh = mesh;
+            meshFilter.sharedMesh = mesh;
         }
 
         if (objectRenderer == null)
@@ -292,18 +319,14 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         if (objectRenderer != null)
         {
-            if (material != null)
-            {
-                materialInstance = new Material(material);
-                objectRenderer.material = materialInstance;
-            }
-            else if (materialInstance == null)
-            {
-                materialInstance = new Material(objectRenderer.sharedMaterial);
-                objectRenderer.material = materialInstance;
-            }
+            EnsureMaterial(material != null ? material : objectRenderer.sharedMaterial);
 
             originalColor = color;
+            if (materialInstance == null)
+            {
+                transform.localScale = Vector3.one * scale;
+                return;
+            }
             materialInstance.color = color;
 
             if (materialInstance.HasProperty("_BaseColor"))
@@ -333,7 +356,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     public virtual void SetEmission(float emissionIntensity, float fresnelPower)
     {
         if (materialInstance == null && objectRenderer != null)
-            materialInstance = objectRenderer.material;
+            EnsureMaterial(objectRenderer.sharedMaterial);
 
         if (materialInstance != null)
         {

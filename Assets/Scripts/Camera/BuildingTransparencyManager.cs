@@ -121,6 +121,9 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
         Detect();
     }
 
+    private readonly List<Vector3> targetScreen = new List<Vector3>(65);
+    private readonly List<float> targetDistances = new List<float>(65);
+
     private void Detect()
     {
         if (cam == null)
@@ -157,6 +160,13 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
             return;
         }
 
+        targetScreen.Clear();
+        targetDistances.Clear();
+        for (int t = 0; t < targetWorld.Count; t++)
+        {
+            targetScreen.Add(cam.WorldToScreenPoint(targetWorld[t]));
+            targetDistances.Add((targetWorld[t] - camPos).magnitude);
+        }
         float maxDistSqr = maxBuildingDistance * maxBuildingDistance;
         float padX = Screen.width * screenPadding;
         float padY = Screen.height * screenPadding;
@@ -187,10 +197,10 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
             bool occluded = false;
             for (int t = 0; t < targetWorld.Count; t++)
             {
-                Vector3 sp = cam.WorldToScreenPoint(targetWorld[t]);
+                Vector3 sp = targetScreen[t];
                 if (sp.z <= 0f) continue;
 
-                float targetCamDist = (targetWorld[t] - camPos).magnitude;
+                float targetCamDist = targetDistances[t];
                 if (buildingCamDist < targetCamDist - depthBias &&
                     rect.Contains(new Vector2(sp.x, sp.y)))
                 {

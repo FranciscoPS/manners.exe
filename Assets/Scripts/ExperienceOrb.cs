@@ -28,10 +28,8 @@ public class ExperienceOrb : BaseCollectible
 
         if (objectRenderer != null)
         {
-            if (materialInstance == null && objectRenderer.material != null)
-            {
-                materialInstance = objectRenderer.material;
-            }
+            if (materialInstance == null)
+                EnsureMaterial(objectRenderer.sharedMaterial);
 
             if (materialInstance != null)
             {

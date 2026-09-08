@@ -101,12 +101,11 @@ public class UpdateManager : MonoBehaviour
         if (isUpdating)
         {
             updateablesToRemove.Remove(updateable);
-            updateablesToAdd.Add(updateable);
+            if (!updateablesToAdd.Contains(updateable)) updateablesToAdd.Add(updateable);
         }
         else
         {
-            updateableSet.Add(updateable);
-            if (!updateables.Contains(updateable))
+            if (updateableSet.Add(updateable))
                 updateables.Add(updateable);
         }
     }
@@ -118,7 +117,7 @@ public class UpdateManager : MonoBehaviour
         if (isUpdating)
         {
             updateablesToAdd.Remove(updateable);
-            updateablesToRemove.Add(updateable);
+            if (!updateablesToRemove.Contains(updateable)) updateablesToRemove.Add(updateable);
         }
         else
         {
@@ -132,7 +131,10 @@ public class UpdateManager : MonoBehaviour
         if (updateable == null) return;
 
         if (isFixedUpdating)
-            fixedUpdateablesToAdd.Add(updateable);
+        {
+            fixedUpdateablesToRemove.Remove(updateable);
+            if (!fixedUpdateablesToAdd.Contains(updateable)) fixedUpdateablesToAdd.Add(updateable);
+        }
         else if (fixedUpdateableSet.Add(updateable))
             fixedUpdateables.Add(updateable);
     }
@@ -142,7 +144,10 @@ public class UpdateManager : MonoBehaviour
         if (updateable == null) return;
 
         if (isFixedUpdating)
-            fixedUpdateablesToRemove.Add(updateable);
+        {
+            fixedUpdateablesToAdd.Remove(updateable);
+            if (!fixedUpdateablesToRemove.Contains(updateable)) fixedUpdateablesToRemove.Add(updateable);
+        }
         else
         {
             fixedUpdateableSet.Remove(updateable);
@@ -155,7 +160,10 @@ public class UpdateManager : MonoBehaviour
         if (updateable == null) return;
 
         if (isLateUpdating)
-            lateUpdateablesToAdd.Add(updateable);
+        {
+            lateUpdateablesToRemove.Remove(updateable);
+            if (!lateUpdateablesToAdd.Contains(updateable)) lateUpdateablesToAdd.Add(updateable);
+        }
         else if (lateUpdateableSet.Add(updateable))
             lateUpdateables.Add(updateable);
     }
@@ -165,7 +173,10 @@ public class UpdateManager : MonoBehaviour
         if (updateable == null) return;
 
         if (isLateUpdating)
-            lateUpdateablesToRemove.Add(updateable);
+        {
+            lateUpdateablesToAdd.Remove(updateable);
+            if (!lateUpdateablesToRemove.Contains(updateable)) lateUpdateablesToRemove.Add(updateable);
+        }
         else
         {
             lateUpdateableSet.Remove(updateable);
@@ -184,6 +195,7 @@ public class UpdateManager : MonoBehaviour
 
             if (item == null)
             {
+                updateableSet.Remove(item);
                 updateables.RemoveAt(i);
                 continue;
             }
@@ -197,6 +209,7 @@ public class UpdateManager : MonoBehaviour
             catch (System.Exception)
             {
 
+                updateableSet.Remove(item);
                 updateables.RemoveAt(i);
                 continue;
             }
@@ -210,6 +223,7 @@ public class UpdateManager : MonoBehaviour
                 catch (MissingReferenceException)
                 {
 
+                    updateableSet.Remove(item);
                     updateables.RemoveAt(i);
                 }
                 catch (System.Exception ex)
@@ -220,7 +234,7 @@ public class UpdateManager : MonoBehaviour
         }
 
         isUpdating = false;
-        ProcessPendingChanges(ref updateables, ref updateablesToAdd, ref updateablesToRemove);
+        ProcessPendingChanges(updateables, updateableSet, updateablesToAdd, updateablesToRemove);
     }
 
     private void FixedUpdate()
@@ -234,6 +248,7 @@ public class UpdateManager : MonoBehaviour
 
             if (item == null)
             {
+                fixedUpdateableSet.Remove(item);
                 fixedUpdateables.RemoveAt(i);
                 continue;
             }
@@ -245,6 +260,7 @@ public class UpdateManager : MonoBehaviour
             }
             catch (System.Exception)
             {
+                fixedUpdateableSet.Remove(item);
                 fixedUpdateables.RemoveAt(i);
                 continue;
             }
@@ -257,6 +273,7 @@ public class UpdateManager : MonoBehaviour
                 }
                 catch (MissingReferenceException)
                 {
+                    fixedUpdateableSet.Remove(item);
                     fixedUpdateables.RemoveAt(i);
                 }
                 catch (System.Exception ex)
@@ -267,7 +284,7 @@ public class UpdateManager : MonoBehaviour
         }
 
         isFixedUpdating = false;
-        ProcessPendingChanges(ref fixedUpdateables, ref fixedUpdateablesToAdd, ref fixedUpdateablesToRemove);
+        ProcessPendingChanges(fixedUpdateables, fixedUpdateableSet, fixedUpdateablesToAdd, fixedUpdateablesToRemove);
     }
 
     private void LateUpdate()
@@ -281,6 +298,7 @@ public class UpdateManager : MonoBehaviour
 
             if (item == null)
             {
+                lateUpdateableSet.Remove(item);
                 lateUpdateables.RemoveAt(i);
                 continue;
             }
@@ -292,6 +310,7 @@ public class UpdateManager : MonoBehaviour
             }
             catch (System.Exception)
             {
+                lateUpdateableSet.Remove(item);
                 lateUpdateables.RemoveAt(i);
                 continue;
             }
@@ -304,6 +323,7 @@ public class UpdateManager : MonoBehaviour
                 }
                 catch (MissingReferenceException)
                 {
+                    lateUpdateableSet.Remove(item);
                     lateUpdateables.RemoveAt(i);
                 }
                 catch (System.Exception ex)
@@ -314,32 +334,25 @@ public class UpdateManager : MonoBehaviour
         }
 
         isLateUpdating = false;
-        ProcessPendingChanges(ref lateUpdateables, ref lateUpdateablesToAdd, ref lateUpdateablesToRemove);
+        ProcessPendingChanges(lateUpdateables, lateUpdateableSet, lateUpdateablesToAdd, lateUpdateablesToRemove);
     }
 
-    private void ProcessPendingChanges<T>(ref List<T> list, ref List<T> toAdd, ref List<T> toRemove)
+    private static void ProcessPendingChanges<T>(List<T> list, HashSet<T> set, List<T> toAdd, List<T> toRemove)
     {
-        if (toAdd.Count > 0)
+        foreach (var item in toRemove)
         {
-            foreach (var item in toAdd)
-            {
-                if (!list.Contains(item))
-                    list.Add(item);
-            }
-            toAdd.Clear();
+            set.Remove(item);
+            list.Remove(item);
         }
+        toRemove.Clear();
 
-        if (toRemove.Count > 0)
+        foreach (var item in toAdd)
         {
-            foreach (var item in toRemove)
-            {
-                list.Remove(item);
-            }
-            toRemove.Clear();
+            if (item is UnityEngine.Object unityObject && unityObject == null) continue;
+            if (set.Add(item)) list.Add(item);
         }
-
+        toAdd.Clear();
     }
-
     public void ClearAll()
     {
         updateables.Clear();
