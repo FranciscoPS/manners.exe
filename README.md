@@ -1,5 +1,7 @@
 # manners.exe
 
+La auditoría de rendimiento, los perfiles gráficos y el protocolo de pruebas están en [Docs/Performance/ANALISIS_RENDIMIENTO.md](Docs/Performance/ANALISIS_RENDIMIENTO.md). En el juego, **Opciones → Gráficos** y **Pausa → Gráficos** permiten ajustar FPS, pantalla, escala 3D y efectos. Los resultados comprobados están en [Docs/Performance/VALIDACION.md](Docs/Performance/VALIDACION.md).
+
 Juego tipo *bullet-heaven* (estilo Vampire Survivors) hecho en **Unity 6 (URP)** con **WebGL** como plataforma objetivo y cámara en perspectiva inclinada.
 
 Este documento resume, a grandes rasgos, **cómo está pensado el código**: los patrones de diseño, la arquitectura y las reglas que se siguen, para que cualquiera que entre al proyecto entienda rápido la forma de trabajar. (El código no lleva comentarios; la intención se documenta aquí y con nombres claros.)

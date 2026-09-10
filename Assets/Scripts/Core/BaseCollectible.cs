@@ -56,6 +56,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     protected bool isBlinking = false;
     protected Color originalColor;
     protected Material materialInstance;
+    private Material sourceMaterial;
 
     protected float nextUpdateTime;
     protected float updateOffset;
@@ -111,7 +112,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     {
         if (objectRenderer != null && materialInstance == null)
         {
-            materialInstance = objectRenderer.material;
+            EnsureMaterialInstance(objectRenderer.sharedMaterial);
+            if (materialInstance == null) return;
 
             if (materialInstance.HasProperty("_RandomOffset"))
                 materialInstance.SetFloat("_RandomOffset", Random.Range(0f, 100f));
@@ -126,6 +128,32 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
                     originalColor = materialInstance.color;
             }
         }
+    }
+
+    // The pooled object owns one material for its entire lifetime, not one per drop.
+    // Keep an instance because the pickup shader uses individual colors/offsets.
+    private void EnsureMaterialInstance(Material source)
+    {
+        if (source == null || objectRenderer == null) return;
+
+        if (materialInstance != null && sourceMaterial == source && materialInstance.shader == source.shader)
+        {
+            materialInstance.CopyPropertiesFromMaterial(source);
+            return;
+        }
+
+        if (materialInstance != null)
+            Destroy(materialInstance);
+
+        sourceMaterial = source;
+        materialInstance = new Material(source);
+        objectRenderer.sharedMaterial = materialInstance;
+    }
+
+    protected virtual void OnDestroy()
+    {
+        if (materialInstance != null)
+            Destroy(materialInstance);
     }
 
     protected virtual void SetupPhysics()
@@ -294,16 +322,19 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         {
             if (material != null)
             {
-                materialInstance = new Material(material);
-                objectRenderer.material = materialInstance;
+                EnsureMaterialInstance(material);
             }
             else if (materialInstance == null)
             {
-                materialInstance = new Material(objectRenderer.sharedMaterial);
-                objectRenderer.material = materialInstance;
+                EnsureMaterialInstance(objectRenderer.sharedMaterial);
             }
 
             originalColor = color;
+            if (materialInstance == null)
+            {
+                transform.localScale = Vector3.one * scale;
+                return;
+            }
             materialInstance.color = color;
 
             if (materialInstance.HasProperty("_BaseColor"))
@@ -333,7 +364,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     public virtual void SetEmission(float emissionIntensity, float fresnelPower)
     {
         if (materialInstance == null && objectRenderer != null)
-            materialInstance = objectRenderer.material;
+            InitializeRenderer();
 
         if (materialInstance != null)
         {

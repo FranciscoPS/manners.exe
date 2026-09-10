@@ -297,7 +297,9 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     {
         if (player == null || agent == null || !agent.isOnNavMesh)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] IGNORADO — player={player != null} agent={agent != null} onNavMesh={agent?.isOnNavMesh}");
+#endif
             return;
         }
 
@@ -315,11 +317,15 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         {
             isDetouring = true;
             agent.SetDestination(hit.position);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] Desviando a {hit.position} (dist al jugador={Vector3.Distance(transform.position, player.position):F1}m)");
+#endif
         }
         else
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] SamplePosition FALLÓ — no hay NavMesh cerca de {target}");
+#endif
         }
     }
 
