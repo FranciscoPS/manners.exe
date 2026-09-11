@@ -24,12 +24,16 @@ public class PauseMenu : MonoBehaviour
     private GameObject currentHelpSubPanel;
     private LevelUpManager levelUpManager;
     private PlayerHealth playerHealth;
+    private GraphicsSettingsMenu graphicsSettings;
 
     private bool reducedVolumeApplied = false;
     private bool audioSettingsChangedWhilePaused = false;
 
     void Start()
     {
+        graphicsSettings = GraphicsSettingsMenu.Install(pausePanel,
+            OnGraphicsButtonPressed, OnGraphicsReturnButtonPressed);
+
         if (pausePanel != null)
             pausePanel.SetActive(false);
 
@@ -61,6 +65,10 @@ public class PauseMenu : MonoBehaviour
 
     void Update()
     {
+        // The graphics panel owns Escape while open, including the frame it closes.
+        if ((graphicsSettings != null && graphicsSettings.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame)
+            return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
 
@@ -200,6 +208,26 @@ public class PauseMenu : MonoBehaviour
         currentHelpSubPanel = null;
     }
 
+    public void OnGraphicsButtonPressed()
+    {
+        if (graphicsSettings == null) return;
+        isPaused = true;
+        Time.timeScale = 0f;
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (helpPanel != null) helpPanel.SetActive(false);
+        if (audioPanel != null) audioPanel.SetActive(false);
+        DeactivateAllHelpSubPanels();
+        currentHelpSubPanel = null;
+        graphicsSettings.gameObject.SetActive(true);
+    }
+
+    private void OnGraphicsReturnButtonPressed()
+    {
+        if (pausePanel != null) pausePanel.SetActive(true);
+        isPaused = true;
+        Time.timeScale = 0f;
+    }
+
     public void OnAudioButtonPressed()
     {
         isPaused = true;
@@ -298,6 +326,8 @@ public class PauseMenu : MonoBehaviour
     }
     private void CloseAllPauseUI()
     {
+        if (graphicsSettings != null) graphicsSettings.gameObject.SetActive(false);
+
         if (pausePanel != null) pausePanel.SetActive(false);
         if (helpPanel != null) helpPanel.SetActive(false);
         if (audioPanel != null) audioPanel.SetActive(false);

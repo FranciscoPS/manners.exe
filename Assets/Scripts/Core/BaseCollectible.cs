@@ -175,7 +175,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if (collected) return;
+        if (collected || deltaTime <= 0f) return;
 
         transform.Rotate(Vector3.up, spinSpeed * deltaTime, Space.Self);
 

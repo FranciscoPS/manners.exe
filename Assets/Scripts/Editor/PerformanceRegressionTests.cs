@@ -31,11 +31,11 @@ public class PerformanceRegressionTests
                 pickup.SetVisuals(null, source, Color.red, 1);
             Assert.AreSame(owned, renderer.sharedMaterial, "Pool reuse must not allocate another material on each spawn.");
             pickup.SetVisuals(null, replacement, Color.blue, 1);
-            yield return null;
+            yield return WaitForMaterialRelease(owned);
             Assert.IsTrue(owned == null, "Replacing a template must release the old instance.");
             owned = renderer.sharedMaterial;
             Object.DestroyImmediate(go);
-            yield return null;
+            yield return WaitForMaterialRelease(owned);
             Assert.IsTrue(owned == null, "Destroying a pickup must release its final instance.");
             Assert.IsTrue(source != null && replacement != null, "Source assets must survive.");
         }
@@ -70,7 +70,7 @@ public class PerformanceRegressionTests
             Assert.AreNotSame(source, owned);
             Assert.AreEqual(before + 1, Resources.FindObjectsOfTypeAll<Material>().Length, "Only one clone per slot, with no implicit Renderer.materials clone.");
             Object.DestroyImmediate(go);
-            yield return null;
+            yield return WaitForMaterialRelease(owned);
             Assert.IsTrue(owned == null);
             Assert.IsTrue(source != null);
         }
@@ -117,6 +117,14 @@ public class PerformanceRegressionTests
         Assert.AreEqual(expected, ((IList)typeof(UpdateManager).GetField(list, Private).GetValue(manager)).Count);
         var members = typeof(UpdateManager).GetField(set, Private).GetValue(manager);
         Assert.AreEqual(expected, members.GetType().GetProperty("Count").GetValue(members));
+    }
+
+    private static IEnumerator WaitForMaterialRelease(Material material)
+    {
+        // EditMode UnityTests advance on editor updates, which need not each
+        // complete a player frame. Destroy is processed at the end of a frame.
+        double deadline = Time.realtimeSinceStartupAsDouble + 2;
+        while (material != null && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
     }
 
     private static void Register(UpdateManager m, TickMember item, string phase)

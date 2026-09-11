@@ -68,6 +68,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     private GameObject fadeOverlay;
     private CanvasGroup fadeCanvasGroup;
+    private GraphicsSettingsMenu graphicsSettings;
 
     private void Awake()
     {
@@ -122,6 +123,11 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void Start()
     {
+        graphicsSettings = GraphicsSettingsMenu.Install(optionsPanel,
+            () => ShowScreen(MenuScreen.Graphics), BackToOptions);
+        if (graphicsSettings != null)
+            screenDictionary[MenuScreen.Graphics] = graphicsSettings.gameObject;
+
         if (mapSelection != null)
         {
             foreach (Button btn in mapSelection.GetComponentsInChildren<Button>(true))
@@ -136,7 +142,8 @@ public class MainMenuUIManager : MonoBehaviour
     {
         return screen == MenuScreen.Help
             || screen == MenuScreen.Audio
-            || screen == MenuScreen.Controles;
+            || screen == MenuScreen.Controles
+            || screen == MenuScreen.Graphics;
     }
 
     private bool IsHelpSubscreen(MenuScreen screen)
@@ -632,4 +639,7 @@ public enum MenuScreen
     HelpSinergias,
 
     Sinergias,
+
+    // Append entries to preserve the indices stored by scene button events.
+    Graphics,
 }

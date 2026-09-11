@@ -7,6 +7,7 @@ public class EnemyProximityGrid
     private readonly Stack<List<int>> listPool = new Stack<List<int>>(64);
     private readonly List<EnemyHealth> entries = new List<EnemyHealth>(256);
     private readonly List<Vector3> positions = new List<Vector3>(256);
+    private readonly List<int> orderedResults = new List<int>(64);
 
     private float invCellSize = 1f;
 
@@ -36,8 +37,9 @@ public class EnemyProximityGrid
         }
     }
 
-    public void CollectWithin(Vector3 center, float radius, List<EnemyHealth> results)
+    public void CollectWithin(Vector3 center, float radius, List<EnemyHealth> results, bool preserveInputOrder = false)
     {
+        if (preserveInputOrder) orderedResults.Clear();
         float radiusSqr = radius * radius;
         int reach = Mathf.CeilToInt(radius * invCellSize);
         int centerX = Mathf.FloorToInt(center.x * invCellSize);
@@ -53,9 +55,21 @@ public class EnemyProximityGrid
                 {
                     int index = bucket[b];
                     if ((positions[index] - center).sqrMagnitude <= radiusSqr)
-                        results.Add(entries[index]);
+                    {
+                        if (preserveInputOrder) orderedResults.Add(index);
+                        else results.Add(entries[index]);
+                    }
                 }
             }
+        }
+
+        // Scatter chooses the first candidates in the active-enemy list. Keep that
+        // choice stable even though spatial buckets are visited in a different order.
+        if (preserveInputOrder)
+        {
+            orderedResults.Sort();
+            for (int i = 0; i < orderedResults.Count; i++)
+                results.Add(entries[orderedResults[i]]);
         }
     }
 

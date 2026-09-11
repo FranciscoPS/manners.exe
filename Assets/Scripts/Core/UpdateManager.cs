@@ -193,10 +193,10 @@ public class UpdateManager : MonoBehaviour
         {
             var item = updateables[i];
 
-            if (item == null)
+            if (IsMissing(item))
             {
-                updateableSet.Remove(item);
                 updateables.RemoveAt(i);
+                updateableSet.Remove(item);
                 continue;
             }
 
@@ -209,8 +209,8 @@ public class UpdateManager : MonoBehaviour
             catch (System.Exception)
             {
 
-                updateableSet.Remove(item);
                 updateables.RemoveAt(i);
+                updateableSet.Remove(item);
                 continue;
             }
 
@@ -223,8 +223,8 @@ public class UpdateManager : MonoBehaviour
                 catch (MissingReferenceException)
                 {
 
-                    updateableSet.Remove(item);
                     updateables.RemoveAt(i);
+                    updateableSet.Remove(item);
                 }
                 catch (System.Exception ex)
                 {
@@ -246,10 +246,10 @@ public class UpdateManager : MonoBehaviour
         {
             var item = fixedUpdateables[i];
 
-            if (item == null)
+            if (IsMissing(item))
             {
-                fixedUpdateableSet.Remove(item);
                 fixedUpdateables.RemoveAt(i);
+                fixedUpdateableSet.Remove(item);
                 continue;
             }
 
@@ -260,8 +260,8 @@ public class UpdateManager : MonoBehaviour
             }
             catch (System.Exception)
             {
-                fixedUpdateableSet.Remove(item);
                 fixedUpdateables.RemoveAt(i);
+                fixedUpdateableSet.Remove(item);
                 continue;
             }
 
@@ -273,8 +273,8 @@ public class UpdateManager : MonoBehaviour
                 }
                 catch (MissingReferenceException)
                 {
-                    fixedUpdateableSet.Remove(item);
                     fixedUpdateables.RemoveAt(i);
+                    fixedUpdateableSet.Remove(item);
                 }
                 catch (System.Exception ex)
                 {
@@ -296,10 +296,10 @@ public class UpdateManager : MonoBehaviour
         {
             var item = lateUpdateables[i];
 
-            if (item == null)
+            if (IsMissing(item))
             {
-                lateUpdateableSet.Remove(item);
                 lateUpdateables.RemoveAt(i);
+                lateUpdateableSet.Remove(item);
                 continue;
             }
 
@@ -310,8 +310,8 @@ public class UpdateManager : MonoBehaviour
             }
             catch (System.Exception)
             {
-                lateUpdateableSet.Remove(item);
                 lateUpdateables.RemoveAt(i);
+                lateUpdateableSet.Remove(item);
                 continue;
             }
 
@@ -323,8 +323,8 @@ public class UpdateManager : MonoBehaviour
                 }
                 catch (MissingReferenceException)
                 {
-                    lateUpdateableSet.Remove(item);
                     lateUpdateables.RemoveAt(i);
+                    lateUpdateableSet.Remove(item);
                 }
                 catch (System.Exception ex)
                 {
@@ -337,22 +337,32 @@ public class UpdateManager : MonoBehaviour
         ProcessPendingChanges(lateUpdateables, lateUpdateableSet, lateUpdateablesToAdd, lateUpdateablesToRemove);
     }
 
+    private static bool IsMissing<T>(T item)
+    {
+        return item == null || (item is UnityEngine.Object unityObject && unityObject == null);
+    }
+
     private static void ProcessPendingChanges<T>(List<T> list, HashSet<T> set, List<T> toAdd, List<T> toRemove)
     {
-        foreach (var item in toRemove)
+        if (toRemove.Count > 0)
         {
-            set.Remove(item);
-            list.Remove(item);
+            foreach (var item in toRemove)
+            {
+                if (set.Remove(item)) list.Remove(item);
+            }
+            toRemove.Clear();
         }
-        toRemove.Clear();
 
-        foreach (var item in toAdd)
+        if (toAdd.Count > 0)
         {
-            if (item is UnityEngine.Object unityObject && unityObject == null) continue;
-            if (set.Add(item)) list.Add(item);
+            foreach (var item in toAdd)
+            {
+                if (!IsMissing(item) && set.Add(item)) list.Add(item);
+            }
+            toAdd.Clear();
         }
-        toAdd.Clear();
     }
+
     public void ClearAll()
     {
         updateables.Clear();

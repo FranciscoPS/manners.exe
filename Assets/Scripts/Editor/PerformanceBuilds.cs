@@ -7,6 +7,19 @@ using UnityEngine;
 
 public static class PerformanceBuilds
 {
+    public static void WindowsPerformanceReview()
+    {
+        PerformanceValidation.RunChecks();
+        WebBuildRenderingChecks.Run();
+        bool previousTiming = PlayerSettings.enableFrameTimingStats;
+        try
+        {
+            PlayerSettings.enableFrameTimingStats = true;
+            Build(BuildTarget.StandaloneWindows64, "Builds/PerformanceReview/Windows/manners.exe");
+        }
+        finally { PlayerSettings.enableFrameTimingStats = previousTiming; }
+    }
+
     public static void Windows()
     {
         WebBuildRenderingChecks.Run();

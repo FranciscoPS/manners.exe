@@ -10,6 +10,7 @@ public class PerformanceMonitor : MonoBehaviour, IUpdateable
 {
     public static PerformanceMonitor Instance { get; private set; }
     [SerializeField, Min(5f)] private float reportInterval = 15f;
+    [SerializeField] private bool enableReleaseLogging;
     private double windowStart;
     private int frames;
     private float worstFrame;
@@ -25,12 +26,17 @@ public class PerformanceMonitor : MonoBehaviour, IUpdateable
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureExists()
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         if (Instance == null)
             new GameObject("[PerformanceMonitor]").AddComponent<PerformanceMonitor>();
+#endif
     }
 
     private void Awake()
     {
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+        if (!enableReleaseLogging) { enabled = false; return; }
+#endif
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);

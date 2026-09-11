@@ -11,8 +11,8 @@ public class BuildingDestructionVFX : MonoBehaviour
     [SerializeField] private float size = 4f;
     [SerializeField] private Color tintColor = new Color(0.8f, 0.7f, 0.6f, 1f);
 
-    private static Material _cachedMaterial;
-    private static Texture2D _cachedTexture;
+    private Material ownedMaterial;
+
 
     private void Start()
     {
@@ -58,7 +58,7 @@ public class BuildingDestructionVFX : MonoBehaviour
 
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         renderer.renderMode = ParticleSystemRenderMode.Billboard;
-        renderer.material = GetOrCreateMaterial();
+        renderer.sharedMaterial = GetOrCreateMaterial();
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
 
@@ -67,42 +67,11 @@ public class BuildingDestructionVFX : MonoBehaviour
 
     private Material GetOrCreateMaterial()
     {
-
-        if (particleMaterial != null)
-        {
-            if (_cachedMaterial == null || _cachedTexture != dustTexture)
-            {
-                _cachedMaterial = new Material(particleMaterial);
-                _cachedTexture  = dustTexture;
-                if (dustTexture != null)
-                    _cachedMaterial.mainTexture = dustTexture;
-            }
-            return _cachedMaterial;
-        }
-
-        Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-        if (shader == null)
-        {
-            shader = Shader.Find("Particles/Standard Unlit");
-        }
-
-        if (shader == null)
-        {
-            return null;
-        }
-
-        Material mat = new Material(shader);
-        mat.mainTexture = dustTexture;
-
-        mat.SetFloat("_Surface", 1);
-        mat.SetFloat("_BlendOp", 0);
-        mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        mat.SetFloat("_ZWrite", 0);
-        mat.renderQueue = 3000;
-
-        return mat;
+        if (ownedMaterial != null) return ownedMaterial;
+        return FlipbookMaterialUtility.Resolve(particleMaterial, dustTexture, false, out ownedMaterial);
     }
+
+    private void OnDestroy() => FlipbookMaterialUtility.Release(ref ownedMaterial);
 
     public void Initialize(Vector3 position, float scale = 1f)
     {

@@ -35,15 +35,6 @@ public class HealthBarUI : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (healthBarFill != null)
-        {
-            RectTransform rt = healthBarFill.rectTransform;
-            rt.anchorMax = new Vector2(currentFillAmount, 1f);
-        }
-    }
-
     private void OnDestroy()
     {
         if (playerHealth != null)
@@ -61,6 +52,7 @@ public class HealthBarUI : MonoBehaviour
         {
             targetFillAmount = maxHealth > 0 ? currentHealth / maxHealth : 0;
             currentFillAmount = targetFillAmount;
+            healthBarFill.rectTransform.anchorMax = new Vector2(currentFillAmount, 1f);
         }
     }
 

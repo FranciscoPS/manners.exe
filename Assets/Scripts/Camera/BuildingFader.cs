@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -16,6 +17,7 @@ public class BuildingFader : MonoBehaviour
     private Renderer[] renderers;
     private Material[][] sharedMatsPerRenderer;
     private Material[][] fadeMatsPerRenderer;
+    private readonly Dictionary<Material, Material> fadeMaterials = new Dictionary<Material, Material>();
     private bool fadeMatsBuilt = false;
     private bool usingFadeMats = false;
 
@@ -85,14 +87,13 @@ public class BuildingFader : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (fadeMatsPerRenderer == null) return;
-        for (int i = 0; i < fadeMatsPerRenderer.Length; i++)
+        foreach (Material material in fadeMaterials.Values)
         {
-            var arr = fadeMatsPerRenderer[i];
-            if (arr == null) continue;
-            for (int j = 0; j < arr.Length; j++)
-                if (arr[j] != null) Destroy(arr[j]);
+            if (material == null) continue;
+            if (Application.isPlaying) Destroy(material);
+            else DestroyImmediate(material);
         }
+        fadeMaterials.Clear();
     }
 
     public void SetOccluded(bool occluded)
@@ -140,13 +141,7 @@ public class BuildingFader : MonoBehaviour
         if (!usingFadeMats) SwitchToFadeMats();
 
         float alpha = Mathf.Lerp(1f, minVisibleAlpha, currentFade);
-        for (int i = 0; i < fadeMatsPerRenderer.Length; i++)
-        {
-            var mats = fadeMatsPerRenderer[i];
-            if (mats == null) continue;
-            for (int j = 0; j < mats.Length; j++)
-                SetMaterialAlpha(mats[j], alpha);
-        }
+        foreach (Material material in fadeMaterials.Values) SetMaterialAlpha(material, alpha);
     }
 
     private void SwitchToFadeMats()
@@ -155,7 +150,7 @@ public class BuildingFader : MonoBehaviour
         for (int i = 0; i < renderers.Length; i++)
         {
             if (renderers[i] != null && fadeMatsPerRenderer[i] != null)
-                renderers[i].materials = fadeMatsPerRenderer[i];
+                renderers[i].sharedMaterials = fadeMatsPerRenderer[i];
         }
         usingFadeMats = true;
     }
@@ -169,8 +164,14 @@ public class BuildingFader : MonoBehaviour
             var inst = new Material[shared.Length];
             for (int j = 0; j < shared.Length; j++)
             {
-                inst[j] = shared[j] != null ? new Material(shared[j]) : null;
-                if (inst[j] != null) SetupTransparentMaterial(inst[j]);
+                if (shared[j] == null) continue;
+                if (!fadeMaterials.TryGetValue(shared[j], out Material material))
+                {
+                    material = new Material(shared[j]);
+                    SetupTransparentMaterial(material);
+                    fadeMaterials.Add(shared[j], material);
+                }
+                inst[j] = material;
             }
             fadeMatsPerRenderer[i] = inst;
         }

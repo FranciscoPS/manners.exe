@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 public class EnemySpawnManager : MonoBehaviour, IUpdateable
 {
@@ -532,7 +531,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 if (center == null || !center.gameObject.activeInHierarchy || alreadyScattered.Contains(center)) continue;
 
                 cluster.Clear();
-                grid.CollectWithin(center.transform.position, ScatterClusterRadius, cluster);
+                grid.CollectWithin(center.transform.position, ScatterClusterRadius, cluster, true);
                 for (int j = cluster.Count - 1; j >= 0; j--)
                 {
                     var member = cluster[j];
@@ -580,10 +579,18 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 if (safeSpawnPoints.Count == 0) continue;
                 for (int k = 0; k < toScatter; k++)
                 {
-                    if (k > 0 && k % 16 == 0) yield return null;
+                    if (k > 0 && k % 16 == 0)
+                    {
+                        yield return null;
+                        if (isSpawningWave) break;
+                        // Both enemies and the player can move while this scan yields.
+                        grid.Build(enemies, ScatterClusterRadius);
+                    }
                     if (candidates[k] == null || !candidates[k].gameObject.activeInHierarchy) continue;
                     SpawnPoint target = safeSpawnPoints[Random.Range(0, safeSpawnPoints.Count)];
-                    EnemyController ctrl = candidates[k].GetComponent<EnemyController>();
+                    if (target == null || (playerTransform != null &&
+                        (target.transform.position - playerTransform.position).sqrMagnitude < ScatterMinPlayerDist * ScatterMinPlayerDist)) continue;
+                    EnemyController ctrl = candidates[k].Controller;
                     if (ctrl != null)
                     {
                         target.WarnThenWarp(ctrl);
@@ -598,6 +605,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         }
     }
 
+    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
     private void LogDebug(string message)
     {
 

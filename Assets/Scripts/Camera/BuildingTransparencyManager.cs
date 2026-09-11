@@ -108,7 +108,7 @@ public class BuildingTransparencyManager : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-
+        if (deltaTime <= 0f) return;
         for (int i = 0; i < faders.Count; i++)
         {
             var f = faders[i];

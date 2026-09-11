@@ -75,7 +75,6 @@ public class FloatingTextManager : MonoBehaviour
         scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
 
-        canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
     }
 
     private void InitializePool()
@@ -111,7 +110,9 @@ public class FloatingTextManager : MonoBehaviour
     {
         if (textPool.Count == 0)
         {
-            return CreateNewFloatingText();
+            // Creation queues an inactive entry. Borrow through the same path as
+            // prewarmed entries so it cannot also be handed to the next caller.
+            CreateNewFloatingText();
         }
 
         FloatingText text = textPool.Dequeue();

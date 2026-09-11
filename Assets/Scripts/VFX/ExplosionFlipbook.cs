@@ -11,8 +11,8 @@ public class ExplosionFlipbook : MonoBehaviour
     [SerializeField] private float size = 2f;
     [SerializeField] private Color tintColor = Color.white;
 
-    private static Material _cachedMaterial;
-    private static Texture2D _cachedTexture;
+    private Material ownedMaterial;
+
 
     private void Start()
     {
@@ -58,7 +58,7 @@ public class ExplosionFlipbook : MonoBehaviour
 
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         renderer.renderMode = ParticleSystemRenderMode.Billboard;
-        renderer.material = GetOrCreateMaterial();
+        renderer.sharedMaterial = GetOrCreateMaterial();
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
 
@@ -67,41 +67,10 @@ public class ExplosionFlipbook : MonoBehaviour
 
     private Material GetOrCreateMaterial()
     {
-
-        if (particleMaterial != null)
-        {
-
-            if (_cachedMaterial == null || _cachedTexture != explosionTexture)
-            {
-                _cachedMaterial = new Material(particleMaterial);
-                _cachedTexture  = explosionTexture;
-                if (explosionTexture != null)
-                    _cachedMaterial.mainTexture = explosionTexture;
-            }
-            return _cachedMaterial;
-        }
-
-        Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-        if (shader == null)
-        {
-            shader = Shader.Find("Particles/Standard Unlit");
-        }
-
-        if (shader == null)
-        {
-            return null;
-        }
-
-        Material mat = new Material(shader);
-        mat.mainTexture = explosionTexture;
-
-        mat.SetFloat("_Surface", 1);
-        mat.SetFloat("_BlendOp", 0);
-        mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
-        mat.SetFloat("_ZWrite", 0);
-        mat.renderQueue = 3000;
-
-        return mat;
+        if (ownedMaterial != null) return ownedMaterial;
+        return FlipbookMaterialUtility.Resolve(particleMaterial, explosionTexture, true, out ownedMaterial);
     }
+
+    private void OnDestroy() => FlipbookMaterialUtility.Release(ref ownedMaterial);
+
 }

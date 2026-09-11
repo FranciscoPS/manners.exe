@@ -1,5 +1,7 @@
 # manners.exe
 
+La revisión actual de rendimiento y del merge está en [REVISION_M4_PRO.md](Docs/Performance/REVISION_M4_PRO.md), con las pruebas en [RESULTADOS_REVISION.md](Docs/Performance/RESULTADOS_REVISION.md). Por defecto: **1920×1080, pantalla completa y 60 FPS**; menú/pausa a 30 y sin foco a 15 cuando Unity continúa ejecutándose. Play Mode también limita los FPS y el tamaño del render 3D en vistas Retina. **Opciones → Gráficos** y **Pausa → Gráficos** permiten personalizarlo; Restablecer recupera estos valores sin borrar progreso. La captura CSV se activa desde **Tools → Manners → Performance** durante Play Mode.
+
 Juego tipo *bullet-heaven* (estilo Vampire Survivors) hecho en **Unity 6 (URP)** con **WebGL** como plataforma objetivo y cámara en perspectiva inclinada.
 
 Este documento resume, a grandes rasgos, **cómo está pensado el código**: los patrones de diseño, la arquitectura y las reglas que se siguen, para que cualquiera que entre al proyecto entienda rápido la forma de trabajar. (El código no lleva comentarios; la intención se documenta aquí y con nombres claros.)
@@ -16,7 +18,7 @@ En vez de que cada objeto tenga su propio `Update()`, los objetos implementan `I
 > **Regla:** no crear `Update()` por objeto; registrarse en el `UpdateManager`.
 
 ### 2. Object Pooling — `PoolManager` + `SpawnFactory`
-Enemigos, proyectiles y coleccionables salen de *pools* pre-asignados. *Spawnear* = encender un objeto; *despawnear* = apagarlo. **Nunca** se hace `Instantiate`/`Destroy` en caliente (evita picos de GC). `SpawnFactory` es una **fachada** simple sobre el pool (`Create*` / `DestroyObject`).
+Enemigos, proyectiles y coleccionables salen de *pools* con precarga escalonada. *Spawnear* reutiliza una instancia disponible; *despawnear* la devuelve. El pool puede crecer al agotarse y algunos VFX todavía crean objetos en ejecución, por lo que siguen existiendo costes de asignación. `SpawnFactory` es una **fachada** sobre el pool (`Create*` / `DestroyObject`).
 > **Regla:** todo lo que aparece/desaparece muchas veces se poolea.
 
 ### 3. Singletons autocreados (Managers)

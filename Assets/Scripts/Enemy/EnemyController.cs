@@ -146,13 +146,13 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         if (rb != null)
         {
             rb.isKinematic = useNavMesh;
-            rb.linearVelocity = Vector3.zero;
+            if (!rb.isKinematic) rb.linearVelocity = Vector3.zero;
         }
 
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Register(this as IUpdateable);
-            UpdateManager.Instance.Register(this as IFixedUpdateable);
+            if (!useNavMesh && rb != null) UpdateManager.Instance.Register(this as IFixedUpdateable);
         }
 
         EnemySeparationManager.Register(this);
@@ -172,7 +172,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-
+        if (deltaTime <= 0f) return;
         if (player == null)
         {
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
@@ -278,6 +278,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public void WarpTo(Vector3 position)
     {
+        if (isKnockedBack) EndKnockback();
         isKnockedBack = false;
         knockbackTimer = 0f;
         knockbackVelocity = Vector3.zero;
@@ -297,7 +298,9 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     {
         if (player == null || agent == null || !agent.isOnNavMesh)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] IGNORADO — player={player != null} agent={agent != null} onNavMesh={agent?.isOnNavMesh}");
+#endif
             return;
         }
 
@@ -315,11 +318,15 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         {
             isDetouring = true;
             agent.SetDestination(hit.position);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] Desviando a {hit.position} (dist al jugador={Vector3.Distance(transform.position, player.position):F1}m)");
+#endif
         }
         else
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] SamplePosition FALLÓ — no hay NavMesh cerca de {target}");
+#endif
         }
     }
 
@@ -344,6 +351,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         if (rb != null)
         {
             rb.linearVelocity = knockbackVelocity;
+            UpdateManager.Instance?.Register(this as IFixedUpdateable);
         }
     }
 
@@ -351,6 +359,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     {
         isKnockedBack = false;
         knockbackVelocity = Vector3.zero;
+        if (useNavMesh) UpdateManager.Instance?.Unregister(this as IFixedUpdateable);
 
         if (useNavMesh && agent != null)
         {
