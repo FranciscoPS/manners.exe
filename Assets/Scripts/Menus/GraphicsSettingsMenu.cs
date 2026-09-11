@@ -88,6 +88,13 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
 
     private Button CreateEntry(GameObject ownerPanel, Button audio, Button style, Action open)
     {
+        // Prefer joining the real menu button list (e.g. Reanudar/Reiniciar/Menu Principal,
+        // or Audio/Controles/Ayuda/Volver) instead of anchoring beside whatever button happens
+        // to trigger audio settings - that button can be a decorative, rotated icon tab that
+        // makes a poor layout template (see the pause menu's rotated AudioPanel flap).
+        Transform list = FindButtonListContainer(ownerPanel);
+        if (list != null) return CreateListEntry(list, open);
+
         Transform parent = audio != null ? audio.transform.parent : ownerPanel.transform;
         Button button = CreateButton("GraphicsButton", parent, "Gráficos", open);
         RectTransform rect = (RectTransform)button.transform;
@@ -107,27 +114,84 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
             rect.anchorMin = rect.anchorMax = new Vector2(.8f, .5f);
             rect.sizeDelta = new Vector2(260, 80);
         }
-
-        if (style != null)
-        {
-            Image original = style.targetGraphic as Image;
-            Image target = button.targetGraphic as Image;
-            if (original != null && target != null)
-            {
-                target.sprite = original.sprite;
-                target.type = original.type;
-                target.color = original.color;
-            }
-            button.colors = style.colors;
-            TMP_Text sample = style.GetComponentInChildren<TMP_Text>(true);
-            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>();
-            if (sample != null)
-            {
-                label.fontSize = Mathf.Min(sample.fontSize, 32);
-                label.color = sample.color;
-            }
-        }
+        ApplyStyle(button, style);
         return button;
+    }
+
+    // Finds the parent of the largest group of sibling, unrotated Buttons in the panel -
+    // i.e. the real vertical menu list, as opposed to a single decorative icon button.
+    private static Transform FindButtonListContainer(GameObject ownerPanel)
+    {
+        Transform best = null;
+        int bestCount = 1;
+        foreach (Button candidate in ownerPanel.GetComponentsInChildren<Button>(true))
+        {
+            Transform parent = candidate.transform.parent;
+            if (parent == null || parent == best) continue;
+            int count = 0;
+            bool anyRotated = false;
+            foreach (Transform child in parent)
+            {
+                if (child.GetComponent<Button>() == null) continue;
+                count++;
+                if (Quaternion.Angle(child.localRotation, Quaternion.identity) > 1f) anyRotated = true;
+            }
+            if (anyRotated || count <= bestCount) continue;
+            bestCount = count;
+            best = parent;
+        }
+        return best;
+    }
+
+    // Inserts the new entry second-to-last, so whatever button is currently last
+    // (Volver, Menu Principal, ...) stays the final option in the list.
+    private Button CreateListEntry(Transform list, Action open)
+    {
+        int originalCount = list.childCount;
+        RectTransform lastRect = (RectTransform)list.GetChild(originalCount - 1);
+        RectTransform templateRect = (RectTransform)list.GetChild(originalCount - 2);
+        Button templateButton = templateRect.GetComponent<Button>();
+        Vector2 step = lastRect.anchoredPosition - templateRect.anchoredPosition;
+
+        Button button = CreateButton("GraphicsButton", list, "Gráficos", open);
+        RectTransform rect = (RectTransform)button.transform;
+        rect.anchorMin = templateRect.anchorMin;
+        rect.anchorMax = templateRect.anchorMax;
+        rect.pivot = templateRect.pivot;
+        rect.sizeDelta = templateRect.sizeDelta;
+        rect.localRotation = templateRect.localRotation;
+        rect.localScale = templateRect.localScale;
+        rect.anchoredPosition = lastRect.anchoredPosition;
+        lastRect.anchoredPosition += step;
+
+        ApplyStyle(button, templateButton);
+        rect.SetSiblingIndex(originalCount - 1);
+
+        if (list.GetComponent<LayoutGroup>() != null)
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)list);
+
+        return button;
+    }
+
+    private static void ApplyStyle(Button button, Button style)
+    {
+        if (style == null) return;
+        Image original = style.targetGraphic as Image;
+        Image target = button.targetGraphic as Image;
+        if (original != null && target != null)
+        {
+            target.sprite = original.sprite;
+            target.type = original.type;
+            target.color = original.color;
+        }
+        button.colors = style.colors;
+        TMP_Text sample = style.GetComponentInChildren<TMP_Text>(true);
+        TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>();
+        if (sample != null)
+        {
+            label.fontSize = Mathf.Min(sample.fontSize, 32);
+            label.color = sample.color;
+        }
     }
 
     private void Build()
