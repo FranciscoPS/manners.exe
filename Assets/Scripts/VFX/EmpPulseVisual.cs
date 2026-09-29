@@ -13,7 +13,7 @@ public class EmpPulseVisual : MonoBehaviour, IUpdateable
     [SerializeField] private Renderer ring;
 
     [Header("Ondas")]
-    [Tooltip("Cuánto sobresale el quad respecto al radio del pulso, para que el halo exterior no se recorte. La primera onda siempre coincide con el radio de la sinergia.")]
+    [Tooltip("Cuánto sobresale el quad respecto al radio del pulso, para que el halo exterior no se recorte. La primera onda siempre coincide con el radio de la sobrecarga.")]
     [SerializeField] private float glowMargin = 1.35f;
     [Tooltip("Cuántas ondas consecutivas salen del jugador. La primera es la que congela (coincide con el radio del config); las demás son solo visuales y la siguen como ondas en el agua.")]
     [SerializeField, Range(1, 4)] private int waveCount = 3;

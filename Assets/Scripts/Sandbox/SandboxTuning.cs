@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [DefaultExecutionOrder(-5000)]
 public class SandboxTuning : MonoBehaviour
@@ -22,10 +23,10 @@ public class SandboxTuning : MonoBehaviour
     [Header("=== BALANCE INDEPENDIENTE ===")]
     [Tooltip("GameBalanceConfig del sandbox (Assets/Configurations/SANDBOX CONFIGURATIONS FOR TESTING/GameBalanceConfig_Sandbox.asset). Se inyecta ANTES que cualquier otro script lea GameBalanceConfig.Instance.")]
     [SerializeField] private GameBalanceConfig balanceOverride;
-    [Tooltip("UpgradeDatabase del sandbox. Aquí es donde se prueban mejoras y sinergias nuevas sin tocar la base real.")]
+    [Tooltip("UpgradeDatabase del sandbox. Aquí es donde se prueban mejoras y sobrecargas nuevas sin tocar la base real.")]
     [SerializeField] private UpgradeDatabase upgradeDatabaseOverride;
-    [Tooltip("SynergyDatabase del sandbox. Ajusta aquí los requisitos y números de cada sinergia sin tocar producción.")]
-    [SerializeField] private SynergyDatabase synergyDatabaseOverride;
+    [Tooltip("OverrideDatabase del sandbox. Ajusta aquí los requisitos y números de cada sobrecarga sin tocar producción.")]
+    [SerializeField, FormerlySerializedAs("synergyDatabaseOverride")] private OverrideDatabase overrideDatabaseOverride;
     [Tooltip("ChestOpeningConfig del sandbox. Ajusta aquí los tiempos, colores y sacudidas de la cinemática de apertura de cofre sin tocar producción.")]
     [SerializeField] private ChestOpeningConfig chestOpeningConfigOverride;
 
@@ -42,17 +43,17 @@ public class SandboxTuning : MonoBehaviour
     [Tooltip("Usar config de producción: se comporta igual que en CityTest (respeta si ya lo completaste antes).\nDesactivado: nunca se muestra en el sandbox.\nForzar siempre: se muestra siempre, aunque ya lo hayas completado antes.")]
     [SerializeField] private TutorialMode tutorialMode = TutorialMode.Desactivado;
 
-    [Header("=== SINERGIAS ===")]
-    [Tooltip("Apaga esto para probar el juego sin ninguna sinergia, aunque se alcancen los niveles requeridos.")]
-    [SerializeField] private bool synergiesEnabled = true;
-    [Tooltip("Sinergias que se activan directamente al arrancar, sin comprobar ni subir los niveles requeridos. Útil para probar solo el efecto de una en aislado.")]
-    [SerializeField] private List<SynergyData> forceActiveSynergies;
+    [Header("=== SOBRECARGAS ===")]
+    [Tooltip("Apaga esto para probar el juego sin ninguna sobrecarga, aunque se alcancen los niveles requeridos.")]
+    [SerializeField, FormerlySerializedAs("synergiesEnabled")] private bool overridesEnabled = true;
+    [Tooltip("Sobrecargas que se activan directamente al arrancar, sin comprobar ni subir los niveles requeridos. Útil para probar solo el efecto de una en aislado.")]
+    [SerializeField, FormerlySerializedAs("forceActiveSynergies")] private List<OverrideData> forceActiveOverrides;
 
     [Header("=== PROGRESIÓN INICIAL ===")]
     [SerializeField] private int startingCoins = 0;
     [SerializeField] private int startingDiamonds = 0;
     [SerializeField] private int startingPlayerLevels = 0;
-    [Tooltip("Nivel inicial de cada mejora. Súbelas a los niveles requeridos por una sinergia para empezar la partida con ella ya activa.")]
+    [Tooltip("Nivel inicial de cada mejora. Súbelas a los niveles requeridos por una sobrecarga para empezar la partida con ella ya activa.")]
     [SerializeField] private List<UpgradeTypeLevel> startingUpgradeLevels;
 
     [Header("=== COFRES ===")]
@@ -92,14 +93,14 @@ public class SandboxTuning : MonoBehaviour
             SandboxLog.Skipped("UpgradeDatabase: usando el asset de producción (Resources/UpgradeDatabase).");
         }
 
-        if (synergyDatabaseOverride != null)
+        if (overrideDatabaseOverride != null)
         {
-            SynergyDatabase.OverrideInstance(synergyDatabaseOverride);
-            SandboxLog.Ok($"SynergyDatabase sobrescrita con '{synergyDatabaseOverride.name}'.");
+            OverrideDatabase.OverrideInstance(overrideDatabaseOverride);
+            SandboxLog.Ok($"OverrideDatabase sobrescrita con '{overrideDatabaseOverride.name}'.");
         }
         else
         {
-            SandboxLog.Skipped("SynergyDatabase: usando el asset de producción (Resources/SynergyDatabase).");
+            SandboxLog.Skipped("OverrideDatabase: usando el asset de producción (Resources/OverrideDatabase).");
         }
 
         if (chestOpeningConfigOverride != null)
@@ -137,7 +138,7 @@ public class SandboxTuning : MonoBehaviour
 
         ConfigureMatch();
         ConfigurePlayer();
-        ConfigureSynergies();
+        ConfigureOverrides();
         ConfigureChests();
         ConfigureSeparation();
 
@@ -174,20 +175,20 @@ public class SandboxTuning : MonoBehaviour
         SandboxLog.Ok($"Jugador: {health.CurrentHealth:F0}/{health.MaxHealth:F0} HP. Invulnerable={startInvulnerable}");
     }
 
-    private void ConfigureSynergies()
+    private void ConfigureOverrides()
     {
-        SynergyManager.EnsureExists();
-        SynergyManager.Instance?.SetEnabled(synergiesEnabled);
+        OverrideManager.EnsureExists();
+        OverrideManager.Instance?.SetEnabled(overridesEnabled);
 
-        if (forceActiveSynergies == null) return;
+        if (forceActiveOverrides == null) return;
 
-        for (int i = 0; i < forceActiveSynergies.Count; i++)
+        for (int i = 0; i < forceActiveOverrides.Count; i++)
         {
-            SynergyData synergy = forceActiveSynergies[i];
-            if (synergy == null) continue;
+            OverrideData overrideData = forceActiveOverrides[i];
+            if (overrideData == null) continue;
 
-            SynergyManager.Instance?.ForceActivate(synergy);
-            SandboxLog.Ok($"Sinergia forzada: {synergy.synergyName}");
+            OverrideManager.Instance?.ForceActivate(overrideData);
+            SandboxLog.Ok($"Sobrecarga forzada: {overrideData.overrideName}");
         }
     }
 

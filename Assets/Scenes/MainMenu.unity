@@ -8775,7 +8775,7 @@ GameObject:
   - component: {fileID: 477628171}
   - component: {fileID: 477628170}
   m_Layer: 5
-  m_Name: SinergiasMenuPanel
+  m_Name: SobrecargasMenuPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12136,7 +12136,7 @@ MonoBehaviour:
   tiendaPanel: {fileID: 1903939709}
   personalizacionPanel: {fileID: 2020104978}
   creditosPanel: {fileID: 1322482282}
-  sinergiasMenuPanel: {fileID: 477628169}
+  sobrecargasMenuPanel: {fileID: 477628169}
   helpPanel: {fileID: 1141013226}
   audioPanel: {fileID: 784891941}
   controlesPanel: {fileID: 1993192805}
@@ -12149,7 +12149,7 @@ MonoBehaviour:
   experienciaPanel: {fileID: 315534462}
   enemigosPanel: {fileID: 1624620165}
   mejorasPanel: {fileID: 2042277212}
-  sinergiasPanel: {fileID: 948081061}
+  sobrecargasPanel: {fileID: 948081061}
   rpPanel: {fileID: 1340622235}
   rPanel: {fileID: 1183530141}
   dPanel: {fileID: 1668294295}
@@ -16103,7 +16103,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4269488966319701093, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_Name
-      value: SynergyHintsPanel
+      value: OverrideHintsPanel
       objectReference: {fileID: 0}
     - target: {fileID: 4269488966319701093, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_IsActive
@@ -17773,7 +17773,7 @@ GameObject:
   - component: {fileID: 945619643}
   - component: {fileID: 945619646}
   m_Layer: 5
-  m_Name: Sinergias
+  m_Name: Sobrecargas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27284,7 +27284,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sinergias
+  m_text: Sobrecargas
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -27377,7 +27377,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
   target: {fileID: 1494279542}
-  prefix: Sin
+  prefix: Sob
   idleMin: 0.7
   idleMax: 2.2
   burstMin: 0.12
@@ -27879,7 +27879,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sinergias
+  m_text: Sobrecargas
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
   m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
@@ -27972,7 +27972,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
   target: {fileID: 1518054753}
-  prefix: Sin
+  prefix: Sob
   idleMin: 0.7
   idleMax: 2.2
   burstMin: 0.12
@@ -32030,7 +32030,7 @@ GameObject:
   - component: {fileID: 1731455157}
   - component: {fileID: 1731455156}
   m_Layer: 5
-  m_Name: Sinergias
+  m_Name: Sobrecargas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33632,7 +33632,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sinergias
+  m_text: Sobrecargas
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -33725,7 +33725,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
   target: {fileID: 1873243502}
-  prefix: Sin
+  prefix: Sob
   idleMin: 0.7
   idleMax: 1
   burstMin: 0.12
@@ -40399,7 +40399,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4269488966319701093, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_Name
-      value: SinergiesPanel
+      value: SobrecargasPanel
       objectReference: {fileID: 0}
     - target: {fileID: 6712630645455901117, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_Pivot.x

@@ -46,23 +46,23 @@ public static class SandboxReportBuilder
         return line.Length > 0 ? line.ToString() : "ninguna";
     }
 
-    public static string BuildSynergiesLine()
+    public static string BuildOverridesLine()
     {
-        SynergyManager manager = SynergyManager.Instance;
-        SynergyDatabase database = SynergyDatabase.Instance;
+        OverrideManager manager = OverrideManager.Instance;
+        OverrideDatabase database = OverrideDatabase.Instance;
 
-        if (manager == null || database == null || database.allSynergies == null)
+        if (manager == null || database == null || database.allOverrides == null)
             return "sin datos";
 
         StringBuilder line = new StringBuilder(128);
 
-        for (int i = 0; i < database.allSynergies.Count; i++)
+        for (int i = 0; i < database.allOverrides.Count; i++)
         {
-            SynergyData synergy = database.allSynergies[i];
-            if (synergy == null) continue;
+            OverrideData overrideData = database.allOverrides[i];
+            if (overrideData == null) continue;
 
             if (line.Length > 0) line.Append("  ");
-            line.Append(manager.IsSynergyActive(synergy) ? $"✔{synergy.synergyName}" : $"✗{synergy.synergyName}");
+            line.Append(manager.IsOverrideActive(overrideData) ? $"✔{overrideData.overrideName}" : $"✗{overrideData.overrideName}");
         }
 
         return line.Length > 0 ? line.ToString() : "ninguna configurada";

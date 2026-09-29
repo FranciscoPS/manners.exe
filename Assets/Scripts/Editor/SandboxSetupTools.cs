@@ -15,8 +15,8 @@ public static class SandboxSetupTools
     internal const string WavesFolder = SandboxFolder + "/Waves";
     internal const string BalancePath = SandboxFolder + "/GameBalanceConfig_Sandbox.asset";
     internal const string UpgradeDatabasePath = SandboxFolder + "/UpgradeDatabase_Sandbox.asset";
-    internal const string SynergyDatabasePath = SandboxFolder + "/SynergyDatabase_Sandbox.asset";
-    internal const string SynergiesFolder = SandboxFolder + "/Synergies";
+    internal const string OverrideDatabasePath = SandboxFolder + "/OverrideDatabase_Sandbox.asset";
+    internal const string OverridesFolder = SandboxFolder + "/Overrides";
     internal const string ChestOpeningConfigPath = SandboxFolder + "/ChestOpeningConfig_Sandbox.asset";
     private const string ScenePath = "Assets/Scenes/Sandbox.unity";
 
@@ -36,7 +36,7 @@ public static class SandboxSetupTools
 
         CopyBalanceConfig();
         CopyUpgradeDatabase();
-        CopySynergyDatabase();
+        CopyOverrideDatabase();
         CopyChestOpeningConfig();
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = CopyEnemyConfigs();
         CopyWaves(enemyMap);
@@ -106,10 +106,10 @@ public static class SandboxSetupTools
             return;
         }
 
-        SynergyDatabase synergies = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
-        if (synergies == null)
+        OverrideDatabase overrides = AssetDatabase.LoadAssetAtPath<OverrideDatabase>(OverrideDatabasePath);
+        if (overrides == null)
         {
-            Debug.LogWarning("[SandboxSetup] No hay SynergyDatabase de sandbox todavía. Ejecuta 'Tools > Manners > Synergies > Crear sistema de sinergias' y luego el paso 1 de nuevo si quieres probar sinergias.");
+            Debug.LogWarning("[SandboxSetup] No hay OverrideDatabase de sandbox todavía. Ejecuta 'Tools > Manners > Overrides > Crear sistema de sobrecargas' y luego el paso 1 de nuevo si quieres probar sobrecargas.");
         }
 
         ChestOpeningConfig chestOpening = AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>(ChestOpeningConfigPath);
@@ -131,7 +131,7 @@ public static class SandboxSetupTools
         SerializedObject tuningSerialized = new SerializedObject(tuning);
         SetReference(tuningSerialized, "balanceOverride", balance);
         SetReference(tuningSerialized, "upgradeDatabaseOverride", upgrades);
-        SetReference(tuningSerialized, "synergyDatabaseOverride", synergies);
+        SetReference(tuningSerialized, "overrideDatabaseOverride", overrides);
         SetReference(tuningSerialized, "chestOpeningConfigOverride", chestOpening);
         tuningSerialized.ApplyModifiedPropertiesWithoutUndo();
 
@@ -311,66 +311,66 @@ public static class SandboxSetupTools
         return copy;
     }
 
-    private static SynergyDatabase CopySynergyDatabase()
+    private static OverrideDatabase CopyOverrideDatabase()
     {
-        SynergyDatabase source = AssetDatabase.LoadAssetAtPath<SynergyDatabase>("Assets/Resources/SynergyDatabase.asset");
+        OverrideDatabase source = AssetDatabase.LoadAssetAtPath<OverrideDatabase>("Assets/Resources/OverrideDatabase.asset");
         if (source == null)
         {
-            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Resources/SynergyDatabase.asset. Ejecuta primero 'Tools > Manners > Synergies > Crear sistema de sinergias'.");
+            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Resources/OverrideDatabase.asset. Ejecuta primero 'Tools > Manners > Overrides > Crear sistema de sobrecargas'.");
             return null;
         }
 
-        EditorAssetUtility.EnsureFolder(SynergiesFolder);
+        EditorAssetUtility.EnsureFolder(OverridesFolder);
 
-        SynergyDatabase copy = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
+        OverrideDatabase copy = AssetDatabase.LoadAssetAtPath<OverrideDatabase>(OverrideDatabasePath);
         if (copy == null)
         {
-            if (!AssetDatabase.CopyAsset("Assets/Resources/SynergyDatabase.asset", SynergyDatabasePath))
+            if (!AssetDatabase.CopyAsset("Assets/Resources/OverrideDatabase.asset", OverrideDatabasePath))
             {
-                Debug.LogWarning("[SandboxSetup] No se pudo duplicar SynergyDatabase.");
+                Debug.LogWarning("[SandboxSetup] No se pudo duplicar OverrideDatabase.");
                 return null;
             }
 
-            copy = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(SynergyDatabasePath);
+            copy = AssetDatabase.LoadAssetAtPath<OverrideDatabase>(OverrideDatabasePath);
         }
 
-        List<SynergyData> copiedSynergies = new List<SynergyData>();
+        List<OverrideData> copiedOverrides = new List<OverrideData>();
 
-        for (int i = 0; i < source.allSynergies.Count; i++)
+        for (int i = 0; i < source.allOverrides.Count; i++)
         {
-            SynergyData synergy = source.allSynergies[i];
-            if (synergy == null) continue;
+            OverrideData overrideData = source.allOverrides[i];
+            if (overrideData == null) continue;
 
-            string sourcePath = AssetDatabase.GetAssetPath(synergy);
-            string targetPath = $"{SynergiesFolder}/{Path.GetFileName(sourcePath)}";
+            string sourcePath = AssetDatabase.GetAssetPath(overrideData);
+            string targetPath = $"{OverridesFolder}/{Path.GetFileName(sourcePath)}";
 
-            SynergyData synergyCopy = AssetDatabase.LoadAssetAtPath<SynergyData>(targetPath);
-            if (synergyCopy == null && AssetDatabase.CopyAsset(sourcePath, targetPath))
-                synergyCopy = AssetDatabase.LoadAssetAtPath<SynergyData>(targetPath);
+            OverrideData overrideCopy = AssetDatabase.LoadAssetAtPath<OverrideData>(targetPath);
+            if (overrideCopy == null && AssetDatabase.CopyAsset(sourcePath, targetPath))
+                overrideCopy = AssetDatabase.LoadAssetAtPath<OverrideData>(targetPath);
 
-            if (synergyCopy != null && synergy.effectConfig != null)
+            if (overrideCopy != null && overrideData.effectConfig != null)
             {
-                string configSourcePath = AssetDatabase.GetAssetPath(synergy.effectConfig);
-                string configTargetPath = $"{SynergiesFolder}/{Path.GetFileName(configSourcePath)}";
+                string configSourcePath = AssetDatabase.GetAssetPath(overrideData.effectConfig);
+                string configTargetPath = $"{OverridesFolder}/{Path.GetFileName(configSourcePath)}";
 
-                SynergyEffectConfig configCopy = AssetDatabase.LoadAssetAtPath<SynergyEffectConfig>(configTargetPath);
+                OverrideEffectConfig configCopy = AssetDatabase.LoadAssetAtPath<OverrideEffectConfig>(configTargetPath);
                 if (configCopy == null && AssetDatabase.CopyAsset(configSourcePath, configTargetPath))
-                    configCopy = AssetDatabase.LoadAssetAtPath<SynergyEffectConfig>(configTargetPath);
+                    configCopy = AssetDatabase.LoadAssetAtPath<OverrideEffectConfig>(configTargetPath);
 
                 if (configCopy != null)
                 {
-                    synergyCopy.effectConfig = configCopy;
-                    EditorUtility.SetDirty(synergyCopy);
+                    overrideCopy.effectConfig = configCopy;
+                    EditorUtility.SetDirty(overrideCopy);
                 }
             }
 
-            copiedSynergies.Add(synergyCopy != null ? synergyCopy : synergy);
+            copiedOverrides.Add(overrideCopy != null ? overrideCopy : overrideData);
         }
 
-        copy.allSynergies = copiedSynergies;
+        copy.allOverrides = copiedOverrides;
         EditorUtility.SetDirty(copy);
 
-        Debug.Log($"[SandboxSetup] SynergyDatabase duplicada con {copiedSynergies.Count} sinergias propias en {SynergiesFolder}");
+        Debug.Log($"[SandboxSetup] OverrideDatabase duplicada con {copiedOverrides.Count} sobrecargas propias en {OverridesFolder}");
         return copy;
     }
 
