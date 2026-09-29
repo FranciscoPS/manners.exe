@@ -23,15 +23,15 @@ public static class OverrideSetupTools
         EmpPulseConfig empConfig = CreateEffectConfig<EmpPulseConfig>("EmpPulseConfig");
 
         OverrideData cryo = CreateOverrideData("Override_CryoField", "Área Criogénica",
-            "Un campo que te sigue ralentiza y daña. Multi disparo añade pulsos; con Balas explosivas y Cadena de impacto, cada tick explota y empuja. Potencia el láser y prolonga el EMP.",
+            "Un campo que te sigue ralentiza y daña.",
             UpgradeType.MoveSpeed, 5, UpgradeType.MagnetRange, 5, cryoPrefab, cryoConfig);
 
         OverrideData laser = CreateOverrideData("Override_LaserBeam", "Rayo Láser",
-            "Un rayo perforante barre al enemigo más cercano. Multi disparo abre un abanico; con Balas explosivas y Cadena de impacto, cada rayo explota y empuja por tick. Con frío o EMP, causa más daño.",
+            "Un rayo perforante barre al enemigo más cercano.",
             UpgradeType.AttackRange, 5, UpgradeType.AttackSpeed, 5, laserPrefab, laserConfig);
 
         OverrideData emp = CreateOverrideData("Override_EmpPulse", "Pulso Electromagnético",
-            "Un pulso congela y contagia a enemigos cercanos. Multi disparo repite la onda; con Balas explosivas y Cadena de impacto, cada onda explota y empuja. El láser añade daño y el frío prolonga la congelación.",
+            "Un pulso congela y contagia a enemigos cercanos.",
             UpgradeType.AttackRange, 5, UpgradeType.MagnetRange, 5, empPrefab, empConfig);
 
         OverrideDatabase database = AssetDatabase.LoadAssetAtPath<OverrideDatabase>(DatabasePath);

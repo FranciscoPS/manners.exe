@@ -38,7 +38,7 @@ public class OverrideHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
     [SerializeField] private PremiumUpgradeVisuals resultVisuals;
 
     [Header("Cuadro de resultado")]
-    [Tooltip("Collection: se revela y brilla en cuanto la sobrecarga está desbloqueada (menú principal, Game Over). Hud: el panel miniatura del HUD decide cuándo revelarla (al aterrizar la animación de activación) y la muestra atenuada si solo se conoce de partidas anteriores.")]
+    [Tooltip("Collection: progreso entre partidas; los niveles muestran el máximo alcanzado y el resultado se revela y brilla en cuanto la sobrecarga está desbloqueada (menú principal, Game Over). Hud: guía de la partida actual; los niveles empiezan en 0 y, si la sobrecarga ya se descubrió, sus iconos se ven siempre y el resultado queda atenuado hasta activarse (al aterrizar la animación de activación).")]
     [SerializeField] private OverrideResultDisplayMode resultDisplay = OverrideResultDisplayMode.Collection;
     [Tooltip("Tinte del icono de resultado en modo Hud cuando la sobrecarga se conoce de otra partida pero todavía no está activa en esta.")]
     [SerializeField] private Color knownInactiveTint = new Color(1f, 1f, 1f, 0.45f);
@@ -105,12 +105,15 @@ public class OverrideHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
         int reachedA = Mathf.Max(currentA, OverrideDiscovery.GetMaxUpgradeLevel(data.requiredUpgradeA));
         int reachedB = Mathf.Max(currentB, OverrideDiscovery.GetMaxUpgradeLevel(data.requiredUpgradeB));
 
-        ApplySlot(iconA, backdropA, unknownTextA, levelTextA, upgradeA != null ? upgradeA.icon : null, reachedA > 0, reachedA, data.requiredLevelA);
-        ApplySlot(iconB, backdropB, unknownTextB, levelTextB, upgradeB != null ? upgradeB.icon : null, reachedB > 0, reachedB, data.requiredLevelB);
+        bool hud = resultDisplay == OverrideResultDisplayMode.Hud;
+        bool hudGuide = hud && (hudKnown || hudActive);
 
-        if (resultDisplay == OverrideResultDisplayMode.Hud)
+        ApplySlot(iconA, backdropA, unknownTextA, levelTextA, upgradeA != null ? upgradeA.icon : null, hudGuide || reachedA > 0, hud ? currentA : reachedA, data.requiredLevelA);
+        ApplySlot(iconB, backdropB, unknownTextB, levelTextB, upgradeB != null ? upgradeB.icon : null, hudGuide || reachedB > 0, hud ? currentB : reachedB, data.requiredLevelB);
+
+        if (hud)
         {
-            isUnlocked = hudKnown || hudActive;
+            isUnlocked = hudGuide;
 
             bool revealResult = ApplySlot(iconResult, backdropResult, unknownTextResult, null, data.icon, isUnlocked, 0, 0);
 
