@@ -24,8 +24,8 @@ public class LaserBeamConfig : OverrideEffectConfig
     [Header("Combinación con Multishot")]
     [Tooltip("Máximo de rayos adicionales mientras el jugador tenga Multishot. Se disparan siempre, en cada barrido: 1 + las balas extra del Multishot, limitado por este valor. 2 produce siempre tres rayos.")]
     [Range(0, 8)] public int maxExtraBeams = 2;
-    [Tooltip("Separación en grados entre los rayos adicionales. El rayo central conserva su objetivo y los extras se alternan a ambos lados.")]
-    [Range(0f, 45f)] public float multiShotSpreadAngle = 16f;
+    [Tooltip("Ángulo mínimo, en grados, entre las direcciones de dos rayos del mismo barrido. Cada rayo busca su propio objetivo con la misma prioridad que el principal (enemigo más cercano, luego un edificio al azar, luego un punto al azar) y descarta los que queden a menos de este ángulo de otro rayo ya apuntado. 0 = solo evita repetir el mismo objetivo.")]
+    [Range(0f, 120f)] public float minBeamSeparationAngle = 40f;
 
     [Header("Combinación con Pulso Electromagnético")]
     [Tooltip("Fracción del daño por tick del láser que se suma al daño de cada onda EMP cuando ambas sobrecargas están activas.")]

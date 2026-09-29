@@ -5,6 +5,7 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
 {
     private static readonly int BeamLengthId = Shader.PropertyToID("_BeamLength");
     private const float ImpactGlowLift = 0.05f;
+    private const int GroundPointAttempts = 12;
 
     private sealed class BeamVisual
     {
@@ -13,7 +14,10 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
         public ParticleSystem impactGlow;
         public LaserImpactVisual impactVisual;
         public readonly MaterialPropertyBlock properties = new MaterialPropertyBlock();
+        public Vector3 groundOrigin;
         public Vector3 direction;
+        public float startDistance;
+        public float endDistance;
         public float baseWidth;
         public float damageTickTimer;
     }
@@ -22,6 +26,9 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
     private Transform player;
     private readonly List<BeamVisual> beamVisuals = new List<BeamVisual>();
     private readonly OverrideCombatResolver combat = new OverrideCombatResolver();
+    private readonly List<Vector3> claimedDirections = new List<Vector3>();
+    private readonly List<EnemyHealth> claimedEnemies = new List<EnemyHealth>();
+    private readonly List<BuildingsScript> claimedBuildings = new List<BuildingsScript>();
     private Material ownedBeamMaterial;
     private bool ownsConfig;
     private int activeBeamCount;
@@ -29,11 +36,6 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
     private float cooldownTimer;
     private bool sweeping;
     private float sweepTimer;
-
-    private Vector3 sweepGroundOrigin;
-    private Vector3 sweepDirection;
-    private float sweepStartDistance;
-    private float sweepEndDistance;
 
     public bool IsActive => isActiveAndEnabled;
 
@@ -51,6 +53,8 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
             return config;
         }
     }
+
+    private float MinSeparationDot => Mathf.Cos(Mathf.Clamp(Config.minBeamSeparationAngle, 0f, 180f) * Mathf.Deg2Rad);
 
     public void Configure(LaserBeamConfig effectConfig)
     {
@@ -117,47 +121,20 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
         if (cooldownTimer <= 0f)
         {
             cooldownTimer = Config.interval;
-            TryStartSweep();
+            BeginSweep();
         }
     }
 
-    private void TryStartSweep()
+    private void BeginSweep()
     {
-        Vector3 targetPoint;
-
-        EnemyHealth nearest = FindNearestEnemy();
-        if (nearest != null)
-        {
-            targetPoint = nearest.transform.position;
-        }
-        else
-        {
-            Vector3? fallback = FindRandomBuildingPosition();
-            targetPoint = fallback ?? RandomGroundPoint();
-        }
-
-        BeginSweep(targetPoint);
-    }
-
-    private void BeginSweep(Vector3 targetGroundPoint)
-    {
-        Vector3 playerGround = new Vector3(player.position.x, targetGroundPoint.y, player.position.z);
-        Vector3 toTarget = targetGroundPoint - playerGround;
-        toTarget.y = 0f;
-
-        sweepDirection = toTarget.sqrMagnitude > 0.0001f ? toTarget.normalized : Vector3.ProjectOnPlane(player.forward, Vector3.up).normalized;
-        if (sweepDirection.sqrMagnitude < 0.0001f) sweepDirection = Vector3.forward;
-        sweepGroundOrigin = playerGround;
-        sweepStartDistance = toTarget.magnitude;
-        sweepEndDistance = sweepStartDistance + Config.extendDistance;
-
         sweeping = true;
         sweepTimer = 0f;
         activeBeamCount = OverrideCombatResolver.EmissionCount(Config.maxExtraBeams);
         EnsureBeamVisuals(activeBeamCount);
+        claimedDirections.Clear();
+        claimedEnemies.Clear();
+        claimedBuildings.Clear();
 
-        int outermostBeam = Mathf.Max(1, activeBeamCount / 2);
-        float angleStep = Mathf.Min(Mathf.Max(0f, Config.multiShotSpreadAngle), 80f / outermostBeam);
         for (int i = 0; i < beamVisuals.Count; i++)
         {
             BeamVisual beam = beamVisuals[i];
@@ -165,12 +142,10 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
             SetVisualActive(beam, active);
             if (!active) continue;
 
-            // Keep beam zero on the selected target, even with an even total beam count.
-            float angle = i == 0 ? 0f : ((i + 1) / 2) * angleStep * (i % 2 == 1 ? -1f : 1f);
-            beam.direction = Quaternion.AngleAxis(angle, Vector3.up) * sweepDirection;
+            AimBeam(beam, PickTarget());
             beam.damageTickTimer = 0f;
             beam.line.widthMultiplier = 0f;
-            UpdateBeamPositions(beam, sweepStartDistance);
+            UpdateBeamPositions(beam, beam.startDistance);
             if (beam.impactVisual != null) beam.impactVisual.SetIntensity(0f);
         }
 
@@ -181,32 +156,99 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
             MusicManager.Instance.PlaySFXOneShot(Config.fireSFX, Config.sfxVolume);
     }
 
-    private Vector3? FindRandomBuildingPosition()
+    private Vector3 PickTarget()
+    {
+        if (!TryPickEnemy(out Vector3 target) && !TryPickBuilding(out target))
+            target = PickGroundPoint();
+
+        claimedDirections.Add(FlatDirection(target));
+        return target;
+    }
+
+    private void AimBeam(BeamVisual beam, Vector3 target)
+    {
+        beam.groundOrigin = new Vector3(player.position.x, target.y, player.position.z);
+        beam.direction = FlatDirection(target);
+        beam.startDistance = Vector3.Distance(beam.groundOrigin, target);
+        beam.endDistance = beam.startDistance + Config.extendDistance;
+    }
+
+    private bool TryPickEnemy(out Vector3 target)
+    {
+        List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
+        EnemyHealth nearest = null;
+        float nearestSqr = Config.range * Config.range;
+
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            EnemyHealth enemy = enemies[i];
+            if (enemy == null || claimedEnemies.Contains(enemy)) continue;
+
+            Vector3 position = enemy.transform.position;
+            float distSqr = (position - player.position).sqrMagnitude;
+            if (distSqr > nearestSqr || !IsSeparated(FlatDirection(position))) continue;
+
+            nearestSqr = distSqr;
+            nearest = enemy;
+        }
+
+        target = nearest != null ? nearest.transform.position : Vector3.zero;
+        if (nearest == null) return false;
+
+        claimedEnemies.Add(nearest);
+        return true;
+    }
+
+    private bool TryPickBuilding(out Vector3 target)
     {
         List<BuildingsScript> buildings = BuildingsScript.ActiveBuildings;
-        float rangeSqr = Config.range * Config.range;
-        int inRangeCount = 0;
+        int candidateCount = 0;
 
         for (int i = 0; i < buildings.Count; i++)
-        {
-            if (buildings[i] == null) continue;
-            if ((buildings[i].transform.position - player.position).sqrMagnitude <= rangeSqr)
-                inRangeCount++;
-        }
+            if (IsBuildingCandidate(buildings[i]))
+                candidateCount++;
 
-        if (inRangeCount == 0) return null;
+        target = Vector3.zero;
+        if (candidateCount == 0) return false;
 
-        int pick = Random.Range(0, inRangeCount);
+        int pick = Random.Range(0, candidateCount);
         for (int i = 0; i < buildings.Count; i++)
         {
-            if (buildings[i] == null) continue;
-            if ((buildings[i].transform.position - player.position).sqrMagnitude > rangeSqr) continue;
+            if (!IsBuildingCandidate(buildings[i])) continue;
+            if (pick-- > 0) continue;
 
-            if (pick == 0) return buildings[i].transform.position;
-            pick--;
+            claimedBuildings.Add(buildings[i]);
+            target = buildings[i].transform.position;
+            return true;
         }
 
-        return null;
+        return false;
+    }
+
+    private bool IsBuildingCandidate(BuildingsScript building)
+    {
+        if (building == null || claimedBuildings.Contains(building)) return false;
+
+        Vector3 position = building.transform.position;
+        return (position - player.position).sqrMagnitude <= Config.range * Config.range && IsSeparated(FlatDirection(position));
+    }
+
+    private Vector3 PickGroundPoint()
+    {
+        Vector3 best = RandomGroundPoint();
+        float bestDot = ClosestClaimedDot(FlatDirection(best));
+
+        for (int attempt = 1; attempt < GroundPointAttempts && bestDot > MinSeparationDot; attempt++)
+        {
+            Vector3 candidate = RandomGroundPoint();
+            float dot = ClosestClaimedDot(FlatDirection(candidate));
+            if (dot >= bestDot) continue;
+
+            best = candidate;
+            bestDot = dot;
+        }
+
+        return best;
     }
 
     private Vector3 RandomGroundPoint()
@@ -215,11 +257,33 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
         return player.position + new Vector3(offset.x, 0f, offset.y);
     }
 
+    private bool IsSeparated(Vector3 direction)
+    {
+        return ClosestClaimedDot(direction) <= MinSeparationDot;
+    }
+
+    private float ClosestClaimedDot(Vector3 direction)
+    {
+        float closest = -1f;
+        for (int i = 0; i < claimedDirections.Count; i++)
+            closest = Mathf.Max(closest, Vector3.Dot(direction, claimedDirections[i]));
+        return closest;
+    }
+
+    private Vector3 FlatDirection(Vector3 target)
+    {
+        Vector3 flat = target - player.position;
+        flat.y = 0f;
+        if (flat.sqrMagnitude > 0.0001f) return flat.normalized;
+
+        Vector3 forward = Vector3.ProjectOnPlane(player.forward, Vector3.up);
+        return forward.sqrMagnitude > 0.0001f ? forward.normalized : Vector3.forward;
+    }
+
     private void UpdateSweep(float deltaTime)
     {
         sweepTimer += deltaTime;
         float t = Config.sweepDuration > 0f ? Mathf.Clamp01(sweepTimer / Config.sweepDuration) : 1f;
-        float currentDistance = Mathf.Lerp(sweepStartDistance, sweepEndDistance, t);
 
         float envelope = BeamEnvelope();
         float width = envelope * IgnitionKick() * WidthPulse();
@@ -227,14 +291,14 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
         {
             BeamVisual beam = beamVisuals[i];
             beam.line.widthMultiplier = beam.baseWidth * width;
-            Vector3 groundPoint = UpdateBeamPositions(beam, currentDistance);
+            Vector3 groundPoint = UpdateBeamPositions(beam, Mathf.Lerp(beam.startDistance, beam.endDistance, t));
             if (beam.impactVisual != null) beam.impactVisual.SetIntensity(envelope);
 
             beam.damageTickTimer -= deltaTime;
             if (beam.damageTickTimer <= 0f)
             {
                 beam.damageTickTimer = Mathf.Max(0.01f, Config.damageTickInterval);
-                DamageNear(sweepGroundOrigin, groundPoint);
+                DamageNear(beam.groundOrigin, groundPoint);
             }
         }
 
@@ -267,7 +331,7 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
 
     private Vector3 UpdateBeamPositions(BeamVisual visual, float distance)
     {
-        Vector3 groundPoint = sweepGroundOrigin + visual.direction * distance;
+        Vector3 groundPoint = visual.groundOrigin + visual.direction * distance;
         Vector3 origin = player.position + Vector3.up * Config.beamOriginHeight;
         Vector3 beam = groundPoint - origin;
 
@@ -345,28 +409,6 @@ public class LaserBeamEffect : MonoBehaviour, IOverrideEffect, IUpdateable
 
         float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / sqrLen);
         return a + ab * t;
-    }
-
-    private EnemyHealth FindNearestEnemy()
-    {
-        List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
-        EnemyHealth nearest = null;
-        float nearestSqr = Config.range * Config.range;
-
-        for (int i = 0; i < enemies.Count; i++)
-        {
-            EnemyHealth enemy = enemies[i];
-            if (enemy == null) continue;
-
-            float distSqr = (enemy.transform.position - player.position).sqrMagnitude;
-            if (distSqr <= nearestSqr)
-            {
-                nearestSqr = distSqr;
-                nearest = enemy;
-            }
-        }
-
-        return nearest;
     }
 
     private void EnsureBeamVisuals(int count)

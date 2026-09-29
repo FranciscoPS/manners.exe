@@ -122,34 +122,28 @@ public class OverrideCombinationTests
     }
 
     [Test]
-    public void LaserMultishotAlwaysFiresDistinctBeamsAndReusesVisualsAfterUpgradeChanges()
+    public void LaserMultishotAlwaysFiresSeparatedBeamsAndReusesVisualsAfterUpgradeChanges()
     {
         Own(UpgradeType.MultiShot);
-        var config = Asset<LaserBeamConfig>();
-        config.fireShake = 0f;
-        config.visualPrefabOverride = GameObject("Beam prefab fixture");
-        config.visualPrefabOverride.AddComponent<LineRenderer>();
-        var effect = Component<LaserBeamEffect>();
-        effect.Configure(config);
-        effect.Activate(player);
+        LaserBeamEffect effect = Laser(out LaserBeamConfig config);
+        Random.InitState(7);
         for (int sweep = 0; sweep < 3; sweep++)
         {
-            Invoke(effect, "BeginSweep", Vector3.forward * 5f);
-            Assert.AreEqual(3, Get<int>(effect, "activeBeamCount"), "Every sweep fires the full fan.");
+            Invoke(effect, "BeginSweep");
+            Assert.AreEqual(3, Get<int>(effect, "activeBeamCount"), "Every sweep fires every beam.");
+            AssertBeamsSeparated(Get<IList>(effect, "beamVisuals"), 3, config.minBeamSeparationAngle);
         }
         var visuals = Get<IList>(effect, "beamVisuals");
         Assert.AreEqual(3, visuals.Count);
-        Assert.Greater(Vector3.Angle(Get<Vector3>(visuals[0], "direction"), Get<Vector3>(visuals[1], "direction")), 1f);
-        Assert.Greater(Vector3.Angle(Get<Vector3>(visuals[1], "direction"), Get<Vector3>(visuals[2], "direction")), 1f);
         object extraVisual = visuals[1];
 
         SetLevel(UpgradeType.MultiShot, 0);
-        Invoke(effect, "BeginSweep", Vector3.forward * 5f);
+        Invoke(effect, "BeginSweep");
         Assert.AreEqual(1, Get<int>(effect, "activeBeamCount"));
         Assert.AreEqual(3, visuals.Count);
         Assert.IsFalse(Get<Transform>(visuals[1], "root").gameObject.activeSelf);
         SetLevel(UpgradeType.MultiShot, 1);
-        Invoke(effect, "BeginSweep", Vector3.forward * 5f);
+        Invoke(effect, "BeginSweep");
         Assert.AreSame(extraVisual, visuals[1], "Repeated sweeps must reuse the existing beam visuals.");
 
         var data = Asset<OverrideData>();
@@ -162,6 +156,41 @@ public class OverrideCombinationTests
         Assert.IsFalse(Get<bool>(effect, "sweeping"));
         for (int i = 0; i < visuals.Count; i++)
             Assert.IsFalse(Get<Transform>(visuals[i], "root").gameObject.activeSelf);
+    }
+
+    [Test]
+    public void LaserMultishotAimsEachBeamAtTheNearestSeparatedEnemy()
+    {
+        Own(UpgradeType.MultiShot);
+        LaserBeamEffect effect = Laser(out LaserBeamConfig config);
+        Enemy(new Vector3(0f, 0f, 3f));
+        Enemy(new Vector3(0.5f, 0f, 4f));
+        Enemy(new Vector3(4f, 0f, 0f));
+        Enemy(new Vector3(-5f, 0f, 0f));
+        Invoke(effect, "BeginSweep");
+        var visuals = Get<IList>(effect, "beamVisuals");
+        AssertBeamAim(visuals[0], Vector3.forward, 3f, "The first beam keeps the nearest enemy.");
+        AssertBeamAim(visuals[1], Vector3.right, 4f, "An enemy too close in angle to another beam is skipped.");
+        AssertBeamAim(visuals[2], Vector3.left, 5f);
+        Assert.AreEqual(config.extendDistance, Get<float>(visuals[2], "endDistance") - Get<float>(visuals[2], "startDistance"), 0.001f);
+    }
+
+    [Test]
+    public void LaserBeamsWithoutEnoughTargetsSpreadToSeparatedGroundPoints()
+    {
+        Own(UpgradeType.MultiShot);
+        LaserBeamEffect effect = Laser(out LaserBeamConfig config);
+        Enemy(new Vector3(0f, 0f, 3f));
+        Random.InitState(11);
+        Invoke(effect, "BeginSweep");
+        var visuals = Get<IList>(effect, "beamVisuals");
+        AssertBeamAim(visuals[0], Vector3.forward, 3f);
+        AssertBeamsSeparated(visuals, 3, config.minBeamSeparationAngle);
+        for (int i = 1; i < 3; i++)
+        {
+            float distance = Get<float>(visuals[i], "startDistance");
+            Assert.That(distance, Is.InRange(config.range * 0.3f - 0.001f, config.range + 0.001f), "Fallback beams aim at ground points within range.");
+        }
     }
 
     [Test]
@@ -459,6 +488,32 @@ public class OverrideCombinationTests
     }
 
     private static float Health(EnemyHealth enemy) => Get<float>(enemy, "currentHealth");
+
+    private LaserBeamEffect Laser(out LaserBeamConfig config)
+    {
+        config = Asset<LaserBeamConfig>();
+        config.fireShake = 0f;
+        config.visualPrefabOverride = GameObject("Beam prefab fixture");
+        config.visualPrefabOverride.AddComponent<LineRenderer>();
+        var effect = Component<LaserBeamEffect>();
+        effect.Configure(config);
+        effect.Activate(player);
+        return effect;
+    }
+
+    private static void AssertBeamAim(object beam, Vector3 direction, float distance, string message = null)
+    {
+        Assert.Less(Vector3.Angle(direction, Get<Vector3>(beam, "direction")), 0.01f, message);
+        Assert.AreEqual(distance, Get<float>(beam, "startDistance"), 0.001f, message);
+    }
+
+    private static void AssertBeamsSeparated(IList beams, int count, float minAngle)
+    {
+        for (int a = 0; a < count; a++)
+            for (int b = a + 1; b < count; b++)
+                Assert.GreaterOrEqual(Vector3.Angle(Get<Vector3>(beams[a], "direction"), Get<Vector3>(beams[b], "direction")), minAngle - 0.01f,
+                    $"Beams {a} and {b} must point in clearly different directions.");
+    }
 
     private void Own(UpgradeType type, int level = 1)
     {
