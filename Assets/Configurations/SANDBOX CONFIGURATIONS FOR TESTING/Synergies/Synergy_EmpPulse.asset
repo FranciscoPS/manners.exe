@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Synergy_EmpPulse
   m_EditorClassIdentifier: Assembly-CSharp::SynergyData
   synergyName: "Pulso Electromagn\xE9tico"
-  description: "Un pulso peri\xF3dico congela a los enemigos cercanos; el congelamiento
-    se contagia entre ellos sin acumularse."
+  description: "Un pulso congela y contagia a enemigos cercanos. Multi disparo repite la onda; cada onda puede explotar y empujar. El láser añade daño y el frío prolonga la congelación."
   icon: {fileID: 21300000, guid: 4192b944616034577a6b5d221dc3e281, type: 3}
   requiredUpgradeA: 2
   requiredLevelA: 3

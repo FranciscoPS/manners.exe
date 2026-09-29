@@ -116,6 +116,23 @@ public class SynergyManager : MonoBehaviour
         return synergy != null && activeEffects.ContainsKey(synergy);
     }
 
+    // Only running effects contribute to combinations; database entries alone
+    // must never grant a synergy that the player has not unlocked.
+    public T GetActiveConfig<T>() where T : SynergyEffectConfig
+    {
+        if (!synergiesEnabled) return null;
+
+        foreach (KeyValuePair<SynergyData, GameObject> pair in activeEffects)
+        {
+            if (pair.Value == null || !pair.Value.activeInHierarchy || !(pair.Key.effectConfig is T effectConfig))
+                continue;
+            Behaviour effect = pair.Value.GetComponent<ISynergyEffect>() as Behaviour;
+            if (effect == null || effect.isActiveAndEnabled) return effectConfig;
+        }
+
+        return null;
+    }
+
     public void ForceActivate(SynergyData synergy)
     {
         if (synergy == null || activeEffects.ContainsKey(synergy)) return;
@@ -202,6 +219,7 @@ public class SynergyManager : MonoBehaviour
 
     private void ClearActiveEffects()
     {
+        SynergyProcVisual.ClearAll();
         foreach (KeyValuePair<SynergyData, GameObject> pair in activeEffects)
         {
             if (pair.Value != null)

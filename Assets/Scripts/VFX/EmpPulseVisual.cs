@@ -28,18 +28,20 @@ public class EmpPulseVisual : MonoBehaviour, IUpdateable
     private float expandDuration;
     private float elapsed;
     private bool playing;
+    private int playingWaveCount;
     private MaterialPropertyBlock properties;
 
     public bool IsActive => isActiveAndEnabled;
 
-    private float TrailDuration => (waveCount - 1) * waveDelay;
+    private float TrailDuration => (playingWaveCount - 1) * waveDelay;
 
-    public void Play(Transform followTarget, float radius, float duration)
+    public void Play(Transform followTarget, float radius, float duration, int visibleWaves = 0)
     {
         origin = followTarget;
         expandDuration = Mathf.Max(0.01f, duration);
         elapsed = 0f;
         playing = true;
+        playingWaveCount = visibleWaves > 0 ? Mathf.Clamp(visibleWaves, 1, 4) : waveCount;
 
         float size = radius * 2f * glowMargin;
         ring.transform.localScale = new Vector3(size, size, 1f);
@@ -94,7 +96,7 @@ public class EmpPulseVisual : MonoBehaviour, IUpdateable
         properties.SetFloat(ExtentId, glowMargin);
         properties.SetFloat(ProgressId, progress);
         properties.SetFloat(FadeId, fade);
-        properties.SetFloat(WaveCountId, waveCount);
+        properties.SetFloat(WaveCountId, playingWaveCount);
         properties.SetFloat(WaveDelayId, waveDelay / expandDuration);
         ring.SetPropertyBlock(properties);
     }

@@ -17,6 +17,16 @@ public class EmpPulseConfig : SynergyEffectConfig
     [Tooltip("Cuántos 'saltos' puede dar el contagio desde los enemigos alcanzados por el círculo. 1 = solo vecinos directos; 3 = vecinos de vecinos de vecinos. 0 = sin contagio. Evita que en una horda densa el pulso congele el mapa entero.")]
     [Min(0)] public int maxChainHops = 3;
 
+    [Header("Combinaciones")]
+    [Tooltip("Máximo de pulsos adicionales cuando Multi Shot se activa para el EMP. La probabilidad se tira por secuencia, independientemente de las balas.")]
+    [Range(0, 8)] public int maxExtraPulses = 2;
+    [Tooltip("Pausa entre la expansión completa de un pulso y el siguiente eco. Los ecos no generan más ecos; el intervalo normal empieza al terminar la secuencia.")]
+    [Min(0.01f)] public float repeatDelay = 0.15f;
+    [Tooltip("Multiplicador de la duración del congelamiento del EMP mientras Campo Criogénico esté activo.")]
+    [Min(1f)] public float cryoFreezeDurationMultiplier = 1.5f;
+    [Tooltip("Multiplicador del daño del láser contra enemigos congelados mientras el EMP esté activo.")]
+    [Min(1f)] public float laserDamageMultiplier = 1.5f;
+
     [Header("Visual")]
     [Tooltip("Si se asigna, se instancia este prefab (VFX o modelo) en cada pulso en vez del círculo generado por código. Con un prefab propio, tú controlas su propia animación de expansión; 'Ring Lifetime' se ignora en ese caso.")]
     public GameObject visualPrefabOverride;

@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_Multishot
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
   upgradeName: Multi disparo
-  description: Cada disparo tiene una probabilidad de X% de generar 3 proyectiles
-    adicionales. Aumenta en +3 cada 4 niveles
+  description: "Cada disparo puede generar proyectiles adicionales. Las sinergias tiran su propia probabilidad para multiplicar rayos o repetir pulsos."
   upgradeType: 5
   icon: {fileID: 21300000, guid: 32d3103fe056946e8855f01e36defbaf, type: 3}
   baseValue: 25

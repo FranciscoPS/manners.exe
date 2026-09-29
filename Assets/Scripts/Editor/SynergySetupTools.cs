@@ -23,15 +23,15 @@ public static class SynergySetupTools
         EmpPulseConfig empConfig = CreateEffectConfig<EmpPulseConfig>("EmpPulseConfig");
 
         SynergyData cryo = CreateSynergyData("Synergy_CryoField", "Área Criogénica",
-            "Un área que se mueve contigo ralentiza y daña levemente a los enemigos que la tocan.",
+            "Un campo que te sigue ralentiza y daña. Multi disparo añade pulsos; cada tick puede explotar y empujar. Potencia el láser y prolonga el EMP.",
             UpgradeType.MoveSpeed, 5, UpgradeType.MagnetRange, 5, cryoPrefab, cryoConfig);
 
         SynergyData laser = CreateSynergyData("Synergy_LaserBeam", "Rayo Láser",
-            "Cada cierto tiempo disparas al piso donde está el enemigo más cercano; el punto de impacto se desliza hacia afuera en línea recta, con el origen del rayo fijo en ti.",
+            "Un rayo perforante barre al enemigo más cercano. Multi disparo abre un abanico; cada rayo puede explotar y empujar por tick. Con frío o EMP, causa más daño.",
             UpgradeType.AttackRange, 5, UpgradeType.AttackSpeed, 5, laserPrefab, laserConfig);
 
         SynergyData emp = CreateSynergyData("Synergy_EmpPulse", "Pulso Electromagnético",
-            "Un pulso periódico congela a los enemigos cercanos; el congelamiento se contagia entre ellos sin acumularse.",
+            "Un pulso congela y contagia a enemigos cercanos. Multi disparo repite la onda; cada onda puede explotar y empujar. El láser añade daño y el frío prolonga la congelación.",
             UpgradeType.AttackRange, 5, UpgradeType.MagnetRange, 5, empPrefab, empConfig);
 
         SynergyDatabase database = AssetDatabase.LoadAssetAtPath<SynergyDatabase>(DatabasePath);

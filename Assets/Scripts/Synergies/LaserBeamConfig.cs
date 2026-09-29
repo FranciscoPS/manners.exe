@@ -10,16 +10,26 @@ public class LaserBeamConfig : SynergyEffectConfig
     public float range = 14f;
 
     [Header("Barrido")]
-    [Tooltip("Daño aplicado a los enemigos cerca del punto de impacto, en cada tick mientras dura el barrido.")]
+    [Tooltip("Daño aplicado a los enemigos a lo largo de cada rayo, en cada tick mientras dura el barrido.")]
     public float damage = 5f;
     [Tooltip("Cada cuántos segundos se aplica daño mientras el rayo barre el piso.")]
     public float damageTickInterval = 0.25f;
-    [Tooltip("Radio alrededor del punto de impacto en el piso donde se aplica daño.")]
+    [Tooltip("Radio alrededor del segmento del rayo en el piso donde se aplica daño.")]
     public float impactRadius = 1.2f;
     [Tooltip("Cuánto tarda el punto de impacto en deslizarse desde el enemigo detectado hasta el final del barrido.")]
     public float sweepDuration = 1.2f;
     [Tooltip("Cuánto más allá del enemigo detectado se extiende el barrido, en la misma línea recta.")]
     public float extendDistance = 4f;
+
+    [Header("Combinación con Multishot")]
+    [Tooltip("Máximo de rayos adicionales cuando Multishot se activa en este barrido. 2 produce tres rayos; la tirada es independiente de las balas.")]
+    [Range(0, 8)] public int maxExtraBeams = 2;
+    [Tooltip("Separación en grados entre los rayos adicionales. El rayo central conserva su objetivo y los extras se alternan a ambos lados.")]
+    [Range(0f, 45f)] public float multiShotSpreadAngle = 16f;
+
+    [Header("Combinación con Pulso Electromagnético")]
+    [Tooltip("Fracción del daño por tick del láser que añade a la sobrecarga de cada pulso cuando ambas sinergias están activas.")]
+    [Min(0f)] public float empDamageMultiplier = 0.5f;
 
     [Header("Visual")]
     [Tooltip("Prefab del VFX del rayo (Assets/Prefabs/VFX/LaserBeam.prefab). Se conservan su curva de grosor, su gradiente de color y su Particle System: una copia brilla en el origen del rayo y otra en el punto de impacto. Si el prefab trae un hijo con LaserImpactVisual (el anillo de impacto en el piso), ese hijo se separa del rayo y sigue al punto de impacto. Si se deja vacío, el rayo se construye por código con 'Beam Material Override' o con un unlit de 'Beam Color'.")]

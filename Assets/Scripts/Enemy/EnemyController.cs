@@ -59,6 +59,9 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public bool WantsSeparation => IsActive && !isKnockedBack;
 
+    public bool IsSlowed => Time.time < slowEndTime && slowMultiplier < 1f;
+    public bool IsFrozen => Time.time < slowEndTime && slowMultiplier <= 0.001f;
+
     public void SetSeparation(Vector3 value) => separation = value;
 
     public void ApplySlow(float multiplier, float duration)

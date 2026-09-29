@@ -6,19 +6,29 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     private static readonly int BeamLengthId = Shader.PropertyToID("_BeamLength");
     private const float ImpactGlowLift = 0.05f;
 
+    private sealed class BeamVisual
+    {
+        public LineRenderer line;
+        public Transform root;
+        public ParticleSystem impactGlow;
+        public LaserImpactVisual impactVisual;
+        public readonly MaterialPropertyBlock properties = new MaterialPropertyBlock();
+        public Vector3 direction;
+        public float baseWidth;
+        public float damageTickTimer;
+    }
+
     private LaserBeamConfig config;
     private Transform player;
-    private LineRenderer line;
-    private Transform visualRoot;
-    private ParticleSystem impactGlow;
-    private LaserImpactVisual impactVisual;
-    private MaterialPropertyBlock beamProperties;
-    private float baseWidth;
+    private readonly List<BeamVisual> beamVisuals = new List<BeamVisual>();
+    private readonly SynergyCombatResolver combat = new SynergyCombatResolver();
+    private Material ownedBeamMaterial;
+    private bool ownsConfig;
+    private int activeBeamCount;
 
     private float cooldownTimer;
     private bool sweeping;
     private float sweepTimer;
-    private float damageTickTimer;
 
     private Vector3 sweepGroundOrigin;
     private Vector3 sweepDirection;
@@ -34,6 +44,7 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
             if (config == null)
             {
                 config = ScriptableObject.CreateInstance<LaserBeamConfig>();
+                ownsConfig = true;
                 Debug.LogWarning($"[SYNERGY] {name} no tiene LaserBeamConfig asignado; usando valores por defecto.");
             }
 
@@ -43,6 +54,7 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
 
     public void Configure(LaserBeamConfig effectConfig)
     {
+        ReleaseOwnedConfig();
         config = effectConfig;
     }
 
@@ -50,7 +62,9 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     {
         player = target;
         cooldownTimer = 0f;
-        BuildVisual();
+        sweeping = false;
+        EnsureBeamVisuals(1);
+        SetVisualActive(false);
     }
 
     public void Deactivate()
@@ -66,6 +80,27 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
     private void OnDisable()
     {
         UpdateManager.Instance?.Unregister(this);
+        sweeping = false;
+        cooldownTimer = config != null ? config.interval : 3f;
+        SetVisualActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        FlipbookMaterialUtility.Release(ref ownedBeamMaterial);
+        ReleaseOwnedConfig();
+    }
+
+    private void ReleaseOwnedConfig()
+    {
+        if (!ownsConfig) return;
+        if (config != null)
+        {
+            if (Application.isPlaying) Destroy(config);
+            else DestroyImmediate(config);
+        }
+        ownsConfig = false;
+        config = null;
     }
 
     public void OnUpdate(float deltaTime)
@@ -110,21 +145,35 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         Vector3 toTarget = targetGroundPoint - playerGround;
         toTarget.y = 0f;
 
-        sweepDirection = toTarget.sqrMagnitude > 0.0001f ? toTarget.normalized : player.forward;
+        sweepDirection = toTarget.sqrMagnitude > 0.0001f ? toTarget.normalized : Vector3.ProjectOnPlane(player.forward, Vector3.up).normalized;
+        if (sweepDirection.sqrMagnitude < 0.0001f) sweepDirection = Vector3.forward;
         sweepGroundOrigin = playerGround;
         sweepStartDistance = toTarget.magnitude;
         sweepEndDistance = sweepStartDistance + Config.extendDistance;
 
         sweeping = true;
         sweepTimer = 0f;
-        damageTickTimer = 0f;
+        // Each sweep owns its multishot roll; projectile firing never triggers this effect.
+        activeBeamCount = SynergyCombatResolver.RollEmissionCount(Config.maxExtraBeams);
+        EnsureBeamVisuals(activeBeamCount);
 
-        SetVisualActive(true);
-        line.widthMultiplier = 0f;
-        UpdateBeamPositions(sweepStartDistance);
+        int outermostBeam = Mathf.Max(1, activeBeamCount / 2);
+        float angleStep = Mathf.Min(Mathf.Max(0f, Config.multiShotSpreadAngle), 80f / outermostBeam);
+        for (int i = 0; i < beamVisuals.Count; i++)
+        {
+            BeamVisual beam = beamVisuals[i];
+            bool active = i < activeBeamCount;
+            SetVisualActive(beam, active);
+            if (!active) continue;
 
-        if (impactVisual != null)
-            impactVisual.SetIntensity(0f);
+            // Keep beam zero on the selected target, even with an even total beam count.
+            float angle = i == 0 ? 0f : ((i + 1) / 2) * angleStep * (i % 2 == 1 ? -1f : 1f);
+            beam.direction = Quaternion.AngleAxis(angle, Vector3.up) * sweepDirection;
+            beam.damageTickTimer = 0f;
+            beam.line.widthMultiplier = 0f;
+            UpdateBeamPositions(beam, sweepStartDistance);
+            if (beam.impactVisual != null) beam.impactVisual.SetIntensity(0f);
+        }
 
         if (Config.fireShake > 0f && CameraShakeManager.Instance != null)
             CameraShakeManager.Instance.Shake(Config.fireShake);
@@ -174,17 +223,20 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         float currentDistance = Mathf.Lerp(sweepStartDistance, sweepEndDistance, t);
 
         float envelope = BeamEnvelope();
-        line.widthMultiplier = baseWidth * envelope * IgnitionKick() * WidthPulse();
-        Vector3 groundPoint = UpdateBeamPositions(currentDistance);
-
-        if (impactVisual != null)
-            impactVisual.SetIntensity(envelope);
-
-        damageTickTimer -= deltaTime;
-        if (damageTickTimer <= 0f)
+        float width = envelope * IgnitionKick() * WidthPulse();
+        for (int i = 0; i < activeBeamCount; i++)
         {
-            damageTickTimer = Config.damageTickInterval;
-            DamageNear(groundPoint);
+            BeamVisual beam = beamVisuals[i];
+            beam.line.widthMultiplier = beam.baseWidth * width;
+            Vector3 groundPoint = UpdateBeamPositions(beam, currentDistance);
+            if (beam.impactVisual != null) beam.impactVisual.SetIntensity(envelope);
+
+            beam.damageTickTimer -= deltaTime;
+            if (beam.damageTickTimer <= 0f)
+            {
+                beam.damageTickTimer = Mathf.Max(0.01f, Config.damageTickInterval);
+                DamageNear(sweepGroundOrigin, groundPoint);
+            }
         }
 
         if (t >= 1f)
@@ -214,50 +266,53 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         return 1f + Config.pulseAmount * Mathf.Sin(sweepTimer * 2f * Mathf.PI * Config.pulseFrequency);
     }
 
-    private Vector3 UpdateBeamPositions(float distance)
+    private Vector3 UpdateBeamPositions(BeamVisual visual, float distance)
     {
-        Vector3 groundPoint = sweepGroundOrigin + sweepDirection * distance;
+        Vector3 groundPoint = sweepGroundOrigin + visual.direction * distance;
         Vector3 origin = player.position + Vector3.up * Config.beamOriginHeight;
         Vector3 beam = groundPoint - origin;
 
-        line.SetPosition(0, origin);
-        line.SetPosition(1, groundPoint);
+        visual.line.SetPosition(0, origin);
+        visual.line.SetPosition(1, groundPoint);
 
-        beamProperties.SetFloat(BeamLengthId, beam.magnitude);
-        line.SetPropertyBlock(beamProperties);
+        visual.properties.SetFloat(BeamLengthId, beam.magnitude);
+        visual.line.SetPropertyBlock(visual.properties);
 
-        if (visualRoot != null)
-            visualRoot.SetPositionAndRotation(origin, beam.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(beam) : visualRoot.rotation);
+        visual.root.SetPositionAndRotation(origin, beam.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(beam) : visual.root.rotation);
 
-        if (impactGlow != null)
-            impactGlow.transform.position = groundPoint + Vector3.up * ImpactGlowLift;
+        if (visual.impactGlow != null)
+            visual.impactGlow.transform.position = groundPoint + Vector3.up * ImpactGlowLift;
 
-        if (impactVisual != null)
-            impactVisual.Follow(new Vector3(groundPoint.x, player.position.y + Config.groundOffset, groundPoint.z));
+        if (visual.impactVisual != null)
+            visual.impactVisual.Follow(new Vector3(groundPoint.x, player.position.y + Config.groundOffset, groundPoint.z));
 
         return groundPoint;
     }
 
     private void SetVisualActive(bool active)
     {
-        if (visualRoot != null)
-            visualRoot.gameObject.SetActive(active);
-        else if (line != null)
-            line.enabled = active;
-
-        if (impactGlow != null)
-            impactGlow.gameObject.SetActive(active);
-
-        if (impactVisual != null)
-            impactVisual.SetVisible(active);
+        for (int i = 0; i < beamVisuals.Count; i++)
+            SetVisualActive(beamVisuals[i], active && i < activeBeamCount);
     }
 
-    private void DamageNear(Vector3 groundPoint)
+    private static void SetVisualActive(BeamVisual visual, bool active)
     {
+        visual.root.gameObject.SetActive(active);
+
+        if (visual.impactGlow != null)
+            visual.impactGlow.gameObject.SetActive(active);
+
+        if (visual.impactVisual != null)
+            visual.impactVisual.SetVisible(active);
+    }
+
+    private void DamageNear(Vector3 groundOrigin, Vector3 groundPoint)
+    {
+        combat.BeginTick(SynergyAttackSource.Laser, Config.damage, groundOrigin, groundPoint - groundOrigin);
         List<EnemyHealth> enemies = EnemyHealth.ActiveEnemies;
         float radiusSqr = Config.impactRadius * Config.impactRadius;
 
-        for (int i = 0; i < enemies.Count; i++)
+        for (int i = enemies.Count - 1; i >= 0; i--)
         {
             EnemyHealth enemy = enemies[i];
             if (enemy == null) continue;
@@ -265,18 +320,20 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
             Vector3 flat = enemy.transform.position;
             flat.y = groundPoint.y;
 
-            Vector3 closestOnBeam = ClosestPointOnSegment(sweepGroundOrigin, groundPoint, flat);
+            Vector3 closestOnBeam = ClosestPointOnSegment(groundOrigin, groundPoint, flat);
             if ((flat - closestOnBeam).sqrMagnitude <= radiusSqr)
-                enemy.TakeDamage(Config.damage);
+                combat.Hit(enemy);
         }
 
+        combat.EndTick();
+
         List<BuildingsScript> buildings = BuildingsScript.ActiveBuildings;
-        for (int i = 0; i < buildings.Count; i++)
+        for (int i = buildings.Count - 1; i >= 0; i--)
         {
             BuildingsScript building = buildings[i];
             if (building == null) continue;
 
-            if (building.IsSegmentWithinHitRange(sweepGroundOrigin, groundPoint, Config.impactRadius))
+            if (building.IsSegmentWithinHitRange(groundOrigin, groundPoint, Config.impactRadius))
                 building.DestroyByHit(groundPoint);
         }
     }
@@ -313,65 +370,71 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         return nearest;
     }
 
-    private void BuildVisual()
+    private void EnsureBeamVisuals(int count)
     {
-        if (Config.visualPrefabOverride != null)
-            BuildPrefabVisual();
-        else
-            BuildDefaultVisual();
+        while (beamVisuals.Count < count)
+        {
+            BeamVisual visual = new BeamVisual();
+            if (Config.visualPrefabOverride != null)
+                BuildPrefabVisual(visual);
+            else
+                BuildDefaultVisual(visual);
 
-        line.positionCount = 2;
-        line.useWorldSpace = true;
-        baseWidth = line.widthMultiplier;
-        beamProperties = new MaterialPropertyBlock();
-
-        SetVisualActive(false);
+            visual.line.positionCount = 2;
+            visual.line.useWorldSpace = true;
+            visual.baseWidth = visual.line.widthMultiplier;
+            SetVisualActive(visual, false);
+            beamVisuals.Add(visual);
+        }
     }
 
-    private void BuildPrefabVisual()
+    private void BuildPrefabVisual(BeamVisual beam)
     {
         GameObject visual = Instantiate(Config.visualPrefabOverride, transform);
         visual.name = Config.visualPrefabOverride.name;
-        visualRoot = visual.transform;
+        beam.root = visual.transform;
 
-        impactVisual = visual.GetComponentInChildren<LaserImpactVisual>(true);
-        if (impactVisual != null)
+        beam.impactVisual = visual.GetComponentInChildren<LaserImpactVisual>(true);
+        if (beam.impactVisual != null)
         {
-            impactVisual.transform.SetParent(transform, false);
-            impactVisual.Configure(Config.impactRadius);
+            beam.impactVisual.transform.SetParent(transform, false);
+            beam.impactVisual.Configure(Config.impactRadius);
         }
 
-        line = visual.GetComponentInChildren<LineRenderer>(true);
-        if (line == null)
+        beam.line = visual.GetComponentInChildren<LineRenderer>(true);
+        if (beam.line == null)
         {
-            line = visual.AddComponent<LineRenderer>();
-            ApplyDefaultLineStyle();
+            beam.line = visual.AddComponent<LineRenderer>();
+            ApplyDefaultLineStyle(beam.line);
         }
 
-        line.widthMultiplier = Config.lineWidth;
+        beam.line.widthMultiplier = Config.lineWidth;
 
         if (Config.beamMaterialOverride != null)
         {
-            line.sharedMaterial = Config.beamMaterialOverride;
-            line.textureMode = LineTextureMode.Stretch;
-            line.textureScale = Vector2.one;
+            beam.line.sharedMaterial = Config.beamMaterialOverride;
+            beam.line.textureMode = LineTextureMode.Stretch;
+            beam.line.textureScale = Vector2.one;
         }
 
         ParticleSystem originGlow = visual.GetComponentInChildren<ParticleSystem>(true);
         if (originGlow != null)
         {
-            impactGlow = Instantiate(originGlow, transform);
-            impactGlow.name = "ImpactGlow";
+            beam.impactGlow = Instantiate(originGlow, transform);
+            beam.impactGlow.name = "ImpactGlow";
         }
     }
 
-    private void BuildDefaultVisual()
+    private void BuildDefaultVisual(BeamVisual beam)
     {
-        line = gameObject.AddComponent<LineRenderer>();
-        ApplyDefaultLineStyle();
+        GameObject visual = new GameObject("LaserBeam");
+        visual.transform.SetParent(transform, false);
+        beam.root = visual.transform;
+        beam.line = visual.AddComponent<LineRenderer>();
+        ApplyDefaultLineStyle(beam.line);
     }
 
-    private void ApplyDefaultLineStyle()
+    private void ApplyDefaultLineStyle(LineRenderer line)
     {
         line.widthCurve = new AnimationCurve(new Keyframe(0f, 0.9f), new Keyframe(1f, 0.6f));
         line.widthMultiplier = Config.lineWidth;
@@ -390,7 +453,9 @@ public class LaserBeamEffect : MonoBehaviour, ISynergyEffect, IUpdateable
         }
         else
         {
-            line.material = new Material(SynergyVisualUtility.FindUnlitShader());
+            if (ownedBeamMaterial == null)
+                ownedBeamMaterial = new Material(SynergyVisualUtility.FindUnlitShader());
+            line.sharedMaterial = ownedBeamMaterial;
             line.startColor = Color.Lerp(Config.beamColor, Color.white, 0.5f);
             line.endColor = Config.beamColor;
         }

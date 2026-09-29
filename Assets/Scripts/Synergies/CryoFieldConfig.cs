@@ -10,8 +10,16 @@ public class CryoFieldConfig : SynergyEffectConfig
     [Range(0f, 1f)] public float slowMultiplier = 0.5f;
     [Tooltip("Daño aplicado a cada enemigo dentro del área en cada tick.")]
     public float damagePerTick = 2f;
-    [Tooltip("Cada cuántos segundos se aplica daño/ralentización.")]
+    [Tooltip("Cada cuántos segundos se aplica daño. La ralentización es continua; después de los ecos de Multi Shot comienza un intervalo nuevo.")]
     public float tickInterval = 1f;
+
+    [Header("Combinaciones")]
+    [Tooltip("Máximo de ticks adicionales cuando Multi Shot se activa para el campo. Cada tick principal tiene una probabilidad independiente de las balas.")]
+    [Range(0, 8)] public int maxExtraPulses = 2;
+    [Tooltip("Segundos entre ticks adicionales. Los ecos no pueden generar más ecos.")]
+    [Min(0.01f)] public float repeatDelay = 0.15f;
+    [Tooltip("Multiplicador del daño del láser contra enemigos ralentizados mientras Campo Criogénico esté activo.")]
+    [Min(1f)] public float laserDamageMultiplier = 1.25f;
 
     [Header("Visual")]
     [Tooltip("Si se asigna, se instancia este prefab (VFX o modelo) como hijo del jugador en vez de la esfera generada por código, centrado en el mismo punto (el origen del jugador). Si el prefab trae CryoFieldVisual (Assets/Prefabs/VFX/CriogenicArea.prefab), la escarcha, la cúpula y la nevada se escalan solas a 'Radius' y la escarcha se abre con una animación al activarse; sin ese componente, tú controlas su escala y no se reescala.")]

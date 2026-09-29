@@ -4167,7 +4167,8 @@ MonoBehaviour:
   startingHealthBonus: 0
   tutorialMode: 1
   synergiesEnabled: 1
-  forceActiveSynergies: []
+  forceActiveSynergies:
+  - {fileID: 11400000, guid: 0b9e4cc7789804dd792e0dff26e7f7c3, type: 2}
   startingCoins: 0
   startingDiamonds: 0
   startingPlayerLevels: 0
@@ -15008,9 +15009,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PerformanceMonitor
   reportInterval: 5
-  fpsCriticalThreshold: 25
-  fpsWarningThreshold: 40
-  activeObjectsAlertThreshold: 150
+  enableReleaseLogging: 0
 --- !u!4 &626491810 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2478060105584587702, guid: 2374eb8b06a34424e8d294a4bdbc47e0, type: 3}
@@ -22528,6 +22527,7 @@ MonoBehaviour:
   minimapCamera: {fileID: 638497315}
   minimapRenderTexture: {fileID: 8400000, guid: 68b96d46f85695d49afce7209f665dfe, type: 2}
   cameraHeight: 80
+  refreshRate: 20
   mapDisplay: {fileID: 1762103407}
   playerIcon: {fileID: 714603142}
   shopIcon: {fileID: 697388964}
