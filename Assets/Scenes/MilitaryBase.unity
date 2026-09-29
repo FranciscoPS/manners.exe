@@ -8918,7 +8918,7 @@ MonoBehaviour:
   buildingsDestroyedText: {fileID: 1529451053}
   coinsCollectedText: {fileID: 837359350}
   diamondsCollectedText: {fileID: 368976461}
-  synergyDiscoveryText: {fileID: 1970020196}
+  overrideDiscoveryText: {fileID: 1970020196}
 --- !u!114 &459448806
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21227,7 +21227,7 @@ GameObject:
   - component: {fileID: 1081879698}
   - component: {fileID: 1081879697}
   m_Layer: 5
-  m_Name: SinergiasTitle
+  m_Name: SobrecargasTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -21265,7 +21265,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
   target: {fileID: 1081879698}
-  prefix: Sin
+  prefix: Sob
   idleMin: 0.7
   idleMax: 2.2
   burstMin: 0.12
@@ -21302,7 +21302,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sinergias
+  m_text: Sobrecargas
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -36075,7 +36075,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4269488966319701093, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_Name
-      value: SynergyHintsPanel
+      value: OverrideHintsPanel
       objectReference: {fileID: 0}
     - target: {fileID: 4269488966319701093, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_IsActive
@@ -38900,7 +38900,7 @@ GameObject:
   - component: {fileID: 1970020197}
   - component: {fileID: 1970020196}
   m_Layer: 5
-  m_Name: SynergyDiscoveryText
+  m_Name: OverrideDiscoveryText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38945,7 +38945,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\xA1Nueva pista de sinergia encontrada!"
+  m_text: "\xA1Nueva pista de sobrecarga encontrada!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}

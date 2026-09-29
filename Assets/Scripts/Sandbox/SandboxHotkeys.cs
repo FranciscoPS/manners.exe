@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Serialization;
 
 public class SandboxHotkeys : MonoBehaviour, IUpdateable
 {
@@ -8,12 +9,12 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
     [SerializeField] private SandboxDebugMonitor debugMonitor;
     [SerializeField] private Key togglePanel = Key.F1;
 
-    [Header("Sinergias")]
-    [Tooltip("Muestra/oculta el panel real de sinergias (Assets/Prefabs/UI/SynergyHintsPanel.prefab) para verificar visualmente el relleno progresivo con el estado actual de PlayerStatsManager.")]
-    [SerializeField] private GameObject synergyHintsPanelPrefab;
-    [SerializeField] private Key toggleSynergyHints = Key.H;
-    [Tooltip("Borra el progreso guardado localmente (PlayerPrefs) de mejoras y sinergias descubiertas, como si fuera una instalación limpia.")]
-    [SerializeField] private Key clearSynergyDiscoveries = Key.Delete;
+    [Header("Sobrecargas")]
+    [Tooltip("Muestra/oculta el panel real de sobrecargas (Assets/Prefabs/UI/OverrideHintsPanel.prefab) para verificar visualmente el relleno progresivo con el estado actual de PlayerStatsManager.")]
+    [SerializeField, FormerlySerializedAs("synergyHintsPanelPrefab")] private GameObject overrideHintsPanelPrefab;
+    [SerializeField, FormerlySerializedAs("toggleSynergyHints")] private Key toggleOverrideHints = Key.H;
+    [Tooltip("Borra el progreso guardado localmente (PlayerPrefs) de mejoras y sobrecargas descubiertas, como si fuera una instalación limpia.")]
+    [SerializeField, FormerlySerializedAs("clearSynergyDiscoveries")] private Key clearOverrideDiscoveries = Key.Delete;
 
     [Header("Progresión")]
     [SerializeField] private Key grantLevel = Key.F2;
@@ -65,11 +66,11 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
         if (WasPressed(keyboard, togglePanel) && debugMonitor != null)
             debugMonitor.TogglePanel();
 
-        if (WasPressed(keyboard, toggleSynergyHints))
-            SandboxCommands.ToggleSynergyHints(synergyHintsPanelPrefab);
+        if (WasPressed(keyboard, toggleOverrideHints))
+            SandboxCommands.ToggleOverrideHints(overrideHintsPanelPrefab);
 
-        if (WasPressed(keyboard, clearSynergyDiscoveries))
-            SandboxCommands.ClearSynergyDiscoveries();
+        if (WasPressed(keyboard, clearOverrideDiscoveries))
+            SandboxCommands.ClearOverrideDiscoveries();
 
         if (WasPressed(keyboard, grantLevel))
             SandboxCommands.GrantLevels(1);
@@ -121,7 +122,7 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
 
     public string BuildHelpText()
     {
-        return $"{togglePanel}=panel  {toggleSynergyHints}=panel de sinergias  {clearSynergyDiscoveries}=borrar progreso sinergias  {grantLevel}=+1 nivel  {grantRandomUpgrade}=mejora  {grantRandomPremiumUpgrade}=mejora premium  " +
+        return $"{togglePanel}=panel  {toggleOverrideHints}=panel de sobrecargas  {clearOverrideDiscoveries}=borrar progreso sobrecargas  {grantLevel}=+1 nivel  {grantRandomUpgrade}=mejora  {grantRandomPremiumUpgrade}=mejora premium  " +
                $"{spawnEnemyBurst}=ráfaga x{burstAmount}  {killAllEnemies}=matar todo  {addCurrency}=+{currencyPerPress} monedas/diamantes  " +
                $"{toggleInvulnerable}=invulnerable  {killPlayer}=morir  {toggleSpawning}=pausar spawns  {forceFinalRush}=oleada final  " +
                $"{cycleTimeScale}=time scale  {spawnChest}=cofre  {reloadSandbox}=reiniciar";

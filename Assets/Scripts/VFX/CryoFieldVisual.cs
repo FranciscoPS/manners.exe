@@ -22,7 +22,7 @@ public class CryoFieldVisual : MonoBehaviour, IUpdateable
     [SerializeField] private float snowfallAuthoredRadius = 10f;
 
     [Header("Aparición")]
-    [Tooltip("Segundos que tarda la escarcha en extenderse desde el jugador hasta el radio completo al activarse la sinergia.")]
+    [Tooltip("Segundos que tarda la escarcha en extenderse desde el jugador hasta el radio completo al activarse la sobrecarga.")]
     [SerializeField] private float revealDuration = 0.7f;
     [Tooltip("Cuánto se pasa del radio la escarcha antes de asentarse (0.12 = 12%). 0 = sin rebote.")]
     [SerializeField, Range(0f, 0.5f)] private float revealOvershoot = 0.12f;

@@ -5,13 +5,13 @@ using UnityEngine.SceneManagement;
 public static class SandboxCommands
 {
     private static int timeScaleIndex;
-    private static GameObject activeSynergyHintsInstance;
+    private static GameObject activeOverrideHintsInstance;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         timeScaleIndex = 0;
-        activeSynergyHintsInstance = null;
+        activeOverrideHintsInstance = null;
     }
 
     public static void SpawnBurst(int count, float radius, EnemyConfiguration enemy)
@@ -223,34 +223,34 @@ public static class SandboxCommands
         SandboxLog.Command($"Time scale: x{Time.timeScale}");
     }
 
-    public static void ToggleSynergyHints(GameObject synergyHintsPanelPrefab)
+    public static void ToggleOverrideHints(GameObject overrideHintsPanelPrefab)
     {
-        if (activeSynergyHintsInstance != null)
+        if (activeOverrideHintsInstance != null)
         {
-            Object.Destroy(activeSynergyHintsInstance);
-            activeSynergyHintsInstance = null;
+            Object.Destroy(activeOverrideHintsInstance);
+            activeOverrideHintsInstance = null;
 
-            SandboxLog.Command("Panel de sinergias: oculto.");
+            SandboxLog.Command("Panel de sobrecargas: oculto.");
             return;
         }
 
-        if (synergyHintsPanelPrefab == null)
+        if (overrideHintsPanelPrefab == null)
         {
-            SandboxLog.Warn("Panel de sinergias: no hay prefab asignado (revisa 'Synergy Hints Panel Prefab' en SandboxHotkeys).");
+            SandboxLog.Warn("Panel de sobrecargas: no hay prefab asignado (revisa 'Override Hints Panel Prefab' en SandboxHotkeys).");
             return;
         }
 
         Canvas canvas = Object.FindFirstObjectByType<Canvas>();
         if (canvas == null)
         {
-            SandboxLog.Warn("Panel de sinergias: no se encontró ningún Canvas en la escena.");
+            SandboxLog.Warn("Panel de sobrecargas: no se encontró ningún Canvas en la escena.");
             return;
         }
 
-        activeSynergyHintsInstance = Object.Instantiate(synergyHintsPanelPrefab, canvas.transform);
-        activeSynergyHintsInstance.SetActive(true);
+        activeOverrideHintsInstance = Object.Instantiate(overrideHintsPanelPrefab, canvas.transform);
+        activeOverrideHintsInstance.SetActive(true);
 
-        SandboxLog.Command("Panel de sinergias: visible con el progreso actual (vuelve a pulsar para ocultarlo).");
+        SandboxLog.Command("Panel de sobrecargas: visible con el progreso actual (vuelve a pulsar para ocultarlo).");
     }
 
     public static void KillPlayer()
@@ -273,20 +273,20 @@ public static class SandboxCommands
         SandboxLog.Command("Morir: muerte forzada (ignora invulnerabilidad). Debería abrirse la pantalla de Game Over.");
     }
 
-    public static void ClearSynergyDiscoveries()
+    public static void ClearOverrideDiscoveries()
     {
-        SynergyDiscovery.Clear();
+        OverrideDiscovery.Clear();
 
-        if (activeSynergyHintsInstance != null)
+        if (activeOverrideHintsInstance != null)
         {
-            foreach (SynergyHintRowUI row in activeSynergyHintsInstance.GetComponentsInChildren<SynergyHintRowUI>(true))
+            foreach (OverrideHintRowUI row in activeOverrideHintsInstance.GetComponentsInChildren<OverrideHintRowUI>(true))
                 row.Refresh();
         }
 
-        if (SynergyHudPanel.Instance != null)
-            SynergyHudPanel.Instance.ResyncDiscovery();
+        if (OverrideHudPanel.Instance != null)
+            OverrideHudPanel.Instance.ResyncDiscovery();
 
-        SandboxLog.Command("Progreso guardado de sinergias borrado (mejoras y sinergias descubiertas en 0).");
+        SandboxLog.Command("Progreso guardado de sobrecargas borrado (mejoras y sobrecargas descubiertas en 0).");
     }
 
     public static void ReloadSandbox()

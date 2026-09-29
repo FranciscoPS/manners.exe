@@ -7,8 +7,8 @@ public class GlitchTextUI : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI target;
 
-    [Tooltip("Parte inicial del texto que nunca se altera (ej. 'Sin' para 'Sinergias').")]
-    [SerializeField] private string prefix = "Sin";
+    [Tooltip("Parte inicial del texto que nunca se altera (ej. 'Sob' para 'Sobrecargas').")]
+    [SerializeField] private string prefix = "Sob";
 
     [Header("Ritmo")]
     [Tooltip("Pausa mínima/máxima (segundos) leyendo el texto normal entre un glitch y otro.")]

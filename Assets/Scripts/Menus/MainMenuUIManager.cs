@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using DG.Tweening;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject tiendaPanel;
     [SerializeField] private GameObject personalizacionPanel;
     [SerializeField] private GameObject creditosPanel;
-    [SerializeField] private GameObject sinergiasMenuPanel;
+    [SerializeField, FormerlySerializedAs("sinergiasMenuPanel")] private GameObject sobrecargasMenuPanel;
 
     [Header("Options Subscreens")]
     [SerializeField] private GameObject helpPanel;
@@ -39,7 +40,7 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject experienciaPanel;
     [SerializeField] private GameObject enemigosPanel;
     [SerializeField] private GameObject mejorasPanel;
-    [SerializeField] private GameObject sinergiasPanel;
+    [SerializeField, FormerlySerializedAs("sinergiasPanel")] private GameObject sobrecargasPanel;
 
     [Header("Normal SubScreens")]
     [SerializeField] private GameObject rpPanel;
@@ -82,7 +83,7 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.Tienda, tiendaPanel },
             { MenuScreen.Personalizacion, personalizacionPanel },
             { MenuScreen.Creditos, creditosPanel },
-            { MenuScreen.Sinergias, sinergiasMenuPanel },
+            { MenuScreen.Sobrecargas, sobrecargasMenuPanel },
             { MenuScreen.mapSelection, mapSelection },
 
             { MenuScreen.Help, helpPanel },
@@ -101,7 +102,7 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.HelpExperiencia, experienciaPanel },
             { MenuScreen.HelpEnemigos, enemigosPanel },
             { MenuScreen.HelpMejoras, mejorasPanel },
-            { MenuScreen.HelpSinergias, sinergiasPanel },
+            { MenuScreen.HelpSobrecargas, sobrecargasPanel },
         };
 
         foreach (var screen in screenDictionary.Values)
@@ -152,7 +153,7 @@ public class MainMenuUIManager : MonoBehaviour
             || screen == MenuScreen.HelpExperiencia
             || screen == MenuScreen.HelpEnemigos
             || screen == MenuScreen.HelpMejoras
-            || screen == MenuScreen.HelpSinergias;
+            || screen == MenuScreen.HelpSobrecargas;
     }
 
     private bool IsUpgradesSubscreen(MenuScreen screen)
@@ -636,9 +637,9 @@ public enum MenuScreen
     UpgradesPremium_EX,
     UpgradesPremium_MLS,
 
-    HelpSinergias,
+    HelpSobrecargas,
 
-    Sinergias,
+    Sobrecargas,
 
     // Append entries to preserve the indices stored by scene button events.
     Graphics,
