@@ -13,6 +13,7 @@ public sealed class OverrideCombatResolver
     private const float ChainRadius = 2.5f;
     private const int MaxChainJumps = 32;
     private const int MaxExtraEmissions = 8;
+    private const int MultishotBulletsPerEmission = 2;
     private readonly HashSet<EnemyHealth> hitEnemies = new HashSet<EnemyHealth>();
     private readonly HashSet<EnemyHealth> pushedEnemies = new HashSet<EnemyHealth>();
     private readonly List<EnemyHealth> explosionTargets = new List<EnemyHealth>();
@@ -32,11 +33,13 @@ public sealed class OverrideCombatResolver
     private int chainJumps;
     private bool tickOpen;
 
-    public static int EmissionCount(int maxExtraEmissions = 2)
+    public static int EmissionCount(int maxExtraEmissions = MaxExtraEmissions)
     {
         PlayerStatsManager stats = PlayerStatsManager.Instance;
         if (maxExtraEmissions <= 0 || !Owns(stats, UpgradeType.MultiShot)) return 1;
-        return 1 + Mathf.Clamp(stats.GetMultiShotExtraBullets(), 0, Mathf.Min(maxExtraEmissions, MaxExtraEmissions));
+        int multishotBullets = 1 + Mathf.Max(0, stats.GetMultiShotExtraBullets());
+        int emissions = (multishotBullets + MultishotBulletsPerEmission - 1) / MultishotBulletsPerEmission;
+        return Mathf.Clamp(emissions, 1, 1 + Mathf.Min(maxExtraEmissions, MaxExtraEmissions));
     }
 
     private static bool Owns(PlayerStatsManager stats, UpgradeType type)

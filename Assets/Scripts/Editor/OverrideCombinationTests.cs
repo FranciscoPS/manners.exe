@@ -76,18 +76,20 @@ public class OverrideCombinationTests
     }
 
     [Test]
-    public void MultishotAlwaysAddsItsExtraBulletsToEveryEmissionGroup()
+    public void MultishotAlwaysEmitsHalfItsBulletsRoundedUp()
     {
         Assert.AreEqual(1, OverrideCombatResolver.EmissionCount(), "Without Multishot there are no extra emissions.");
         Own(UpgradeType.MultiShot);
         Assert.AreEqual(0f, stats.GetMultiShotProbability(), "The fixture proves the combination ignores the projectile chance.");
-        Assert.AreEqual(3, OverrideCombatResolver.EmissionCount());
+        Assert.AreEqual(2, OverrideCombatResolver.EmissionCount(), "Level 1 fires four bullets, so it emits two.");
         Assert.AreEqual(2, OverrideCombatResolver.EmissionCount(1));
         Assert.AreEqual(1, OverrideCombatResolver.EmissionCount(0));
         Assert.AreEqual(1, OverrideCombatResolver.EmissionCount(-1));
-        Assert.AreEqual(4, OverrideCombatResolver.EmissionCount(8), "Level 1 matches the projectile's three extra bullets.");
         SetLevel(UpgradeType.MultiShot, 2);
-        Assert.AreEqual(7, OverrideCombatResolver.EmissionCount(8));
+        Assert.AreEqual(4, OverrideCombatResolver.EmissionCount(), "Seven bullets round up to four emissions.");
+        Assert.AreEqual(3, OverrideCombatResolver.EmissionCount(2), "The config ceiling still limits the half.");
+        SetLevel(UpgradeType.MultiShot, 3);
+        Assert.AreEqual(5, OverrideCombatResolver.EmissionCount());
         SetLevel(UpgradeType.MultiShot, 100);
         Assert.AreEqual(9, OverrideCombatResolver.EmissionCount(20), "Extra emissions stay capped at eight.");
         SetLevel(UpgradeType.MultiShot, 0);
@@ -108,7 +110,7 @@ public class OverrideCombinationTests
 
         for (int i = 0; i < 5; i++)
         {
-            Assert.AreEqual(3, OverrideCombatResolver.EmissionCount());
+            Assert.AreEqual(2, OverrideCombatResolver.EmissionCount());
             Set(target.Controller, "isKnockedBack", false);
             Set(neighbor.Controller, "isKnockedBack", false);
             float neighborHealth = Health(neighbor);
@@ -124,23 +126,23 @@ public class OverrideCombinationTests
     [Test]
     public void LaserMultishotAlwaysFiresSeparatedBeamsAndReusesVisualsAfterUpgradeChanges()
     {
-        Own(UpgradeType.MultiShot);
+        Own(UpgradeType.MultiShot, 2);
         LaserBeamEffect effect = Laser(out LaserBeamConfig config);
         Random.InitState(7);
         for (int sweep = 0; sweep < 3; sweep++)
         {
             Invoke(effect, "BeginSweep");
-            Assert.AreEqual(3, Get<int>(effect, "activeBeamCount"), "Every sweep fires every beam.");
-            AssertBeamsSeparated(Get<IList>(effect, "beamVisuals"), 3, config.minBeamSeparationAngle);
+            Assert.AreEqual(4, Get<int>(effect, "activeBeamCount"), "Every sweep fires half the Multishot bullets, rounded up.");
+            AssertBeamsSeparated(Get<IList>(effect, "beamVisuals"), 4, config.minBeamSeparationAngle);
         }
         var visuals = Get<IList>(effect, "beamVisuals");
-        Assert.AreEqual(3, visuals.Count);
+        Assert.AreEqual(4, visuals.Count);
         object extraVisual = visuals[1];
 
         SetLevel(UpgradeType.MultiShot, 0);
         Invoke(effect, "BeginSweep");
         Assert.AreEqual(1, Get<int>(effect, "activeBeamCount"));
-        Assert.AreEqual(3, visuals.Count);
+        Assert.AreEqual(4, visuals.Count);
         Assert.IsFalse(Get<Transform>(visuals[1], "root").gameObject.activeSelf);
         SetLevel(UpgradeType.MultiShot, 1);
         Invoke(effect, "BeginSweep");
@@ -161,7 +163,7 @@ public class OverrideCombinationTests
     [Test]
     public void LaserMultishotAimsEachBeamAtTheNearestSeparatedEnemy()
     {
-        Own(UpgradeType.MultiShot);
+        Own(UpgradeType.MultiShot, 2);
         LaserBeamEffect effect = Laser(out LaserBeamConfig config);
         Enemy(new Vector3(0f, 0f, 3f));
         Enemy(new Vector3(0.5f, 0f, 4f));
@@ -178,15 +180,15 @@ public class OverrideCombinationTests
     [Test]
     public void LaserBeamsWithoutEnoughTargetsSpreadToSeparatedGroundPoints()
     {
-        Own(UpgradeType.MultiShot);
+        Own(UpgradeType.MultiShot, 2);
         LaserBeamEffect effect = Laser(out LaserBeamConfig config);
         Enemy(new Vector3(0f, 0f, 3f));
         Random.InitState(11);
         Invoke(effect, "BeginSweep");
         var visuals = Get<IList>(effect, "beamVisuals");
         AssertBeamAim(visuals[0], Vector3.forward, 3f);
-        AssertBeamsSeparated(visuals, 3, config.minBeamSeparationAngle);
-        for (int i = 1; i < 3; i++)
+        AssertBeamsSeparated(visuals, 4, config.minBeamSeparationAngle);
+        for (int i = 1; i < 4; i++)
         {
             float distance = Get<float>(visuals[i], "startDistance");
             Assert.That(distance, Is.InRange(config.range * 0.3f - 0.001f, config.range + 0.001f), "Fallback beams aim at ground points within range.");
@@ -379,7 +381,7 @@ public class OverrideCombinationTests
     }
 
     [Test]
-    public void CryoMultishotHasTwoDelayedEchoesWithoutRecursiveBursts()
+    public void CryoMultishotHasHalfItsBulletsAsDelayedTicksWithoutRecursiveBursts()
     {
         Own(UpgradeType.MultiShot);
         var config = Asset<CryoFieldConfig>();
@@ -397,19 +399,17 @@ public class OverrideCombinationTests
         Assert.IsTrue(enemy.Controller.IsSlowed, "The aura still refreshes slow between damage ticks.");
         effect.OnUpdate(0.5f);
         Assert.AreEqual(990f, Health(enemy));
-        Assert.AreEqual(2, Get<int>(effect, "remainingExtraPulses"));
+        Assert.AreEqual(1, Get<int>(effect, "remainingExtraPulses"), "Level 1 fires four bullets, so the tick repeats once.");
         effect.OnUpdate(0.1f);
         Assert.AreEqual(990f, Health(enemy));
         effect.OnUpdate(0.11f);
         Assert.AreEqual(980f, Health(enemy));
-        effect.OnUpdate(0.21f);
-        Assert.AreEqual(970f, Health(enemy));
         Assert.AreEqual(0, Get<int>(effect, "remainingExtraPulses"));
         effect.OnUpdate(0.5f);
-        Assert.AreEqual(970f, Health(enemy), "Echoes must not start another burst.");
+        Assert.AreEqual(980f, Health(enemy), "Echoes must not start another burst.");
         effect.OnUpdate(0.51f);
-        Assert.AreEqual(960f, Health(enemy));
-        Assert.AreEqual(2, Get<int>(effect, "remainingExtraPulses"), "Every main tick starts the full echo sequence again.");
+        Assert.AreEqual(970f, Health(enemy));
+        Assert.AreEqual(1, Get<int>(effect, "remainingExtraPulses"), "Every main tick starts the full echo sequence again.");
         Invoke(effect, "OnDisable");
         Assert.AreEqual(0, Get<int>(effect, "remainingExtraPulses"), "Disabling cancels pending echoes.");
     }
@@ -450,12 +450,9 @@ public class OverrideCombinationTests
         effect.OnUpdate(0.11f);
         effect.OnUpdate(0.11f);
         Assert.AreEqual(990f, Health(enemy));
-        effect.OnUpdate(0.21f);
-        effect.OnUpdate(0.11f);
-        Assert.AreEqual(985f, Health(enemy));
         Assert.AreEqual(0, Get<int>(effect, "remainingExtraPulses"));
         effect.OnUpdate(1f);
-        Assert.AreEqual(985f, Health(enemy), "After three waves, the regular interval resumes.");
+        Assert.AreEqual(990f, Health(enemy), "After half the Multishot bullets in waves, the regular interval resumes.");
     }
 
     [Test]

@@ -18,8 +18,8 @@ public class EmpPulseConfig : OverrideEffectConfig
     [Min(0)] public int maxChainHops = 3;
 
     [Header("Combinaciones")]
-    [Tooltip("Máximo de pulsos adicionales mientras el jugador tenga Multi Shot. Se emiten siempre, en cada secuencia: 1 + las balas extra del Multi Shot, limitado por este valor. 2 produce siempre tres ondas.")]
-    [Range(0, 8)] public int maxExtraPulses = 2;
+    [Tooltip("Tope de pulsos adicionales mientras el jugador tenga Multi Shot. Se emiten siempre, en cada secuencia: en total, la mitad de las balas del Multi Shot, redondeada hacia arriba (4 balas = 2 ondas, 7 = 4, 10 = 5), sin pasar de 1 + este valor. 8 deja la regla de la mitad sin tope práctico; 0 desactiva la combinación.")]
+    [Range(0, 8)] public int maxExtraPulses = 8;
     [Tooltip("Pausa entre la expansión completa de un pulso y el siguiente eco. Los ecos no generan más ecos; el intervalo normal empieza al terminar la secuencia.")]
     [Min(0.01f)] public float repeatDelay = 0.15f;
     [Tooltip("Multiplicador de la duración del congelamiento del EMP mientras Campo Criogénico esté activo.")]
