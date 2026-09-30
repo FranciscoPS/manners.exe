@@ -22,20 +22,22 @@ public static class InvisibleWallWarningSetupTools
     private const string WallsRootName = "InvisibleWalls";
     private const string ContainerName = "WallWarnings";
 
-    private const float PreviewZoneWidth = 5f;
+    private const float PreviewZoneWidth = 5.5f;
     private const float PreviewZoneHeight = 4f;
     private const float PreviewHeight = 2f;
+    private const float PreviewGroundDepth = 1.6f;
+    private const float PreviewGroundLift = 0.03f;
     private const float CanvasScale = 0.01f;
     private const float CanvasDepthOffset = 0.02f;
-    private const float StripeHeight = 58f;
-    private const float StripeInset = 16f;
+    private const float StripeHeight = 80f;
+    private const float StripeInset = 14f;
     private const float StripeTextPadding = 10f;
     private const int StripeMaskSoftness = 40;
-    private const float TextSize = 40f;
+    private const float TextSize = 56f;
     private const float TextSpacing = 6f;
-    private const float TextGlow = 1.6f;
+    private const float TextGlow = 1.3f;
     private const float ScrollSpeed = 90f;
-    private static readonly Color TextColor = new Color(1f, 0.3f, 0.24f, 1f);
+    private static readonly Color TextColor = new Color(1f, 0.86f, 0.82f, 1f);
 
     [MenuItem("Tools/Manners/Muros invisibles/1. Crear assets del aviso", false, 35)]
     public static void CreateWarningAssets()
@@ -125,6 +127,12 @@ public static class InvisibleWallWarningSetupTools
             if (box != null) walls.Add(box);
         }
 
+        Vector3 interiorReference = Vector3.zero;
+        for (int i = 0; i < walls.Count; i++)
+            interiorReference += walls[i].transform.TransformPoint(walls[i].center);
+        if (walls.Count > 0)
+            interiorReference /= walls.Count;
+
         Transform container = wallsRoot.Find(ContainerName);
         if (container == null)
         {
@@ -147,7 +155,6 @@ public static class InvisibleWallWarningSetupTools
             byWall[wall] = existing;
         }
 
-        InvisibleWallWarning[] ordered = new InvisibleWallWarning[walls.Count];
         int created = 0;
 
         for (int i = 0; i < walls.Count; i++)
@@ -168,30 +175,20 @@ public static class InvisibleWallWarningSetupTools
             warningObject.name = $"Warning_{wall.name}";
             warningObject.SetActive(true);
             warning.transform.SetSiblingIndex(i);
-            warning.AlignToWall(PreviewHeight);
+            warning.AlignToWall(PreviewHeight, interiorReference);
 
             if (PrefabUtility.IsPartOfPrefabInstance(warningObject))
             {
                 PrefabUtility.RecordPrefabInstancePropertyModifications(warningObject);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(warning.transform);
             }
-
-            ordered[i] = warning;
         }
 
-        InvisibleWallWarningSystem system = wallsRoot.GetComponent<InvisibleWallWarningSystem>();
-        if (system == null)
-            system = wallsRoot.gameObject.AddComponent<InvisibleWallWarningSystem>();
+        if (wallsRoot.GetComponent<InvisibleWallWarningSystem>() == null)
+            wallsRoot.gameObject.AddComponent<InvisibleWallWarningSystem>();
+        EditorUtility.SetDirty(wallsRoot.gameObject);
 
-        SerializedObject systemSerialized = new SerializedObject(system);
-        SerializedProperty list = systemSerialized.FindProperty("warnings");
-        list.arraySize = ordered.Length;
-        for (int i = 0; i < ordered.Length; i++)
-            list.GetArrayElementAtIndex(i).objectReferenceValue = ordered[i];
-        systemSerialized.ApplyModifiedPropertiesWithoutUndo();
-        EditorUtility.SetDirty(system);
-
-        Debug.Log($"[InvisibleWallWarningSetup] '{scene.name}': {walls.Count} muros con aviso ({created} nuevos, {removed} sobrantes eliminados) en {WallsRootName}/{ContainerName}. El sistema está en '{WallsRootName}'. Los avisos se ven en la escena para ajustarlos y se ocultan al dar Play hasta que el jugador se acerca.");
+        Debug.Log($"[InvisibleWallWarningSetup] '{scene.name}': {walls.Count} muros con aviso ({created} nuevos, {removed} sobrantes eliminados) en {WallsRootName}/{ContainerName}. El sistema está en '{WallsRootName}' y controla todos los avisos hijos. Los avisos se ven en la escena para ajustarlos y se ocultan al dar Play hasta que el jugador se acerca.");
         return true;
     }
 
@@ -296,12 +293,27 @@ public static class InvisibleWallWarningSetupTools
         hexRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
         hexRenderer.sortingOrder = 0;
 
+        GameObject groundObject = new GameObject("GroundBand", typeof(MeshFilter), typeof(MeshRenderer));
+        groundObject.transform.SetParent(root.transform, false);
+        groundObject.transform.localPosition = new Vector3(0f, -PreviewHeight + PreviewGroundLift, -PreviewGroundDepth * 0.5f);
+        groundObject.transform.localRotation = Quaternion.LookRotation(Vector3.down, Vector3.back);
+        groundObject.transform.localScale = new Vector3(PreviewZoneWidth, PreviewGroundDepth, 1f);
+        groundObject.GetComponent<MeshFilter>().sharedMesh = hexObject.GetComponent<MeshFilter>().sharedMesh;
+
+        MeshRenderer groundRenderer = groundObject.GetComponent<MeshRenderer>();
+        groundRenderer.sharedMaterial = hexMaterial;
+        groundRenderer.shadowCastingMode = ShadowCastingMode.Off;
+        groundRenderer.receiveShadows = false;
+        groundRenderer.lightProbeUsage = LightProbeUsage.Off;
+        groundRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+        groundRenderer.sortingOrder = 0;
+
         GameObject canvasObject = new GameObject("Stripes", typeof(RectTransform), typeof(Canvas), typeof(CanvasGroup));
         canvasObject.transform.SetParent(root.transform, false);
 
         Canvas canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
-        canvas.sortingOrder = 1;
+        canvas.sortingOrder = 0;
 
         RectTransform canvasRect = (RectTransform)canvasObject.transform;
         canvasRect.pivot = new Vector2(0.5f, 0.5f);
@@ -319,6 +331,7 @@ public static class InvisibleWallWarningSetupTools
 
         SerializedObject warningSerialized = new SerializedObject(warning);
         warningSerialized.FindProperty("hexPanel").objectReferenceValue = hexRenderer;
+        warningSerialized.FindProperty("groundBand").objectReferenceValue = groundRenderer;
         warningSerialized.FindProperty("stripesCanvas").objectReferenceValue = canvasRect;
         warningSerialized.FindProperty("stripesGroup").objectReferenceValue = group;
         SerializedProperty marquees = warningSerialized.FindProperty("marquees");

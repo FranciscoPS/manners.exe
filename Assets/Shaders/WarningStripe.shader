@@ -4,8 +4,11 @@ Shader "UI/WarningStripe"
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
 
+        [Header(Global)]
+        _Brightness ("Global Brightness", Range(0, 3)) = 1
+
         [Header(Band)]
-        [HDR] _FillColor ("Band Fill Color", Color) = (0.32, 0.01, 0.01, 0.6)
+        [HDR] _FillColor ("Band Fill Color", Color) = (0.32, 0.01, 0.01, 0.4)
 
         [Header(Hazard Hatch)]
         [HDR] _HatchColor ("Hatch Color", Color) = (1.1, 0.05, 0.04, 0.45)
@@ -15,7 +18,7 @@ Shader "UI/WarningStripe"
         _HatchSpeed ("Hatch Speed (canvas units per second)", Float) = 45
 
         [Header(Edges)]
-        [HDR] _EdgeColor ("Edge Line Color", Color) = (2.2, 0.12, 0.08, 1)
+        [HDR] _EdgeColor ("Edge Line Color", Color) = (1.5, 0.09, 0.06, 1)
         _EdgeThickness ("Edge Line Thickness (fraction of height)", Range(0, 0.5)) = 0.07
         _EdgeGlow ("Edge Glow", Range(0, 1)) = 0.3
 
@@ -83,6 +86,7 @@ Shader "UI/WarningStripe"
             };
 
             sampler2D _MainTex;
+            float _Brightness;
             float4 _FillColor;
             float4 _HatchColor;
             float _HatchSpacing;
@@ -127,7 +131,7 @@ Shader "UI/WarningStripe"
                 float alpha = saturate(_FillColor.a + _HatchColor.a * hatch + _EdgeColor.a * (edge + edgeGlow * 0.5));
 
                 float visibility = IN.color.a * flicker * tex2D(_MainTex, IN.texcoord).a;
-                return float4(color * IN.color.rgb * visibility, alpha * visibility);
+                return float4(color * IN.color.rgb * visibility * _Brightness, alpha * visibility);
             }
             ENDCG
         }

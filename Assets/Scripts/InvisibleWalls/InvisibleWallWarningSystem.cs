@@ -29,14 +29,11 @@ public class InvisibleWallWarningSystem : MonoBehaviour, IUpdateable
         }
     }
 
-    [Header("Avisos")]
-    [Tooltip("Un aviso por muro invisible. Los coloca y conecta 'Tools > Manners > Muros invisibles > 2. Colocar avisos en la escena abierta'.")]
-    [SerializeField] private InvisibleWallWarning[] warnings;
-
     [Header("Jugador")]
-    [Tooltip("Cada cuántos segundos se vuelve a buscar al jugador (tag 'Player') mientras no exista en la escena.")]
+    [Tooltip("Cada cuántos segundos se vuelve a buscar al jugador (tag 'Player') mientras no exista en la escena. Los avisos que controla este sistema son todos los InvisibleWallWarning hijos de este objeto (los coloca 'Tools > Manners > Muros invisibles > 2').")]
     [SerializeField, Min(0.05f)] private float playerSearchInterval = 0.5f;
 
+    private InvisibleWallWarning[] warnings;
     private Collider playerCollider;
     private Rigidbody playerBody;
     private PlayerHealth playerHealth;
@@ -47,7 +44,7 @@ public class InvisibleWallWarningSystem : MonoBehaviour, IUpdateable
 
     private void Awake()
     {
-        if (warnings == null) return;
+        warnings = GetComponentsInChildren<InvisibleWallWarning>(true);
 
         for (int i = 0; i < warnings.Length; i++)
         {

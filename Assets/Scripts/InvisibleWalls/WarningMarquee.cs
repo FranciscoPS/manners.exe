@@ -9,7 +9,7 @@ public class WarningMarquee : MonoBehaviour
     [Tooltip("Mensaje que se repite. La fuente pixel solo tiene ASCII sin acentos (A-Z, 0-9 y signos básicos).")]
     [SerializeField] private string message = "WARNING";
     [Tooltip("Separador entre repeticiones. La fuente pixel no tiene •, ▶ ni ⚠: usa / - > | _ : o espacios.")]
-    [SerializeField] private string separator = "   ///   ";
+    [SerializeField] private string separator = "  //  ";
     [Tooltip("Cuántas veces se repite el mensaje dentro del texto. Tiene que cubrir el ancho de la franja más una repetición: súbelo si ves un hueco en el borde.")]
     [SerializeField, Min(2)] private int repetitions = 10;
 
@@ -33,11 +33,6 @@ public class WarningMarquee : MonoBehaviour
         string composed = ComposeMessage();
         if (label.text != composed)
             label.text = composed;
-    }
-
-    private void OnEnable()
-    {
-        measured = false;
     }
 
     public void ApplyMessage()

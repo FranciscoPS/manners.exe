@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7168b6e1815240e2ba235f53c625f914, type: 3}
+  m_Name: InvisibleWallWarningConfig
+  m_EditorClassIdentifier: Assembly-CSharp::InvisibleWallWarningConfig
+  activationDistance: 6
+  fullIntensityDistance: 1
+  fullIntensityLeadSeconds: 0.35
+  lookAheadSeconds: 0.6
+  maxLookAheadDistance: 12
+  impactLeadSeconds: 0.5
+  fadeInSpeed: 5
+  fadeOutSpeed: 2.5
+  hideDelay: 0.3
+  followSharpness: 14
+  stripesAppearAt: 0.25
+  sidePadding: 1.5
+  topPadding: 1
+  bottomExtension: 0.1
+  surfaceOffset: 0.05
+  groundDepth: 1.6
+  groundHeightOffset: 0.03
+  panelOpacityBetweenCameraAndPlayer: 0.55
+  stripesOpacityBetweenCameraAndPlayer: 0.3
+  hideWhenPlayerDies: 1

@@ -2,16 +2,22 @@ using UnityEngine;
 
 public class InvisibleWallWarning : MonoBehaviour
 {
-    private static readonly int IntensityId = Shader.PropertyToID("_Intensity");
-    private static readonly int OpacityId = Shader.PropertyToID("_Opacity");
+    private static readonly int RevealId = Shader.PropertyToID("_Reveal");
+    private static readonly int FadeId = Shader.PropertyToID("_Fade");
 
     [Header("Muro")]
     [Tooltip("BoxCollider del muro invisible que vigila este aviso. Lo asigna 'Tools > Manners > Muros invisibles > 2'. El aviso se coloca sobre la cara del muro que mira al jugador, sin importar la rotación ni la escala del muro.")]
     [SerializeField] private BoxCollider wall;
+    [Tooltip("Metros del muro, desde su extremo inicial (esfera azul al seleccionar este aviso en la escena), donde el aviso no aparece. Úsalo en esquinas donde el muro sigue por fuera del mapa.")]
+    [SerializeField, Min(0f)] private float trimStart;
+    [Tooltip("Metros del muro, desde su extremo final (esfera roja al seleccionar este aviso en la escena), donde el aviso no aparece.")]
+    [SerializeField, Min(0f)] private float trimEnd;
 
     [Header("Referencias")]
-    [Tooltip("Quad con el material 'Custom/WallWarningHex' (panel de hexágonos). Se escala al tamaño de la zona en cada frame; el tamaño de cada hexágono, colores y animaciones se ajustan en el material, en metros.")]
+    [Tooltip("Quad con el material 'Custom/WallWarningHex' pegado a la pared (panel de hexágonos). Se escala al tamaño de la zona en cada frame; el tamaño de cada hexágono, colores, brillo y animaciones se ajustan en el material, en metros.")]
     [SerializeField] private Renderer hexPanel;
+    [Tooltip("Quad acostado en el piso, en la base de la pared, con el mismo material de hexágonos. Es lo que se lee en muros que la cámara ve de canto. Su profundidad se ajusta en el config (Banda en el piso). Opcional.")]
+    [SerializeField] private Renderer groundBand;
     [Tooltip("Canvas en World Space con las franjas de WARNING. Su Width/Height se ajusta a la zona usando la escala del propio canvas (0.01 = 100 unidades de canvas por metro). Las franjas se anclan arriba y abajo: su alto, posición y márgenes se editan en sus RectTransform.")]
     [SerializeField] private RectTransform stripesCanvas;
     [Tooltip("CanvasGroup del canvas de franjas. Su alpha lo controla el aviso según la cercanía.")]
@@ -27,35 +33,48 @@ public class InvisibleWallWarning : MonoBehaviour
     private float halfThickness;
     private float halfLength;
     private bool wallReady;
+    private bool initialized;
     private bool visible = true;
     private float intensity;
-    private float alongPosition;
-    private Vector2 appliedSize;
+    private float alongOffset;
+    private float hiddenTimer;
+    private Vector3 appliedSize;
     private float appliedIntensity = -1f;
-    private float appliedOpacity = -1f;
+    private float appliedPanelFade = -1f;
+    private float appliedStripesFade = -1f;
 
     public BoxCollider Wall => wall;
 
+    private void Awake()
+    {
+        if (!initialized)
+            SetVisible(false);
+    }
+
     public void Initialize()
     {
+        initialized = true;
         wallReady = CacheWallFrame();
         if (stripesCanvas != null)
             stripesCanvasComponent = stripesCanvas.GetComponent<Canvas>();
 
         intensity = 0f;
-        appliedSize = Vector2.zero;
+        hiddenTimer = 0f;
+        appliedSize = Vector3.zero;
         appliedIntensity = -1f;
-        appliedOpacity = -1f;
+        appliedPanelFade = -1f;
+        appliedStripesFade = -1f;
         SetVisible(false);
     }
 
-    public void AlignToWall(float previewHeight)
+    public void AlignToWall(float previewHeight, Vector3 interiorReference)
     {
         if (!CacheWallFrame()) return;
 
-        Vector3 position = wallCenter + normalAxis * (halfThickness + 0.05f);
+        Vector3 inward = Vector3.Dot(interiorReference - wallCenter, normalAxis) >= 0f ? normalAxis : -normalAxis;
+        Vector3 position = wallCenter + inward * (halfThickness + 0.05f);
         position.y = previewHeight;
-        transform.SetPositionAndRotation(position, Quaternion.LookRotation(-normalAxis, Vector3.up));
+        transform.SetPositionAndRotation(position, Quaternion.LookRotation(-inward, Vector3.up));
     }
 
     public void Tick(in InvisibleWallWarningSystem.Frame frame, float deltaTime)
@@ -70,14 +89,15 @@ public class InvisibleWallWarning : MonoBehaviour
 
         float gap = Mathf.Max(0f, Mathf.Abs(normalOffset) - halfThickness - frame.playerRadius);
         float overshoot = Mathf.Max(0f, Mathf.Abs(along) - halfLength);
+        bool pastEnd = overshoot > frame.playerRadius;
         float distance = overshoot > 0f ? Mathf.Sqrt(gap * gap + overshoot * overshoot) : gap;
 
         float approachSpeed = Mathf.Max(0f, -Vector3.Dot(frame.playerVelocity, normal));
         float reach = config.activationDistance + Mathf.Min(approachSpeed * config.lookAheadSeconds, config.maxLookAheadDistance);
-        float full = Mathf.Min(config.fullIntensityDistance, reach - 0.01f);
+        float full = Mathf.Min(config.fullIntensityDistance + approachSpeed * config.fullIntensityLeadSeconds, reach - 0.01f);
 
         float target = 0f;
-        if (!frame.suppressed)
+        if (!frame.suppressed && !pastEnd)
         {
             float t = 1f - Mathf.InverseLerp(full, reach, distance);
             target = t * t * (3f - 2f * t);
@@ -88,42 +108,51 @@ public class InvisibleWallWarning : MonoBehaviour
 
         if (intensity <= 0f)
         {
-            SetVisible(false);
+            if (!visible) return;
+
+            ApplyIntensity(1f, 1f, config.stripesAppearAt);
+            hiddenTimer += deltaTime;
+            if (hiddenTimer >= config.hideDelay)
+                SetVisible(false);
             return;
         }
 
+        hiddenTimer = 0f;
+
+        float width = Mathf.Min(frame.zoneSize.x, halfLength * 2f);
+        float limit = halfLength - width * 0.5f;
         float lead = 0f;
         if (config.impactLeadSeconds > 0f && approachSpeed > 0.01f)
-        {
-            float timeToImpact = gap / approachSpeed;
-            lead = Vector3.Dot(frame.playerVelocity, alongAxis) * Mathf.Min(timeToImpact, config.impactLeadSeconds);
-        }
+            lead = Vector3.Dot(frame.playerVelocity, alongAxis) * Mathf.Min(gap / approachSpeed, config.impactLeadSeconds);
 
-        float targetAlong = Mathf.Clamp(along + lead, -halfLength, halfLength);
+        float desiredOffset = Mathf.Clamp(along + lead, -limit, limit) - along;
         bool appearing = !visible;
         SetVisible(true);
 
         if (appearing || config.followSharpness <= 0f)
-            alongPosition = targetAlong;
+            alongOffset = desiredOffset;
         else
-            alongPosition = Mathf.Lerp(alongPosition, targetAlong, 1f - Mathf.Exp(-config.followSharpness * deltaTime));
+            alongOffset = Mathf.Lerp(alongOffset, desiredOffset, 1f - Mathf.Exp(-config.followSharpness * deltaTime));
 
-        Vector3 position = wallCenter + alongAxis * alongPosition + normal * (halfThickness + config.surfaceOffset);
+        float alongPosition = Mathf.Clamp(along + alongOffset, -limit, limit);
+        Vector3 wallBase = wallCenter + alongAxis * alongPosition + normal * (halfThickness + config.surfaceOffset);
+        Vector3 position = wallBase;
         position.y = frame.zoneBottom + frame.zoneSize.y * 0.5f;
 
         Vector3 forward = -normal;
-        float opacity = 1f;
-        if (frame.hasCamera && Vector3.Dot(frame.cameraPosition - position, normal) < 0f)
-        {
+        bool cameraBehindWall = frame.hasCamera && Vector3.Dot(frame.cameraPosition - position, normal) < 0f;
+        if (cameraBehindWall)
             forward = normal;
-            opacity = config.opacityBetweenCameraAndPlayer;
-        }
 
         transform.SetPositionAndRotation(position, Quaternion.LookRotation(forward, Vector3.up));
-        ApplySize(frame.zoneSize);
-        ApplyIntensity(opacity, config.stripesAppearAt);
+        PlaceGroundBand(wallBase, normal, frame.zoneBottom + config.bottomExtension + config.groundHeightOffset, config.groundDepth);
+        ApplySize(new Vector3(width, frame.zoneSize.y, config.groundDepth));
+        ApplyIntensity(
+            cameraBehindWall ? config.panelOpacityBetweenCameraAndPlayer : 1f,
+            cameraBehindWall ? config.stripesOpacityBetweenCameraAndPlayer : 1f,
+            config.stripesAppearAt);
 
-        if (marquees == null) return;
+        if (marquees == null || (stripesCanvasComponent != null && !stripesCanvasComponent.enabled)) return;
 
         for (int i = 0; i < marquees.Length; i++)
         {
@@ -160,6 +189,13 @@ public class InvisibleWallWarning : MonoBehaviour
             halfLength = halfX;
         }
 
+        float alongMin = -halfLength + trimStart;
+        float alongMax = halfLength - trimEnd;
+        if (alongMax <= alongMin) return false;
+
+        wallCenter += alongAxis * ((alongMin + alongMax) * 0.5f);
+        halfLength = (alongMax - alongMin) * 0.5f;
+
         return normalAxis.sqrMagnitude > 0.5f && alongAxis.sqrMagnitude > 0.5f;
     }
 
@@ -170,13 +206,30 @@ public class InvisibleWallWarning : MonoBehaviour
         gameObject.SetActive(value);
     }
 
-    private void ApplySize(Vector2 size)
+    private void PlaceGroundBand(Vector3 wallBase, Vector3 normal, float height, float depth)
+    {
+        if (groundBand == null) return;
+
+        bool show = depth > 0.01f;
+        if (groundBand.enabled != show)
+            groundBand.enabled = show;
+        if (!show) return;
+
+        Vector3 center = wallBase + normal * (depth * 0.5f);
+        center.y = height;
+        groundBand.transform.SetPositionAndRotation(center, Quaternion.LookRotation(Vector3.down, normal));
+    }
+
+    private void ApplySize(Vector3 size)
     {
         if ((size - appliedSize).sqrMagnitude < 0.0001f) return;
         appliedSize = size;
 
         if (hexPanel != null)
             hexPanel.transform.localScale = new Vector3(size.x, size.y, 1f);
+
+        if (groundBand != null)
+            groundBand.transform.localScale = new Vector3(size.x, Mathf.Max(0.01f, size.z), 1f);
 
         if (stripesCanvas != null)
         {
@@ -187,24 +240,20 @@ public class InvisibleWallWarning : MonoBehaviour
         }
     }
 
-    private void ApplyIntensity(float opacity, float stripesAppearAt)
+    private void ApplyIntensity(float panelFade, float stripesFade, float stripesAppearAt)
     {
-        if (Mathf.Abs(intensity - appliedIntensity) < 0.002f && Mathf.Abs(opacity - appliedOpacity) < 0.002f) return;
+        if (Mathf.Abs(intensity - appliedIntensity) < 0.002f
+            && Mathf.Abs(panelFade - appliedPanelFade) < 0.002f
+            && Mathf.Abs(stripesFade - appliedStripesFade) < 0.002f) return;
+
         appliedIntensity = intensity;
-        appliedOpacity = opacity;
+        appliedPanelFade = panelFade;
+        appliedStripesFade = stripesFade;
 
-        if (hexPanel != null)
-        {
-            if (properties == null)
-                properties = new MaterialPropertyBlock();
+        SetRendererValues(hexPanel, panelFade);
+        SetRendererValues(groundBand, 1f);
 
-            hexPanel.GetPropertyBlock(properties);
-            properties.SetFloat(IntensityId, intensity);
-            properties.SetFloat(OpacityId, opacity);
-            hexPanel.SetPropertyBlock(properties);
-        }
-
-        float stripesAlpha = Mathf.Clamp01((intensity - stripesAppearAt) / Mathf.Max(0.01f, 1f - stripesAppearAt)) * opacity;
+        float stripesAlpha = Mathf.Clamp01((intensity - stripesAppearAt) / Mathf.Max(0.01f, 1f - stripesAppearAt)) * stripesFade;
 
         if (stripesGroup != null)
             stripesGroup.alpha = stripesAlpha;
@@ -212,4 +261,33 @@ public class InvisibleWallWarning : MonoBehaviour
         if (stripesCanvasComponent != null)
             stripesCanvasComponent.enabled = stripesAlpha > 0.001f;
     }
+
+    private void SetRendererValues(Renderer target, float fade)
+    {
+        if (target == null) return;
+
+        if (properties == null)
+            properties = new MaterialPropertyBlock();
+
+        target.GetPropertyBlock(properties);
+        properties.SetFloat(RevealId, intensity);
+        properties.SetFloat(FadeId, fade);
+        target.SetPropertyBlock(properties);
+    }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        if (!CacheWallFrame()) return;
+
+        Vector3 start = wallCenter - alongAxis * halfLength;
+        Vector3 end = wallCenter + alongAxis * halfLength;
+        Gizmos.color = new Color(1f, 0.25f, 0.2f, 1f);
+        Gizmos.DrawLine(start, end);
+        Gizmos.color = new Color(0.2f, 0.6f, 1f, 1f);
+        Gizmos.DrawSphere(start, 0.6f);
+        Gizmos.color = new Color(1f, 0.2f, 0.2f, 1f);
+        Gizmos.DrawSphere(end, 0.6f);
+    }
+#endif
 }
