@@ -18,6 +18,7 @@ public static class SandboxSetupTools
     internal const string OverrideDatabasePath = SandboxFolder + "/OverrideDatabase_Sandbox.asset";
     internal const string OverridesFolder = SandboxFolder + "/Overrides";
     internal const string ChestOpeningConfigPath = SandboxFolder + "/ChestOpeningConfig_Sandbox.asset";
+    internal const string InvisibleWallWarningConfigPath = SandboxFolder + "/InvisibleWallWarningConfig_Sandbox.asset";
     private const string ScenePath = "Assets/Scenes/Sandbox.unity";
 
     private static readonly string[] SourceEnemyConfigs =
@@ -38,6 +39,7 @@ public static class SandboxSetupTools
         CopyUpgradeDatabase();
         CopyOverrideDatabase();
         CopyChestOpeningConfig();
+        CopyInvisibleWallWarningConfig();
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = CopyEnemyConfigs();
         CopyWaves(enemyMap);
 
@@ -118,10 +120,21 @@ public static class SandboxSetupTools
             Debug.LogWarning("[SandboxSetup] No hay ChestOpeningConfig de sandbox todavía. Ejecuta 'Tools > Manners > VFX > Crear configuración de apertura de cofre' y luego el paso 1 de nuevo si quieres tunearla por separado.");
         }
 
+        InvisibleWallWarningConfig wallWarning = AssetDatabase.LoadAssetAtPath<InvisibleWallWarningConfig>(InvisibleWallWarningConfigPath);
+        if (wallWarning == null)
+        {
+            Debug.LogWarning("[SandboxSetup] No hay InvisibleWallWarningConfig de sandbox todavía. Ejecuta 'Tools > Manners > Muros invisibles > 1. Crear assets del aviso' y luego este paso de nuevo.");
+        }
+
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = LoadEnemyMap();
         Dictionary<WaveData, WaveData> waveMap = LoadWaveMap();
 
         RewireEnemySpawnManager(enemyMap, waveMap);
+
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(InvisibleWallWarningSetupTools.PrefabPath) != null)
+            InvisibleWallWarningSetupTools.PlaceWarnings(active);
+        else
+            Debug.LogWarning("[SandboxSetup] Avisos de muros invisibles sin colocar: falta el prefab. Ejecuta 'Tools > Manners > Muros invisibles > 1. Crear assets del aviso' y luego este paso de nuevo.");
 
         GameObject sandboxRoot = GameObject.Find("[SANDBOX]");
         if (sandboxRoot == null)
@@ -133,6 +146,7 @@ public static class SandboxSetupTools
         SetReference(tuningSerialized, "upgradeDatabaseOverride", upgrades);
         SetReference(tuningSerialized, "overrideDatabaseOverride", overrides);
         SetReference(tuningSerialized, "chestOpeningConfigOverride", chestOpening);
+        SetReference(tuningSerialized, "invisibleWallWarningConfigOverride", wallWarning);
         tuningSerialized.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject panelRoot = BuildOrFindDebugPanel(sandboxRoot.transform);
@@ -266,6 +280,29 @@ public static class SandboxSetupTools
 
         Debug.Log($"[SandboxSetup] ChestOpeningConfig duplicado en {ChestOpeningConfigPath}");
         return AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>(ChestOpeningConfigPath);
+    }
+
+    internal static InvisibleWallWarningConfig CopyInvisibleWallWarningConfig()
+    {
+        InvisibleWallWarningConfig existing = AssetDatabase.LoadAssetAtPath<InvisibleWallWarningConfig>(InvisibleWallWarningConfigPath);
+        if (existing != null) return existing;
+
+        if (AssetDatabase.LoadAssetAtPath<InvisibleWallWarningConfig>(InvisibleWallWarningSetupTools.ConfigPath) == null)
+        {
+            Debug.LogWarning($"[SandboxSetup] No se encontró {InvisibleWallWarningSetupTools.ConfigPath}. Ejecuta primero 'Tools > Manners > Muros invisibles > 1. Crear assets del aviso' si quieres tunear los avisos de muros invisibles por separado en el sandbox.");
+            return null;
+        }
+
+        EditorAssetUtility.EnsureFolder(SandboxFolder);
+
+        if (!AssetDatabase.CopyAsset(InvisibleWallWarningSetupTools.ConfigPath, InvisibleWallWarningConfigPath))
+        {
+            Debug.LogWarning("[SandboxSetup] No se pudo duplicar InvisibleWallWarningConfig.");
+            return null;
+        }
+
+        Debug.Log($"[SandboxSetup] InvisibleWallWarningConfig duplicado en {InvisibleWallWarningConfigPath}");
+        return AssetDatabase.LoadAssetAtPath<InvisibleWallWarningConfig>(InvisibleWallWarningConfigPath);
     }
 
     private static UpgradeDatabase CopyUpgradeDatabase()

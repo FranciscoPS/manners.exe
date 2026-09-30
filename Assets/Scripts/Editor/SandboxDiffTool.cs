@@ -174,6 +174,10 @@ public static class SandboxDiffTool
             Load<ChestOpeningConfig>(ProductionChestOpeningConfigPath),
             Load<ChestOpeningConfig>(SandboxSetupTools.ChestOpeningConfigPath));
 
+        AddPair(result, "InvisibleWallWarningConfig",
+            Load<InvisibleWallWarningConfig>(InvisibleWallWarningSetupTools.ConfigPath),
+            Load<InvisibleWallWarningConfig>(SandboxSetupTools.InvisibleWallWarningConfigPath));
+
         UpgradeDatabase productionUpgradeDb = Load<UpgradeDatabase>(ProductionUpgradeDatabasePath);
         AddPair(result, "UpgradeDatabase", productionUpgradeDb, Load<UpgradeDatabase>(SandboxSetupTools.UpgradeDatabasePath));
 
