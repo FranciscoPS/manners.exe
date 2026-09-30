@@ -14,8 +14,8 @@ public class CryoFieldConfig : OverrideEffectConfig
     public float tickInterval = 1f;
 
     [Header("Combinaciones")]
-    [Tooltip("Máximo de ticks adicionales mientras el jugador tenga Multi Shot. Se aplican siempre, después de cada tick principal: 1 + las balas extra del Multi Shot, limitado por este valor. 2 produce siempre tres ticks.")]
-    [Range(0, 8)] public int maxExtraPulses = 2;
+    [Tooltip("Tope de ticks adicionales mientras el jugador tenga Multi Shot. Se aplican siempre, después de cada tick principal: en total, la mitad de las balas del Multi Shot, redondeada hacia arriba (4 balas = 2 ticks, 7 = 4, 10 = 5), sin pasar de 1 + este valor. 8 deja la regla de la mitad sin tope práctico; 0 desactiva la combinación.")]
+    [Range(0, 8)] public int maxExtraPulses = 8;
     [Tooltip("Segundos entre ticks adicionales. Los ecos no pueden generar más ecos.")]
     [Min(0.01f)] public float repeatDelay = 0.15f;
     [Tooltip("Multiplicador del daño del láser contra enemigos ralentizados mientras Campo Criogénico esté activo.")]
