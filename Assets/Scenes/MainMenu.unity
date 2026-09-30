@@ -711,7 +711,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 13.289215, z: 0, w: 3.9867249}
+  m_margin: {x: 0, y: 6.3402786, z: 0, w: 3.9867249}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -14132,9 +14132,10 @@ MonoBehaviour:
       m_Calls: []
   m_text: "- El robot se mueve usando las teclas WASD.\n\n\n- El disparo es autom\xE1tico
     y siempre apunta a los enemigos.\n\n\n- El men\xFA de pausa se abre presionando
-    ESC.\n\n\n- Para abrir la tienda, presiona \"espacio\" mientras estes cerca de
-    ella (deberas buscarla en el mapa).\n\n\n- Para cerrar la tienda, presiona \"Espacio\"
-    nuevamente. Tambien se cierra automaticamente despues de realizar una compra."
+    ESC.\n\n\n- Para abrir la tienda, presiona \"espacio\" mientras est\xE9s cerca
+    de ella (deber\xE1s buscarla en el mapa).\n\n\n- Para cerrar la tienda, presiona
+    \"Espacio\" nuevamente. Tambi\xE9n se cierra autom\xE1ticamente despu\xE9s de
+    realizar una compra."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
   m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
@@ -16105,6 +16106,14 @@ PrefabInstance:
       propertyPath: m_fontSize
       value: 17.25
       objectReference: {fileID: 0}
+    - target: {fileID: 102429590612397358, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
+    - target: {fileID: 851537983115705579, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 946572152152146631, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16153,6 +16162,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1274190945058634639, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 1558513898675070700, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16169,6 +16182,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1663449455360150631, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 1752961358872623679, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16189,10 +16206,22 @@ PrefabInstance:
       propertyPath: m_fontSize
       value: 17.25
       objectReference: {fileID: 0}
+    - target: {fileID: 1937443198948534305, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 2504672642801357150, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_fontSize
       value: 17.25
       objectReference: {fileID: 0}
+    - target: {fileID: 2504672642801357150, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
+    - target: {fileID: 2653850824626800927, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 3114026092560508757, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16225,6 +16254,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3522949329844682986, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 3563110996129087543, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16285,6 +16318,10 @@ PrefabInstance:
       propertyPath: m_fontSize
       value: 17.25
       objectReference: {fileID: 0}
+    - target: {fileID: 5023753485997966697, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 5312934843740562655, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16305,6 +16342,10 @@ PrefabInstance:
       propertyPath: m_fontSize
       value: 17.25
       objectReference: {fileID: 0}
+    - target: {fileID: 5783852277880774431, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 6379203782452516830, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16321,6 +16362,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6419026000319192789, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 6595221613263685548, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16337,6 +16382,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6693846662250674308, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 6712630645455901117, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_Pivot.x
       value: 1
@@ -16417,6 +16466,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7218144946704659585, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 7630166122762146678, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16431,8 +16484,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7630166122762146678, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -252.5
       objectReference: {fileID: 0}
+    - target: {fileID: 7921873446030152080, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 8158102150975496684, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -16469,6 +16526,10 @@ PrefabInstance:
       propertyPath: m_fontSize
       value: 17.25
       objectReference: {fileID: 0}
+    - target: {fileID: 8466644945010109603, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
     - target: {fileID: 9038094439556974859, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -18597,11 +18658,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Blackdoor Studios\n\n- Francisco  Peralta - Director/Programador\r\n-
-    Mauricio Reyna - Artista 3D y Animaciones \n- Pedro Juarez -  Main Tester y Apoyo
-    General\n- Zo\xE9 Hern\xE1ndez - Directora de Arte\n- Diego Trejo - Ingeniero
-    en audio/musico \r\n\r\nTesters: \n\n- Vivian tamayo torres\r\n- Bruno Alexis
-    Mora Valencia"
+  m_text: "Blackdoor Studios\n\n- Francisco Peralta - Director/Programador\r\n- Mauricio
+    Reyna - Artista 3D y Animaciones \n- Pedro Ju\xE1rez -  Main Tester y Apoyo General\n-
+    Zo\xE9 Hern\xE1ndez - Directora de Arte\n- Diego Trejo - Ingeniero en audio/m\xFAsico
+    \r\n\r\nTesters: \n\n- Vivian Tamayo Torres\r\n- Bruno Alexis Mora Valencia"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
   m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
@@ -19653,11 +19713,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "- La experiencia se obtiene al derrotar enemigos y destruir edificios.\n\n\n-
-    Cuando subes de nivel, se otorga una mejora de estad\xEDstica aleatoria.\n\n\n-
-    Cada vez que subes de nivel, se requiere m\xE1s experiencia para alcanzar el
-    siguiente nivel.\n\n\n- El menu de mejoras de experiencia aparece autom\xE1ticamente
-    cuando subes de nivel y se cierra una vez que seleccionas una mejora.\n\n\n-
-    Mant\xE9n presionado el bot\xF3n izquierdo del mouse sobre una mejora para elegirla."
+    Cuando subes de nivel, se otorgan una selecci\xF3n de mejoras de estad\xEDsticas
+    aleatorias, de las que puedes elegir una.\n\n\n- Cada vez que subes de nivel,
+    se requiere m\xE1s experiencia para alcanzar el siguiente nivel.\n\n\n- El men\xFA
+    de mejoras de experiencia aparece autom\xE1ticamente cuando subes de nivel y
+    se cierra una vez que seleccionas una mejora.\n\n\n- Mant\xE9n presionado el
+    bot\xF3n izquierdo del mouse sobre una mejora para elegirla."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
   m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
@@ -27979,7 +28040,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Abrir menu de pausa '
+  m_text: "Abrir men\xFA de pausa "
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
   m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
@@ -32112,7 +32173,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Control de musica
+  m_text: "Control de m\xFAsica"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
   m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
@@ -36259,7 +36320,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Abrir menu de tienda '
+  m_text: "Abrir men\xFA de tienda "
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
   m_sharedMaterial: {fileID: -4054535063896590863, guid: 04f713734c4b9c74f84e76d6d49dc08c, type: 2}
