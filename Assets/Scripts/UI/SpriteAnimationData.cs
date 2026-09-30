@@ -12,13 +12,13 @@ public class SpriteAnimationData : ScriptableObject
     [Tooltip("Frames por segundo. Corre en tiempo real, así que también avanza mientras el tutorial congela el juego.")]
     [SerializeField][Min(1f)] private float framesPerSecond = 12f;
 
-    [Tooltip("Al terminar, la imagen se queda en el último frame. Apagado = vuelve al primer frame.")]
-    [SerializeField] private bool holdLastFrame = true;
+    [Tooltip("Índice del primer frame del tramo que se repite. Los frames anteriores son la entrada y se reproducen una sola vez; desde este frame hasta el último se repiten mientras el robot siga hablando (el texto se sigue escribiendo). Cuando el texto termina, se completa la vuelta en curso y la imagen se queda en el último frame. 0 = se repite la animación completa.")]
+    [SerializeField][Min(0)] private int loopStartFrame = 0;
 
     public Sprite[] Frames => frames;
     public bool HasFrames => frames != null && frames.Length > 0;
     public float FrameDuration => 1f / framesPerSecond;
-    public Sprite RestingFrame => holdLastFrame ? frames[frames.Length - 1] : frames[0];
+    public int LoopStartFrame => Mathf.Clamp(loopStartFrame, 0, frames.Length - 1);
 
 #if UNITY_EDITOR
     [ContextMenu("Cargar frames del spritesheet")]

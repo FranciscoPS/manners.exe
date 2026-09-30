@@ -502,23 +502,24 @@ public class TutorialManager : MonoBehaviour
     private IEnumerator RobotAnimationRoutine()
     {
         Sprite[] frames = robotTalkAnimation.Frames;
+        int lastFrame = frames.Length - 1;
+        int loopStartFrame = robotTalkAnimation.LoopStartFrame;
         float frameDuration = robotTalkAnimation.FrameDuration;
-        float totalDuration = frameDuration * frames.Length;
-        int shownFrame = 0;
-        robotImage.sprite = frames[0];
+        int frame = 0;
+        float frameElapsed = 0f;
+        robotImage.sprite = frames[frame];
 
-        float elapsed = 0f;
-        while (elapsed < totalDuration)
+        while (frame < lastFrame || isTyping)
         {
             yield return null;
-            elapsed += Mathf.Min(Time.unscaledDeltaTime, frameDuration);
-            int frame = Mathf.Min((int)(elapsed / frameDuration), frames.Length - 1);
-            if (frame == shownFrame) continue;
-            shownFrame = frame;
+            frameElapsed += Mathf.Min(Time.unscaledDeltaTime, frameDuration);
+            if (frameElapsed < frameDuration) continue;
+
+            frameElapsed -= frameDuration;
+            frame = frame < lastFrame ? frame + 1 : loopStartFrame;
             robotImage.sprite = frames[frame];
         }
 
-        robotImage.sprite = robotTalkAnimation.RestingFrame;
         robotAnimationCoroutine = null;
     }
 
