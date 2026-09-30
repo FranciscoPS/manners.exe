@@ -8,7 +8,18 @@ public class BuildingFader : MonoBehaviour
     [Tooltip("Incluir renderers de los hijos (normalmente sí, el visual cuelga del root).")]
     [SerializeField] private bool affectsChildRenderers = true;
 
-    private float minVisibleAlpha = 0.6f;
+    [Tooltip("Renderers hijos que no se desvanecen con el edificio ni cuentan para detectar si tapa algo. Por ejemplo, la esfera de rango de la tienda, cuyo material controla ShopVisualFeedback.")]
+    [SerializeField] private Renderer[] excludedRenderers = new Renderer[0];
+
+    [Header("Opacidad propia")]
+    [Tooltip("Activo: este edificio usa su propia opacidad al tapar al jugador o a enemigos, en vez de la global del BuildingTransparencyManager. Para edificios importantes que no deben perderse de vista, como la tienda.")]
+    [SerializeField] private bool useOwnMinVisibleAlpha = false;
+
+    [Tooltip("Opacidad de este edificio cuando tapa algo (solo con 'Use Own Min Visible Alpha' activo). 0 = invisible, 1 = opaco. Se puede ajustar en Play Mode y se ve al instante.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float ownMinVisibleAlpha = 0.7f;
+
+    private float globalMinVisibleAlpha = 0.6f;
 
     private static readonly int FadeID = Shader.PropertyToID("_Fade");
     private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
@@ -31,11 +42,16 @@ public class BuildingFader : MonoBehaviour
     public Bounds WorldBounds { get; private set; }
     public bool NeedsTick => !Mathf.Approximately(currentFade, targetFade);
 
+    private float MinVisibleAlpha => useOwnMinVisibleAlpha ? ownMinVisibleAlpha : globalMinVisibleAlpha;
+
     private void Awake()
     {
-        renderers = affectsChildRenderers
+        Renderer[] found = affectsChildRenderers
             ? GetComponentsInChildren<Renderer>(true)
             : GetComponents<Renderer>();
+        renderers = excludedRenderers.Length == 0
+            ? found
+            : System.Array.FindAll(found, r => System.Array.IndexOf(excludedRenderers, r) < 0);
 
         sharedMatsPerRenderer = new Material[renderers.Length][];
         for (int i = 0; i < renderers.Length; i++)
@@ -105,7 +121,7 @@ public class BuildingFader : MonoBehaviour
     public void Tick(float deltaTime, float speed, float minAlpha)
     {
         if (suspended) return;
-        minVisibleAlpha = minAlpha;
+        globalMinVisibleAlpha = minAlpha;
         currentFade = Mathf.MoveTowards(currentFade, targetFade, speed * deltaTime);
         Apply();
     }
@@ -113,9 +129,17 @@ public class BuildingFader : MonoBehaviour
     public void ForceApply(float minAlpha)
     {
         if (suspended) return;
-        minVisibleAlpha = minAlpha;
+        globalMinVisibleAlpha = minAlpha;
         Apply();
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (!Application.isPlaying || renderers == null || suspended) return;
+        Apply();
+    }
+#endif
 
     private void Apply()
     {
@@ -140,7 +164,7 @@ public class BuildingFader : MonoBehaviour
 
         if (!usingFadeMats) SwitchToFadeMats();
 
-        float alpha = Mathf.Lerp(1f, minVisibleAlpha, currentFade);
+        float alpha = Mathf.Lerp(1f, MinVisibleAlpha, currentFade);
         foreach (Material material in fadeMaterials.Values) SetMaterialAlpha(material, alpha);
     }
 
