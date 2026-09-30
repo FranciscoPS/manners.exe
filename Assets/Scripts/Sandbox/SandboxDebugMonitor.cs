@@ -31,18 +31,18 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         public TextMeshProUGUI value;
     }
 
-    private class SynergyRow
+    private class OverrideRow
     {
-        public SynergyData synergy;
+        public OverrideData overrideData;
         public TextMeshProUGUI label;
         public TextMeshProUGUI value;
     }
 
     private TextMeshProUGUI headerText;
     private TextMeshProUGUI footerText;
-    private TextMeshProUGUI synergiesSectionTitle;
+    private TextMeshProUGUI overridesSectionTitle;
     private readonly List<UpgradeRow> upgradeRows = new List<UpgradeRow>();
-    private readonly List<SynergyRow> synergyRows = new List<SynergyRow>();
+    private readonly List<OverrideRow> overrideRows = new List<OverrideRow>();
 
     private PlayerHealth cachedPlayerHealth;
     private PlayerExperience cachedPlayerExperience;
@@ -72,10 +72,10 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         if (logUpgrades && PlayerStatsManager.Instance != null)
             PlayerStatsManager.Instance.OnUpgradeApplied += HandleUpgradeApplied;
 
-        if (SynergyManager.Instance != null)
+        if (OverrideManager.Instance != null)
         {
-            SynergyManager.Instance.OnSynergyActivated += HandleSynergyActivated;
-            SynergyManager.Instance.OnSynergyDeactivated += HandleSynergyDeactivated;
+            OverrideManager.Instance.OnOverrideActivated += HandleOverrideActivated;
+            OverrideManager.Instance.OnOverrideDeactivated += HandleOverrideDeactivated;
         }
     }
 
@@ -90,10 +90,10 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         if (PlayerStatsManager.Instance != null)
             PlayerStatsManager.Instance.OnUpgradeApplied -= HandleUpgradeApplied;
 
-        if (SynergyManager.Instance != null)
+        if (OverrideManager.Instance != null)
         {
-            SynergyManager.Instance.OnSynergyActivated -= HandleSynergyActivated;
-            SynergyManager.Instance.OnSynergyDeactivated -= HandleSynergyDeactivated;
+            OverrideManager.Instance.OnOverrideActivated -= HandleOverrideActivated;
+            OverrideManager.Instance.OnOverrideDeactivated -= HandleOverrideDeactivated;
         }
     }
 
@@ -164,16 +164,16 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             upgradeRows.Add(new UpgradeRow { type = types[i], label = label, value = value });
         }
 
-        synergiesSectionTitle = CreateSectionTitle(parent, "SINERGIAS");
-        List<SynergyData> synergies = SynergyDatabase.Instance != null ? SynergyDatabase.Instance.allSynergies : null;
-        if (synergies != null)
+        overridesSectionTitle = CreateSectionTitle(parent, "SOBRECARGAS");
+        List<OverrideData> overrides = OverrideDatabase.Instance != null ? OverrideDatabase.Instance.allOverrides : null;
+        if (overrides != null)
         {
-            for (int i = 0; i < synergies.Count; i++)
+            for (int i = 0; i < overrides.Count; i++)
             {
-                if (synergies[i] == null) continue;
+                if (overrides[i] == null) continue;
 
-                (TextMeshProUGUI label, TextMeshProUGUI value) = CreateRow(parent, synergies[i].synergyName);
-                synergyRows.Add(new SynergyRow { synergy = synergies[i], label = label, value = value });
+                (TextMeshProUGUI label, TextMeshProUGUI value) = CreateRow(parent, overrides[i].overrideName);
+                overrideRows.Add(new OverrideRow { overrideData = overrides[i], label = label, value = value });
             }
         }
 
@@ -186,13 +186,13 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         if (headerText != null) headerText.text = SandboxReportBuilder.BuildHeader(smoothedFps, cachedPlayerHealth, cachedPlayerExperience);
         if (footerText != null) footerText.text = SandboxReportBuilder.BuildFooter();
 
-        SynergyManager synergyManager = SynergyManager.Instance;
+        OverrideManager overrideManager = OverrideManager.Instance;
 
-        if (synergiesSectionTitle != null)
+        if (overridesSectionTitle != null)
         {
-            bool enabled = synergyManager == null || synergyManager.SynergiesEnabled;
-            synergiesSectionTitle.text = enabled ? "SINERGIAS" : "SINERGIAS (desactivadas)";
-            synergiesSectionTitle.color = enabled ? ColorSectionTitle : ColorInactive;
+            bool enabled = overrideManager == null || overrideManager.OverridesEnabled;
+            overridesSectionTitle.text = enabled ? "SOBRECARGAS" : "SOBRECARGAS (desactivadas)";
+            overridesSectionTitle.color = enabled ? ColorSectionTitle : ColorInactive;
         }
 
         PlayerStatsManager stats = PlayerStatsManager.Instance;
@@ -206,11 +206,11 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             row.label.color = level > 0 ? Color.white : ColorLabelDim;
         }
 
-        for (int i = 0; i < synergyRows.Count; i++)
+        for (int i = 0; i < overrideRows.Count; i++)
         {
-            SynergyRow row = synergyRows[i];
-            SynergyData synergy = row.synergy;
-            bool active = synergyManager != null && synergyManager.IsSynergyActive(synergy);
+            OverrideRow row = overrideRows[i];
+            OverrideData overrideData = row.overrideData;
+            bool active = overrideManager != null && overrideManager.IsOverrideActive(overrideData);
 
             if (active)
             {
@@ -220,11 +220,11 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
             }
             else
             {
-                int levelA = stats != null ? stats.GetUpgradeLevel(synergy.requiredUpgradeA) : 0;
-                int levelB = stats != null ? stats.GetUpgradeLevel(synergy.requiredUpgradeB) : 0;
+                int levelA = stats != null ? stats.GetUpgradeLevel(overrideData.requiredUpgradeA) : 0;
+                int levelB = stats != null ? stats.GetUpgradeLevel(overrideData.requiredUpgradeB) : 0;
                 bool anyProgress = levelA > 0 || levelB > 0;
 
-                row.value.text = $"{FormatUpgradeName(synergy.requiredUpgradeA)} {levelA}/{synergy.requiredLevelA}   {FormatUpgradeName(synergy.requiredUpgradeB)} {levelB}/{synergy.requiredLevelB}";
+                row.value.text = $"{FormatUpgradeName(overrideData.requiredUpgradeA)} {levelA}/{overrideData.requiredLevelA}   {FormatUpgradeName(overrideData.requiredUpgradeB)} {levelB}/{overrideData.requiredLevelB}";
                 row.value.color = anyProgress ? ColorPartial : ColorInactive;
                 row.label.color = ColorLabelDim;
             }
@@ -238,7 +238,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 
         Debug.Log($"{SandboxLog.Prefix} ══ INFORME ══\n{SandboxLog.Prefix} {header}\n" +
                    $"{SandboxLog.Prefix} Mejoras:  {SandboxReportBuilder.BuildUpgradesLine()}\n" +
-                   $"{SandboxLog.Prefix} Sinergias: {SandboxReportBuilder.BuildSynergiesLine()}\n" +
+                   $"{SandboxLog.Prefix} Sobrecargas: {SandboxReportBuilder.BuildOverridesLine()}\n" +
                    $"{SandboxLog.Prefix} {footer}");
     }
 
@@ -255,14 +255,14 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         SandboxLog.Info($"MEJORA aplicada: {type} → nivel {level} ({value}).");
     }
 
-    private void HandleSynergyActivated(SynergyData synergy)
+    private void HandleOverrideActivated(OverrideData overrideData)
     {
-        SandboxLog.Info($"SINERGIA desbloqueada: {synergy.synergyName}");
+        SandboxLog.Info($"SOBRECARGA desbloqueada: {overrideData.overrideName}");
     }
 
-    private void HandleSynergyDeactivated(SynergyData synergy)
+    private void HandleOverrideDeactivated(OverrideData overrideData)
     {
-        SandboxLog.Info($"SINERGIA desactivada: {synergy.synergyName}");
+        SandboxLog.Info($"SOBRECARGA desactivada: {overrideData.overrideName}");
     }
 
     private void HandleChestSpawned()

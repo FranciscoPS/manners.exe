@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using DG.Tweening;
 using UnityEngine.UI;
 using TMPro;
@@ -29,9 +30,9 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI coinsCollectedText;
     [SerializeField] private TextMeshProUGUI diamondsCollectedText;
 
-    [Header("Sinergias")]
-    [Tooltip("Aviso que aparece solo si en esta partida se descubrió una pista o una sinergia nueva.")]
-    [SerializeField] private TextMeshProUGUI synergyDiscoveryText;
+    [Header("Sobrecargas")]
+    [Tooltip("Aviso que aparece solo si en esta partida se descubrió una pista o una sobrecarga nueva.")]
+    [SerializeField, FormerlySerializedAs("synergyDiscoveryText")] private TextMeshProUGUI overrideDiscoveryText;
 
     private bool isTransitioning = false;
     private bool statsUpdated = false;
@@ -106,22 +107,22 @@ public class GameOverUI : MonoBehaviour
             diamondsCollectedText.text = $"Gemas recolectadas: {GameSessionStats.Instance.DiamondsCollected}";
         }
 
-        UpdateSynergyDiscovery();
+        UpdateOverrideDiscovery();
     }
 
-    private void UpdateSynergyDiscovery()
+    private void UpdateOverrideDiscovery()
     {
-        if (synergyDiscoveryText == null) return;
+        if (overrideDiscoveryText == null) return;
 
-        int newSynergies = SynergyDiscovery.NewSynergiesThisRun;
-        int newPieces = SynergyDiscovery.NewPiecesThisRun;
+        int newOverrides = OverrideDiscovery.NewOverridesThisRun;
+        int newPieces = OverrideDiscovery.NewPiecesThisRun;
 
-        if (newSynergies > 0)
-            synergyDiscoveryText.text = newSynergies == 1 ? "¡Nueva sinergia descubierta!" : $"¡{newSynergies} sinergias nuevas descubiertas!";
+        if (newOverrides > 0)
+            overrideDiscoveryText.text = newOverrides == 1 ? "¡Nueva sobrecarga descubierta!" : $"¡{newOverrides} sobrecargas nuevas descubiertas!";
         else if (newPieces > 0)
-            synergyDiscoveryText.text = newPieces == 1 ? "¡Nueva pista de sinergia encontrada!" : $"¡{newPieces} pistas de sinergia nuevas!";
+            overrideDiscoveryText.text = newPieces == 1 ? "¡Nueva pista de sobrecarga encontrada!" : $"¡{newPieces} pistas de sobrecarga nuevas!";
 
-        synergyDiscoveryText.gameObject.SetActive(newSynergies > 0 || newPieces > 0);
+        overrideDiscoveryText.gameObject.SetActive(newOverrides > 0 || newPieces > 0);
     }
 
     private void SetGameOverVisible(bool visible)

@@ -2397,7 +2397,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\xA1Nueva pista de sinergia encontrada!"
+  m_text: "\xA1Nueva pista de sobrecarga encontrada!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -2489,7 +2489,7 @@ GameObject:
   - component: {fileID: 110999706}
   - component: {fileID: 110999705}
   m_Layer: 5
-  m_Name: SynergyDiscoveryText
+  m_Name: OverrideDiscoveryText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4853,7 +4853,7 @@ MonoBehaviour:
   buildingsDestroyedText: {fileID: 1041108445}
   coinsCollectedText: {fileID: 984507742}
   diamondsCollectedText: {fileID: 215934752}
-  synergyDiscoveryText: {fileID: 110999705}
+  overrideDiscoveryText: {fileID: 110999705}
 --- !u!114 &238261087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13131,7 +13131,7 @@ GameObject:
   - component: {fileID: 615039320}
   - component: {fileID: 615039319}
   m_Layer: 5
-  m_Name: SinergiasTitle
+  m_Name: SobrecargasTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13169,7 +13169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlitchTextUI
   target: {fileID: 615039320}
-  prefix: Sin
+  prefix: Sob
   idleMin: 0.7
   idleMax: 2.2
   burstMin: 0.12
@@ -13206,7 +13206,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sinergias
+  m_text: Sobrecargas
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 5348552356862849577, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
@@ -25131,7 +25131,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4269488966319701093, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_Name
-      value: SynergyHintsPanel
+      value: OverrideHintsPanel
       objectReference: {fileID: 0}
     - target: {fileID: 4269488966319701093, guid: 239e1ad7542434aeebac977e661e7e54, type: 3}
       propertyPath: m_IsActive
@@ -52079,7 +52079,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6611613503886692042, guid: e2e13877671304964becaf900928621d, type: 3}
       propertyPath: m_Name
-      value: SynergyHudPanel
+      value: OverrideHudPanel
       objectReference: {fileID: 0}
     - target: {fileID: 6611613503886692042, guid: e2e13877671304964becaf900928621d, type: 3}
       propertyPath: m_IsActive

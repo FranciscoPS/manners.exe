@@ -4101,9 +4101,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SandboxHotkeys
   debugMonitor: {fileID: 166476814}
   togglePanel: 94
-  synergyHintsPanelPrefab: {fileID: 0}
-  toggleSynergyHints: 22
-  clearSynergyDiscoveries: 71
+  overrideHintsPanelPrefab: {fileID: 0}
+  toggleOverrideHints: 22
+  clearOverrideDiscoveries: 71
   grantLevel: 95
   grantRandomUpgrade: 96
   grantRandomPremiumUpgrade: 97
@@ -4159,15 +4159,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SandboxTuning
   balanceOverride: {fileID: 11400000, guid: 25c6ad9476bbc4dafbfddc8a2cac1ab6, type: 2}
   upgradeDatabaseOverride: {fileID: 11400000, guid: ba5e3bc2858e24167b54ca418e8154a5, type: 2}
-  synergyDatabaseOverride: {fileID: 11400000, guid: 01fc478299b5d4065bf4dfd5b88fcfe8, type: 2}
+  overrideDatabaseOverride: {fileID: 11400000, guid: 01fc478299b5d4065bf4dfd5b88fcfe8, type: 2}
   chestOpeningConfigOverride: {fileID: 0}
   matchDurationMinutes: 3
   startingTimeScale: 1
   startInvulnerable: 0
   startingHealthBonus: 0
   tutorialMode: 1
-  synergiesEnabled: 1
-  forceActiveSynergies: []
+  overridesEnabled: 1
+  forceActiveOverrides:
+  - {fileID: 11400000, guid: 0b9e4cc7789804dd792e0dff26e7f7c3, type: 2}
   startingCoins: 0
   startingDiamonds: 0
   startingPlayerLevels: 0
@@ -5428,7 +5429,7 @@ MonoBehaviour:
   buildingsDestroyedText: {fileID: 0}
   coinsCollectedText: {fileID: 0}
   diamondsCollectedText: {fileID: 0}
-  synergyDiscoveryText: {fileID: 0}
+  overrideDiscoveryText: {fileID: 0}
 --- !u!114 &238261087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15008,9 +15009,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PerformanceMonitor
   reportInterval: 5
-  fpsCriticalThreshold: 25
-  fpsWarningThreshold: 40
-  activeObjectsAlertThreshold: 150
+  enableReleaseLogging: 0
 --- !u!4 &626491810 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2478060105584587702, guid: 2374eb8b06a34424e8d294a4bdbc47e0, type: 3}
@@ -22528,6 +22527,7 @@ MonoBehaviour:
   minimapCamera: {fileID: 638497315}
   minimapRenderTexture: {fileID: 8400000, guid: 68b96d46f85695d49afce7209f665dfe, type: 2}
   cameraHeight: 80
+  refreshRate: 20
   mapDisplay: {fileID: 1762103407}
   playerIcon: {fileID: 714603142}
   shopIcon: {fileID: 697388964}
@@ -44675,7 +44675,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6611613503886692042, guid: e2e13877671304964becaf900928621d, type: 3}
       propertyPath: m_Name
-      value: SynergyHudPanel
+      value: OverrideHudPanel
       objectReference: {fileID: 0}
     - target: {fileID: 6611613503886692042, guid: e2e13877671304964becaf900928621d, type: 3}
       propertyPath: m_IsActive

@@ -51,9 +51,9 @@ public static class SandboxDiffTool
 
     private const string ProductionBalancePath = "Assets/Resources/GameBalanceConfig.asset";
     private const string ProductionUpgradeDatabasePath = "Assets/Resources/UpgradeDatabase.asset";
-    private const string ProductionSynergyDatabasePath = "Assets/Resources/SynergyDatabase.asset";
+    private const string ProductionOverrideDatabasePath = "Assets/Resources/OverrideDatabase.asset";
     private const string ProductionChestOpeningConfigPath = "Assets/Resources/ChestOpeningConfig.asset";
-    private const string ProductionSynergiesFolder = "Assets/Configurations/Synergies";
+    private const string ProductionOverridesFolder = "Assets/Configurations/Overrides";
     private const string ProductionConfigurationsFolder = "Assets/Configurations/";
     private const string ProductionResourcesFolder = "Assets/Resources/";
 
@@ -183,15 +183,15 @@ public static class SandboxDiffTool
                 AddPair(result, $"UpgradeData/{pair.Key.name}", pair.Key, pair.Value);
         }
 
-        AddPair(result, "SynergyDatabase",
-            Load<SynergyDatabase>(ProductionSynergyDatabasePath),
-            Load<SynergyDatabase>(SandboxSetupTools.SynergyDatabasePath));
+        AddPair(result, "OverrideDatabase",
+            Load<OverrideDatabase>(ProductionOverrideDatabasePath),
+            Load<OverrideDatabase>(SandboxSetupTools.OverrideDatabasePath));
 
-        foreach (SynergyData synergy in LoadAllInFolder<SynergyData>(ProductionSynergiesFolder))
-            AddPair(result, $"SynergyData/{synergy.name}", synergy, LoadCounterpart<SynergyData>(synergy, SandboxSetupTools.SynergiesFolder));
+        foreach (OverrideData overrideData in LoadAllInFolder<OverrideData>(ProductionOverridesFolder))
+            AddPair(result, $"OverrideData/{overrideData.name}", overrideData, LoadCounterpart<OverrideData>(overrideData, SandboxSetupTools.OverridesFolder));
 
-        foreach (SynergyEffectConfig config in LoadAllInFolder<SynergyEffectConfig>(ProductionSynergiesFolder))
-            AddPair(result, $"SynergyEffectConfig/{config.name}", config, LoadCounterpart<SynergyEffectConfig>(config, SandboxSetupTools.SynergiesFolder));
+        foreach (OverrideEffectConfig config in LoadAllInFolder<OverrideEffectConfig>(ProductionOverridesFolder))
+            AddPair(result, $"OverrideEffectConfig/{config.name}", config, LoadCounterpart<OverrideEffectConfig>(config, SandboxSetupTools.OverridesFolder));
 
         foreach (KeyValuePair<EnemyConfiguration, EnemyConfiguration> pair in SandboxSetupTools.LoadEnemyMap())
             AddPair(result, $"EnemyConfiguration/{pair.Key.name}", pair.Key, pair.Value);
