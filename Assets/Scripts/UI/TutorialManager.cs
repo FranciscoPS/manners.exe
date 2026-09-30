@@ -76,6 +76,12 @@ public class TutorialManager : MonoBehaviour
     [SerializeField][Range(0f, 1f)] private float typingVolume = 0.4f;
     [SerializeField][Range(0.75f, 1.25f)] private float typingPitch = 1.0f;
 
+    [Header("Robot Animation")]
+    [Tooltip("Arrastra aquí: la Image del robot dentro de TutorialPanel")]
+    [SerializeField] private Image robotImage;
+    [Tooltip("Se reproduce una sola vez cada vez que el robot empieza a hablar (cuando el texto comienza a escribirse)")]
+    [SerializeField] private SpriteAnimationData robotTalkAnimation;
+
     [Header("HUD Highlight Targets")]
     [Tooltip("Arrastra aquí: CurrencyPanel")]
     [SerializeField] private RectTransform targetCurrencyPanel;
@@ -137,6 +143,8 @@ public class TutorialManager : MonoBehaviour
     private Coroutine typewriterCoroutine;
     private bool isTyping = false;
     private AudioSource typingSource;
+
+    private Coroutine robotAnimationCoroutine;
 
     private Coroutine pulseCoroutine;
     private RectTransform currentHighlightTarget;
@@ -341,6 +349,8 @@ public class TutorialManager : MonoBehaviour
         if (messageText != null)
             typewriterCoroutine = StartCoroutine(TypewriterRoutine(currentStep.text));
 
+        PlayRobotAnimation();
+
         GameEvents.TriggerTutorialStepShown(currentStep.id);
     }
 
@@ -473,6 +483,44 @@ public class TutorialManager : MonoBehaviour
         if (typingSource != null) typingSource.Stop();
         if (messageText != null) messageText.maxVisibleCharacters = int.MaxValue;
         isTyping = false;
+    }
+
+    private void PlayRobotAnimation()
+    {
+        StopRobotAnimation();
+        if (robotImage == null || robotTalkAnimation == null || !robotTalkAnimation.HasFrames) return;
+        robotAnimationCoroutine = StartCoroutine(RobotAnimationRoutine());
+    }
+
+    private void StopRobotAnimation()
+    {
+        if (robotAnimationCoroutine == null) return;
+        StopCoroutine(robotAnimationCoroutine);
+        robotAnimationCoroutine = null;
+    }
+
+    private IEnumerator RobotAnimationRoutine()
+    {
+        Sprite[] frames = robotTalkAnimation.Frames;
+        int lastFrame = frames.Length - 1;
+        int loopStartFrame = robotTalkAnimation.LoopStartFrame;
+        float frameDuration = robotTalkAnimation.FrameDuration;
+        int frame = 0;
+        float frameElapsed = 0f;
+        robotImage.sprite = frames[frame];
+
+        while (frame < lastFrame || isTyping)
+        {
+            yield return null;
+            frameElapsed += Mathf.Min(Time.unscaledDeltaTime, frameDuration);
+            if (frameElapsed < frameDuration) continue;
+
+            frameElapsed -= frameDuration;
+            frame = frame < lastFrame ? frame + 1 : loopStartFrame;
+            robotImage.sprite = frames[frame];
+        }
+
+        robotAnimationCoroutine = null;
     }
 
     private void EnterWaitingForCoins()
@@ -641,6 +689,7 @@ public class TutorialManager : MonoBehaviour
     private void HidePanel()
     {
         SkipTypewriter();
+        StopRobotAnimation();
         StopHighlight();
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
 
