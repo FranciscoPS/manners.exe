@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7168b6e1815240e2ba235f53c625f914, type: 3}
   m_Name: InvisibleWallWarningConfig
   m_EditorClassIdentifier: Assembly-CSharp::InvisibleWallWarningConfig
-  activationDistance: 6
+  activationDistance: 9
   fullIntensityDistance: 1
   fullIntensityLeadSeconds: 0.35
   lookAheadSeconds: 0.6
@@ -27,8 +27,9 @@ MonoBehaviour:
   topPadding: 1
   bottomExtension: 0.1
   surfaceOffset: 0.05
+  fieldLength: 40
   groundDepth: 1.6
   groundHeightOffset: 0.03
-  panelOpacityBetweenCameraAndPlayer: 0.55
-  stripesOpacityBetweenCameraAndPlayer: 0.3
+  panelOpacityBetweenCameraAndPlayer: 0.77
+  stripesOpacityBetweenCameraAndPlayer: 0.42
   hideWhenPlayerDies: 1

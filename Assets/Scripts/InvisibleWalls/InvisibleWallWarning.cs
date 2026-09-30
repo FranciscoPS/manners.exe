@@ -4,6 +4,7 @@ public class InvisibleWallWarning : MonoBehaviour
 {
     private static readonly int RevealId = Shader.PropertyToID("_Reveal");
     private static readonly int FadeId = Shader.PropertyToID("_Fade");
+    private static readonly int RevealCenterId = Shader.PropertyToID("_RevealCenter");
 
     [Header("Muro")]
     [Tooltip("BoxCollider del muro invisible que vigila este aviso. Lo asigna 'Tools > Manners > Muros invisibles > 2'. El aviso se coloca sobre la cara del muro que mira al jugador, sin importar la rotación ni la escala del muro.")]
@@ -14,16 +15,22 @@ public class InvisibleWallWarning : MonoBehaviour
     [SerializeField, Min(0f)] private float trimEnd;
 
     [Header("Referencias")]
-    [Tooltip("Quad con el material 'Custom/WallWarningHex' pegado a la pared (panel de hexágonos). Se escala al tamaño de la zona en cada frame; el tamaño de cada hexágono, colores, brillo y animaciones se ajustan en el material, en metros.")]
+    [Tooltip("Quad con el material 'Custom/WallWarningHex' pegado a la pared (campo de hexágonos). Se escala al largo del campo (config) y al alto de la zona en cada frame; el tamaño de cada hexágono, colores, brillo y animaciones se ajustan en el material, en metros.")]
     [SerializeField] private Renderer hexPanel;
     [Tooltip("Quad acostado en el piso, en la base de la pared, con el mismo material de hexágonos. Es lo que se lee en muros que la cámara ve de canto. Su profundidad se ajusta en el config (Banda en el piso). Opcional.")]
     [SerializeField] private Renderer groundBand;
-    [Tooltip("Canvas en World Space con las franjas de WARNING. Su Width/Height se ajusta a la zona usando la escala del propio canvas (0.01 = 100 unidades de canvas por metro). Las franjas se anclan arriba y abajo: su alto, posición y márgenes se editan en sus RectTransform.")]
+    [Tooltip("Canvas en World Space con las franjas de WARNING. Su Width/Height se ajusta a la zona alrededor del jugador usando la escala del propio canvas (0.01 = 100 unidades de canvas por metro). Las franjas se anclan arriba y abajo: su alto, posición y márgenes se editan en sus RectTransform.")]
     [SerializeField] private RectTransform stripesCanvas;
     [Tooltip("CanvasGroup del canvas de franjas. Su alpha lo controla el aviso según la cercanía.")]
     [SerializeField] private CanvasGroup stripesGroup;
     [Tooltip("Textos que se desplazan dentro de las franjas.")]
     [SerializeField] private WarningMarquee[] marquees;
+
+    [Header("Orden de dibujo")]
+    [Tooltip("Order in Layer del campo de hexágonos y de la banda del piso. Mayor que 0 para dibujarse encima del agua y de los demás transparentes (si no, el agua los tapa).")]
+    [SerializeField] private int panelSortingOrder = 1;
+    [Tooltip("Order in Layer del canvas de franjas. Mayor que el del campo para que el WARNING quede siempre encima de los hexágonos.")]
+    [SerializeField] private int stripesSortingOrder = 2;
 
     private Canvas stripesCanvasComponent;
     private MaterialPropertyBlock properties;
@@ -36,12 +43,14 @@ public class InvisibleWallWarning : MonoBehaviour
     private bool initialized;
     private bool visible = true;
     private float intensity;
-    private float alongOffset;
+    private float smoothedLead;
     private float hiddenTimer;
-    private Vector3 appliedSize;
+    private Vector4 appliedSize;
     private float appliedIntensity = -1f;
     private float appliedPanelFade = -1f;
     private float appliedStripesFade = -1f;
+    private float appliedPanelFocus = -1f;
+    private float appliedGroundFocus = -1f;
 
     public BoxCollider Wall => wall;
 
@@ -58,12 +67,18 @@ public class InvisibleWallWarning : MonoBehaviour
         if (stripesCanvas != null)
             stripesCanvasComponent = stripesCanvas.GetComponent<Canvas>();
 
+        if (hexPanel != null) hexPanel.sortingOrder = panelSortingOrder;
+        if (groundBand != null) groundBand.sortingOrder = panelSortingOrder;
+        if (stripesCanvasComponent != null) stripesCanvasComponent.sortingOrder = stripesSortingOrder;
+
         intensity = 0f;
         hiddenTimer = 0f;
-        appliedSize = Vector3.zero;
+        appliedSize = Vector4.zero;
         appliedIntensity = -1f;
         appliedPanelFade = -1f;
         appliedStripesFade = -1f;
+        appliedPanelFocus = -1f;
+        appliedGroundFocus = -1f;
         SetVisible(false);
     }
 
@@ -110,7 +125,7 @@ public class InvisibleWallWarning : MonoBehaviour
         {
             if (!visible) return;
 
-            ApplyIntensity(1f, 1f, config.stripesAppearAt);
+            ApplyIntensity(1f, 1f, config.stripesAppearAt, appliedPanelFocus, appliedGroundFocus);
             hiddenTimer += deltaTime;
             if (hiddenTimer >= config.hideDelay)
                 SetVisible(false);
@@ -119,38 +134,49 @@ public class InvisibleWallWarning : MonoBehaviour
 
         hiddenTimer = 0f;
 
-        float width = Mathf.Min(frame.zoneSize.x, halfLength * 2f);
-        float limit = halfLength - width * 0.5f;
+        float wallLength = halfLength * 2f;
+        float zoneWidth = Mathf.Min(frame.zoneSize.x, wallLength);
+        float fieldWidth = Mathf.Min(Mathf.Max(config.fieldLength, zoneWidth), wallLength);
+
         float lead = 0f;
         if (config.impactLeadSeconds > 0f && approachSpeed > 0.01f)
             lead = Vector3.Dot(frame.playerVelocity, alongAxis) * Mathf.Min(gap / approachSpeed, config.impactLeadSeconds);
 
-        float desiredOffset = Mathf.Clamp(along + lead, -limit, limit) - along;
         bool appearing = !visible;
         SetVisible(true);
 
         if (appearing || config.followSharpness <= 0f)
-            alongOffset = desiredOffset;
+            smoothedLead = lead;
         else
-            alongOffset = Mathf.Lerp(alongOffset, desiredOffset, 1f - Mathf.Exp(-config.followSharpness * deltaTime));
+            smoothedLead = Mathf.Lerp(smoothedLead, lead, 1f - Mathf.Exp(-config.followSharpness * deltaTime));
 
-        float alongPosition = Mathf.Clamp(along + alongOffset, -limit, limit);
-        Vector3 wallBase = wallCenter + alongAxis * alongPosition + normal * (halfThickness + config.surfaceOffset);
-        Vector3 position = wallBase;
-        position.y = frame.zoneBottom + frame.zoneSize.y * 0.5f;
+        float focusAlong = Mathf.Clamp(along + smoothedLead, -halfLength, halfLength);
+        float zoneLimit = halfLength - zoneWidth * 0.5f;
+        float fieldLimit = halfLength - fieldWidth * 0.5f;
+        float zoneAlong = Mathf.Clamp(focusAlong, -zoneLimit, zoneLimit);
+        float fieldAlong = Mathf.Clamp(focusAlong, -fieldLimit, fieldLimit);
 
-        Vector3 forward = -normal;
-        bool cameraBehindWall = frame.hasCamera && Vector3.Dot(frame.cameraPosition - position, normal) < 0f;
-        if (cameraBehindWall)
-            forward = normal;
+        float faceOffset = halfThickness + config.surfaceOffset;
+        float zoneCenterHeight = frame.zoneBottom + frame.zoneSize.y * 0.5f;
+        Vector3 zoneCenter = WallPoint(zoneAlong, normal, faceOffset, zoneCenterHeight);
+        Vector3 fieldCenter = WallPoint(fieldAlong, normal, faceOffset, zoneCenterHeight);
 
-        transform.SetPositionAndRotation(position, Quaternion.LookRotation(forward, Vector3.up));
-        PlaceGroundBand(wallBase, normal, frame.zoneBottom + config.bottomExtension + config.groundHeightOffset, config.groundDepth);
-        ApplySize(new Vector3(width, frame.zoneSize.y, config.groundDepth));
+        bool cameraBehindWall = frame.hasCamera && Vector3.Dot(frame.cameraPosition - zoneCenter, normal) < 0f;
+        transform.SetPositionAndRotation(zoneCenter, Quaternion.LookRotation(cameraBehindWall ? normal : -normal, Vector3.up));
+
+        if (hexPanel != null)
+            hexPanel.transform.position = fieldCenter;
+
+        PlaceGroundBand(fieldCenter, normal, frame.zoneBottom + config.bottomExtension + config.groundHeightOffset, config.groundDepth);
+        ApplySize(new Vector4(zoneWidth, frame.zoneSize.y, fieldWidth, config.groundDepth));
+
+        float focusOffset = focusAlong - fieldAlong;
         ApplyIntensity(
             cameraBehindWall ? config.panelOpacityBetweenCameraAndPlayer : 1f,
             cameraBehindWall ? config.stripesOpacityBetweenCameraAndPlayer : 1f,
-            config.stripesAppearAt);
+            config.stripesAppearAt,
+            FocusCoordinate(hexPanel, focusOffset, fieldWidth),
+            FocusCoordinate(groundBand, focusOffset, fieldWidth));
 
         if (marquees == null || (stripesCanvasComponent != null && !stripesCanvasComponent.enabled)) return;
 
@@ -199,6 +225,21 @@ public class InvisibleWallWarning : MonoBehaviour
         return normalAxis.sqrMagnitude > 0.5f && alongAxis.sqrMagnitude > 0.5f;
     }
 
+    private Vector3 WallPoint(float alongPosition, Vector3 normal, float faceOffset, float height)
+    {
+        Vector3 point = wallCenter + alongAxis * alongPosition + normal * faceOffset;
+        point.y = height;
+        return point;
+    }
+
+    private float FocusCoordinate(Renderer target, float offsetAlong, float width)
+    {
+        if (target == null) return 0.5f;
+
+        float direction = Vector3.Dot(alongAxis, target.transform.right) >= 0f ? 1f : -1f;
+        return Mathf.Clamp01(0.5f + direction * offsetAlong / Mathf.Max(0.01f, width));
+    }
+
     private void SetVisible(bool value)
     {
         if (visible == value) return;
@@ -220,16 +261,16 @@ public class InvisibleWallWarning : MonoBehaviour
         groundBand.transform.SetPositionAndRotation(center, Quaternion.LookRotation(Vector3.down, normal));
     }
 
-    private void ApplySize(Vector3 size)
+    private void ApplySize(Vector4 size)
     {
         if ((size - appliedSize).sqrMagnitude < 0.0001f) return;
         appliedSize = size;
 
         if (hexPanel != null)
-            hexPanel.transform.localScale = new Vector3(size.x, size.y, 1f);
+            hexPanel.transform.localScale = new Vector3(size.z, size.y, 1f);
 
         if (groundBand != null)
-            groundBand.transform.localScale = new Vector3(size.x, Mathf.Max(0.01f, size.z), 1f);
+            groundBand.transform.localScale = new Vector3(size.z, Mathf.Max(0.01f, size.w), 1f);
 
         if (stripesCanvas != null)
         {
@@ -240,18 +281,22 @@ public class InvisibleWallWarning : MonoBehaviour
         }
     }
 
-    private void ApplyIntensity(float panelFade, float stripesFade, float stripesAppearAt)
+    private void ApplyIntensity(float panelFade, float stripesFade, float stripesAppearAt, float panelFocus, float groundFocus)
     {
         if (Mathf.Abs(intensity - appliedIntensity) < 0.002f
             && Mathf.Abs(panelFade - appliedPanelFade) < 0.002f
-            && Mathf.Abs(stripesFade - appliedStripesFade) < 0.002f) return;
+            && Mathf.Abs(stripesFade - appliedStripesFade) < 0.002f
+            && Mathf.Abs(panelFocus - appliedPanelFocus) < 0.001f
+            && Mathf.Abs(groundFocus - appliedGroundFocus) < 0.001f) return;
 
         appliedIntensity = intensity;
         appliedPanelFade = panelFade;
         appliedStripesFade = stripesFade;
+        appliedPanelFocus = panelFocus;
+        appliedGroundFocus = groundFocus;
 
-        SetRendererValues(hexPanel, panelFade);
-        SetRendererValues(groundBand, 1f);
+        SetRendererValues(hexPanel, panelFade, panelFocus);
+        SetRendererValues(groundBand, 1f, groundFocus);
 
         float stripesAlpha = Mathf.Clamp01((intensity - stripesAppearAt) / Mathf.Max(0.01f, 1f - stripesAppearAt)) * stripesFade;
 
@@ -262,7 +307,7 @@ public class InvisibleWallWarning : MonoBehaviour
             stripesCanvasComponent.enabled = stripesAlpha > 0.001f;
     }
 
-    private void SetRendererValues(Renderer target, float fade)
+    private void SetRendererValues(Renderer target, float fade, float focus)
     {
         if (target == null) return;
 
@@ -272,6 +317,7 @@ public class InvisibleWallWarning : MonoBehaviour
         target.GetPropertyBlock(properties);
         properties.SetFloat(RevealId, intensity);
         properties.SetFloat(FadeId, fade);
+        properties.SetFloat(RevealCenterId, Mathf.Clamp01(focus));
         target.SetPropertyBlock(properties);
     }
 

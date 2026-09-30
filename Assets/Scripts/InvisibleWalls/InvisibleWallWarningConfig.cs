@@ -5,7 +5,7 @@ public class InvisibleWallWarningConfig : ScriptableObject
 {
     [Header("=== ACTIVACIÓN ===")]
     [Tooltip("Distancia en metros entre el borde del jugador y la pared a la que el aviso empieza a aparecer (quieto o moviéndose en paralelo a la pared).")]
-    [Min(0.1f)] public float activationDistance = 6f;
+    [Min(0.1f)] public float activationDistance = 9f;
     [Tooltip("Distancia en metros a la que el aviso llega a su intensidad máxima estando quieto. 0 = solo al tocar la pared.")]
     [Min(0f)] public float fullIntensityDistance = 1f;
     [Tooltip("Segundos antes del choque en los que el aviso ya debe estar al máximo al acercarse corriendo: la distancia de intensidad máxima crece con la velocidad hacia la pared × este valor.")]
@@ -39,6 +39,10 @@ public class InvisibleWallWarningConfig : ScriptableObject
     [Tooltip("Separación en metros entre la zona y la cara de la pared, para que no parpadee contra ella.")]
     [Min(0f)] public float surfaceOffset = 0.05f;
 
+    [Header("=== CAMPO DE HEXÁGONOS ===")]
+    [Tooltip("Largo en metros del campo de hexágonos sobre la pared, centrado en el jugador (o en el punto donde va a chocar). Cubre la pared visible para que se lea por dónde pasa el límite y planear la ruta; las franjas de WARNING quedan encima, del ancho de la zona. Se recorta en los extremos del muro. 40 ≈ el ancho de la pantalla.")]
+    [Min(0f)] public float fieldLength = 40f;
+
     [Header("=== BANDA EN EL PISO ===")]
     [Tooltip("Metros que la banda de hexágonos se extiende por el piso desde la base de la pared hacia el jugador. Es lo que se lee en los muros que la cámara ve de canto (este/oeste). 0 = sin banda.")]
     [Min(0f)] public float groundDepth = 1.6f;
@@ -47,9 +51,9 @@ public class InvisibleWallWarningConfig : ScriptableObject
 
     [Header("=== VISIBILIDAD ===")]
     [Tooltip("Opacidad del panel de hexágonos cuando la pared queda entre la cámara y el jugador (paredes del lado de la cámara), para no tapar al jugador. 1 = igual que en las demás paredes.")]
-    [Range(0f, 1f)] public float panelOpacityBetweenCameraAndPlayer = 0.55f;
+    [Range(0f, 1f)] public float panelOpacityBetweenCameraAndPlayer = 0.77f;
     [Tooltip("Opacidad de las franjas de WARNING cuando la pared queda entre la cámara y el jugador. Más baja que la del panel porque la franja superior cruza el cuerpo del jugador en pantalla.")]
-    [Range(0f, 1f)] public float stripesOpacityBetweenCameraAndPlayer = 0.3f;
+    [Range(0f, 1f)] public float stripesOpacityBetweenCameraAndPlayer = 0.42f;
     [Tooltip("Ocultar los avisos cuando el jugador muere.")]
     public bool hideWhenPlayerDies = true;
 

@@ -9,12 +9,12 @@ Shader "Custom/WallWarningHex"
         _CellSize ("Cell Size (meters, flat to flat)", Float) = 0.55
         _LineWidth ("Line Width (fraction of cell)", Range(0.005, 0.25)) = 0.045
         _LineGlow ("Line Glow Width (fraction of cell)", Range(0.01, 0.5)) = 0.16
-        [HDR] _LineColor ("Line Color", Color) = (1.6, 0.11, 0.07, 0.9)
-        [HDR] _FillColor ("Cell Fill Color", Color) = (0.8, 0.03, 0.03, 0.14)
+        [HDR] _LineColor ("Line Color", Color) = (1.6, 0.11, 0.07, 1)
+        [HDR] _FillColor ("Cell Fill Color", Color) = (0.8, 0.03, 0.03, 0.2)
 
         [Header(Cell Activity)]
         _LitCellRatio ("Lit Cells Ratio", Range(0, 1)) = 0.16
-        [HDR] _LitCellColor ("Lit Cell Color", Color) = (1.2, 0.06, 0.04, 0.35)
+        [HDR] _LitCellColor ("Lit Cell Color", Color) = (1.2, 0.06, 0.04, 0.49)
         _LitCellRate ("Lit Cells Change Rate (Hz)", Float) = 2.2
         _FlickerSpeed ("Cell Flicker Speed (Hz)", Float) = 1.4
         _FlickerAmount ("Cell Flicker Amount", Range(0, 1)) = 0.4
@@ -33,12 +33,14 @@ Shader "Custom/WallWarningHex"
         _BorderFade ("Border Fade (fraction of zone)", Range(0.01, 0.5)) = 0.1
         _RevealJitter ("Reveal Jitter", Range(0, 1)) = 0.35
         _RevealSoftness ("Reveal Softness", Range(0.01, 1)) = 0.2
+        _RevealVerticalWeight ("Reveal Vertical Weight (lower = fills the height sooner)", Range(0, 1)) = 0.4
         _GroundGlow ("Ground Glow", Range(0, 3)) = 0.7
         _GroundGlowHeight ("Ground Glow Height (meters)", Float) = 0.35
 
         [Header(Set By Code)]
         _Reveal ("Reveal (set by code)", Range(0, 1)) = 1
         _Fade ("Fade (set by code)", Range(0, 1)) = 1
+        _RevealCenter ("Reveal Center U (set by code)", Range(0, 1)) = 0.5
     }
 
     SubShader
@@ -46,7 +48,7 @@ Shader "Custom/WallWarningHex"
         Tags
         {
             "RenderType" = "Transparent"
-            "Queue" = "Transparent-1"
+            "Queue" = "Transparent"
             "RenderPipeline" = "UniversalPipeline"
             "IgnoreProjector" = "True"
         }
@@ -102,10 +104,12 @@ Shader "Custom/WallWarningHex"
                 float _BorderFade;
                 float _RevealJitter;
                 float _RevealSoftness;
+                float _RevealVerticalWeight;
                 float _GroundGlow;
                 float _GroundGlowHeight;
                 float _Reveal;
                 float _Fade;
+                float _RevealCenter;
             CBUFFER_END
 
             float Hash21(float2 p)
@@ -166,8 +170,11 @@ Shader "Custom/WallWarningHex"
                 glow *= glow;
 
                 float cellRandom = Hash21(cellKey);
+                float2 focus = float2(_RevealCenter, 0.5);
                 float2 cellCenterUV = IN.uv - offsetFromCenter * cellSize / panelSize;
-                float radial = length((cellCenterUV - 0.5) * 2.0);
+                float2 cellFromFocus = (cellCenterUV - focus) * panelSize;
+                float sideReach = max((cellFromFocus.x < 0.0 ? _RevealCenter : 1.0 - _RevealCenter) * panelSize.x, 0.5);
+                float radial = length(float2(cellFromFocus.x / sideReach, cellFromFocus.y / (panelSize.y * 0.5) * _RevealVerticalWeight));
                 float threshold = radial * (1.0 - _RevealJitter * 0.5) + cellRandom * _RevealJitter * 0.5;
                 float cellVisible = smoothstep(threshold, threshold + _RevealSoftness, _Reveal * (1.05 + _RevealSoftness));
 
@@ -179,7 +186,7 @@ Shader "Custom/WallWarningHex"
                 float litSeed = Hash21(cellKey + frac(epoch * float2(0.1031, 0.1973)) * 97.0);
                 float lit = step(1.0 - _LitCellRatio, litSeed) * (0.55 + 0.45 * saturate(1.0 - edgeDistance * 2.0));
 
-                float2 metersFromCenter = (IN.uv - 0.5) * panelSize;
+                float2 metersFromCenter = (IN.uv - focus) * panelSize;
                 float spacing = max(_RippleSpacing, 0.01);
                 float ripplePhase = frac(length(metersFromCenter) / spacing - time * _RippleSpeed / spacing);
                 float ripple = pow(1.0 - abs(ripplePhase - 0.5) * 2.0, 4.0) * _RippleStrength * _Reveal;

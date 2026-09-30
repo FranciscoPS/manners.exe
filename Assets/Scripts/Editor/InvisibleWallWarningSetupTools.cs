@@ -291,7 +291,7 @@ public static class InvisibleWallWarningSetupTools
         hexRenderer.receiveShadows = false;
         hexRenderer.lightProbeUsage = LightProbeUsage.Off;
         hexRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
-        hexRenderer.sortingOrder = 0;
+        hexRenderer.sortingOrder = 1;
 
         GameObject groundObject = new GameObject("GroundBand", typeof(MeshFilter), typeof(MeshRenderer));
         groundObject.transform.SetParent(root.transform, false);
@@ -306,14 +306,14 @@ public static class InvisibleWallWarningSetupTools
         groundRenderer.receiveShadows = false;
         groundRenderer.lightProbeUsage = LightProbeUsage.Off;
         groundRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
-        groundRenderer.sortingOrder = 0;
+        groundRenderer.sortingOrder = 1;
 
         GameObject canvasObject = new GameObject("Stripes", typeof(RectTransform), typeof(Canvas), typeof(CanvasGroup));
         canvasObject.transform.SetParent(root.transform, false);
 
         Canvas canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
-        canvas.sortingOrder = 0;
+        canvas.sortingOrder = 2;
 
         RectTransform canvasRect = (RectTransform)canvasObject.transform;
         canvasRect.pivot = new Vector2(0.5f, 0.5f);

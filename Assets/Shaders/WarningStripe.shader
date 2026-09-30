@@ -8,10 +8,10 @@ Shader "UI/WarningStripe"
         _Brightness ("Global Brightness", Range(0, 3)) = 1
 
         [Header(Band)]
-        [HDR] _FillColor ("Band Fill Color", Color) = (0.32, 0.01, 0.01, 0.4)
+        [HDR] _FillColor ("Band Fill Color", Color) = (0.32, 0.01, 0.01, 0.56)
 
         [Header(Hazard Hatch)]
-        [HDR] _HatchColor ("Hatch Color", Color) = (1.1, 0.05, 0.04, 0.45)
+        [HDR] _HatchColor ("Hatch Color", Color) = (1.1, 0.05, 0.04, 0.63)
         _HatchSpacing ("Hatch Spacing (canvas units)", Float) = 34
         _HatchWidth ("Hatch Width (fraction of spacing)", Range(0.05, 0.95)) = 0.4
         _HatchSlant ("Hatch Slant", Range(-3, 3)) = 1
