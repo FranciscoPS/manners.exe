@@ -15,7 +15,7 @@ public class InvisibleWallWarning : MonoBehaviour
     [SerializeField, Min(0f)] private float trimEnd;
 
     [Header("Referencias")]
-    [Tooltip("Quad con el material 'Custom/WallWarningHex' pegado a la pared (campo de hexágonos). Se escala al largo del campo (config) y al alto de la zona en cada frame; el tamaño de cada hexágono, colores, brillo y animaciones se ajustan en el material, en metros.")]
+    [Tooltip("Quad con el material 'Custom/WallWarningHex' pegado a la pared (campo de hexágonos). Se escala al largo y alto del campo (config, Campo de hexágonos) en cada frame; el tamaño de cada hexágono, colores, brillo y animaciones se ajustan en el material, en metros.")]
     [SerializeField] private Renderer hexPanel;
     [Tooltip("Quad acostado en el piso, en la base de la pared, con el mismo material de hexágonos. Es lo que se lee en muros que la cámara ve de canto. Su profundidad se ajusta en el config (Banda en el piso). Opcional.")]
     [SerializeField] private Renderer groundBand;
@@ -45,7 +45,8 @@ public class InvisibleWallWarning : MonoBehaviour
     private float intensity;
     private float smoothedLead;
     private float hiddenTimer;
-    private Vector4 appliedSize;
+    private Vector2 appliedZoneSize;
+    private Vector3 appliedFieldSize;
     private float appliedIntensity = -1f;
     private float appliedPanelFade = -1f;
     private float appliedStripesFade = -1f;
@@ -73,7 +74,8 @@ public class InvisibleWallWarning : MonoBehaviour
 
         intensity = 0f;
         hiddenTimer = 0f;
-        appliedSize = Vector4.zero;
+        appliedZoneSize = Vector2.zero;
+        appliedFieldSize = Vector3.zero;
         appliedIntensity = -1f;
         appliedPanelFade = -1f;
         appliedStripesFade = -1f;
@@ -137,6 +139,7 @@ public class InvisibleWallWarning : MonoBehaviour
         float wallLength = halfLength * 2f;
         float zoneWidth = Mathf.Min(frame.zoneSize.x, wallLength);
         float fieldWidth = Mathf.Min(Mathf.Max(config.fieldLength, zoneWidth), wallLength);
+        float fieldHeight = config.fieldHeight > 0f ? config.fieldHeight : frame.zoneSize.y;
 
         float lead = 0f;
         if (config.impactLeadSeconds > 0f && approachSpeed > 0.01f)
@@ -157,9 +160,8 @@ public class InvisibleWallWarning : MonoBehaviour
         float fieldAlong = Mathf.Clamp(focusAlong, -fieldLimit, fieldLimit);
 
         float faceOffset = halfThickness + config.surfaceOffset;
-        float zoneCenterHeight = frame.zoneBottom + frame.zoneSize.y * 0.5f;
-        Vector3 zoneCenter = WallPoint(zoneAlong, normal, faceOffset, zoneCenterHeight);
-        Vector3 fieldCenter = WallPoint(fieldAlong, normal, faceOffset, zoneCenterHeight);
+        Vector3 zoneCenter = WallPoint(zoneAlong, normal, faceOffset, frame.zoneBottom + frame.zoneSize.y * 0.5f);
+        Vector3 fieldCenter = WallPoint(fieldAlong, normal, faceOffset, frame.zoneBottom + fieldHeight * 0.5f);
 
         bool cameraBehindWall = frame.hasCamera && Vector3.Dot(frame.cameraPosition - zoneCenter, normal) < 0f;
         transform.SetPositionAndRotation(zoneCenter, Quaternion.LookRotation(cameraBehindWall ? normal : -normal, Vector3.up));
@@ -168,7 +170,7 @@ public class InvisibleWallWarning : MonoBehaviour
             hexPanel.transform.position = fieldCenter;
 
         PlaceGroundBand(fieldCenter, normal, frame.zoneBottom + config.bottomExtension + config.groundHeightOffset, config.groundDepth);
-        ApplySize(new Vector4(zoneWidth, frame.zoneSize.y, fieldWidth, config.groundDepth));
+        ApplySize(new Vector2(zoneWidth, frame.zoneSize.y), new Vector3(fieldWidth, fieldHeight, config.groundDepth));
 
         float focusOffset = focusAlong - fieldAlong;
         ApplyIntensity(
@@ -178,12 +180,13 @@ public class InvisibleWallWarning : MonoBehaviour
             FocusCoordinate(hexPanel, focusOffset, fieldWidth),
             FocusCoordinate(groundBand, focusOffset, fieldWidth));
 
-        if (marquees == null || (stripesCanvasComponent != null && !stripesCanvasComponent.enabled)) return;
+        if (marquees == null || stripesCanvas == null || (stripesCanvasComponent != null && !stripesCanvasComponent.enabled)) return;
 
+        float wallAnchor = Vector3.Dot(stripesCanvas.position, stripesCanvas.right) / Mathf.Max(0.0001f, stripesCanvas.lossyScale.x);
         for (int i = 0; i < marquees.Length; i++)
         {
             if (marquees[i] != null)
-                marquees[i].Scroll(deltaTime);
+                marquees[i].Scroll(deltaTime, wallAnchor);
         }
     }
 
@@ -261,23 +264,26 @@ public class InvisibleWallWarning : MonoBehaviour
         groundBand.transform.SetPositionAndRotation(center, Quaternion.LookRotation(Vector3.down, normal));
     }
 
-    private void ApplySize(Vector4 size)
+    private void ApplySize(Vector2 zoneSize, Vector3 fieldSize)
     {
-        if ((size - appliedSize).sqrMagnitude < 0.0001f) return;
-        appliedSize = size;
-
-        if (hexPanel != null)
-            hexPanel.transform.localScale = new Vector3(size.z, size.y, 1f);
-
-        if (groundBand != null)
-            groundBand.transform.localScale = new Vector3(size.z, Mathf.Max(0.01f, size.w), 1f);
-
-        if (stripesCanvas != null)
+        if ((fieldSize - appliedFieldSize).sqrMagnitude >= 0.0001f)
         {
+            appliedFieldSize = fieldSize;
+
+            if (hexPanel != null)
+                hexPanel.transform.localScale = new Vector3(fieldSize.x, fieldSize.y, 1f);
+
+            if (groundBand != null)
+                groundBand.transform.localScale = new Vector3(fieldSize.x, Mathf.Max(0.01f, fieldSize.z), 1f);
+        }
+
+        if ((zoneSize - appliedZoneSize).sqrMagnitude >= 0.0001f && stripesCanvas != null)
+        {
+            appliedZoneSize = zoneSize;
             Vector3 canvasScale = stripesCanvas.localScale;
             stripesCanvas.sizeDelta = new Vector2(
-                size.x / Mathf.Max(0.0001f, canvasScale.x),
-                size.y / Mathf.Max(0.0001f, canvasScale.y));
+                zoneSize.x / Mathf.Max(0.0001f, canvasScale.x),
+                zoneSize.y / Mathf.Max(0.0001f, canvasScale.y));
         }
     }
 

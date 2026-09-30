@@ -14,7 +14,7 @@ public class WarningMarquee : MonoBehaviour
     [SerializeField, Min(2)] private int repetitions = 10;
 
     [Header("Movimiento")]
-    [Tooltip("Velocidad en unidades del canvas por segundo (con escala 0.01, 100 = 1 metro por segundo). Positivo = avanza hacia la izquierda; negativo = hacia la derecha.")]
+    [Tooltip("Velocidad en unidades del canvas por segundo (con escala 0.01, 100 = 1 metro por segundo). Positivo = avanza hacia la izquierda; negativo = hacia la derecha. El texto está anclado a la pared: la franja solo lo revela alrededor del jugador, así que moverse no cambia su dirección ni su velocidad.")]
     [SerializeField] private float scrollSpeed = 90f;
 
     private RectTransform labelRect;
@@ -43,7 +43,7 @@ public class WarningMarquee : MonoBehaviour
         measured = false;
     }
 
-    public void Scroll(float deltaTime)
+    public void Scroll(float deltaTime, float wallAnchor)
     {
         if (labelRect == null) return;
         if (!measured) Measure();
@@ -51,7 +51,7 @@ public class WarningMarquee : MonoBehaviour
 
         offset = Mathf.Repeat(offset + scrollSpeed * deltaTime, period);
         Vector2 position = labelRect.anchoredPosition;
-        position.x = originX - offset;
+        position.x = originX - Mathf.Repeat(offset + wallAnchor, period);
         labelRect.anchoredPosition = position;
     }
 

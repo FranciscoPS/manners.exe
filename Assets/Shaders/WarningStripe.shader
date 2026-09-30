@@ -104,7 +104,12 @@ Shader "UI/WarningStripe"
                 v2f OUT;
                 OUT.vertex = UnityObjectToClipPos(v.vertex);
                 OUT.texcoord = v.texcoord;
-                OUT.canvasPosition = v.vertex.xy;
+                float3 positionWS = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0)).xyz;
+                float3 axisX = unity_ObjectToWorld._m00_m10_m20;
+                float3 axisY = unity_ObjectToWorld._m01_m11_m21;
+                float scaleX = max(length(axisX), 0.000001);
+                float scaleY = max(length(axisY), 0.000001);
+                OUT.canvasPosition = float2(dot(positionWS, axisX) / (scaleX * scaleX), dot(positionWS, axisY) / (scaleY * scaleY));
                 OUT.color = v.color;
                 return OUT;
             }

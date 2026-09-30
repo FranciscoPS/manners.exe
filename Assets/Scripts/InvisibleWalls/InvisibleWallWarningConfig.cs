@@ -42,6 +42,8 @@ public class InvisibleWallWarningConfig : ScriptableObject
     [Header("=== CAMPO DE HEXÁGONOS ===")]
     [Tooltip("Largo en metros del campo de hexágonos sobre la pared, centrado en el jugador (o en el punto donde va a chocar). Cubre la pared visible para que se lea por dónde pasa el límite y planear la ruta; las franjas de WARNING quedan encima, del ancho de la zona. Se recorta en los extremos del muro. 40 ≈ el ancho de la pantalla.")]
     [Min(0f)] public float fieldLength = 40f;
+    [Tooltip("Alto total en metros del campo de hexágonos, medido desde el piso hacia arriba. Solo cambia los hexágonos: las franjas de WARNING se quedan alrededor del jugador. 0 = el mismo alto que la zona del jugador.")]
+    [Min(0f)] public float fieldHeight = 0f;
 
     [Header("=== BANDA EN EL PISO ===")]
     [Tooltip("Metros que la banda de hexágonos se extiende por el piso desde la base de la pared hacia el jugador. Es lo que se lee en los muros que la cámara ve de canto (este/oeste). 0 = sin banda.")]
