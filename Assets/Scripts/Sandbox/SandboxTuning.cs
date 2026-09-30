@@ -29,6 +29,8 @@ public class SandboxTuning : MonoBehaviour
     [SerializeField, FormerlySerializedAs("synergyDatabaseOverride")] private OverrideDatabase overrideDatabaseOverride;
     [Tooltip("ChestOpeningConfig del sandbox. Ajusta aquí los tiempos, colores y sacudidas de la cinemática de apertura de cofre sin tocar producción.")]
     [SerializeField] private ChestOpeningConfig chestOpeningConfigOverride;
+    [Tooltip("InvisibleWallWarningConfig del sandbox. Ajusta aquí la distancia de activación, anticipación y tamaño de la zona de aviso de los muros invisibles sin tocar producción.")]
+    [SerializeField] private InvisibleWallWarningConfig invisibleWallWarningConfigOverride;
 
     [Header("=== PARTIDA ===")]
     [SerializeField] private float matchDurationMinutes = 3f;
@@ -111,6 +113,16 @@ public class SandboxTuning : MonoBehaviour
         else
         {
             SandboxLog.Skipped("ChestOpeningConfig: usando el asset de producción (Resources/ChestOpeningConfig).");
+        }
+
+        if (invisibleWallWarningConfigOverride != null)
+        {
+            InvisibleWallWarningConfig.OverrideInstance(invisibleWallWarningConfigOverride);
+            SandboxLog.Ok($"InvisibleWallWarningConfig sobrescrito con '{invisibleWallWarningConfigOverride.name}'.");
+        }
+        else
+        {
+            SandboxLog.Skipped("InvisibleWallWarningConfig: usando el asset de producción (Resources/InvisibleWallWarningConfig).");
         }
 
         ConfigureTutorial();
