@@ -51,7 +51,7 @@ PrefabInstance:
     - target: {fileID: -6652725513331149018, guid: ca9a9d6174fc0a1439501c4f9d68a90c, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: 8fb02e9eb07e6744ebdcff49da33f2f7, type: 2}
+      objectReference: {fileID: 2100000, guid: 377600a8fb69b294891a6c87390c0de2, type: 2}
     - target: {fileID: 919132149155446097, guid: ca9a9d6174fc0a1439501c4f9d68a90c, type: 3}
       propertyPath: m_Name
       value: APC2
@@ -89,6 +89,7 @@ MonoBehaviour:
   damageColor: {r: 1, g: 0, b: 0, a: 1}
   tweenTime: 0.3
   tweenLoops: 3
+  includeChildRenderers: 0
 --- !u!1001 &7753194116943157264
 PrefabInstance:
   m_ObjectHideFlags: 0

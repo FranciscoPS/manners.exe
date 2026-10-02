@@ -251,12 +251,13 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
             GameGraphicsSettings.SupportsAmbientOcclusion ? OnOff(draft.ambientOcclusion) : "No disponible",
             step => draft.ambientOcclusion = !draft.ambientOcclusion, () => GameGraphicsSettings.SupportsAmbientOcclusion);
         AddRow(content, 1, 4, "Postprocesado", () => OnOff(draft.postProcessing), step => draft.postProcessing = !draft.postProcessing);
+        AddRow(content, 1, 5, "Contornos de edificios", () => OnOff(draft.outlines), step => draft.outlines = !draft.outlines);
 
         syncHint = CreateText("SyncHint", content, "", 21, TextAlignmentOptions.Left);
-        Stretch(syncHint.rectTransform, 0, .115f, 1, .215f);
+        Stretch(syncHint.rectTransform, 0, .105f, 1, .185f);
         syncHint.color = new Color(.67f, .8f, .84f);
         statusText = CreateText("Status", content, "", 20, TextAlignmentOptions.Left);
-        Stretch(statusText.rectTransform, 0, .068f, 1, .12f);
+        Stretch(statusText.rectTransform, 0, .06f, 1, .1f);
         statusText.color = Accent;
 
         backButton = CreateButton("Back", content, "Volver", Close);
@@ -274,8 +275,8 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
     {
         RectTransform holder = CreateRect(label, parent);
         float left = column == 0 ? 0 : .53f;
-        float top = .79f - row * .112f;
-        Stretch(holder, left, top - .1f, left + .47f, top);
+        float top = .775f - row * .098f;
+        Stretch(holder, left, top - .09f, left + .47f, top);
         TextMeshProUGUI caption = CreateText("Label", holder, label, 23, TextAlignmentOptions.Left);
         Stretch(caption.rectTransform, 0, .58f, 1, 1);
         SettingRow setting = new SettingRow { read = read, available = available };
@@ -526,7 +527,8 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         bool matches = draft.frameRate == preset.frameRate && draft.vSync == preset.vSync
             && Mathf.Approximately(draft.renderScale, preset.renderScale)
             && draft.textureMipmapLimit == preset.textureMipmapLimit && draft.shadows == preset.shadows
-            && draft.ambientOcclusion == preset.ambientOcclusion && draft.postProcessing == preset.postProcessing;
+            && draft.ambientOcclusion == preset.ambientOcclusion && draft.postProcessing == preset.postProcessing
+            && draft.outlines == preset.outlines;
         return matches ? PresetName(draft.preset) : "Personalizado";
     }
 
