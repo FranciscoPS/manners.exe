@@ -52,7 +52,7 @@ public static class PerformanceValidation
     {
         public string path, serializedLightingDataReference, serializedOcclusionDataReference;
         public int gameObjects, activeGameObjects, renderers, activeEnabledRenderers, shadowCasters;
-        public int uniqueMaterials, materialSlots, staticRenderers, occluderRenderers, lightmappedRenderers;
+        public int uniqueMaterials, materialSlots, staticRenderers, occluderRenderers, lightmappedRenderers, staticDestructibles;
         public int missingScripts, lodGroups, lodLevels, colliders, rigidbodies, animators;
         public long sourceMeshTrianglesAcrossActiveRenderers;
         public List<Count> rendererTypes = new List<Count>();
@@ -111,6 +111,8 @@ public static class PerformanceValidation
                 {
                     SceneRecord scene = InspectScene(buildScene.path);
                     report.scenes.Add(scene);
+                    Require(report, buildScene.path + " keeps destructible buildings out of static batching", scene.staticDestructibles == 0,
+                        scene.staticDestructibles + " object(s) under BuildingsScript/BuildingFader are static; Standalone static batching freezes their debris and shop bounce. Fix with Tools/Manners/Performance/1.");
                     foreach (string path in scene.dependencies) dependencyPaths.Add(path);
                 }
                 catch (Exception exception) { report.errors.Add(buildScene.path + ": " + exception); }
@@ -290,6 +292,9 @@ public static class PerformanceValidation
                     });
                 }
             }
+            var staticDestructibles = new List<GameObject>();
+            foreach (GameObject root in preview.GetRootGameObjects()) LevelOptimizationTools.CollectStaticDestructibles(root, staticDestructibles);
+            record.staticDestructibles = staticDestructibles.Count;
             record.uniqueMaterials = materials.Count;
             record.rendererTypes = Counts(rendererTypes);
             record.shaderUsage = Counts(shaders);

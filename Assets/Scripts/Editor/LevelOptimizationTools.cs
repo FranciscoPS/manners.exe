@@ -1,5 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public static class LevelOptimizationTools
 {
@@ -18,34 +22,42 @@ public static class LevelOptimizationTools
     [MenuItem("Tools/Manners/Performance/1. Marcar edificios y mapa como estáticos", false, 40)]
     public static void MarkBuildingsAndMapStatic()
     {
-        string[] guids = AssetDatabase.FindAssets("t:Prefab", StaticGeometryFolders);
+        var paths = new HashSet<string>(AssetDatabase.FindAssets("t:Prefab", StaticGeometryFolders).Select(AssetDatabase.GUIDToAssetPath));
+        var destructibles = new List<GameObject>();
         int prefabsTouched = 0;
         int objectsMarked = 0;
+        int objectsCleared = 0;
 
-        foreach (string guid in guids)
+        foreach (string path in paths.OrderBy(p => AssetDatabase.GetDependencies(p, true).Count(paths.Contains)))
         {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
             GameObject root = PrefabUtility.LoadPrefabContents(path);
             if (root == null) continue;
 
             bool hasRuntimeRendererMutator = root.GetComponentInChildren<BuildingFader>(true) != null
                 || root.GetComponentInChildren<BuildingsScript>(true) != null;
 
+            bool changed = false;
             if (hasRuntimeRendererMutator)
             {
-                Debug.Log($"[LevelOptimizationTools] {path} tiene BuildingFader/BuildingsScript (modifica materiales o se desactiva en runtime) — se deja sin marcar para no romper static batching.");
-                PrefabUtility.UnloadPrefabContents(root);
-                continue;
+                destructibles.Clear();
+                CollectStaticDestructibles(root, destructibles);
+                ClearGeometryFlags(destructibles);
+                objectsCleared += destructibles.Count;
+                changed = destructibles.Count > 0;
+
+                if (changed)
+                    Debug.Log($"[LevelOptimizationTools] {path}: {destructibles.Count} objeto(s) de edificios destructibles desmarcados como estáticos (static batching los congela en la build).");
             }
-
-            bool changed = false;
-            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            else
             {
-                if (GameObjectUtility.GetStaticEditorFlags(t.gameObject) == GeometryFlags) continue;
+                foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (GameObjectUtility.GetStaticEditorFlags(t.gameObject) == GeometryFlags) continue;
 
-                GameObjectUtility.SetStaticEditorFlags(t.gameObject, GeometryFlags);
-                objectsMarked++;
-                changed = true;
+                    GameObjectUtility.SetStaticEditorFlags(t.gameObject, GeometryFlags);
+                    objectsMarked++;
+                    changed = true;
+                }
             }
 
             if (changed)
@@ -57,8 +69,55 @@ public static class LevelOptimizationTools
             PrefabUtility.UnloadPrefabContents(root);
         }
 
+        int sceneObjectsCleared = EditorApplication.isPlaying ? 0 : ClearStaticDestructiblesInOpenScenes(destructibles);
+
         AssetDatabase.SaveAssets();
-        Debug.Log($"[LevelOptimizationTools] {objectsMarked} objeto(s) marcados como estáticos en {prefabsTouched} prefab(s) de {StaticGeometryFolders.Length} carpeta(s). Ahora abrí cada escena de nivel y corré el paso 2 para bakear Occlusion Culling.");
+        Debug.Log($"[LevelOptimizationTools] {objectsMarked} objeto(s) marcados como estáticos y {objectsCleared} objeto(s) de edificios destructibles desmarcados en {prefabsTouched} prefab(s) de {StaticGeometryFolders.Length} carpeta(s); {sceneObjectsCleared} más en las escenas abiertas (guardalas si cambiaron). Ahora abrí cada escena de nivel y corré el paso 2 para bakear Occlusion Culling.");
+    }
+
+    public static void CollectStaticDestructibles(GameObject root, List<GameObject> results)
+    {
+        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+        {
+            if ((GameObjectUtility.GetStaticEditorFlags(t.gameObject) & GeometryFlags) == 0) continue;
+            if (t.GetComponentInParent<BuildingsScript>(true) == null && t.GetComponentInParent<BuildingFader>(true) == null) continue;
+
+            results.Add(t.gameObject);
+        }
+    }
+
+    private static int ClearStaticDestructiblesInOpenScenes(List<GameObject> buffer)
+    {
+        int cleared = 0;
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+            if (!scene.isLoaded) continue;
+
+            buffer.Clear();
+            foreach (GameObject root in scene.GetRootGameObjects())
+                CollectStaticDestructibles(root, buffer);
+
+            if (buffer.Count == 0) continue;
+
+            Undo.RecordObjects(buffer.ToArray(), "Desmarcar edificios destructibles estáticos");
+            ClearGeometryFlags(buffer);
+            EditorSceneManager.MarkSceneDirty(scene);
+            cleared += buffer.Count;
+            Debug.Log($"[LevelOptimizationTools] {scene.path}: {buffer.Count} objeto(s) de edificios destructibles desmarcados como estáticos.");
+        }
+
+        return cleared;
+    }
+
+    private static void ClearGeometryFlags(List<GameObject> objects)
+    {
+        foreach (GameObject go in objects)
+        {
+            GameObjectUtility.SetStaticEditorFlags(go, GameObjectUtility.GetStaticEditorFlags(go) & ~GeometryFlags);
+            if (PrefabUtility.IsPartOfPrefabInstance(go))
+                PrefabUtility.RecordPrefabInstancePropertyModifications(go);
+        }
     }
 
     [MenuItem("Tools/Manners/Performance/2. Bakear Occlusion Culling (escena actual)", false, 41)]
