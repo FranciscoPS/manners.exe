@@ -139,6 +139,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingFader
   affectsChildRenderers: 1
+  excludedRenderers: []
+  useOwnMinVisibleAlpha: 0
+  ownMinVisibleAlpha: 0.7
 --- !u!1 &7120313892158634722
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,6 +290,26 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
+      propertyPath: m_MotionVectors
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
+      propertyPath: m_LightProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}
+      propertyPath: m_ReflectionProbeUsage
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 860e08a1904c842439a66ed837a7efcf, type: 3}

@@ -145,6 +145,8 @@ public static class PerformanceValidation
         Require(report, "Eco reduces rendering work", eco.frameRate <= balanced.frameRate && eco.renderScale < balanced.renderScale && !eco.shadows && !eco.postProcessing,
             "Eco lowers frame rate and internal scale and disables shadows/postprocessing.");
         Require(report, "High offers ambient occlusion", high.ambientOcclusion, "High keeps an explicit visual-quality alternative.");
+        Require(report, "Eco removes the toon outline pass", !eco.outlines && balanced.outlines && high.outlines,
+            "Eco skips the environment outline draw calls; Balanced and High keep the Denshattack-style lines.");
         var invalid = new GameGraphicsSettings.SettingsData
         {
             preset = (GameGraphicsSettings.GraphicsPreset)999, frameRate = -1,
@@ -194,8 +196,10 @@ public static class PerformanceValidation
         foreach (string path in new[] { "Assets/Settings/PC_NoAO_Renderer.asset", "Assets/Settings/Minimap_Renderer.asset" })
         {
             var renderer = AssetDatabase.LoadAssetAtPath<ScriptableRendererData>(path);
-            Require(report, path + " has no renderer features", renderer != null && renderer.rendererFeatures.Count == 0,
-                "Ambient occlusion cannot leak into the low-cost renderer.");
+            bool onlyOutline = renderer != null && renderer.rendererFeatures.TrueForAll(feature => feature is RenderObjects);
+            bool minimapBare = !path.Contains("Minimap") || (renderer != null && renderer.rendererFeatures.Count == 0);
+            Require(report, path + " has no costly renderer features", onlyOutline && minimapBare,
+                "Ambient occlusion cannot leak into the low-cost renderer; only the toon outline RenderObjects pass is allowed, and the minimap draws none.");
         }
         const string depthSubgraph = "Assets/Shaders/Water/DepthFade.shadersubgraph";
         Require(report, "Water depth dependency documented", File.Exists(depthSubgraph) && File.ReadAllText(depthSubgraph).Contains("SceneDepthNode"), depthSubgraph);
