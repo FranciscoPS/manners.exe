@@ -150,6 +150,7 @@ MonoBehaviour:
   animator: {fileID: 7590107289440812755}
   animationHitDelay: 0.3
   gameOverPanel: {fileID: 0}
+  testInvulnerable: 0
 --- !u!114 &5744792153705871918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,6 +277,26 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -2029894882828272653, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2029894882828272653, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
+      propertyPath: m_MotionVectors
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2029894882828272653, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2029894882828272653, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
+      propertyPath: m_LightProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2029894882828272653, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
+      propertyPath: m_ReflectionProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2029894882828272653, guid: 739f130eb43425f4a80f8f8b76e54a03, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 7bad0196b39ea4143957cea76ce670dd, type: 2}
@@ -346,3 +367,4 @@ MonoBehaviour:
   damageColor: {r: 1, g: 0, b: 0, a: 1}
   tweenTime: 0.3
   tweenLoops: 3
+  includeChildRenderers: 0

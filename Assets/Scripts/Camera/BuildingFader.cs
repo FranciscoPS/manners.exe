@@ -49,9 +49,8 @@ public class BuildingFader : MonoBehaviour
         Renderer[] found = affectsChildRenderers
             ? GetComponentsInChildren<Renderer>(true)
             : GetComponents<Renderer>();
-        renderers = excludedRenderers.Length == 0
-            ? found
-            : System.Array.FindAll(found, r => System.Array.IndexOf(excludedRenderers, r) < 0);
+        renderers = System.Array.FindAll(found, r => !ToonEnvironmentStyle.IsGroundShadow(r)
+            && System.Array.IndexOf(excludedRenderers, r) < 0);
 
         sharedMatsPerRenderer = new Material[renderers.Length][];
         for (int i = 0; i < renderers.Length; i++)

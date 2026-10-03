@@ -101,21 +101,42 @@ public static class ToonEnvironmentTools
         else Debug.LogWarning(report.ToString());
     }
 
+    [MenuItem("Tools/Manners/Visual toon/0. Aplicar todo el estilo a las escenas del alcance (pasos 1 a 11 en orden)", false, 60)]
+    public static void RunAllFromMenu()
+    {
+        if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        string original = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
+        RunAll(false);
+        if (!string.IsNullOrEmpty(original) && File.Exists(original))
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(original, UnityEditor.SceneManagement.OpenSceneMode.Single);
+    }
+
     public static void RunAllBatch()
+    {
+        bool passed = RunAll(true);
+        if (Application.isBatchMode) EditorApplication.Exit(passed ? 0 : 1);
+    }
+
+    private static bool RunAll(bool capture)
     {
         var report = new StringBuilder();
         bool passed;
         try
         {
-            ToonStylePreview.CaptureLevel1("antes", report);
             ConvertEnvironmentMaterials(report);
             ConfigureEnvironmentRenderers(report);
+            ToonWorldTools.ConvertCharacters(report);
+            ToonWorldTools.ConfigureTerrain(report);
+            ToonWorldTools.BuildGroundShadows(report);
             EnsureOutlineRendererFeatures(report);
+            ToonWorldTools.EnsureGroundShadowRendererFeatures(report);
             ConfigureWebTextures(report);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            ToonSceneTools.ConfigureScenes(report);
+            AssetDatabase.SaveAssets();
             passed = Validate(report);
-            ToonStylePreview.CaptureLevel1("despues", report);
+            if (capture) ToonStylePreview.CaptureAll("despues", report);
         }
         catch (Exception exception)
         {
@@ -126,7 +147,7 @@ public static class ToonEnvironmentTools
         File.WriteAllText(ReportPath, report.ToString());
         if (passed) Debug.Log("[ToonEnvironmentTools] Conversión completa. Informe: " + ReportPath);
         else Debug.LogError("[ToonEnvironmentTools] Conversión con problemas. Informe: " + ReportPath);
-        if (Application.isBatchMode) EditorApplication.Exit(passed ? 0 : 1);
+        return passed;
     }
 
     public static ToonEnvironmentStyle GetOrCreateStyle()
@@ -160,9 +181,14 @@ public static class ToonEnvironmentTools
             return;
         }
 
-        ExtractEmbeddedMaterials(style, report);
-        List<MaterialUse> uses = CollectEnvironmentMaterials(report);
+        ToonScopeTools.Refresh();
+        ToonWorldTools.EnsureWorldDefaults(style, report);
+        ToonScopeTools.ExtractScopedEmbeddedMaterials(style, report);
+
+        List<MaterialUse> uses = CollectEnvironmentMaterials(style, report);
         AddFolderMaterials(uses, style);
+        AddListedMaterials(uses, style.additionalEnvironmentMaterials, "(modelo colocado en una escena del alcance o material adicional del estilo)");
+        AddListedMaterials(uses, style.groundReceiverMaterials, "(piso que recibe sombras planas)");
         AddParentMaterials(uses);
         var convertible = new List<MaterialUse>();
         foreach (MaterialUse use in uses)
@@ -172,6 +198,11 @@ public static class ToonEnvironmentTools
             if (style.excludedMaterials.Contains(material))
             {
                 report.AppendLine($"EXCLUIDO {path}");
+                continue;
+            }
+            if (style.characterMaterials.Contains(material))
+            {
+                report.AppendLine($"PERSONAJE (lo gestiona la conversión de personajes) {path}");
                 continue;
             }
             if (string.IsNullOrEmpty(path) || !path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase) || AssetDatabase.IsSubAsset(material))
@@ -198,49 +229,33 @@ public static class ToonEnvironmentTools
         {
             string path = AssetDatabase.GetAssetPath(use.material);
             string outcome = ConvertMaterial(use.material, toon, style, ref windowIndex);
+            bool receiver = style.groundReceiverMaterials.Contains(use.material);
+            use.material.SetFloat(ToonEnvironmentStyle.StencilRefId, receiver ? 8f : 0f);
+            if (receiver)
+            {
+                use.material.SetShaderPassEnabled(ToonEnvironmentStyle.OutlinePassLightMode, false);
+                style.environmentMaterials.Remove(use.material);
+                outcome += "; piso: recibe sombras planas y no dibuja contorno";
+            }
+            else if (!style.environmentMaterials.Contains(use.material)) style.environmentMaterials.Add(use.material);
             report.AppendLine($"CONVERTIDO {path}: {outcome}");
-            if (!style.environmentMaterials.Contains(use.material)) style.environmentMaterials.Add(use.material);
         }
         style.environmentMaterials.RemoveAll(material => material == null);
+        style.groundReceiverMaterials.RemoveAll(material => material == null);
+        style.additionalEnvironmentMaterials.RemoveAll(material => material == null);
         EditorUtility.SetDirty(style);
         report.AppendLine($"RESUMEN materiales: {convertible.Count} convertidos, {style.environmentMaterials.Count} gestionados en {StyleAssetPath}");
     }
 
-    private static void ExtractEmbeddedMaterials(ToonEnvironmentStyle style, StringBuilder report)
+    private static void AddListedMaterials(List<MaterialUse> uses, List<Material> materials, string origin)
     {
-        var reimport = new HashSet<string>();
-        foreach (GameObject prefab in style.prefabsWithEmbeddedMaterials)
-        {
-            if (prefab == null) continue;
-            foreach (Renderer renderer in prefab.GetComponentsInChildren<Renderer>(true))
-            {
-                if (!IsEnvironmentRenderer(renderer)) continue;
-                foreach (Material material in renderer.sharedMaterials)
-                {
-                    if (material == null || !AssetDatabase.IsSubAsset(material) || style.excludedMaterials.Contains(material)) continue;
-                    string modelPath = AssetDatabase.GetAssetPath(material);
-                    string folder = Path.GetDirectoryName(modelPath).Replace('\\', '/') + "/Materials";
-                    EditorAssetUtility.EnsureFolder(folder);
-                    string target = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + SanitizeFileName(material.name) + ".mat");
-                    string error = AssetDatabase.ExtractAsset(material, target);
-                    if (string.IsNullOrEmpty(error))
-                    {
-                        reimport.Add(modelPath);
-                        report.AppendLine($"EXTRAIDO {material.name} de {modelPath} -> {target}");
-                    }
-                    else report.AppendLine($"ERROR al extraer {material.name} de {modelPath}: {error}");
-                }
-            }
-        }
-        foreach (string modelPath in reimport)
-        {
-            AssetDatabase.WriteImportSettingsIfDirty(modelPath);
-            AssetDatabase.ImportAsset(modelPath, ImportAssetOptions.ForceUpdate);
-        }
-        if (reimport.Count > 0) AssetDatabase.SaveAssets();
+        if (materials == null) return;
+        var known = new HashSet<Material>(uses.Select(use => use.material));
+        foreach (Material material in materials)
+            if (material != null && known.Add(material)) uses.Add(new MaterialUse { material = material, firstPrefab = origin });
     }
 
-    private static string SanitizeFileName(string name)
+    internal static string SanitizeFileName(string name)
     {
         foreach (char invalid in Path.GetInvalidFileNameChars()) name = name.Replace(invalid, '_');
         return name.Trim();
@@ -297,7 +312,7 @@ public static class ToonEnvironmentTools
         return false;
     }
 
-    private static int ParentDepth(Material material)
+    internal static int ParentDepth(Material material)
     {
         int depth = 0;
         Material parent = material.parent;
@@ -309,10 +324,10 @@ public static class ToonEnvironmentTools
         return depth;
     }
 
-    private static List<MaterialUse> CollectEnvironmentMaterials(StringBuilder report)
+    private static List<MaterialUse> CollectEnvironmentMaterials(ToonEnvironmentStyle style, StringBuilder report)
     {
         var uses = new Dictionary<Material, MaterialUse>();
-        foreach (string path in EnvironmentPrefabPaths())
+        foreach (string path in EnvironmentPrefabPaths(style))
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (prefab == null) continue;
@@ -334,13 +349,7 @@ public static class ToonEnvironmentTools
         return uses.Values.ToList();
     }
 
-    private static IEnumerable<string> EnvironmentPrefabPaths()
-    {
-        return AssetDatabase.FindAssets("t:Prefab", PrefabFolders)
-            .Select(AssetDatabase.GUIDToAssetPath)
-            .Distinct()
-            .OrderBy(path => path, StringComparer.Ordinal);
-    }
+    private static IEnumerable<string> EnvironmentPrefabPaths(ToonEnvironmentStyle style) => ToonScopeTools.Prefabs(style, PrefabFolders);
 
     private static bool IsEnvironmentRenderer(Renderer renderer) => renderer is MeshRenderer || renderer is SkinnedMeshRenderer;
 
@@ -362,32 +371,26 @@ public static class ToonEnvironmentTools
         Color baseColor = FirstColor(material, Color.white, "_BaseColor", "_Color");
         baseColor.a = 1f;
         Texture maskMap = FirstTexture(material, "_MetallicGlossMap", "_MaskMap");
-        bool keepEmission = alreadyToon && material.IsKeywordEnabled("_EMISSION") && material.GetTexture(ToonEnvironmentStyle.EmissionMapId) != null;
+        bool hadEmission = alreadyToon && material.IsKeywordEnabled("_EMISSION") && material.GetTexture(ToonEnvironmentStyle.EmissionMapId) != null;
 
-        if (!alreadyToon) material.shader = toon;
-        material.SetTexture(ToonEnvironmentStyle.BaseMapId, baseMap);
-        material.SetColor(ToonEnvironmentStyle.BaseColorId, baseColor);
-        material.SetFloat("_Surface", 0f);
-        material.SetFloat("_Blend", 0f);
-        material.SetFloat("_Cull", (float)CullMode.Back);
-        material.SetFloat("_SrcBlend", (float)BlendMode.One);
-        material.SetFloat("_DstBlend", (float)BlendMode.Zero);
-        material.SetFloat("_SrcBlendAlpha", (float)BlendMode.One);
-        material.SetFloat("_DstBlendAlpha", (float)BlendMode.Zero);
-        material.SetFloat("_ZWrite", 1f);
+        if (material.parent != null && AssetDatabase.IsSubAsset(material.parent)) material.parent = null;
+        if (!alreadyToon)
+        {
+            material.shader = toon;
+            material.SetTexture(ToonEnvironmentStyle.BaseMapId, baseMap);
+            material.SetColor(ToonEnvironmentStyle.BaseColorId, baseColor);
+        }
+        SetOpaque(material);
         material.SetFloat("_ReceiveShadowsOff", 1f);
-        material.renderQueue = -1;
-        material.SetOverrideTag("RenderType", "Opaque");
-        material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
         if (material.parent == null) style.ApplyShadingTo(material);
 
         var keywords = new List<string> { "_RECEIVE_SHADOWS_OFF" };
         string outcome;
-        if (keepEmission)
+        if (alreadyToon)
         {
-            keywords.Add("_EMISSION");
-            material.SetFloat("_EmissionEnabled", 1f);
-            outcome = "emisión existente conservada";
+            if (hadEmission) keywords.Add("_EMISSION");
+            material.SetFloat("_EmissionEnabled", hadEmission ? 1f : 0f);
+            outcome = hadEmission ? "ya era toon; emisión existente conservada" : "ya era toon; sigue sin emisión (usa la herramienta de máscaras para añadirla)";
         }
         else
         {
@@ -439,14 +442,29 @@ public static class ToonEnvironmentTools
         return outcome;
     }
 
-    private static Texture FirstTexture(Material material, params string[] names)
+    internal static void SetOpaque(Material material)
+    {
+        material.SetFloat("_Surface", 0f);
+        material.SetFloat("_Blend", 0f);
+        material.SetFloat("_Cull", (float)CullMode.Back);
+        material.SetFloat("_SrcBlend", (float)BlendMode.One);
+        material.SetFloat("_DstBlend", (float)BlendMode.Zero);
+        material.SetFloat("_SrcBlendAlpha", (float)BlendMode.One);
+        material.SetFloat("_DstBlendAlpha", (float)BlendMode.Zero);
+        material.SetFloat("_ZWrite", 1f);
+        material.renderQueue = -1;
+        material.SetOverrideTag("RenderType", "Opaque");
+        material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+    }
+
+    internal static Texture FirstTexture(Material material, params string[] names)
     {
         foreach (string name in names)
             if (material.HasProperty(name) && material.GetTexture(name) != null) return material.GetTexture(name);
         return null;
     }
 
-    private static Color FirstColor(Material material, Color fallback, params string[] names)
+    internal static Color FirstColor(Material material, Color fallback, params string[] names)
     {
         foreach (string name in names)
             if (material.HasProperty(name)) return material.GetColor(name);
@@ -475,7 +493,7 @@ public static class ToonEnvironmentTools
     public static void ConfigureEnvironmentRenderers(StringBuilder report)
     {
         ToonEnvironmentStyle style = GetOrCreateStyle();
-        var ordered = EnvironmentPrefabPaths().ToList();
+        var ordered = EnvironmentPrefabPaths(style).ToList();
         ordered.Sort((a, b) =>
         {
             int rankA = PrefabRank(a);
@@ -595,18 +613,21 @@ public static class ToonEnvironmentTools
         }
     }
 
-    private static bool ConfigureOutlineFeature(RenderObjects feature)
+    private static bool ConfigureOutlineFeature(RenderObjects feature) =>
+        ConfigurePassFeature(feature, OutlineFeatureName, ToonEnvironmentStyle.OutlinePassLightMode);
+
+    internal static bool ConfigurePassFeature(RenderObjects feature, string passTag, string lightMode)
     {
         bool changed = false;
         RenderObjects.RenderObjectsSettings settings = feature.settings;
-        if (settings.passTag != OutlineFeatureName) { settings.passTag = OutlineFeatureName; changed = true; }
+        if (settings.passTag != passTag) { settings.passTag = passTag; changed = true; }
         if (settings.Event != RenderPassEvent.AfterRenderingOpaques) { settings.Event = RenderPassEvent.AfterRenderingOpaques; changed = true; }
         if (settings.filterSettings.RenderQueueType != RenderQueueType.Opaque) { settings.filterSettings.RenderQueueType = RenderQueueType.Opaque; changed = true; }
         if (settings.filterSettings.LayerMask.value != ~0) { settings.filterSettings.LayerMask = ~0; changed = true; }
         string[] passNames = settings.filterSettings.PassNames;
-        if (passNames == null || passNames.Length != 1 || passNames[0] != ToonEnvironmentStyle.OutlinePassLightMode)
+        if (passNames == null || passNames.Length != 1 || passNames[0] != lightMode)
         {
-            settings.filterSettings.PassNames = new[] { ToonEnvironmentStyle.OutlinePassLightMode };
+            settings.filterSettings.PassNames = new[] { lightMode };
             changed = true;
         }
         if (settings.overrideMaterial != null) { settings.overrideMaterial = null; changed = true; }
@@ -667,15 +688,59 @@ public static class ToonEnvironmentTools
             applied++;
         }
         report.AppendLine($"RESUMEN estilo: valores de sombra y contorno aplicados a {applied} materiales (las variantes heredan de su padre).");
+        ToonWorldTools.ApplyStyle(report);
     }
 
-    public static bool? IsSrpBatcherCompatible(Shader shader)
+    private static void RenderOnce(Shader shader)
     {
-        var method = typeof(ShaderUtil).GetMethod("GetSRPBatcherCompatibilityCode",
-            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+        const int probeLayer = 31;
+        var root = new GameObject("Toon shader probe") { hideFlags = HideFlags.HideAndDontSave };
+        var material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+        RenderTexture target = RenderTexture.GetTemporary(16, 16, 24);
+        bool previousAsync = ShaderUtil.allowAsyncCompilation;
+        try
+        {
+            ShaderUtil.allowAsyncCompilation = false;
+            root.transform.position = new Vector3(0f, -5000f, 0f);
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.hideFlags = HideFlags.HideAndDontSave;
+            cube.layer = probeLayer;
+            cube.transform.SetParent(root.transform, false);
+            cube.transform.localPosition = new Vector3(0f, 0f, 5f);
+            cube.GetComponent<MeshRenderer>().sharedMaterial = material;
+            var cameraObject = new GameObject("Toon shader probe camera") { hideFlags = HideFlags.HideAndDontSave };
+            cameraObject.transform.SetParent(root.transform, false);
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.cullingMask = 1 << probeLayer;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.targetTexture = target;
+            camera.Render();
+            camera.targetTexture = null;
+        }
+        finally
+        {
+            ShaderUtil.allowAsyncCompilation = previousAsync;
+            RenderTexture.ReleaseTemporary(target);
+            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(material);
+        }
+    }
+
+    public static bool? IsSrpBatcherCompatible(Shader shader) => IsSrpBatcherCompatible(shader, out _);
+
+    public static bool? IsSrpBatcherCompatible(Shader shader, out string reason)
+    {
+        reason = null;
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+        var method = typeof(ShaderUtil).GetMethod("GetSRPBatcherCompatibilityCode", flags);
         if (method == null || shader == null) return null;
+        RenderOnce(shader);
         object code = method.Invoke(null, new object[] { shader, 0 });
-        return code is int value ? value == 0 : (bool?)null;
+        if (!(code is int value)) return null;
+        if (value == 0) return true;
+        var reasonMethod = typeof(ShaderUtil).GetMethod("GetSRPBatcherCompatibilityIssueReason", flags);
+        reason = reasonMethod != null ? reasonMethod.Invoke(null, new object[] { shader, 0, value }) as string : "código " + value;
+        return false;
     }
 
     public static bool Validate(StringBuilder report)
@@ -686,7 +751,7 @@ public static class ToonEnvironmentTools
         Shader toon = Shader.Find(ToonEnvironmentStyle.ShaderName);
         if (toon == null) problems.Add("Shader " + ToonEnvironmentStyle.ShaderName + " no encontrado.");
         else if (ShaderUtil.ShaderHasError(toon)) problems.Add("El shader toon tiene errores de compilación (ver consola).");
-        else if (IsSrpBatcherCompatible(toon) == false) problems.Add("El shader toon no es compatible con el SRP Batcher (revisar el CBUFFER UnityPerMaterial).");
+        else if (IsSrpBatcherCompatible(toon, out string batcherReason) == false) problems.Add("El shader toon no es compatible con el SRP Batcher: " + batcherReason);
 
         var style = AssetDatabase.LoadAssetAtPath<ToonEnvironmentStyle>(StyleAssetPath);
         if (style == null) problems.Add("Falta el asset " + StyleAssetPath + " (los ajustes gráficos no podrán apagar los contornos).");
@@ -736,7 +801,7 @@ public static class ToonEnvironmentTools
 
         int castingRenderers = 0;
         int missingMaterials = 0;
-        foreach (string path in EnvironmentPrefabPaths())
+        foreach (string path in style != null ? EnvironmentPrefabPaths(style) : Enumerable.Empty<string>())
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (prefab == null) continue;
@@ -751,6 +816,9 @@ public static class ToonEnvironmentTools
         }
         if (castingRenderers > 0) problems.Add($"{castingRenderers} renderers de edificios/props siguen proyectando sombras: ejecuta 'Configurar renderers'.");
         if (missingMaterials > 0) notes.Add($"{missingMaterials} slots de material vacíos en prefabs de edificios (piezas rotas con materiales no versionados): se ven magenta.");
+
+        ToonWorldTools.Validate(style, problems, notes);
+        ToonSceneTools.Validate(style, problems, notes);
 
         report.AppendLine(problems.Count == 0 ? "VALIDACIÓN toon: OK" : $"VALIDACIÓN toon: {problems.Count} problema(s)");
         foreach (string problem in problems) report.AppendLine("  PROBLEMA " + problem);

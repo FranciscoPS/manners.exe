@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ToonTerrain
+  m_Shader: {fileID: 4800000, guid: d3d7796fc6b88244185003930287628f, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _TOON_TERRAIN_DETAIL
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _Control:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Control1:
+        m_Texture: {fileID: -1717162441689355923, guid: fccef0788352eb847aae837819c0de86, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMap:
+        m_Texture: {fileID: 2800000, guid: 653226afc1a45934b8d9a5916302a78a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TerrainHolesTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _DetailThreshold: 0.42
+    - _DetailTiling: 14
+    - _InkFadeEnd: 110
+    - _InkFadeStart: 50
+    - _InkWidth: 2
+    - _LightColorInfluence: 0
+    - _ShadeSoftness: 0.01
+    - _ShadeThreshold: 0.8
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _DetailStrength0: {r: 0.12, g: 0.07, b: 0.14, a: 0}
+    - _DetailStrength1: {r: 0, g: 0, b: 0.035, a: 0}
+    - _InkColor: {r: 0.05, g: 0.05, b: 0.08, a: 1}
+    - _LayerColor0: {r: 0.43529412, g: 0.70980394, b: 0.38431373, a: 1}
+    - _LayerColor1: {r: 0.9411765, g: 0.7647059, b: 0.41568628, a: 1}
+    - _LayerColor2: {r: 0.5568628, g: 0.49803922, b: 0.4, a: 1}
+    - _LayerColor3: {r: 0.4862745, g: 0.4862745, b: 0.5176471, a: 1}
+    - _LayerColor4: {r: 0.8392157, g: 0.8509804, b: 0.8784314, a: 1}
+    - _LayerColor5: {r: 0.54509807, g: 0.54509807, b: 0.54509807, a: 1}
+    - _LayerColor6: {r: 0.7411765, g: 0.7372549, b: 0.76862746, a: 1}
+    - _LayerColor7: {r: 0.99215686, g: 0.99215686, b: 0.99215686, a: 1}
+    - _ShadeColor: {r: 0.55, g: 0.6, b: 0.78, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

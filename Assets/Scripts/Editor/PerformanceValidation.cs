@@ -198,10 +198,10 @@ public static class PerformanceValidation
         foreach (string path in new[] { "Assets/Settings/PC_NoAO_Renderer.asset", "Assets/Settings/Minimap_Renderer.asset" })
         {
             var renderer = AssetDatabase.LoadAssetAtPath<ScriptableRendererData>(path);
-            bool onlyOutline = renderer != null && renderer.rendererFeatures.TrueForAll(feature => feature is RenderObjects);
+            bool onlyToonPasses = renderer != null && renderer.rendererFeatures.TrueForAll(feature => feature is RenderObjects);
             bool minimapBare = !path.Contains("Minimap") || (renderer != null && renderer.rendererFeatures.Count == 0);
-            Require(report, path + " has no costly renderer features", onlyOutline && minimapBare,
-                "Ambient occlusion cannot leak into the low-cost renderer; only the toon outline RenderObjects pass is allowed, and the minimap draws none.");
+            Require(report, path + " has no costly renderer features", onlyToonPasses && minimapBare,
+                "Ambient occlusion cannot leak into the low-cost renderer; only the toon RenderObjects passes (outline and flat ground shadow) are allowed, and the minimap draws none.");
         }
         const string depthSubgraph = "Assets/Shaders/Water/DepthFade.shadersubgraph";
         Require(report, "Water depth dependency documented", File.Exists(depthSubgraph) && File.ReadAllText(depthSubgraph).Contains("SceneDepthNode"), depthSubgraph);

@@ -88,6 +88,7 @@ MonoBehaviour:
   applyToVisual1: 1
   applyToVisual2: 1
   attackRadius: 1.5
+  pathUpdateInterval: 0.2
 --- !u!114 &6190908423056691718
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -171,6 +172,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 112106002721811655}
     m_Modifications:
+    - target: {fileID: -9081178023558340663, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -9081178023558340663, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_MotionVectors
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -9081178023558340663, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -9081178023558340663, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_LightProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -9081178023558340663, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_ReflectionProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.77
@@ -227,6 +248,26 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 59264599911185236, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 59264599911185236, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_MotionVectors
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 59264599911185236, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 59264599911185236, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_LightProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 59264599911185236, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
+      propertyPath: m_ReflectionProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
       propertyPath: m_Name
       value: LowPolyTankModel
@@ -262,16 +303,7 @@ MonoBehaviour:
   damageColor: {r: 1, g: 0, b: 0, a: 1}
   tweenTime: 0.3
   tweenLoops: 3
---- !u!23 &1337217390993472394 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 59264599911185236, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
-  m_PrefabInstance: {fileID: 1323017014965813470}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1415643505391132439 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: -9081178023558340663, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
-  m_PrefabInstance: {fileID: 1323017014965813470}
-  m_PrefabAsset: {fileID: 0}
+  includeChildRenderers: 0
 --- !u!4 &1573715094316558133 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}
@@ -297,6 +329,7 @@ MonoBehaviour:
   damageColor: {r: 1, g: 0, b: 0, a: 1}
   tweenTime: 0.3
   tweenLoops: 3
+  includeChildRenderers: 0
 --- !u!4 &7448795903361531221 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -791722453592539765, guid: 3b5f97f27ef82d64f8f248773de4db31, type: 3}

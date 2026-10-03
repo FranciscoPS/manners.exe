@@ -3,7 +3,12 @@ guid: 5d1baca610873a14380e9756343800f8
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CombinedmeshRootScene91321Mtl
+    second: {fileID: 2100000, guid: c3ea74ae30f1ea4458d84be0e23b216b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -91,7 +96,7 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    globalScale: 0.38
+    globalScale: 38
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
