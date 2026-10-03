@@ -16,7 +16,8 @@ Indicaciones permanentes del usuario; aplican a cada tarea:
 
 ## Escenas y pruebas
 
-- Escenas de producción: `MainMenu`, `Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity` (Mapa 1) y `MilitaryBase` (Mapa 2). `CityTest` es la versión anterior del Mapa 1.
+- Escenas de producción: `MainMenu` y `Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity` (Mapa 1). `CityTest` es la versión anterior del Mapa 1.
+- El Mapa 2 (`MilitaryBase`) está en pausa desde el 2 de octubre de 2026: todo el trabajo actual es solo sobre el Mapa 1. No tocar su escena, sus enemigos (prefabs `L2*`) ni sus assets, y no incluirlo en herramientas, validaciones, capturas ni pruebas hasta que el usuario lo reactive. Si un asset compartido con el Mapa 1 cambia, no hace falta ajustar el Mapa 2.
 - Los sistemas nuevos y los experimentos de balance se prueban en `Assets/Scenes/Sandbox.unity`, con sus propias copias de assets en `Assets/Configurations/SANDBOX CONFIGURATIONS FOR TESTING/` y los ajustes en el componente `SandboxTuning`. No se experimenta editando los niveles que ya funcionan. El sandbox es un nivel duplicado con objetos reales de escena, no algo generado en runtime.
 - Los valores del sandbox pasan a producción solo con `Tools > Manners > Sandbox > 4` (comparar y sincronizar). Nunca borrar y pegar assets a mano: cambian los GUID y se rompen referencias. Si la herramienta no lleva un cambio, se arregla la herramienta.
 - Pruebas EditMode: `OverrideCombinationTests` (Window > General > Test Runner).

@@ -246,12 +246,12 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         AddRow(content, 1, 1, "Detalle de texturas", () =>
             draft.textureMipmapLimit == 0 ? "Completo" : draft.textureMipmapLimit == 1 ? "Mitad" : "Cuarto",
             step => draft.textureMipmapLimit = Wrap(draft.textureMipmapLimit + step, 3));
-        AddRow(content, 1, 2, "Sombras en tiempo real", () => OnOff(draft.shadows), step => draft.shadows = !draft.shadows);
+        AddRow(content, 1, 2, "Sombras", () => OnOff(draft.shadows), step => draft.shadows = !draft.shadows);
         AddRow(content, 1, 3, "Oclusión ambiental (SSAO)", () =>
             GameGraphicsSettings.SupportsAmbientOcclusion ? OnOff(draft.ambientOcclusion) : "No disponible",
             step => draft.ambientOcclusion = !draft.ambientOcclusion, () => GameGraphicsSettings.SupportsAmbientOcclusion);
         AddRow(content, 1, 4, "Postprocesado", () => OnOff(draft.postProcessing), step => draft.postProcessing = !draft.postProcessing);
-        AddRow(content, 1, 5, "Contornos de edificios", () => OnOff(draft.outlines), step => draft.outlines = !draft.outlines);
+        AddRow(content, 1, 5, "Contornos", () => OnOff(draft.outlines), step => draft.outlines = !draft.outlines);
 
         syncHint = CreateText("SyncHint", content, "", 21, TextAlignmentOptions.Left);
         Stretch(syncHint.rectTransform, 0, .105f, 1, .185f);

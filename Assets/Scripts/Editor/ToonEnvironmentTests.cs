@@ -21,12 +21,188 @@ public class ToonEnvironmentTests
     }
 
     [Test]
-    public void ToonShaderIsSrpBatcherCompatible()
+    public void WorldShadersCompileWithTheExpectedPasses()
     {
-        Shader shader = Shader.Find(ToonEnvironmentStyle.ShaderName);
-        bool? compatible = ToonEnvironmentTools.IsSrpBatcherCompatible(shader);
+        AssertPasses(ToonEnvironmentStyle.CharacterShaderName, "UNIVERSALFORWARD", "TOONOUTLINE", "TOONGROUNDSHADOW", "SHADOWCASTER", "DEPTHONLY", "DEPTHNORMALS");
+        AssertPasses(ToonEnvironmentStyle.GroundShadowShaderName, "TOONGROUNDSHADOW");
+        AssertPasses(ToonEnvironmentStyle.TerrainShaderName, "UNIVERSALFORWARD", "SHADOWCASTER", "DEPTHONLY", "DEPTHNORMALS");
+    }
+
+    private static void AssertPasses(string shaderName, params string[] expected)
+    {
+        Shader shader = Shader.Find(shaderName);
+        Assert.IsNotNull(shader, "Falta el shader " + shaderName);
+        Assert.IsFalse(ShaderUtil.ShaderHasError(shader), "El shader " + shaderName + " tiene errores de compilación.");
+        var lightModes = new HashSet<string>();
+        var tag = new ShaderTagId("LightMode");
+        for (int i = 0; i < shader.passCount; i++) lightModes.Add(shader.FindPassTagValue(i, tag).name.ToUpperInvariant());
+        CollectionAssert.IsSubsetOf(expected, lightModes, shaderName);
+    }
+
+    [TestCase(ToonEnvironmentStyle.ShaderName)]
+    [TestCase(ToonEnvironmentStyle.CharacterShaderName)]
+    [TestCase(ToonEnvironmentStyle.GroundShadowShaderName)]
+    public void ToonShaderIsSrpBatcherCompatible(string shaderName)
+    {
+        Shader shader = Shader.Find(shaderName);
+        bool? compatible = ToonEnvironmentTools.IsSrpBatcherCompatible(shader, out string reason);
         if (compatible == null) Assert.Ignore("Esta versión del editor no expone la comprobación del SRP Batcher.");
-        Assert.IsTrue(compatible.Value, "Todas las propiedades del material deben estar en el CBUFFER UnityPerMaterial de todas las pasadas.");
+        Assert.IsTrue(compatible.Value, "Todas las propiedades del material deben estar en el CBUFFER UnityPerMaterial de todas las pasadas: " + reason);
+    }
+
+    [Test]
+    public void ShadowsOptionTogglesTheGroundShadowPassAndRestoresIt()
+    {
+        var shadow = new Material(Shader.Find(ToonEnvironmentStyle.GroundShadowShaderName));
+        var caster = new Material(Shader.Find(ToonEnvironmentStyle.CharacterShaderName));
+        var enemy = new Material(Shader.Find(ToonEnvironmentStyle.CharacterShaderName));
+        enemy.SetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode, false);
+        var style = ScriptableObject.CreateInstance<ToonEnvironmentStyle>();
+        style.groundShadowMaterial = shadow;
+        style.groundShadowCasterMaterials.Add(caster);
+        style.groundShadowCasterMaterials.Add(null);
+        style.characterMaterials.Add(caster);
+        style.characterMaterials.Add(enemy);
+        style.groundHeight = 0.25f;
+        try
+        {
+            Assert.IsFalse(GameGraphicsSettings.CreatePreset(GameGraphicsSettings.GraphicsPreset.Eco).shadows, "Eco no dibuja sombras.");
+            ToonEnvironmentStyle.ApplyGroundShadows(false, style);
+            Assert.IsFalse(shadow.GetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode));
+            Assert.IsFalse(caster.GetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode));
+            ToonEnvironmentStyle.ApplyGroundShadows(true, style);
+            Assert.IsTrue(shadow.GetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode));
+            Assert.IsTrue(caster.GetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode));
+            Assert.IsFalse(enemy.GetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode), "Los enemigos no proyectan sombra plana salvo que el estilo los incluya.");
+            Assert.AreEqual(0.25f, Shader.GetGlobalFloat(ToonEnvironmentStyle.GroundHeightId));
+
+            style.characterOutlines = false;
+            ToonEnvironmentStyle.ApplyOutlines(true, style);
+            Assert.IsFalse(enemy.GetShaderPassEnabled(ToonEnvironmentStyle.OutlinePassLightMode), "Con 'Character Outlines' apagado los personajes no dibujan contorno.");
+            style.characterOutlines = true;
+            ToonEnvironmentStyle.ApplyOutlines(true, style);
+            Assert.IsTrue(enemy.GetShaderPassEnabled(ToonEnvironmentStyle.OutlinePassLightMode));
+        }
+        finally
+        {
+            Shader.SetGlobalFloat(ToonEnvironmentStyle.GroundHeightId, 0f);
+            ToonEnvironmentStyle.ApplyOutlines(true, null);
+            Object.DestroyImmediate(style);
+            Object.DestroyImmediate(shadow);
+            Object.DestroyImmediate(caster);
+            Object.DestroyImmediate(enemy);
+        }
+    }
+
+    [Test]
+    public void LevelTwoStaysOutOfTheDefaultScope()
+    {
+        var style = ScriptableObject.CreateInstance<ToonEnvironmentStyle>();
+        try
+        {
+            CollectionAssert.Contains(style.scenesToScan, ToonStylePreview.Level1ScenePath);
+            foreach (string scene in style.scenesToScan) StringAssert.DoesNotContain("MilitaryBase", scene);
+        }
+        finally
+        {
+            Object.DestroyImmediate(style);
+        }
+    }
+
+    [Test]
+    public void GroundShadowDarkensTheFloorOnceAndNeverTheCaster()
+    {
+        bool previousFog = RenderSettings.fog;
+        Light previousSun = RenderSettings.sun;
+        bool previousAsync = ShaderUtil.allowAsyncCompilation;
+        ShaderUtil.allowAsyncCompilation = false;
+        RenderSettings.fog = false;
+        var root = new GameObject("Toon ground shadow test");
+        var floorMaterial = new Material(Shader.Find(ToonEnvironmentStyle.ShaderName));
+        var casterMaterial = new Material(Shader.Find(ToonEnvironmentStyle.CharacterShaderName));
+        var target = new RenderTexture(Size, Size, 24, RenderTextureFormat.ARGB32);
+        var readback = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
+        try
+        {
+            root.transform.position = new Vector3(0f, 0f, 4000f);
+            Shader.SetGlobalFloat(ToonEnvironmentStyle.GroundHeightId, 0f);
+            foreach (Material material in new[] { floorMaterial, casterMaterial })
+            {
+                material.SetColor(ToonEnvironmentStyle.BaseColorId, Color.white);
+                material.SetColor(ToonEnvironmentStyle.ShadeColorId, Color.white);
+                material.EnableKeyword("_RECEIVE_SHADOWS_OFF");
+                material.SetShaderPassEnabled(ToonEnvironmentStyle.OutlinePassLightMode, false);
+            }
+            floorMaterial.SetFloat(ToonEnvironmentStyle.StencilRefId, 8f);
+            casterMaterial.SetColor(ToonEnvironmentStyle.GroundShadowColorId, new Color(0.5f, 0.5f, 0.5f, 1f));
+            casterMaterial.SetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode, true);
+
+            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            floor.transform.SetParent(root.transform, false);
+            floor.GetComponent<MeshRenderer>().sharedMaterial = floorMaterial;
+            foreach (float x in new[] { -0.3f, 0.3f })
+            {
+                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.transform.SetParent(root.transform, false);
+                cube.transform.localPosition = new Vector3(x, 0.5f, 0f);
+                cube.GetComponent<MeshRenderer>().sharedMaterial = casterMaterial;
+            }
+
+            var lightObject = new GameObject("Toon test light");
+            lightObject.transform.SetParent(root.transform, false);
+            var light = lightObject.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.color = Color.white;
+            light.intensity = 1f;
+            light.shadows = LightShadows.None;
+            light.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            RenderSettings.sun = light;
+            foreach (Light other in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+                if (other != light && other.type == LightType.Directional) other.intensity = 0f;
+
+            var cameraObject = new GameObject("Toon test camera");
+            cameraObject.transform.SetParent(root.transform, false);
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.orthographicSize = 3f;
+            camera.aspect = 1f;
+            camera.nearClipPlane = 0.1f;
+            camera.farClipPlane = 50f;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = Color.magenta;
+            camera.allowHDR = false;
+            camera.allowMSAA = false;
+            camera.useOcclusionCulling = false;
+            camera.transform.localPosition = new Vector3(0f, 10f, 0f);
+            camera.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            camera.targetTexture = target;
+
+            Render(camera, target, readback);
+            Color[] pixels = Render(camera, target, readback);
+            float shadowed = Luminance(Sample(pixels, 0.5f, 0.5f + 1f / 6f));
+            float open = Luminance(Sample(pixels, 0.5f, 0.25f));
+            float top = Luminance(Sample(pixels, 0.55f, 0.5f));
+            Assert.Greater(open, 0.9f, "El piso fuera de la sombra debe verse sin oscurecer.");
+            Assert.That(shadowed, Is.EqualTo(0.5f).Within(0.08f), "Donde se solapan las sombras de los dos cubos el piso se oscurece una sola vez.");
+            Assert.Greater(top, 0.9f, "La sombra plana no debe oscurecer al propio personaje.");
+
+            casterMaterial.SetShaderPassEnabled(ToonEnvironmentStyle.GroundShadowPassLightMode, false);
+            pixels = Render(camera, target, readback);
+            Assert.Greater(Luminance(Sample(pixels, 0.5f, 0.5f + 1f / 6f)), 0.9f, "Con la pasada apagada no queda sombra en el piso.");
+        }
+        finally
+        {
+            ShaderUtil.allowAsyncCompilation = previousAsync;
+            RenderSettings.fog = previousFog;
+            RenderSettings.sun = previousSun;
+            RenderTexture.active = null;
+            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(floorMaterial);
+            Object.DestroyImmediate(casterMaterial);
+            Object.DestroyImmediate(readback);
+            target.Release();
+            Object.DestroyImmediate(target);
+        }
     }
 
     [Test]

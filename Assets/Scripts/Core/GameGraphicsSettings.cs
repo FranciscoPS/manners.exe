@@ -208,6 +208,7 @@ public static class GameGraphicsSettings
                 ? sourcePipeline.shadowCascadeCount : 1;
         }
         ToonEnvironmentStyle.ApplyOutlines(current.outlines);
+        ToonEnvironmentStyle.ApplyGroundShadows(current.shadows);
         foreach (var pair in Cameras)
             if (pair.Key != null && pair.Value.data != null) ApplyCamera(pair.Value);
     }
@@ -355,6 +356,7 @@ public static class GameGraphicsSettings
         Cameras.Clear();
         RemovedCameras.Clear();
         ToonEnvironmentStyle.ApplyOutlines(true);
+        ToonEnvironmentStyle.ApplyGroundShadows(true);
         if (QualitySettings.renderPipeline == runtimePipeline) QualitySettings.renderPipeline = originalQualityPipeline;
         QualitySettings.vSyncCount = originalVSync;
         Application.targetFrameRate = originalFrameRate;
