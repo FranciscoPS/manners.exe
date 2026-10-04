@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Wave_03
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: "Primera Presi\xF3n"
-  totalEnemies: 200
+  totalEnemies: 80
   isRestWave: 0
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: 7aecfe60982974d87bf31c849d6f5eff, type: 2}
-    percentage: 70
+    percentage: 80
   - enemyConfig: {fileID: 11400000, guid: 7a4ae5ff25f144ab581944c218069a8f, type: 2}
-    percentage: 30
-  spawnInterval: 0.35
-  enemiesPerBatch: 8
+    percentage: 20
+  spawnInterval: 0.65
+  enemiesPerBatch: 3

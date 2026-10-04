@@ -33,6 +33,8 @@ public class SandboxTuning : MonoBehaviour
     [SerializeField] private InvisibleWallWarningConfig invisibleWallWarningConfigOverride;
 
     [Header("=== PARTIDA ===")]
+    [Tooltip("Apagado: la partida dura lo que diga el GameBalanceConfig del sandbox (el valor que se sincroniza a producción). Encendido: se usa 'Match Duration Minutes' solo en el sandbox, para llegar antes a la oleada final.")]
+    [SerializeField] private bool overrideMatchDuration = false;
     [SerializeField] private float matchDurationMinutes = 3f;
     [SerializeField] private float startingTimeScale = 1f;
 
@@ -166,10 +168,13 @@ public class SandboxTuning : MonoBehaviour
             return;
         }
 
-        timeManager.SetMatchDuration(matchDurationMinutes);
+        if (overrideMatchDuration)
+            timeManager.SetMatchDuration(matchDurationMinutes);
+
         timeManager.ResetGame();
 
-        SandboxLog.Ok($"Partida: {matchDurationMinutes} min hasta la oleada final. Time scale inicial x{Time.timeScale}.");
+        string source = overrideMatchDuration ? "override del sandbox" : "GameBalanceConfig";
+        SandboxLog.Ok($"Partida: {timeManager.MatchDurationSeconds / 60f:0.##} min hasta la oleada final ({source}). Time scale inicial x{Time.timeScale}.");
     }
 
     private void ConfigurePlayer()

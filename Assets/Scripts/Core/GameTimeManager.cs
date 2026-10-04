@@ -20,9 +20,7 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         }
     }
 
-    [Header("Match Duration")]
-    [Tooltip("Duracion de la partida en minutos. El cronometro cuenta hacia atras desde aqui; al llegar a 0 se lanza la oleada final imposible.")]
-    [SerializeField] private float matchDurationMinutes = 15f;
+    private float matchDurationMinutes = 15f;
 
     private float gameStartTime;
     private bool isGameActive = false;
@@ -36,6 +34,12 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
     public void SetMatchDuration(float minutes)
     {
         matchDurationMinutes = Mathf.Max(0.1f, minutes);
+    }
+
+    private void LoadMatchDuration()
+    {
+        if (GameBalanceConfig.Instance != null)
+            SetMatchDuration(GameBalanceConfig.Instance.MatchDurationMinutes);
     }
 
     public bool IsActive => isGameActive && this != null && enabled;
@@ -54,6 +58,7 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
             instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
+            LoadMatchDuration();
 
             if (UpdateManager.Instance != null)
             {
@@ -109,6 +114,7 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        LoadMatchDuration();
 
         if (!scene.name.Contains("Menu") && !scene.name.Contains("MainMenu"))
         {

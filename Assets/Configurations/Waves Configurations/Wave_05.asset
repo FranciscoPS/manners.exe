@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Wave_05
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Reagrupamiento
-  totalEnemies: 130
+  totalEnemies: 70
+  isRestWave: 0
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
-    percentage: 55
+    percentage: 70
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
-    percentage: 45
-  spawnInterval: 0.8
-  enemiesPerBatch: 5
+    percentage: 30
+  spawnInterval: 0.75
+  enemiesPerBatch: 4

@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Wave_07
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: "Contenci\xF3n"
-  totalEnemies: 150
+  totalEnemies: 90
+  isRestWave: 0
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
-    percentage: 45
+    percentage: 55
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
     percentage: 45
-  spawnInterval: 0.7
-  enemiesPerBatch: 5
+  spawnInterval: 0.65
+  enemiesPerBatch: 4

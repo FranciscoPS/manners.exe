@@ -31,19 +31,19 @@ public class SandboxSyncWindow : EditorWindow
     {
         SandboxSyncWindow window = GetWindow<SandboxSyncWindow>("Sandbox ↔ Producción");
         window.minSize = new Vector2(840f, 420f);
-        window.Scan();
+        window.Scan(true);
         window.Focus();
     }
 
     private void OnEnable()
     {
         if (result == null)
-            Scan();
+            Scan(false);
     }
 
-    private void Scan()
+    private void Scan(bool includeScene)
     {
-        result = SandboxDiffTool.Compare();
+        result = SandboxDiffTool.Compare(includeScene);
         groups.Clear();
 
         Group current = null;
@@ -70,6 +70,14 @@ public class SandboxSyncWindow : EditorWindow
         DrawToolbar();
 
         if (result == null) return;
+
+        if (!result.includesScene)
+        {
+            EditorGUILayout.HelpBox(
+                "Los valores del EnemySpawnManager de escena (ritmo de oleadas, rampa inicial, oleada final) no están en esta comparación. " +
+                "Pulsa 'Volver a comparar' fuera de Play Mode para incluirlos: abre un momento LEVEL 1 y Sandbox y las vuelve a cerrar.",
+                MessageType.Info);
+        }
 
         if (result.pairs.Count == 0)
         {
@@ -122,7 +130,7 @@ public class SandboxSyncWindow : EditorWindow
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
             if (GUILayout.Button("Volver a comparar", EditorStyles.toolbarButton, GUILayout.Width(130f)))
-                Scan();
+                Scan(true);
 
             GUILayout.Space(10f);
             GUILayout.Label("Copiar:", EditorStyles.miniLabel, GUILayout.Width(44f));
@@ -181,9 +189,9 @@ public class SandboxSyncWindow : EditorWindow
                 GUILayout.FlexibleSpace();
 
                 if (GUILayout.Button("Prod", EditorStyles.miniButtonLeft, GUILayout.Width(44f)))
-                    EditorGUIUtility.PingObject(group.pair.production);
+                    EditorGUIUtility.PingObject(SandboxDiffTool.PingTarget(group.pair, true));
                 if (GUILayout.Button("Sandbox", EditorStyles.miniButtonRight, GUILayout.Width(62f)))
-                    EditorGUIUtility.PingObject(group.pair.sandbox);
+                    EditorGUIUtility.PingObject(SandboxDiffTool.PingTarget(group.pair, false));
             }
 
             if (!group.expanded) return;
@@ -239,14 +247,15 @@ public class SandboxSyncWindow : EditorWindow
         bool confirmed = EditorUtility.DisplayDialog(
             "Sincronizar valores",
             $"Se van a sobrescribir {selected.Count} valor(es) en {targetName} con los de {sourceName}.\n\n" +
-            "Los assets se guardan en disco al terminar. Puedes deshacer con Ctrl+Z mientras no cierres Unity.\n\n¿Continuar?",
+            "Los assets y la escena de destino se guardan en disco al terminar. Los cambios en assets se pueden deshacer con Ctrl+Z mientras no cierres Unity; los de escena, volviendo a sincronizar en sentido contrario.\n\n¿Continuar?",
             "Aplicar", "Cancelar");
 
         if (!confirmed) return;
 
+        bool includeScene = result.includesScene;
         int applied = SandboxDiffTool.Apply(result, selected, direction);
         Debug.Log($"[SandboxSync] {applied} valor(es) copiados de {sourceName} a {targetName}.");
-        Scan();
+        Scan(includeScene);
     }
 
     private List<SandboxDiffTool.DiffEntry> CollectSelected()

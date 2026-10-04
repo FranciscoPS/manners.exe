@@ -61,6 +61,10 @@ public class GameBalanceConfig : ScriptableObject
         instance = config;
     }
 
+    [Header("=== PARTIDA ===")]
+    [Tooltip("Duración de la partida en minutos. El cronómetro cuenta hacia atrás desde aquí; al llegar a 0 empieza el overtime con la oleada final.")]
+    [SerializeField] private float matchDurationMinutes = 15f;
+
     [Header("=== INITIAL PLAYER STATS ===")]
     [SerializeField] private float playerMaxHealth = 100f;
     [SerializeField] private float playerBaseDamage = 10f;
@@ -99,9 +103,17 @@ public class GameBalanceConfig : ScriptableObject
     [SerializeField] private float diamondLifetime = 30f;
     [SerializeField] private float orbLifetime = 30f;
 
+    [Header("=== COFRES ===")]
+    [Tooltip("Segundo de juego en que aparece el primer cofre.")]
+    [SerializeField] private float chestFirstSpawnDelay = 60f;
+    [Tooltip("Segundos de juego entre que se recoge un cofre y aparece el siguiente. Cuenta el cronómetro de partida: en pausa no avanza.")]
+    [SerializeField] private float chestSpawnInterval = 60f;
+
     [Header("=== ENEMY DROPS BY WAVE ===")]
     [Tooltip("Configuraciones de drops por tipo de enemigo y wave. Se busca la primera que matchee el wave actual.")]
     [SerializeField] private EnemyDropConfig[] enemyDropConfigs = new EnemyDropConfig[0];
+
+    public float MatchDurationMinutes => matchDurationMinutes;
 
     public float PlayerMaxHealth => playerMaxHealth;
     public float PlayerBaseDamage => playerBaseDamage;
@@ -131,6 +143,9 @@ public class GameBalanceConfig : ScriptableObject
     public float CoinLifetime => coinLifetime;
     public float DiamondLifetime => diamondLifetime;
     public float OrbLifetime => orbLifetime;
+
+    public float ChestFirstSpawnDelay => chestFirstSpawnDelay;
+    public float ChestSpawnInterval => chestSpawnInterval;
 
     public int CalculateExperienceForLevel(int level)
     {

@@ -6,11 +6,8 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
     private static ChestSpawner instance;
     private static bool isQuitting = false;
 
-    [Header("Spawn Timing")]
-    [Tooltip("Cada cuántos segundos de JUEGO aparece un cofre. Cuenta el cronómetro de partida, no el tiempo real: si se pausa, NO avanza.")]
-    [SerializeField] private float spawnInterval = 60f;
-    [Tooltip("Segundo de JUEGO en que aparece el PRIMER cofre tras iniciar la partida (igual al intervalo normal: 1 min).")]
-    [SerializeField] private float firstSpawnDelay = 60f;
+    private float spawnInterval = 60f;
+    private float firstSpawnDelay = 60f;
 
     [Header("Spawn Position")]
     [SerializeField] private Vector3 centerPoint = Vector3.zero;
@@ -40,6 +37,15 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         spawnInterval = interval;
         firstSpawnDelay = firstDelay;
         nextSpawnTime = firstDelay;
+    }
+
+    private void LoadSpawnTiming()
+    {
+        GameBalanceConfig balance = GameBalanceConfig.Instance;
+        if (balance == null) return;
+
+        spawnInterval = balance.ChestSpawnInterval;
+        firstSpawnDelay = balance.ChestFirstSpawnDelay;
     }
 
     public void SetSpawnArea(Vector3 center, float minRadius, float maxRadius)
@@ -142,6 +148,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
 
+        LoadSpawnTiming();
         nextSpawnTime = firstSpawnDelay;
 
         if (UpdateManager.Instance != null)
@@ -168,6 +175,7 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        LoadSpawnTiming();
         nextSpawnTime = firstSpawnDelay;
         cachedPlayer = null;
         lastSpawnAngle = -999f;

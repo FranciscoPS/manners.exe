@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public static class SandboxDiffTool
 {
@@ -17,6 +19,7 @@ public static class SandboxDiffTool
         public string label;
         public Object production;
         public Object sandbox;
+        public bool inScene;
 
         public Object Source(SyncDirection direction)
         {
@@ -47,6 +50,7 @@ public static class SandboxDiffTool
         public readonly List<DiffEntry> entries = new List<DiffEntry>();
         public readonly Dictionary<Object, Object> productionToSandbox = new Dictionary<Object, Object>();
         public readonly Dictionary<Object, Object> sandboxToProduction = new Dictionary<Object, Object>();
+        public bool includesScene;
     }
 
     private const string ProductionBalancePath = "Assets/Resources/GameBalanceConfig.asset";
@@ -56,8 +60,9 @@ public static class SandboxDiffTool
     private const string ProductionOverridesFolder = "Assets/Configurations/Overrides";
     private const string ProductionConfigurationsFolder = "Assets/Configurations/";
     private const string ProductionResourcesFolder = "Assets/Resources/";
+    private const string ProductionScenePath = "Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity";
 
-    public static DiffResult Compare()
+    public static DiffResult Compare(bool includeScene)
     {
         DiffResult result = new DiffResult();
         CollectPairs(result);
@@ -67,7 +72,28 @@ public static class SandboxDiffTool
         for (int i = 0; i < result.pairs.Count; i++)
             CollectDiffs(result, result.pairs[i]);
 
+        if (includeScene && !EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            List<Scene> openedScenes = new List<Scene>();
+            AssetPair spawner = FindSpawnerPair(openedScenes);
+
+            if (spawner != null)
+            {
+                result.pairs.Add(spawner);
+                CollectDiffs(result, spawner);
+            }
+
+            CloseScenes(openedScenes);
+            result.includesScene = true;
+        }
+
         return result;
+    }
+
+    public static Object PingTarget(AssetPair pair, bool productionSide)
+    {
+        if (!pair.inScene) return productionSide ? pair.production : pair.sandbox;
+        return AssetDatabase.LoadAssetAtPath<SceneAsset>(productionSide ? ProductionScenePath : SandboxSetupTools.ScenePath);
     }
 
     public static int Apply(DiffResult result, IList<DiffEntry> entries, SyncDirection direction)
@@ -90,9 +116,18 @@ public static class SandboxDiffTool
 
         int applied = 0;
         int skipped = 0;
+        HashSet<Scene> changedScenes = new HashSet<Scene>();
+        List<Scene> openedScenes = new List<Scene>();
 
         foreach (KeyValuePair<AssetPair, List<DiffEntry>> group in byPair)
         {
+            if (group.Key.inScene)
+            {
+                AssetPair spawner = FindSpawnerPair(openedScenes);
+                group.Key.production = spawner != null ? spawner.production : null;
+                group.Key.sandbox = spawner != null ? spawner.sandbox : null;
+            }
+
             Object source = group.Key.Source(direction);
             Object target = group.Key.Target(direction);
             if (source == null || target == null) continue;
@@ -135,11 +170,22 @@ public static class SandboxDiffTool
             {
                 targetSO.ApplyModifiedProperties();
                 EditorUtility.SetDirty(target);
+
+                if (target is Component component)
+                    changedScenes.Add(component.gameObject.scene);
             }
         }
 
         if (applied > 0)
             AssetDatabase.SaveAssets();
+
+        foreach (Scene scene in changedScenes)
+        {
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        CloseScenes(openedScenes);
 
         if (skipped > 0)
             Debug.LogWarning($"[SandboxSync] {skipped} referencia(s) se dejaron sin copiar porque apuntan a assets exclusivos del otro lado sin contraparte (detalle arriba).");
@@ -162,6 +208,52 @@ public static class SandboxDiffTool
         }
 
         return report.ToString();
+    }
+
+    private static AssetPair FindSpawnerPair(List<Scene> openedScenes)
+    {
+        EnemySpawnManager production = FindInScene<EnemySpawnManager>(ProductionScenePath, openedScenes);
+        EnemySpawnManager sandbox = FindInScene<EnemySpawnManager>(SandboxSetupTools.ScenePath, openedScenes);
+
+        if (production == null || sandbox == null)
+        {
+            Debug.LogWarning($"[SandboxSync] No se pudo comparar el EnemySpawnManager de escena: falta en {(production == null ? ProductionScenePath : SandboxSetupTools.ScenePath)}.");
+            return null;
+        }
+
+        return new AssetPair { label = "EnemySpawnManager (escena)", production = production, sandbox = sandbox, inScene = true };
+    }
+
+    private static void CloseScenes(List<Scene> openedScenes)
+    {
+        for (int i = 0; i < openedScenes.Count; i++)
+        {
+            if (openedScenes[i].IsValid() && openedScenes[i].isLoaded)
+                EditorSceneManager.CloseScene(openedScenes[i], true);
+        }
+
+        openedScenes.Clear();
+    }
+
+    private static T FindInScene<T>(string scenePath, List<Scene> openedScenes) where T : Component
+    {
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath) == null) return null;
+
+        Scene scene = SceneManager.GetSceneByPath(scenePath);
+        if (!scene.IsValid() || !scene.isLoaded)
+        {
+            scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+            openedScenes.Add(scene);
+        }
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            T found = roots[i].GetComponentInChildren<T>(true);
+            if (found != null) return found;
+        }
+
+        return null;
     }
 
     private static void CollectPairs(DiffResult result)

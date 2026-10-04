@@ -19,7 +19,7 @@ public static class SandboxSetupTools
     internal const string OverridesFolder = SandboxFolder + "/Overrides";
     internal const string ChestOpeningConfigPath = SandboxFolder + "/ChestOpeningConfig_Sandbox.asset";
     internal const string InvisibleWallWarningConfigPath = SandboxFolder + "/InvisibleWallWarningConfig_Sandbox.asset";
-    private const string ScenePath = "Assets/Scenes/Sandbox.unity";
+    internal const string ScenePath = "Assets/Scenes/Sandbox.unity";
 
     private static readonly string[] SourceEnemyConfigs =
     {

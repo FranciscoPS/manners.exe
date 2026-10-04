@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Wave_04
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveName: Respiro
-  totalEnemies: 35
+  totalEnemies: 8
   isRestWave: 1
   enemyDistribution:
   - enemyConfig: {fileID: 11400000, guid: baabdd4b5dcc1453aa0e177a49cd24a0, type: 2}
-    percentage: 50
+    percentage: 60
   - enemyConfig: {fileID: 11400000, guid: 639ff9699c58443b39310cfa9ff93343, type: 2}
-    percentage: 50
-  spawnInterval: 2.5
+    percentage: 40
+  spawnInterval: 3
   enemiesPerBatch: 1

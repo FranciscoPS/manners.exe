@@ -37595,7 +37595,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b5fc473770a31a648834fb6d26d5c44e, type: 2}
   - {fileID: 11400000, guid: 0a23896a9bafd7b459e3a4e94001537b, type: 2}
   - {fileID: 11400000, guid: 9e4d5fa6c60aee04797823c7213501d7, type: 2}
-  timeBetweenWaves: 10
+  timeBetweenWaves: 6
   autoLoopWaves: 1
   enableContinuousSpawn: 1
   continuousSpawnInterval: 3
@@ -37603,9 +37603,9 @@ MonoBehaviour:
   continuousEnemyTypes: []
   maxConcurrentEnemies: 450
   enableEarlyRamp: 1
-  earlyRampSeconds: 150
-  earlyRampStartFactor: 0.2
-  earlyRampCurvePower: 2
+  earlyRampSeconds: 20
+  earlyRampStartFactor: 0.6
+  earlyRampCurvePower: 1
   finalRushBurstInterval: 6
   finalRushBurstIntervalReductionPerTier: 1
   finalRushBurstIntervalMin: 1.5
