@@ -14,6 +14,7 @@ public class ChestOpeningSequence : MonoBehaviour
     private Image dimOverlay;
     private Image flashOverlay;
     private CanvasGroup promptGroup;
+    private CanvasGroup skipHintGroup;
     private TextMeshProUGUI promptText;
     private TextMeshProUGUI skipHintText;
     private RadiantAuraVFX aura;
@@ -192,21 +193,32 @@ public class ChestOpeningSequence : MonoBehaviour
         promptText.text = "";
 
         GameObject hintObj = new GameObject("SkipHintText", typeof(RectTransform));
-        hintObj.transform.SetParent(textObj.transform, false);
+        hintObj.transform.SetParent(canvasRoot.transform, false);
 
         RectTransform hintRect = hintObj.GetComponent<RectTransform>();
-        hintRect.anchorMin = new Vector2(0.5f, 0f);
-        hintRect.anchorMax = new Vector2(0.5f, 0f);
-        hintRect.pivot = new Vector2(0.5f, 1f);
+        hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 0.5f);
+        hintRect.pivot = new Vector2(0.5f, 0.5f);
         hintRect.sizeDelta = new Vector2(1000f, 50f);
-        hintRect.anchoredPosition = new Vector2(0f, 6f);
 
+        skipHintGroup = hintObj.AddComponent<CanvasGroup>();
         skipHintText = hintObj.AddComponent<TextMeshProUGUI>();
         skipHintText.alignment = TextAlignmentOptions.Center;
-        skipHintText.fontSize = 30;
-        skipHintText.color = new Color(0.85f, 0.88f, 0.95f, 0.9f);
+        skipHintText.fontSize = 64;
+        skipHintText.color = new Color32(255, 0, 0, 255);
         skipHintText.raycastTarget = false;
         skipHintText.text = "";
+
+        TMP_FontAsset[] loadedFonts = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
+        for (int i = 0; i < loadedFonts.Length; i++)
+        {
+            if (loadedFonts[i].name == "Orbitron-ExtraBold SDF")
+            {
+                skipHintText.font = loadedFonts[i];
+                return;
+            }
+        }
+
+        Debug.LogError("No se encontró la fuente TMP Orbitron-ExtraBold SDF para la indicación del cofre.");
     }
 
     private static string KeyLabel(Key key)
@@ -237,9 +249,11 @@ public class ChestOpeningSequence : MonoBehaviour
         dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, 0f);
         flashOverlay.color = Color.clear;
         promptGroup.alpha = 1f;
+        skipHintGroup.alpha = 1f;
         auraGroup.alpha = 1f;
         promptText.text = config.promptMessage;
         skipHintText.text = config.allowSkip ? string.Format(config.skipHintMessage, KeyLabel(config.skipKey)) : "";
+        skipHintText.rectTransform.anchoredPosition = new Vector2(0f, 315f);
         aura.SpinMultiplier = 0.3f;
         aura.Play();
         showcase.TryBegin(config);
@@ -385,6 +399,7 @@ public class ChestOpeningSequence : MonoBehaviour
     {
         float startDim = dimOverlay.color.a;
         float startPrompt = promptGroup.alpha;
+        float startSkipHint = skipHintGroup.alpha;
         float startAura = auraGroup.alpha;
         float elapsed = 0f;
 
@@ -393,6 +408,7 @@ public class ChestOpeningSequence : MonoBehaviour
             float t = elapsed / duration;
             dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, Mathf.Lerp(startDim, 0f, t));
             promptGroup.alpha = Mathf.Lerp(startPrompt, 0f, t);
+            skipHintGroup.alpha = Mathf.Lerp(startSkipHint, 0f, t);
             auraGroup.alpha = Mathf.Lerp(startAura, 0f, t);
 
             if (showcase.IsActive)
@@ -404,6 +420,7 @@ public class ChestOpeningSequence : MonoBehaviour
 
         dimOverlay.color = Color.clear;
         promptGroup.alpha = 0f;
+        skipHintGroup.alpha = 0f;
         auraGroup.alpha = 0f;
     }
 
