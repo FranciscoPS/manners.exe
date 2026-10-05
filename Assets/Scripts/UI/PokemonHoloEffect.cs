@@ -7,6 +7,8 @@ public class PokemonHoloEffect : MonoBehaviour
     [Header("Holo Foil")]
     [SerializeField] private float scrollSpeed = 0.35f;
     [SerializeField] private float rainbowRepeats = 1f;
+    [Tooltip("Ancho, en unidades de canvas, que ocupa una repetición del arcoíris.")]
+    [SerializeField] private float rainbowSpan = 420f;
     [SerializeField] private float diagonalAngleDegrees = 45f;
     [SerializeField] private float saturation = 0.9f;
     [SerializeField] private float sheenIntensity = 0.55f;
@@ -25,6 +27,14 @@ public class PokemonHoloEffect : MonoBehaviour
         image.raycastTarget = false;
         image.color = Color.white;
 
+        Image shape = transform.parent != null ? transform.parent.GetComponent<Image>() : null;
+        if (shape != null && shape.sprite != null)
+        {
+            image.sprite = shape.sprite;
+            image.type = shape.type;
+            image.pixelsPerUnitMultiplier = shape.pixelsPerUnitMultiplier;
+        }
+
         if (holoShader == null)
             holoShader = Shader.Find("UI/PokemonHolo");
 
@@ -33,6 +43,7 @@ public class PokemonHoloEffect : MonoBehaviour
             material = new Material(holoShader);
             material.SetFloat("_Angle", diagonalAngleDegrees * Mathf.Deg2Rad);
             material.SetFloat("_Frequency", rainbowRepeats);
+            material.SetFloat("_Span", Mathf.Max(1f, rainbowSpan));
             material.SetFloat("_Saturation", saturation);
             material.SetFloat("_Intensity", sheenIntensity);
             material.SetFloat("_MinBrightness", minBrightness);

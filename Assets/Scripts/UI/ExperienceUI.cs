@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
 
 public class ExperienceUI : MonoBehaviour, IUpdateable
 {
@@ -10,6 +11,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
     private Image expBarFill;
     private TextMeshProUGUI levelText;
     private TextMeshProUGUI expText;
+    private RectTransform barRect;
 
     private PlayerExperience playerExperience;
 
@@ -26,6 +28,8 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
     {
         Transform expBarPanel = transform.Find("ExpBarPanel");
         if (expBarPanel == null) return;
+
+        barRect = expBarPanel as RectTransform;
 
         Image[] allImages = expBarPanel.GetComponentsInChildren<Image>(true);
         foreach (var img in allImages)
@@ -134,7 +138,14 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
 
         if (levelText != null)
         {
-            levelText.text = "Level " + newLevel;
+            levelText.text = "Nivel " + newLevel;
+        }
+
+        if (barRect != null)
+        {
+            barRect.DOKill();
+            barRect.localScale = Vector3.one;
+            barRect.DOPunchScale(new Vector3(0.012f, 0.35f, 0f), 0.4f, 6, 0.6f).SetUpdate(true);
         }
     }
 }

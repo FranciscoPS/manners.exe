@@ -112,11 +112,13 @@ public class LeaderboardUI : MonoBehaviour
         _hue += Time.unscaledDeltaTime * rgbSpeed;
         if (_hue >= 1f) _hue -= 1f;
 
+        UIStyle style = UIStyle.Instance;
+
         if (rgbTitle && titleText != null)
-            titleText.color = Color.HSVToRGB(_hue, rgbSaturation, rgbValue);
+            titleText.color = style != null ? style.AccentCycle(_hue) : Color.HSVToRGB(_hue, rgbSaturation, rgbValue);
 
         if (rgbEntries && leaderboardText != null)
-            leaderboardText.color = Color.HSVToRGB((_hue + 0.5f) % 1f, rgbSaturation, rgbValue);
+            leaderboardText.color = style != null ? style.AccentCycle(_hue + 0.5f) : Color.HSVToRGB((_hue + 0.5f) % 1f, rgbSaturation, rgbValue);
     }
 
     private void StartAnimations()
@@ -182,7 +184,10 @@ public class LeaderboardUI : MonoBehaviour
 
     private static string RankHex(int rank)
     {
-        Color c = rank == 1 ? Gold : rank == 2 ? Silver : rank == 3 ? Bronze : Rest;
+        UIStyle style = UIStyle.Instance;
+        Color first = style != null ? style.yellow : Gold;
+        Color rest = style != null ? style.textDim : Rest;
+        Color c = rank == 1 ? first : rank == 2 ? Silver : rank == 3 ? Bronze : rest;
         return ColorUtility.ToHtmlStringRGB(c);
     }
 

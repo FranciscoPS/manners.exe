@@ -96,7 +96,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         if (list != null) return CreateListEntry(list, open);
 
         Transform parent = audio != null ? audio.transform.parent : ownerPanel.transform;
-        Button button = CreateButton("GraphicsButton", parent, "Gráficos", open);
+        Button button = CreateButton("GraphicsButton", parent, "Gráficos", open, UIPlateRole.Secondary, UIStyle.Instance == null);
         RectTransform rect = (RectTransform)button.transform;
         if (audio != null)
         {
@@ -153,7 +153,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         Button templateButton = templateRect.GetComponent<Button>();
         Vector2 step = lastRect.anchoredPosition - templateRect.anchoredPosition;
 
-        Button button = CreateButton("GraphicsButton", list, "Gráficos", open);
+        Button button = CreateButton("GraphicsButton", list, "Gráficos", open, UIPlateRole.Secondary, UIStyle.Instance == null);
         RectTransform rect = (RectTransform)button.transform;
         rect.anchorMin = templateRect.anchorMin;
         rect.anchorMax = templateRect.anchorMax;
@@ -175,6 +175,34 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
 
     private static void ApplyStyle(Button button, Button style)
     {
+        UIStyle uiStyle = UIStyle.Instance;
+        if (uiStyle != null)
+        {
+            uiStyle.ApplyButton(button, UIPlateRole.Secondary);
+
+            TMP_Text styledSample = style != null ? style.GetComponentInChildren<TMP_Text>(true) : null;
+            TextMeshProUGUI styledLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+            if (styledSample != null && styledLabel != null)
+            {
+                float size = styledSample.enableAutoSizing ? styledSample.fontSizeMax : styledSample.fontSize;
+                styledLabel.enableAutoSizing = true;
+                styledLabel.fontSizeMax = size;
+                styledLabel.fontSizeMin = Mathf.Max(10f, size * 0.5f);
+                styledLabel.textWrappingMode = TextWrappingModes.NoWrap;
+                styledLabel.margin = styledSample.margin;
+                styledLabel.characterSpacing = styledSample.characterSpacing;
+                styledLabel.rectTransform.anchorMin = Vector2.zero;
+                styledLabel.rectTransform.anchorMax = Vector2.one;
+            }
+
+            if (button.GetComponent<MenuButtonHover>() == null)
+            {
+                MenuButtonHover hover = button.gameObject.AddComponent<MenuButtonHover>();
+                hover.Configure(uiStyle.hoverScale, uiStyle.hoverDuration, uiStyle.hoverRotation, uiStyle.pressScale, uiStyle.hoverShadow);
+            }
+            return;
+        }
+
         if (style == null) return;
         Image original = style.targetGraphic as Image;
         Image target = button.targetGraphic as Image;
@@ -196,26 +224,50 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
 
     private void Build()
     {
+        UIStyle style = UIStyle.Instance;
+
         Image scrim = gameObject.AddComponent<Image>();
         scrim.color = new Color(.018f, .025f, .05f, .97f);
+        if (style != null)
+        {
+            Color veil = style.scrim;
+            veil.a = 0.93f;
+            scrim.color = veil;
+            scrim.material = style.scrimStripes;
+        }
 
         RectTransform panel = CreateRect("GraphicsCard", transform);
         Stretch(panel, .08f, .06f, .92f, .94f);
         Image background = panel.gameObject.AddComponent<Image>();
         background.color = new Color(.035f, .055f, .09f, 1);
-        Outline border = panel.gameObject.AddComponent<Outline>();
-        border.effectColor = Accent;
-        border.effectDistance = new Vector2(2, -2);
+        if (style != null)
+        {
+            style.ApplyPanel(background, true);
+        }
+        else
+        {
+            Outline border = panel.gameObject.AddComponent<Outline>();
+            border.effectColor = Accent;
+            border.effectDistance = new Vector2(2, -2);
+        }
 
         RectTransform content = CreateRect("Controls", panel);
         Stretch(content, .035f, .035f, .965f, .97f);
         controls = content.gameObject.AddComponent<CanvasGroup>();
-        TextMeshProUGUI title = CreateText("Title", content, "Gráficos", 50, TextAlignmentOptions.Left);
-        Stretch(title.rectTransform, 0, .895f, 1, 1);
+
+        if (style != null)
+        {
+            Image ribbon = style.CreatePlate("TitleRibbon", content, style.primary, style.skew, true, style.plateStripesBold);
+            Stretch(ribbon.rectTransform, 0, .905f, .36f, 1);
+        }
+
+        TextMeshProUGUI title = CreateText("Title", content, "Gráficos", 50, style != null ? TextAlignmentOptions.Center : TextAlignmentOptions.Left, UITextRole.Title);
+        Stretch(title.rectTransform, style != null ? .02f : 0, style != null ? .905f : .895f, style != null ? .34f : 1, 1);
         TextMeshProUGUI intro = CreateText("Introduction", content,
             "Empieza con Equilibrado. Para reducir consumo y calor, prueba Eco, 30 FPS o menor escala 3D.",
             24, TextAlignmentOptions.Left);
-        Stretch(intro.rectTransform, 0, .79f, 1, .91f);
+        Stretch(intro.rectTransform, 0, .79f, 1, .9f);
+        if (style != null) intro.color = style.textDim;
 
         AddRow(content, 0, 0, "Perfil", ReadPresetName, step =>
         {
@@ -255,16 +307,16 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
 
         syncHint = CreateText("SyncHint", content, "", 21, TextAlignmentOptions.Left);
         Stretch(syncHint.rectTransform, 0, .105f, 1, .185f);
-        syncHint.color = new Color(.67f, .8f, .84f);
+        syncHint.color = style != null ? style.textDim : new Color(.67f, .8f, .84f);
         statusText = CreateText("Status", content, "", 20, TextAlignmentOptions.Left);
         Stretch(statusText.rectTransform, 0, .06f, 1, .1f);
-        statusText.color = Accent;
+        statusText.color = style != null ? style.cyan : Accent;
 
-        backButton = CreateButton("Back", content, "Volver", Close);
+        backButton = CreateButton("Back", content, "Volver", Close, UIPlateRole.Neutral);
         Stretch((RectTransform)backButton.transform, 0, 0, .25f, .065f);
         resetButton = CreateButton("Reset", content, "Restablecer", ResetSettings);
         Stretch((RectTransform)resetButton.transform, .375f, 0, .66f, .065f);
-        applyButton = CreateButton("Apply", content, "Aplicar", ApplySettings);
+        applyButton = CreateButton("Apply", content, "Aplicar", ApplySettings, UIPlateRole.Primary);
         Stretch((RectTransform)applyButton.transform, .715f, 0, 1, .065f);
 
         BuildConfirmation(panel);
@@ -277,16 +329,25 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         float left = column == 0 ? 0 : .53f;
         float top = .775f - row * .098f;
         Stretch(holder, left, top - .09f, left + .47f, top);
+        UIStyle style = UIStyle.Instance;
         TextMeshProUGUI caption = CreateText("Label", holder, label, 23, TextAlignmentOptions.Left);
         Stretch(caption.rectTransform, 0, .58f, 1, 1);
+        if (style != null) caption.color = style.yellow;
         SettingRow setting = new SettingRow { read = read, available = available };
         setting.previous = CreateButton("Previous", holder, "<", () => Edit(edit, -1));
         Stretch((RectTransform)setting.previous.transform, 0, 0, .125f, .57f);
         setting.next = CreateButton("Next", holder, ">", () => Edit(edit, 1));
         Stretch((RectTransform)setting.next.transform, .875f, 0, 1, .57f);
-        setting.value = CreateText("Value", holder, "", 23, TextAlignmentOptions.Center);
-        Stretch(setting.value.rectTransform, .135f, 0, .865f, .57f);
-        setting.value.color = Accent;
+
+        if (style != null)
+        {
+            Image valuePlate = style.CreatePlate("ValuePlate", holder, style.panelAlt, style.skew, false, null);
+            Stretch(valuePlate.rectTransform, .15f, .02f, .85f, .55f);
+        }
+
+        setting.value = CreateText("Value", holder, "", 23, TextAlignmentOptions.Center, style != null ? UITextRole.Label : UITextRole.Body);
+        Stretch(setting.value.rectTransform, .165f, 0, .835f, .57f);
+        setting.value.color = style != null ? style.cyan : Accent;
         rows.Add(setting);
     }
 
@@ -295,7 +356,15 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         RectTransform overlay = CreateRect("DisplayConfirmation", parent);
         Stretch(overlay, 0, 0, 1, 1);
         confirmation = overlay.gameObject;
-        overlay.gameObject.AddComponent<Image>().color = new Color(.02f, .035f, .065f, .99f);
+        UIStyle style = UIStyle.Instance;
+        Image veil = overlay.gameObject.AddComponent<Image>();
+        veil.color = new Color(.02f, .035f, .065f, .99f);
+        if (style != null)
+        {
+            Color fill = style.panel;
+            fill.a = 0.985f;
+            veil.color = fill;
+        }
         confirmationText = CreateText("Question", overlay, "", 35, TextAlignmentOptions.Center);
         Stretch(confirmationText.rectTransform, .1f, .46f, .9f, .78f);
         keepButton = CreateButton("Keep", overlay, "Mantener", () =>
@@ -303,14 +372,14 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
             GameGraphicsSettings.ConfirmDisplayChange();
             RefreshFromService();
             statusText.text = "Configuración de pantalla guardada.";
-        });
+        }, UIPlateRole.Primary);
         Stretch((RectTransform)keepButton.transform, .15f, .28f, .47f, .39f);
         revertButton = CreateButton("Revert", overlay, "Revertir", () =>
         {
             GameGraphicsSettings.RevertDisplayChange();
             RefreshFromService();
             statusText.text = "Pantalla anterior restaurada.";
-        });
+        }, UIPlateRole.Danger);
         Stretch((RectTransform)revertButton.transform, .53f, .28f, .85f, .39f);
         SetNavigation(keepButton, revertButton, revertButton, revertButton, revertButton);
         SetNavigation(revertButton, keepButton, keepButton, keepButton, keepButton);
@@ -465,7 +534,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(button.gameObject);
     }
 
-    private Button CreateButton(string name, Transform parent, string caption, Action clicked)
+    private Button CreateButton(string name, Transform parent, string caption, Action clicked, UIPlateRole role = UIPlateRole.Secondary, bool clickSound = true)
     {
         RectTransform rect = CreateRect(name, parent);
         Image image = rect.gameObject.AddComponent<Image>();
@@ -482,15 +551,24 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         button.colors = colors;
         button.onClick.AddListener(() =>
         {
-            MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
+            if (clickSound) MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
             clicked?.Invoke();
         });
-        TextMeshProUGUI text = CreateText("Text", rect, caption, 26, TextAlignmentOptions.Center);
+        TextMeshProUGUI text = CreateText("Text", rect, caption, 26, TextAlignmentOptions.Center, UITextRole.Label);
         Stretch(text.rectTransform, .04f, .04f, .96f, .96f);
+
+        UIStyle style = UIStyle.Instance;
+        if (style != null)
+        {
+            style.ApplyButton(button, role);
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.characterSpacing = 3f;
+            text.extraPadding = true;
+        }
         return button;
     }
 
-    private TextMeshProUGUI CreateText(string name, Transform parent, string text, float size, TextAlignmentOptions alignment)
+    private TextMeshProUGUI CreateText(string name, Transform parent, string text, float size, TextAlignmentOptions alignment, UITextRole role = UITextRole.Body)
     {
         RectTransform rect = CreateRect(name, parent);
         TextMeshProUGUI label = rect.gameObject.AddComponent<TextMeshProUGUI>();
@@ -504,6 +582,18 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         label.color = Color.white;
         label.raycastTarget = false;
         label.overflowMode = TextOverflowModes.Ellipsis;
+
+        UIStyle style = UIStyle.Instance;
+        if (style != null)
+        {
+            style.ApplyText(label, role);
+            if (role != UITextRole.Body)
+            {
+                label.fontSizeMin = size * .55f;
+                label.characterSpacing = 3f;
+                label.extraPadding = true;
+            }
+        }
         return label;
     }
 

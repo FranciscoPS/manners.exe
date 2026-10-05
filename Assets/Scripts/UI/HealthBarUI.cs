@@ -13,6 +13,11 @@ public class HealthBarUI : MonoBehaviour
     [SerializeField] private int blinkCount = 3;
     [SerializeField] private Color blinkColor = Color.red;
 
+    [Header("Golpe")]
+    [Tooltip("Sacudida de toda la barra (marco y relleno) al recibir daño, en unidades de canvas. 0 = sin sacudida.")]
+    [SerializeField] private float damageShake = 9f;
+    [SerializeField] private float damageShakeDuration = 0.28f;
+
     private Color originalColor;
     private PlayerHealth playerHealth;
     private Tween blinkTween;
@@ -60,8 +65,12 @@ public class HealthBarUI : MonoBehaviour
     {
         if (healthBarFill == null) return;
 
+        if (damageShake > 0f && transform is RectTransform barRect)
+            barRect.Shake(damageShake, damageShakeDuration);
+
         blinkTween?.Kill();
 
+        healthBarFill.color = originalColor;
         blinkTween = healthBarFill.DOColor(blinkColor, blinkDuration)
             .SetLoops(blinkCount * 2, LoopType.Yoyo)
             .SetEase(Ease.Linear)

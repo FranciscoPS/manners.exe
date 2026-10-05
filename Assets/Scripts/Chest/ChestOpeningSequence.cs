@@ -208,6 +208,7 @@ public class ChestOpeningSequence : MonoBehaviour
         skipHintText.raycastTarget = false;
         skipHintText.text = "";
 
+<<<<<<< Updated upstream
         TMP_FontAsset[] loadedFonts = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
         for (int i = 0; i < loadedFonts.Length; i++)
         {
@@ -219,6 +220,17 @@ public class ChestOpeningSequence : MonoBehaviour
         }
 
         Debug.LogError("No se encontró la fuente TMP Orbitron-ExtraBold SDF para la indicación del cofre.");
+=======
+        UIStyle style = UIStyle.Instance;
+        if (style != null)
+        {
+            style.ApplyText(promptText, UITextRole.Title);
+            promptText.characterSpacing = 3f;
+            promptText.extraPadding = true;
+            style.ApplyText(skipHintText, UITextRole.Body);
+            skipHintText.color = style.textDim;
+        }
+>>>>>>> Stashed changes
     }
 
     private static string KeyLabel(Key key)
@@ -429,7 +441,8 @@ public class ChestOpeningSequence : MonoBehaviour
         promptHue += Time.unscaledDeltaTime * 0.6f;
         if (promptHue > 1f) promptHue -= 1f;
 
-        promptText.color = Color.HSVToRGB(promptHue, 0.35f, 1f);
+        UIStyle style = UIStyle.Instance;
+        promptText.color = style != null ? style.AccentCycle(promptHue) : Color.HSVToRGB(promptHue, 0.35f, 1f);
 
         float scale = 1f + Mathf.Sin(Time.unscaledTime * 6f) * 0.05f * intensity;
         promptText.rectTransform.localScale = Vector3.one * scale;

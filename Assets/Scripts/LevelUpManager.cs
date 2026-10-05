@@ -33,6 +33,8 @@ public class LevelUpManager : MonoBehaviour
 
     [Header("Rainbow Text Settings")]
     [SerializeField] private float colorSpeed = 1f;
+    [Tooltip("Fondo del título (estallido). Si está asignado, es el fondo el que recorre los colores de acento y el texto queda fijo para leerse mejor.")]
+    [SerializeField] private Graphic titleBackdrop;
 
     [Header("Juice")]
     [Tooltip("Retraso entre la aparición de cada card de mejora, para un efecto de cascada.")]
@@ -109,10 +111,9 @@ public class LevelUpManager : MonoBehaviour
             }
         }
 
-        if (levelUpActive && levelUpText != null)
+        if (levelUpActive)
         {
-            float hue = Mathf.PingPong(Time.unscaledTime * colorSpeed, 1f);
-            levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
+            UpdateTitleColor();
         }
 
         if (levelUpActive && currentMode == UpgradeMode.Shop && shopOnCooldown)
@@ -136,6 +137,30 @@ public class LevelUpManager : MonoBehaviour
         }
     }
 
+    private void UpdateTitleColor()
+    {
+        UIStyle style = UIStyle.Instance;
+        if (titleBackdrop != null && style != null)
+        {
+            titleBackdrop.color = style.AccentCycle(Time.unscaledTime * style.accentCycleSpeed * colorSpeed);
+            return;
+        }
+
+        if (levelUpText != null)
+        {
+            float hue = Mathf.PingPong(Time.unscaledTime * colorSpeed, 1f);
+            levelUpText.color = Color.HSVToRGB(hue, 1f, 1f);
+        }
+    }
+
+    private void PlayTitleIntro()
+    {
+        levelUpText.rectTransform.PopIn();
+
+        if (titleBackdrop != null)
+            titleBackdrop.rectTransform.PopIn(0.36f, 1.5f);
+    }
+
     private void HandleLevelUp(int newLevel)
     {
         if (levelUpActive)
@@ -150,7 +175,7 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
         {
             levelUpText.text = $"Nivel {newLevel}!";
-            levelUpText.rectTransform.PopIn();
+            PlayTitleIntro();
         }
 
         if (cooldownWarningText != null)
@@ -317,7 +342,7 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
         {
             levelUpText.text = "Tienda";
-            levelUpText.rectTransform.PopIn();
+            PlayTitleIntro();
         }
 
         // Mostrar sólo la instrucción de la tienda y ocultar la del cofre
@@ -371,7 +396,7 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpText != null)
         {
             levelUpText.text = "\u00a1Cofre!";
-            levelUpText.rectTransform.PopIn();
+            PlayTitleIntro();
         }
 
         if (cooldownWarningText != null)

@@ -46,6 +46,12 @@ public class GlitchTextUI : MonoBehaviour
     [SerializeField] private Color flickerColorA = new Color(0f, 1f, 1f, 1f);
     [SerializeField] private Color flickerColorB = new Color(1f, 0f, 1f, 1f);
 
+    [Header("Placa de fondo")]
+    [Tooltip("Placa inclinada que acompaña al texto: su inclinación tiembla durante cada ráfaga. Vacío = se busca la placa del botón o de la cinta de título.")]
+    [SerializeField] private UISkew companion;
+    [Tooltip("Cuánto varía la inclinación de la placa en cada frame de la ráfaga.")]
+    [SerializeField] private float companionSkewJitter = 0.09f;
+
     private Phase phase;
     private float phaseTimer;
     private float stepTimer;
@@ -56,6 +62,7 @@ public class GlitchTextUI : MonoBehaviour
     private Vector2 baseAnchoredPosition;
     private Color baseColor;
     private bool captured;
+    private float companionBaseSkew;
 
     private void OnEnable()
     {
@@ -116,6 +123,16 @@ public class GlitchTextUI : MonoBehaviour
         baseAnchoredPosition = target.rectTransform.anchoredPosition;
         baseColor = target.color;
         captured = true;
+
+        if (companion == null)
+        {
+            companion = target.GetComponentInParent<UISkew>();
+            if (companion == null && target.transform.parent != null)
+                companion = target.transform.parent.GetComponentInChildren<UISkew>();
+        }
+
+        if (companion != null)
+            companionBaseSkew = companion.Amount;
     }
 
     private void Restore()
@@ -125,6 +142,9 @@ public class GlitchTextUI : MonoBehaviour
         target.text = originalText;
         target.rectTransform.anchoredPosition = baseAnchoredPosition;
         target.color = baseColor;
+
+        if (companion != null)
+            companion.Amount = companionBaseSkew;
     }
 
     private void StartBurst()
@@ -151,6 +171,9 @@ public class GlitchTextUI : MonoBehaviour
             float roll = Random.value;
             target.color = roll < 0.33f ? flickerColorA : roll < 0.66f ? flickerColorB : baseColor;
         }
+
+        if (companion != null)
+            companion.Amount = companionBaseSkew + Random.Range(-companionSkewJitter, companionSkewJitter);
     }
 
     private void EndBurst()

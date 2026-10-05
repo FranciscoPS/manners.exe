@@ -23,6 +23,8 @@ public class ChestAnnouncement : MonoBehaviour
 
     private TMP_Text text;
     private RectTransform textRect;
+    private CanvasGroup group;
+    private UnityEngine.UI.Image plate;
     private Coroutine routine;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -87,8 +89,30 @@ public class ChestAnnouncement : MonoBehaviour
         scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
 
+        UIStyle style = UIStyle.Instance;
+
+        GameObject bannerObj = new GameObject("AnnouncementBanner", typeof(RectTransform));
+        bannerObj.transform.SetParent(canvasObj.transform, false);
+        group = bannerObj.AddComponent<CanvasGroup>();
+        group.blocksRaycasts = false;
+        group.interactable = false;
+
+        textRect = (RectTransform)bannerObj.transform;
+        textRect.anchorMin = new Vector2(0.5f, verticalAnchor);
+        textRect.anchorMax = new Vector2(0.5f, verticalAnchor);
+        textRect.pivot = new Vector2(0.5f, 0.5f);
+        textRect.anchoredPosition = Vector2.zero;
+        textRect.sizeDelta = new Vector2(1400f, 200f);
+
+        if (style != null)
+        {
+            plate = style.CreatePlate("Plate", bannerObj.transform, style.panel, style.skew, true, null);
+            plate.GetComponent<UnityEngine.UI.Shadow>().effectColor = style.yellow;
+            plate.rectTransform.anchorMin = plate.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        }
+
         GameObject textObj = new GameObject("AnnouncementText");
-        textObj.transform.SetParent(canvasObj.transform, false);
+        textObj.transform.SetParent(bannerObj.transform, false);
 
         text = textObj.AddComponent<TextMeshProUGUI>();
         text.alignment = TextAlignmentOptions.Center;
@@ -98,14 +122,21 @@ public class ChestAnnouncement : MonoBehaviour
         text.fontStyle = FontStyles.Bold;
         text.raycastTarget = false;
 
-        textRect = text.rectTransform;
-        textRect.anchorMin = new Vector2(0.5f, verticalAnchor);
-        textRect.anchorMax = new Vector2(0.5f, verticalAnchor);
-        textRect.pivot = new Vector2(0.5f, 0.5f);
-        textRect.anchoredPosition = Vector2.zero;
-        textRect.sizeDelta = new Vector2(1400f, 200f);
+        if (style != null)
+        {
+            style.ApplyText(text, UITextRole.Title);
+            text.color = style.yellow;
+            text.characterSpacing = 3f;
+            text.extraPadding = true;
+        }
 
-        textObj.SetActive(false);
+        RectTransform labelRect = text.rectTransform;
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = Vector2.one;
+        labelRect.offsetMin = Vector2.zero;
+        labelRect.offsetMax = Vector2.zero;
+
+        bannerObj.SetActive(false);
     }
 
     private void ShowInternal(string message)
@@ -113,6 +144,14 @@ public class ChestAnnouncement : MonoBehaviour
         if (text == null) return;
 
         text.text = message;
+
+        if (plate != null)
+        {
+            textRect.gameObject.SetActive(true);
+            text.ForceMeshUpdate();
+            Vector2 size = text.GetPreferredValues(message, textRect.sizeDelta.x - 120f, 0f);
+            plate.rectTransform.sizeDelta = new Vector2(size.x + fontSize * 2.2f, size.y + fontSize * 0.7f);
+        }
 
         if (routine != null)
             StopCoroutine(routine);
@@ -122,7 +161,7 @@ public class ChestAnnouncement : MonoBehaviour
 
     private IEnumerator AnimateRoutine()
     {
-        text.gameObject.SetActive(true);
+        textRect.gameObject.SetActive(true);
 
         float elapsed = 0f;
         while (elapsed < displayDuration)
@@ -137,18 +176,14 @@ public class ChestAnnouncement : MonoBehaviour
             float alpha = elapsed < fadeStart
                 ? 1f
                 : Mathf.Clamp01(1f - (elapsed - fadeStart) / (displayDuration - fadeStart));
-            Color c = text.color;
-            c.a = alpha;
-            text.color = c;
+            group.alpha = alpha;
 
             yield return null;
         }
 
         textRect.localScale = Vector3.one;
-        Color final = text.color;
-        final.a = 1f;
-        text.color = final;
-        text.gameObject.SetActive(false);
+        group.alpha = 1f;
+        textRect.gameObject.SetActive(false);
         routine = null;
     }
 }

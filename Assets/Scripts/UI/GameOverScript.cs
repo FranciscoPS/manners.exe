@@ -313,7 +313,7 @@ public class GameOverUI : MonoBehaviour
         rt.offsetMax = Vector2.zero;
 
         Image img = imgObj.AddComponent<Image>();
-        img.color = Color.black;
+        img.color = UIStyle.Instance != null ? UIStyle.Instance.ink : Color.black;
 
         fadeOverlay.AddComponent<FadeOverlayController>();
 

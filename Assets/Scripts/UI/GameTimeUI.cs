@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class GameTimeUI : MonoBehaviour
@@ -12,6 +13,11 @@ public class GameTimeUI : MonoBehaviour
     [SerializeField] private Color timeColor = Color.white;
     [Tooltip("Color del cronometro al entrar en overtime (tiempo agotado).")]
     [SerializeField] private Color overtimeColor = new Color(1f, 0.15f, 0.15f);
+
+    [Header("Placa de fondo")]
+    [Tooltip("Placa detrás del cronómetro. Cambia de color y da un golpe junto con el texto al entrar en overtime.")]
+    [SerializeField] private Graphic plate;
+    [SerializeField] private Color overtimePlateColor = new Color(1f, 0.29f, 0.18f);
 
     private void Start()
     {
@@ -66,6 +72,12 @@ public class GameTimeUI : MonoBehaviour
             gameTimeText.color = overtimeColor;
         }
 
+        if (plate != null)
+        {
+            plate.color = overtimePlateColor;
+            plate.rectTransform.Punch();
+        }
+
         if (overtimeLabel == null)
         {
             overtimeLabel = CreateOvertimeLabel();
@@ -91,14 +103,15 @@ public class GameTimeUI : MonoBehaviour
         label.fontSharedMaterial = gameTimeText.fontSharedMaterial;
         label.fontSize = gameTimeText.fontSize * 0.55f;
         label.alignment = TextAlignmentOptions.Center;
-        label.fontStyle = FontStyles.Bold;
+        label.fontStyle = gameTimeText.fontStyle;
+        label.characterSpacing = gameTimeText.characterSpacing;
         label.raycastTarget = false;
 
         RectTransform rt = label.rectTransform;
         rt.anchorMin = new Vector2(0.5f, 0f);
         rt.anchorMax = new Vector2(0.5f, 0f);
         rt.pivot = new Vector2(0.5f, 1f);
-        rt.anchoredPosition = new Vector2(0f, -4f);
+        rt.anchoredPosition = new Vector2(0f, -8f);
         rt.sizeDelta = new Vector2(300f, 40f);
 
         return label;
