@@ -106,9 +106,30 @@ public static class UIStyleTools
         return style;
     }
 
+    [MenuItem("Tools/Manners/UI/Restablecer paleta, forma y movimiento del estilo", false, 131)]
+    public static void ResetIdentityFromMenu()
+    {
+        if (!EditorUtility.DisplayDialog("Estilo de la interfaz", "Se descartan los ajustes hechos a mano en UIStyle.asset y vuelven los valores de la identidad. Después hay que aplicar el estilo (paso 0).", "Restablecer", "Cancelar")) return;
+        var report = new StringBuilder();
+        ResetIdentity(GetOrCreateStyle(), report);
+        BuildKit(report);
+        Debug.Log(report.ToString());
+    }
+
+    private static void ResetIdentity(UIStyle style, StringBuilder report)
+    {
+        UIStyle fresh = ScriptableObject.CreateInstance<UIStyle>();
+        fresh.version = UIStyle.IdentityVersion;
+        JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(fresh), style);
+        UnityEngine.Object.DestroyImmediate(fresh);
+        EditorUtility.SetDirty(style);
+        report.AppendLine($"ESTILO: paleta, forma y movimiento restablecidos a la identidad v{UIStyle.IdentityVersion}.");
+    }
+
     public static UIStyle BuildKit(StringBuilder report)
     {
         UIStyle style = GetOrCreateStyle();
+        if (style.version != UIStyle.IdentityVersion) ResetIdentity(style, report);
         UIStyleSpriteBuilder.BuildAll(style, report);
         UIStyleFontBuilder.Build(style, report);
         BuildMaterials(style, report);
@@ -127,13 +148,16 @@ public static class UIStyleTools
             return;
         }
 
-        style.plateStripes = PlateMaterial("UIPlate Stripes", shader, new Color(0.88f, 0.85f, 0.96f, 1f), new Color(0f, 0f, 0f, 0f), 30f, 0.5f, 22f);
-        style.plateStripesBold = PlateMaterial("UIPlate Stripes Bold", shader, new Color(0.74f, 0.69f, 0.9f, 1f), new Color(0f, 0f, 0f, 0f), 46f, 0.5f, 38f);
-        style.scrimStripes = PlateMaterial("UIPlate Scrim", shader, Color.white, new Color(0.3f, 0.14f, 0.55f, 0.13f), 150f, 0.5f, 16f);
-        report.AppendLine($"MATERIALES: 3 materiales de placa en {MaterialFolder}.");
+        Color none = new Color(0f, 0f, 0f, 0f);
+        style.plateStripes = PlateMaterial("UIPlate Stripes", shader, new Color(0.9f, 0.88f, 0.95f, 1f), none, 30f, 0.5f, new Vector2(1f, -1f), 22f, 0.3f);
+        style.plateStripesBold = PlateMaterial("UIPlate Stripes Bold", shader, new Color(0.76f, 0.72f, 0.9f, 1f), none, 36f, 0.5f, new Vector2(1f, -1f), 34f, 0.3f);
+        style.plateHazard = PlateMaterial("UIPlate Hazard", shader, new Color(0.7f, 0.68f, 0.76f, 1f), none, 44f, 0.5f, new Vector2(1f, -1f), 30f, 0.3f);
+        style.screenScan = PlateMaterial("UIPlate Screen", shader, Color.white, new Color(0.3f, 0.5f, 0.9f, 0.055f), 5f, 0.5f, new Vector2(0f, 1f), 10f, -1f);
+        style.scrimStripes = PlateMaterial("UIPlate Scrim", shader, Color.white, new Color(0.2f, 0.36f, 0.8f, 0.05f), 8f, 0.5f, new Vector2(0f, 1f), 14f, -1f);
+        report.AppendLine($"MATERIALES: 5 materiales de placa en {MaterialFolder}.");
     }
 
-    private static Material PlateMaterial(string name, Shader shader, Color multiply, Color add, float size, float duty, float speed)
+    private static Material PlateMaterial(string name, Shader shader, Color multiply, Color add, float size, float duty, Vector2 direction, float speed, float fillMin)
     {
         string path = $"{MaterialFolder}/{name}.mat";
         Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -148,8 +172,10 @@ public static class UIStyleTools
         material.SetColor("_PatternAdd", add);
         material.SetFloat("_PatternSize", size);
         material.SetFloat("_PatternDuty", duty);
-        material.SetFloat("_PatternSlope", 1f);
+        material.SetVector("_PatternDir", new Vector4(direction.x, direction.y, 0f, 0f));
         material.SetFloat("_PatternSpeed", speed);
+        material.SetFloat("_FillMin", fillMin);
+        material.SetFloat("_FillMax", 2f);
         EditorUtility.SetDirty(material);
         return material;
     }

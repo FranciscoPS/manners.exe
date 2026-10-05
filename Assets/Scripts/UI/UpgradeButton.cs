@@ -31,6 +31,8 @@ public class UpgradeButton : MonoBehaviour
     [SerializeField] private float introOvershoot = 1.3f;
 
     [Header("Component References")]
+    [Tooltip("Casilla de fondo del icono: se oculta junto con el icono cuando la mejora no tiene imagen.")]
+    [SerializeField] private GameObject iconBackdrop;
     private HoldToSelectButton holdToSelectButton;
     private PremiumUpgradeVisuals premiumVisuals;
     private PurchaseEffectFeedback purchaseEffect;
@@ -260,6 +262,9 @@ public class UpgradeButton : MonoBehaviour
             iconImage.gameObject.SetActive(false);
         }
 
+        if (iconBackdrop != null && iconImage != null)
+            iconBackdrop.SetActive(iconImage.gameObject.activeSelf);
+
         if (costText != null)
             costText.gameObject.SetActive(false);
 
@@ -393,6 +398,9 @@ public class UpgradeButton : MonoBehaviour
             iconImage.gameObject.SetActive(false);
         }
 
+        if (iconBackdrop != null && iconImage != null)
+            iconBackdrop.SetActive(iconImage.gameObject.activeSelf);
+
         if (costText != null)
         {
             if (currentMode == UpgradeMode.Shop)
@@ -454,12 +462,12 @@ public class UpgradeButton : MonoBehaviour
                 else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot)
                 {
                     int nextBullets = 3;
-                    valuesText.text = $"0% → {nextValue:F1}% (+{nextBullets} balas)";
+                    valuesText.text = $"0% → {nextValue:F1}%\n<size=62%>+{nextBullets} balas</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
                     int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
-                    valuesText.text = $"0% → {nextValue:F1}% · empuja {nextEnemies} enem.";
+                    valuesText.text = $"0% → {nextValue:F1}%\n<size=62%>empuja {nextEnemies} enem.</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
@@ -517,13 +525,13 @@ public class UpgradeButton : MonoBehaviour
                 {
                     int currentBullets = PlayerStatsManager.Instance.GetMultiShotExtraBullets();
                     int nextBullets = 3 + ((nextLevel - 1) / 4) * 3;
-                    valuesText.text = $"{currentUpgradeValue:F1}% (+{currentBullets}) → {nextUpgradeValue:F1}% (+{nextBullets})";
+                    valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%\n<size=62%>+{currentBullets} → +{nextBullets} balas</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
                     int currentEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(currentLevel) + 1;
                     int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
-                    valuesText.text = $"{currentUpgradeValue:F1}% [{currentEnemies} enem.] → {nextUpgradeValue:F1}% [{nextEnemies} enem.]";
+                    valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%\n<size=62%>empuja {currentEnemies} → {nextEnemies} enem.</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {

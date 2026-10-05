@@ -8,7 +8,7 @@ public class FloatingText : MonoBehaviour
     [SerializeField] private float lifetime = 1f;
     [SerializeField] private float fadeStartTime = 0.5f;
     [Tooltip("Escala con la que aparece el número antes de asentarse en su tamaño normal.")]
-    [SerializeField] private float popScale = 1.45f;
+    [SerializeField] private float popScale = 1.2f;
     [SerializeField] private float popDuration = 0.16f;
 
     private TextMeshProUGUI textMesh;

@@ -29,6 +29,7 @@ public static partial class UIStyleApplier
     };
 
     private const string StylePrefix = "Style";
+    private const float CardSlotInset = 24f;
     private const float LargePanelMinSize = 260f;
 
     private static readonly string[] LegacyPanelSprites = { "FrameMap", "Interface windows", "PanelParaBotones" };
@@ -142,6 +143,8 @@ public static partial class UIStyleApplier
 
     private static void StyleRoot(Transform root)
     {
+        Cleanup(root);
+
         foreach (Image image in root.GetComponentsInChildren<Image>(true))
             StyleImage(image);
 
@@ -180,23 +183,23 @@ public static partial class UIStyleApplier
 
         if (name.StartsWith("EmptySquare"))
         {
-            style.ApplySprite(image, style.plateChamfer, style.panelAlt, 0f, Vector2.zero, null);
+            style.ApplySprite(image, style.plate, style.secondary, style.skew, Vector2.zero, null);
             Touch(image);
             return;
         }
 
         if (name == "IconBackdrop")
         {
-            image.sprite = null;
-            image.type = Image.Type.Simple;
-            image.color = Luminance(image.color) > 0.93f ? style.paper : Color.Lerp(style.paper, style.yellow, 0.55f);
+            bool result = go.transform.parent != null && go.transform.parent.name.EndsWith("3");
+            style.ApplySprite(image, null, result ? Color.Lerp(style.cream, style.yellow, 0.6f) : style.cream, style.skew, Vector2.zero, null);
             Touch(image);
             return;
         }
 
         if (name == "Key")
         {
-            style.ApplySprite(image, style.plateChamfer, style.paper, 0f, style.shadowOffset, null);
+            style.ApplySprite(image, style.plateChamfer, style.cream, 0f, style.shadowOffset, null);
+            UIStyle.SetLip(image, style.secondary);
             Touch(image);
             return;
         }
@@ -236,7 +239,7 @@ public static partial class UIStyleApplier
             return;
         }
 
-        if (Array.IndexOf(LegacyPanelSprites, key) >= 0 || IsStylePanel(image.sprite) || (image.sprite == style.plate && image.GetComponent<UISkew>() == null))
+        if (Array.IndexOf(LegacyPanelSprites, key) >= 0 || IsStylePanel(image.sprite) || image.sprite == style.plateChamfer || (image.sprite == style.plate && (!IsSkewed(image) || IsButtonContainer(go))))
         {
             StylePanel(image);
             return;
@@ -245,13 +248,19 @@ public static partial class UIStyleApplier
         if (key == "arrow" || image.sprite == style.arrowDown)
         {
             image.sprite = style.arrowDown;
-            image.color = style.yellow;
+            image.color = style.cyan;
             Touch(image);
             return;
         }
 
         if (IsPicture(image, key))
             AddFrame(image.rectTransform);
+    }
+
+    private static bool IsSkewed(Image image)
+    {
+        UISkew skew = image.GetComponent<UISkew>();
+        return skew != null;
     }
 
     private static bool IsPicture(Image image, string key)
@@ -288,12 +297,12 @@ public static partial class UIStyleApplier
         string name = image.gameObject.name;
         Color color = style.scrim;
 
-        if (name == "MainMenuPanel") color.a = 0.4f;
-        else if (name == "Panel") color.a = 0.55f;
+        if (name == "MainMenuPanel") color.a = 0.45f;
+        else if (name == "Panel") color.a = 0.6f;
         else if (name == "GameOverPanel")
         {
-            color = Color.Lerp(style.ink, style.danger, 0.38f);
-            color.a = 0.93f;
+            color = Color.Lerp(style.ink, style.danger, 0.3f);
+            color.a = 0.94f;
         }
 
         image.sprite = null;
@@ -311,13 +320,6 @@ public static partial class UIStyleApplier
         Vector2 size = Size(image.rectTransform);
         imageCount++;
 
-        if (name == "TutorialPanel")
-        {
-            style.ApplySprite(image, style.panelPaper, Color.white, 0f, style.panelShadowOffset, null);
-            Touch(image);
-            return;
-        }
-
         if (IsButtonContainer(go))
         {
             if (go.GetComponent<GridLayoutGroup>() != null)
@@ -328,7 +330,8 @@ public static partial class UIStyleApplier
             {
                 Color dock = style.panel;
                 dock.a = 0.94f;
-                style.ApplySprite(image, style.plate, dock, style.skew, style.panelShadowOffset, null);
+                style.ApplySprite(image, style.plate, dock, style.skewSoft, style.panelShadowOffset, null);
+                UIStyle.SetLip(image, style.secondary);
             }
             else
             {
@@ -349,13 +352,13 @@ public static partial class UIStyleApplier
         if (ancestor != null && Contains(ancestor.rectTransform, image.rectTransform))
         {
             bool onPaper = ancestor.sprite == style.panelPaper;
-            style.ApplySprite(image, style.plate, onPaper ? Color.Lerp(style.paper, style.secondary, 0.22f) : style.panelAlt, 0f, Vector2.zero, null);
+            style.ApplySprite(image, style.plateChamfer, onPaper ? Color.Lerp(style.cream, style.secondary, 0.25f) : style.panelAlt, 0f, Vector2.zero, null);
             Touch(image);
             return;
         }
 
         bool large = Mathf.Min(size.x, size.y) >= LargePanelMinSize;
-        style.ApplySprite(image, large ? style.panelDark : style.panelSmall, Color.white, 0f, large ? style.panelShadowOffset : style.shadowOffset, null);
+        style.ApplySprite(image, large ? style.panelDark : style.panelSmall, Color.white, 0f, large ? style.panelShadowOffset : style.shadowOffset, large ? style.screenScan : null);
         Touch(image);
     }
 
@@ -391,7 +394,7 @@ public static partial class UIStyleApplier
 
         TMP_Text label = DirectChildText(button.transform);
         bool isPicture = image.sprite != null && Array.IndexOf(LegacyButtonSprites, key) < 0 && Array.IndexOf(LegacyPanelSprites, key) < 0
-            && key != "builtin" && image.sprite != style.plate;
+            && key != "builtin" && image.sprite != style.plate && image.sprite != style.plateChamfer;
 
         if (label == null || isPicture)
         {
@@ -399,9 +402,9 @@ public static partial class UIStyleApplier
 
             ColorBlock iconColors = ColorBlock.defaultColorBlock;
             iconColors.normalColor = Color.white;
-            iconColors.highlightedColor = new Color(1f, 0.93f, 0.6f, 1f);
+            iconColors.highlightedColor = new Color(0.62f, 0.86f, 1f, 1f);
             iconColors.selectedColor = iconColors.highlightedColor;
-            iconColors.pressedColor = new Color(0.85f, 0.75f, 0.45f, 1f);
+            iconColors.pressedColor = new Color(0.4f, 0.62f, 0.8f, 1f);
             iconColors.disabledColor = style.disabled;
             iconColors.fadeDuration = 0.08f;
             button.transition = Selectable.Transition.ColorTint;
@@ -417,7 +420,16 @@ public static partial class UIStyleApplier
         }
 
         UIPlateRole role = ButtonRole(button, label);
-        style.ApplySprite(image, style.plate, Color.white, style.skew, style.shadowOffset, style.plateStripes);
+        bool gridKey = button.transform.parent != null && button.transform.parent.GetComponent<GridLayoutGroup>() != null;
+        if (gridKey)
+        {
+            style.ApplySprite(image, style.plateChamfer, Color.white, 0f, style.shadowOffset * 0.67f, null);
+            UIStyle.SetLip(image, style.lipTint);
+        }
+        else
+        {
+            style.ApplySprite(image, style.plate, Color.white, Size(image.rectTransform).y > 96f ? style.skewSoft : style.skew, style.shadowOffset, style.plateStripes);
+        }
         image.raycastTarget = true;
         button.targetGraphic = image;
         button.transition = Selectable.Transition.ColorTint;
@@ -451,6 +463,8 @@ public static partial class UIStyleApplier
 
         if (ContainsAny(text, "salir", "exit", "mainmenu", "menu principal", "menú principal", "skip", "saltar", "revert", "button_del"))
             return UIPlateRole.Danger;
+        if (ContainsAny(text, "sobrecarga"))
+            return UIPlateRole.Anomaly;
         if (ContainsAny(text, "volver", "regresar", "return", "back", "cancel", "nobutton", "button_spc"))
             return UIPlateRole.Neutral;
         if (ContainsAny(text, "play", "jugar", "reanudar", "resume", "next", "comprar", "purchase", "equipar", "apply", "aplicar", "retry", "keep", "mantener", "button_end"))
@@ -469,7 +483,7 @@ public static partial class UIStyleApplier
     {
         bool locked = Luminance(image.color) < 0.2f && image.sprite != style.panelDark;
         bool wasLocked = image.sprite == style.panelDark && image.color.r < 0.7f;
-        style.ApplySprite(image, style.panelDark, locked || wasLocked ? new Color(0.5f, 0.5f, 0.58f, 1f) : Color.white, 0f, style.panelShadowOffset, null);
+        style.ApplySprite(image, style.panelDark, locked || wasLocked ? new Color(0.5f, 0.5f, 0.58f, 1f) : Color.white, 0f, style.panelShadowOffset, style.screenScan);
         image.raycastTarget = true;
 
         ColorBlock colors = ColorBlock.defaultColorBlock;
@@ -493,25 +507,28 @@ public static partial class UIStyleApplier
             slot.anchorMin = iconRect.anchorMin;
             slot.anchorMax = iconRect.anchorMax;
             slot.pivot = iconRect.pivot;
+            Vector2 slotSize = iconRect.sizeDelta + new Vector2(32f, 16f);
+            if (iconRect.anchorMin.y > 0.99f && Mathf.Approximately(iconRect.pivot.y, 0.5f))
+            {
+                iconRect.anchoredPosition = new Vector2(iconRect.anchoredPosition.x, -Snap(CardSlotInset + slotSize.y * 0.5f));
+                Touch(iconRect);
+            }
             slot.anchoredPosition = iconRect.anchoredPosition;
-            slot.sizeDelta = iconRect.sizeDelta + new Vector2(36f, 36f);
+            slot.sizeDelta = slotSize;
             Image slotImage = GetOrAdd<Image>(slot.gameObject);
             slotImage.raycastTarget = false;
-            style.ApplySprite(slotImage, style.plateChamfer, style.paper, 0f, style.shadowOffset * 0.8f, null);
+            style.ApplySprite(slotImage, style.plate, style.cream, style.skew, style.shadowOffset * 0.67f, null);
             Touch(slotImage);
             Touch(slot);
 
-            RectTransform band = GetOrCreateSibling(slot, StylePrefix + "Band");
-            band.anchorMin = iconRect.anchorMin;
-            band.anchorMax = iconRect.anchorMax;
-            band.pivot = iconRect.pivot;
-            band.anchoredPosition = iconRect.anchoredPosition;
-            band.sizeDelta = new Vector2(Size((RectTransform)card).x * 0.78f, 76f);
-            Image bandImage = GetOrAdd<Image>(band.gameObject);
-            bandImage.raycastTarget = false;
-            style.ApplySprite(bandImage, style.plate, style.secondary, style.skew, Vector2.zero, style.plateStripes);
-            Touch(bandImage);
-            Touch(band);
+            UpgradeButton upgrade = button.GetComponent<UpgradeButton>();
+            if (upgrade != null)
+            {
+                var serializedUpgrade = new SerializedObject(upgrade);
+                serializedUpgrade.FindProperty("iconBackdrop").objectReferenceValue = slot.gameObject;
+                serializedUpgrade.ApplyModifiedPropertiesWithoutUndo();
+                Touch(upgrade);
+            }
         }
 
         Transform overlay = DirectChild(card, "FillOverlay");
@@ -520,8 +537,8 @@ public static partial class UIStyleApplier
             Image overlayImage = overlay.GetComponent<Image>();
             if (overlayImage != null)
             {
-                Color fillColor = style.yellow;
-                fillColor.a = 0.55f;
+                Color fillColor = style.cyan;
+                fillColor.a = 0.5f;
                 style.ApplySprite(overlayImage, style.fill, fillColor, 0f, Vector2.zero, style.plateStripesBold);
                 Touch(overlayImage);
             }
@@ -531,11 +548,11 @@ public static partial class UIStyleApplier
         if (hold != null)
         {
             var serialized = new SerializedObject(hold);
-            Color premium = style.paper;
-            premium.a = 0.7f;
+            Color premium = Lilac;
+            premium.a = 0.6f;
             serialized.FindProperty("premiumFillColor").colorValue = premium;
             SerializedProperty inset = serialized.FindProperty("fillInset");
-            if (inset != null) inset.vector2Value = new Vector2(11f, 11f);
+            if (inset != null) inset.vector2Value = new Vector2(13f, 13f);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             Touch(hold);
         }
@@ -566,7 +583,7 @@ public static partial class UIStyleApplier
             Image image = background.GetComponent<Image>();
             if (image != null)
             {
-                style.ApplySprite(image, style.plate, style.panel, style.skew, Vector2.zero, null);
+                style.ApplySprite(image, style.capsule, style.panel, 0f, Vector2.zero, null);
                 Touch(image);
             }
             Touch(rect);
@@ -589,7 +606,7 @@ public static partial class UIStyleApplier
             Image image = fill.GetComponent<Image>();
             if (image != null)
             {
-                style.ApplySprite(image, style.fill, style.cyan, style.skew, Vector2.zero, style.plateStripesBold);
+                style.ApplySprite(image, style.fill, style.cyan, 0f, Vector2.zero, style.plateStripesBold);
                 Touch(image);
             }
             Touch(fill);
@@ -597,11 +614,12 @@ public static partial class UIStyleApplier
 
         if (handle != null)
         {
-            handle.sizeDelta = new Vector2(34f, 8f);
+            handle.sizeDelta = new Vector2(30f, 10f);
             Image image = handle.GetComponent<Image>();
             if (image != null)
             {
-                style.ApplySprite(image, style.plate, style.yellow, style.skew, style.shadowOffset, null);
+                style.ApplySprite(image, style.capsule, style.paper, 0f, style.shadowOffset * 0.67f, null);
+                UIStyle.SetLip(image, style.secondary);
                 Touch(image);
             }
             Touch(handle);
@@ -609,9 +627,9 @@ public static partial class UIStyleApplier
 
         ColorBlock colors = ColorBlock.defaultColorBlock;
         colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(1f, 1f, 0.82f, 1f);
+        colors.highlightedColor = new Color(0.62f, 0.86f, 1f, 1f);
         colors.selectedColor = colors.highlightedColor;
-        colors.pressedColor = new Color(0.85f, 0.85f, 0.7f, 1f);
+        colors.pressedColor = new Color(0.4f, 0.62f, 0.8f, 1f);
         colors.disabledColor = style.disabled;
         slider.colors = colors;
         Touch(slider);
@@ -625,18 +643,23 @@ public static partial class UIStyleApplier
 
         Transform parent = text.transform.parent;
         Button parentButton = parent != null ? parent.GetComponent<Button>() : null;
-        bool inPlateButton = parentButton != null && parentButton.targetGraphic is Image plate && plate.sprite == style.plate;
+        bool inPlateButton = parentButton != null && parentButton.targetGraphic is Image plate && (plate.sprite == style.plate || plate.sprite == style.plateChamfer);
         Image backdrop = PanelAncestor(text.transform);
         bool onPaper = (backdrop != null && backdrop.sprite == style.panelPaper) || (parent != null && parent.name == "Key");
         float size = MaxSize(text);
         string name = go.name;
         Color mapped = MapColor(text.color, style.paper);
-        bool accent = !Near(mapped, style.paper) && !Near(mapped, style.textDim);
+        bool accent = !Near(mapped, style.paper) && !Near(mapped, style.textDim) && !Near(mapped, style.yellow) && !Near(mapped, style.cyan);
         textCount++;
 
-        if (go.GetComponent<FloatingText>() != null)
+        FloatingText floating = go.GetComponent<FloatingText>();
+        if (floating != null)
         {
             Apply(text, UITextRole.Number, text.color, false);
+            var serializedFloating = new SerializedObject(floating);
+            serializedFloating.FindProperty("popScale").floatValue = 1.2f;
+            serializedFloating.ApplyModifiedPropertiesWithoutUndo();
+            Touch(floating);
             return;
         }
 
@@ -649,18 +672,23 @@ public static partial class UIStyleApplier
         if (onPaper)
         {
             if (size >= 34f || name.Contains("Title"))
-                Apply(text, UITextRole.Heading, accent ? mapped : style.primary, true);
+            {
+                Apply(text, UITextRole.Heading, style.secondary, true);
+                text.fontSharedMaterial = style.textPlain;
+            }
             else
-                Apply(text, UITextRole.BodyDark, accent && !Near(mapped, style.yellow) ? mapped : style.ink, false);
+            {
+                Apply(text, UITextRole.BodyDark, style.ink, false);
+            }
             if (parent != null && parent.name == "Key")
-                text.fontStyle = FontStyles.Italic | FontStyles.UpperCase;
-            Touch(text);
+                text.fontStyle = FontStyles.UpperCase;
+            Finish(text);
             return;
         }
 
         if (name == "UnknownText")
         {
-            Apply(text, UITextRole.Heading, style.yellow, false);
+            Apply(text, UITextRole.Heading, style.cyan, false);
             return;
         }
 
@@ -693,7 +721,7 @@ public static partial class UIStyleApplier
 
         if (heading)
         {
-            Apply(text, UITextRole.Heading, accent ? mapped : style.yellow, true);
+            Apply(text, UITextRole.Heading, accent ? mapped : style.cyan, true);
             return;
         }
 
@@ -709,7 +737,7 @@ public static partial class UIStyleApplier
         color.a = alpha;
         text.color = color;
         text.fontStyle = UIStyle.TextStyle(role);
-        text.characterSpacing = role == UITextRole.Body || role == UITextRole.BodyDark ? 0f : 3f;
+        text.characterSpacing = style.TextSpacing(role);
         text.extraPadding = role != UITextRole.BodyDark;
 
         Vector2 rect = text.rectTransform.rect.size;
@@ -727,7 +755,9 @@ public static partial class UIStyleApplier
         if (role == UITextRole.Label && rect.x > 60f)
         {
             float margin = Mathf.Round(Mathf.Clamp(rect.y * 0.3f, 8f, 26f));
-            text.margin = new Vector4(margin, 0f, margin, 0f);
+            UISkew skew = text.transform.parent != null ? text.transform.parent.GetComponent<UISkew>() : null;
+            float lean = skew != null ? Mathf.Round(Mathf.Min(Mathf.Abs(skew.Amount) * rect.y * 0.5f, rect.x * 0.1f)) : 0f;
+            text.margin = new Vector4(margin + lean, 0f, margin + lean, 0f);
         }
 
         Finish(text);
@@ -751,9 +781,11 @@ public static partial class UIStyleApplier
 
     private static Color MapColor(Color color, Color fallback)
     {
-        Color[] palette = { style.yellow, style.good, style.primary, style.danger, style.cyan, style.paper, style.textDim, style.ink, style.secondary };
+        Color[] palette = { style.yellow, style.good, style.alert, style.cyan, style.paper, style.textDim, style.ink, Lilac };
         foreach (Color entry in palette)
             if (Near(color, entry)) return WithAlpha(entry, color.a);
+
+        if (Near(color, FirstVersionDim)) return WithAlpha(style.textDim, color.a);
 
         Color.RGBToHSV(color, out float h, out float s, out float v);
         if (s < 0.2f)
@@ -761,10 +793,11 @@ public static partial class UIStyleApplier
         if (h >= 0.1f && h < 0.2f) return WithAlpha(style.yellow, color.a);
         if (h >= 0.2f && h < 0.45f) return WithAlpha(style.good, color.a);
         if (h >= 0.45f && h < 0.62f) return WithAlpha(style.cyan, color.a);
-        if (h >= 0.62f && h < 0.78f) return WithAlpha(style.secondary, color.a);
-        if (h >= 0.78f && h < 0.97f) return WithAlpha(style.primary, color.a);
-        return WithAlpha(style.danger, color.a);
+        if (h >= 0.62f && h < 0.97f) return WithAlpha(Lilac, color.a);
+        return WithAlpha(style.alert, color.a);
     }
+
+    private static readonly Color FirstVersionDim = new Color32(0xCF, 0xC4, 0xF2, 0xFF);
 
     private static Color WithAlpha(Color color, float alpha)
     {
@@ -816,15 +849,51 @@ public static partial class UIStyleApplier
 
         Rect titleBounds = RelativeRect(host, title.rectTransform);
         float titleSize = MaxSize(title);
-        RectTransform ribbon = GetOrCreateChild(host, StylePrefix + "Ribbon", 0);
-        ribbon.anchorMin = ribbon.anchorMax = new Vector2(0.5f, 0.5f);
-        ribbon.pivot = new Vector2(0.5f, 0.5f);
-        ribbon.anchoredPosition = new Vector2(0f, Snap(titleBounds.center.y - hostRect.center.y));
-        ribbon.sizeDelta = new Vector2(Snap(hostRect.width - 50f), Snap(Mathf.Max(titleSize * 1.5f, 110f)));
+        Vector2 center = new Vector2(0.5f, 0.5f);
+        Vector2 ribbonPosition = new Vector2(0f, Snap(titleBounds.center.y - hostRect.center.y));
+        Vector2 ribbonSize = new Vector2(Snap(hostRect.width - 50f), Snap(Mathf.Max(titleSize * 1.5f, 110f)));
+        float w = ribbonSize.x;
+        float h = ribbonSize.y;
+        float lean = Mathf.Round(style.skew * h * 0.5f);
+
+        RectTransform accent = GetOrCreateChild(host, StylePrefix + "ShardAccent", 0);
+        Shard(accent, center, ribbonPosition, ribbonSize, gameOver ? style.yellow : style.primary, 0f, 1f, 0f, 0.06f, new[]
+        {
+            new Vector2(-lean - 30f, -2f),
+            new Vector2(w - lean + 4f, -8f),
+            new Vector2(w - lean * 0.2f + 8f, h * 0.4f),
+            new Vector2(w + lean + 40f, h * 0.86f),
+            new Vector2(w + lean + 4f, h + 16f),
+            new Vector2(lean - 22f, h + 24f),
+            new Vector2(lean * 0.5f - 24f, h * 0.8f),
+            new Vector2(-lean - 42f, h * 0.5f),
+            new Vector2(-lean * 0.5f - 26f, h * 0.3f),
+        });
+
+        RectTransform ink = GetOrCreateChild(host, StylePrefix + "ShardInk", 1);
+        Shard(ink, center, ribbonPosition, ribbonSize, style.ink, 0f, 0.45f, 2.1f, 0f, new[]
+        {
+            new Vector2(-lean - 10f, -12f),
+            new Vector2(w - lean + 14f, -16f),
+            new Vector2(w - lean * 0.4f + 10f, h * 0.3f),
+            new Vector2(w + lean + 26f, h * 0.64f),
+            new Vector2(w + lean * 0.56f + 10f, h * 0.78f),
+            new Vector2(w + lean + 12f, h + 8f),
+            new Vector2(lean - 6f, h + 12f),
+            new Vector2(lean * 0.44f - 10f, h * 0.72f),
+            new Vector2(-lean - 28f, h * 0.36f),
+            new Vector2(-lean * 0.6f - 10f, h * 0.2f),
+        });
+
+        RectTransform ribbon = GetOrCreateChild(host, StylePrefix + "Ribbon", 2);
+        ribbon.anchorMin = ribbon.anchorMax = center;
+        ribbon.pivot = center;
+        ribbon.anchoredPosition = ribbonPosition;
+        ribbon.sizeDelta = ribbonSize;
         Image ribbonImage = GetOrAdd<Image>(ribbon.gameObject);
         ribbonImage.raycastTarget = false;
-        style.ApplySprite(ribbonImage, style.plate, gameOver ? style.danger : style.primary, style.skew, style.panelShadowOffset, style.plateStripesBold);
-        AccentLayer(ribbonImage, style.yellow, new Vector2(8f, -8f), new Vector2(5f, -5f));
+        Color ribbonColor = gameOver ? style.danger : style.secondary;
+        style.ApplySprite(ribbonImage, style.plate, ribbonColor, style.skew, Vector2.zero, gameOver ? style.plateHazard : style.plateStripes);
         Touch(ribbonImage);
         Touch(ribbon);
 
@@ -832,23 +901,34 @@ public static partial class UIStyleApplier
         {
             Rect subBounds = RelativeRect(host, subtitle.rectTransform);
             float subSize = MaxSize(subtitle);
-            RectTransform sub = GetOrCreateChild(host, StylePrefix + "SubRibbon", 1);
+            RectTransform sub = GetOrCreateChild(host, StylePrefix + "SubRibbon", 3);
             sub.anchorMin = sub.anchorMax = new Vector2(0.5f, 0.5f);
             sub.pivot = new Vector2(0.5f, 0.5f);
             sub.anchoredPosition = new Vector2(Snap(hostRect.width * 0.05f), Snap(subBounds.center.y - hostRect.center.y));
-            sub.sizeDelta = new Vector2(Snap(hostRect.width * 0.66f), Snap(Mathf.Max(subSize * 1.55f, 54f)));
+            sub.sizeDelta = new Vector2(Snap(hostRect.width * 0.66f), Snap(Mathf.Max(subSize * 1.45f, 52f)));
             Image subImage = GetOrAdd<Image>(sub.gameObject);
             subImage.raycastTarget = false;
-            style.ApplySprite(subImage, style.plate, style.panel, style.skew, style.shadowOffset, null);
+            style.ApplySprite(subImage, style.capsule, style.panel, 0f, style.shadowOffset * 0.67f, null);
+            UIStyle.SetLip(subImage, style.secondary);
             Touch(subImage);
             Touch(sub);
+
+            RectTransform chevron = GetOrCreateChild(sub, StylePrefix + "Glyph", -1);
+            chevron.anchorMin = chevron.anchorMax = new Vector2(0f, 0.5f);
+            chevron.pivot = new Vector2(0.5f, 0.5f);
+            chevron.anchoredPosition = new Vector2(34f, 0f);
+            chevron.sizeDelta = new Vector2(26f, 26f);
+            Image chevronImage = GetOrAdd<Image>(chevron.gameObject);
+            chevronImage.raycastTarget = false;
+            style.ApplySprite(chevronImage, style.chevron, style.cyan, 0f, Vector2.zero, null);
+            Touch(chevronImage);
 
             subtitle.rectTransform.anchorMin = subtitle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             subtitle.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             subtitle.rectTransform.anchoredPosition = sub.anchoredPosition;
-            subtitle.rectTransform.sizeDelta = sub.sizeDelta - new Vector2(70f, 10f);
-            subtitle.margin = Vector4.zero;
-            Apply(subtitle, UITextRole.Heading, style.yellow, true);
+            subtitle.rectTransform.sizeDelta = sub.sizeDelta - new Vector2(24f, 8f);
+            Apply(subtitle, UITextRole.Heading, style.textDim, true);
+            subtitle.margin = new Vector4(48f, 0f, 16f, 0f);
             subtitle.alignment = TextAlignmentOptions.Center;
             Touch(subtitle.rectTransform);
             Finish(subtitle);
@@ -856,31 +936,63 @@ public static partial class UIStyleApplier
 
         title.rectTransform.anchorMin = title.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         title.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        title.rectTransform.anchoredPosition = ribbon.anchoredPosition;
-        title.rectTransform.sizeDelta = ribbon.sizeDelta - new Vector2(90f, 14f);
+        bool faceTitle = host.parent != null && host.parent.name == "MainMenuPanel";
+        float leftPad = faceTitle ? 150f : lean + 46f;
+        float rightPad = lean + 46f;
+        title.rectTransform.anchoredPosition = ribbon.anchoredPosition + new Vector2((leftPad - rightPad) * 0.5f, 0f);
+        title.rectTransform.sizeDelta = ribbon.sizeDelta - new Vector2(leftPad + rightPad, 14f);
         title.margin = Vector4.zero;
         Apply(title, UITextRole.Title, style.paper, true);
         title.alignment = TextAlignmentOptions.Center;
         Touch(title.rectTransform);
         Finish(title);
+
+        RectTransform cursor = GetOrCreateChild(host, StylePrefix + "Cursor", -1);
+        float textWidth = Mathf.Min(title.GetPreferredValues(title.text).x, title.rectTransform.sizeDelta.x);
+        float height = Snap(Mathf.Clamp(title.fontSize * 0.62f, 24f, 64f));
+        cursor.anchorMin = cursor.anchorMax = new Vector2(0.5f, 0.5f);
+        cursor.pivot = new Vector2(0f, 0.5f);
+        cursor.sizeDelta = new Vector2(Snap(height * 0.5f), height);
+        Vector2 cursorPosition = new Vector2(Snap(title.rectTransform.anchoredPosition.x + textWidth * 0.5f + CursorGap), Snap(ribbon.anchoredPosition.y - title.fontSize * 0.36f + height * 0.5f));
+        if ((cursor.anchoredPosition - cursorPosition).sqrMagnitude > 0.0001f) cursor.anchoredPosition = cursorPosition;
+        Image cursorImage = GetOrAdd<Image>(cursor.gameObject);
+        cursorImage.raycastTarget = false;
+        style.ApplySprite(cursorImage, style.cursor, style.paper, 0f, Vector2.zero, null);
+        UITextCursor follow = GetOrAdd<UITextCursor>(cursor.gameObject);
+        var serializedCursor = new SerializedObject(follow);
+        serializedCursor.FindProperty("target").objectReferenceValue = title;
+        serializedCursor.FindProperty("gap").floatValue = CursorGap;
+        serializedCursor.ApplyModifiedPropertiesWithoutUndo();
+        Touch(follow);
+        Touch(cursorImage);
+        Touch(cursor);
     }
 
-    private static void AccentLayer(Image image, Color accent, Vector2 accentOffset, Vector2 inkOffset)
-    {
-        Shadow[] shadows = image.GetComponents<Shadow>();
-        Shadow first = shadows.Length > 0 ? shadows[0] : image.gameObject.AddComponent<Shadow>();
-        Shadow second = shadows.Length > 1 ? shadows[1] : image.gameObject.AddComponent<Shadow>();
+    private const float CursorGap = 1f;
 
-        first.enabled = true;
-        first.effectColor = accent;
-        first.effectDistance = accentOffset;
-        first.useGraphicAlpha = true;
-        second.enabled = true;
-        second.effectColor = style.ink;
-        second.effectDistance = inkOffset;
-        second.useGraphicAlpha = true;
-        Touch(first);
-        Touch(second);
+    private static void Shard(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size, Color color, float stroke, float motion, float phase, float enterDelay, Vector2[] pixels)
+    {
+        rect.anchorMin = rect.anchorMax = anchor;
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+
+        UIShard shard = GetOrAdd<UIShard>(rect.gameObject);
+        shard.raycastTarget = false;
+        shard.color = color;
+
+        var serialized = new SerializedObject(shard);
+        SerializedProperty points = serialized.FindProperty("points");
+        points.arraySize = pixels.Length;
+        for (int i = 0; i < pixels.Length; i++)
+            points.GetArrayElementAtIndex(i).vector2Value = new Vector2(pixels[i].x / size.x, pixels[i].y / size.y);
+        serialized.FindProperty("stroke").floatValue = stroke;
+        serialized.FindProperty("motion").floatValue = motion;
+        serialized.FindProperty("phase").floatValue = phase;
+        serialized.FindProperty("enterDelay").floatValue = enterDelay;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        Touch(shard);
+        Touch(rect);
     }
 
     private static void AddScreenIntros(Transform root)

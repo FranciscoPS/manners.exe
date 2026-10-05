@@ -25,6 +25,8 @@ public class LevelUpManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private TextMeshProUGUI cooldownWarningText;
     [SerializeField] private TextMeshProUGUI closeInstructionText;
+    [Tooltip("Placa de fondo de la instrucción de cierre: se muestra y se oculta junto con el texto.")]
+    [SerializeField] private GameObject closeInstructionPlate;
 
     [Header("Upgrade Buttons")]
     [SerializeField] private UpgradeButton upgradeButton1;
@@ -78,6 +80,7 @@ public class LevelUpManager : MonoBehaviour
         {
             closeInstructionText.gameObject.SetActive(false);
         }
+        SyncInstructionPlate();
 
         if (ExperienceManager.Instance != null)
             ExperienceManager.Instance.OnLevelUp += HandleLevelUp;
@@ -192,6 +195,14 @@ public class LevelUpManager : MonoBehaviour
 
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
+
+        SyncInstructionPlate();
+    }
+
+    private void SyncInstructionPlate()
+    {
+        if (closeInstructionPlate != null && closeInstructionText != null)
+            closeInstructionPlate.SetActive(closeInstructionText.gameObject.activeSelf);
     }
 
     private void GenerateUpgradeOptions(UpgradeMode mode)
@@ -378,6 +389,7 @@ public class LevelUpManager : MonoBehaviour
             }
         }
 
+        SyncInstructionPlate();
         GameEvents.TriggerShopOpened();
     }
 
@@ -418,6 +430,7 @@ public class LevelUpManager : MonoBehaviour
         if (levelUpPanel != null)
             levelUpPanel.SetActive(true);
 
+        SyncInstructionPlate();
         return true;
     }
 
@@ -544,6 +557,7 @@ public class LevelUpManager : MonoBehaviour
             // Dejamos preparado el texto para la próxima tienda.
             closeInstructionText.text = "Presiona Espacio para cerrar la tienda";
         }
+        SyncInstructionPlate();
 
         if (currentMode == UpgradeMode.Shop && connectedShop != null)
         {

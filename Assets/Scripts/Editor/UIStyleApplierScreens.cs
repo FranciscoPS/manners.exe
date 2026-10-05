@@ -11,6 +11,34 @@ using UnityEngine.UI;
 
 public static partial class UIStyleApplier
 {
+    private static readonly string[] ObsoleteObjects =
+    {
+        "StyleBolt", "StyleSpark", "StyleBand", "StyleMinimapShadow", "StyleEye", "StylePaper",
+        "StyleDepthFar", "StyleDepthMid", "StyleDepthNear", "StyleTitleDepth",
+    };
+    private const float ReferenceHeight = 1080f;
+    private const float OverrideHudScale = 1.1f;
+    private const float OverrideHudTop = 171f;
+    private const float OverrideHudLeft = 280f;
+    private static readonly string[] OverlayPanels = { "LevelUpPanel", "PausePanel", "GameOverPanel", "AudioPanel", "InitialsEntryUI" };
+
+    private static Color Lilac => Color.Lerp(style.anomaly, style.paper, 0.5f);
+
+    private static void Cleanup(Transform root)
+    {
+        var doomed = new List<GameObject>();
+        foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            if (Array.IndexOf(ObsoleteObjects, child.name) >= 0) doomed.Add(child.gameObject);
+        foreach (GameObject go in doomed) UnityEngine.Object.DestroyImmediate(go);
+
+        foreach (Image image in root.GetComponentsInChildren<Image>(true))
+        {
+            if (PrefabUtility.IsPartOfPrefabInstance(image)) continue;
+            Shadow[] shadows = image.GetComponents<Shadow>();
+            for (int i = 1; i < shadows.Length; i++) UnityEngine.Object.DestroyImmediate(shadows[i]);
+        }
+    }
+
     private static void StyleHud(Transform root)
     {
         Transform timer = DirectChild(root, "Timer");
@@ -35,6 +63,29 @@ public static partial class UIStyleApplier
 
         Transform shop = DirectChild(root, "ShopText");
         if (shop != null) StyleShopPrompt((RectTransform)shop);
+
+        Transform levelUp = DirectChild(root, "LevelUpPanel");
+        if (currency != null && levelUp != null && currency.GetSiblingIndex() < levelUp.GetSiblingIndex())
+        {
+            currency.SetSiblingIndex(levelUp.GetSiblingIndex());
+            Touch(currency);
+        }
+
+        if (timer != null)
+        {
+            foreach (string overlay in OverlayPanels)
+            {
+                Transform panel = DirectChild(root, overlay);
+                if (panel != null && !PrefabUtility.IsPartOfPrefabInstance(panel.gameObject)) Touch(GetOrAdd<UIOverlay>(panel.gameObject));
+            }
+        }
+    }
+
+    private static void HudPlate(Image image, Color lip)
+    {
+        style.ApplySprite(image, style.plate, style.panel, style.skew, style.shadowOffset, null);
+        UIStyle.SetLip(image, lip);
+        Touch(image);
     }
 
     private static void StyleTimer(RectTransform timer)
@@ -59,19 +110,19 @@ public static partial class UIStyleApplier
 
         Image plateImage = GetOrAdd<Image>(plate.gameObject);
         plateImage.raycastTarget = false;
-        style.ApplySprite(plateImage, style.plate, style.panel, style.skew, style.shadowOffset * 1.4f, null);
-        plateImage.GetComponent<Shadow>().effectColor = style.primary;
-        Touch(plateImage);
+        HudPlate(plateImage, style.secondary);
+        Touch(GetOrAdd<CanvasGroup>(plate.gameObject));
+        Touch(GetOrAdd<UIHideUnderOverlay>(plate.gameObject));
         Touch(plate);
 
         RectTransform icon = GetOrCreateChild(plate, StylePrefix + "Glyph", 0);
         icon.anchorMin = icon.anchorMax = new Vector2(0f, 0.5f);
         icon.pivot = new Vector2(0.5f, 0.5f);
         icon.anchoredPosition = new Vector2(52f, 0f);
-        icon.sizeDelta = new Vector2(56f, 56f);
+        icon.sizeDelta = new Vector2(52f, 52f);
         Image iconImage = GetOrAdd<Image>(icon.gameObject);
         iconImage.raycastTarget = false;
-        style.ApplySprite(iconImage, style.iconClock, Color.white, 0f, Vector2.zero, null);
+        style.ApplySprite(iconImage, style.iconClock, style.cyan, 0f, Vector2.zero, null);
         Touch(iconImage);
 
         if (!nested) timer.SetParent(plate, false);
@@ -81,10 +132,10 @@ public static partial class UIStyleApplier
 
         Apply(text, UITextRole.Number, style.paper, false);
         text.enableAutoSizing = false;
-        text.fontSize = 56f;
-        text.fontSizeMax = 56f;
-        text.fontSizeMin = 28f;
-        text.margin = new Vector4(62f, 0f, 0f, 0f);
+        text.fontSize = 52f;
+        text.fontSizeMax = 52f;
+        text.fontSizeMin = 26f;
+        text.margin = new Vector4(70f, 0f, 24f, 0f);
         text.alignment = TextAlignmentOptions.Center;
         Finish(text);
 
@@ -93,7 +144,7 @@ public static partial class UIStyleApplier
         {
             var serialized = new SerializedObject(timeUI);
             serialized.FindProperty("timeColor").colorValue = style.paper;
-            serialized.FindProperty("overtimeColor").colorValue = style.yellow;
+            serialized.FindProperty("overtimeColor").colorValue = style.paper;
             SetReference(serialized, "plate", plateImage);
             SetColor(serialized, "overtimePlateColor", style.danger);
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -101,45 +152,49 @@ public static partial class UIStyleApplier
         }
     }
 
+    private static void BarFrame(Image frame)
+    {
+        style.ApplySprite(frame, style.capsule, style.panel, 0f, style.shadowOffset * 0.67f, null);
+        UIStyle.SetLip(frame, style.secondary);
+        Touch(frame);
+    }
+
+    private static void BarFill(Transform background, string fillName, Color color)
+    {
+        Stretch((RectTransform)background, 8f, 8f, -8f, -8f);
+        Image backgroundImage = background.GetComponent<Image>();
+        if (backgroundImage != null)
+        {
+            backgroundImage.enabled = false;
+            Touch(backgroundImage);
+        }
+        Touch(background);
+
+        Transform fill = DirectChild(background, fillName);
+        if (fill == null) return;
+
+        RectTransform fillRect = (RectTransform)fill;
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+        Image fillImage = fill.GetComponent<Image>();
+        if (fillImage != null)
+        {
+            fillImage.raycastTarget = false;
+            style.ApplySprite(fillImage, style.fill, color, 0f, Vector2.zero, style.plateStripesBold);
+            Touch(fillImage);
+        }
+        Touch(fillRect);
+    }
+
     private static void StyleExpBar(RectTransform panel)
     {
         Image frame = panel.GetComponent<Image>();
         panel.sizeDelta = new Vector2(panel.sizeDelta.x, 46f);
-        if (frame != null)
-        {
-            style.ApplySprite(frame, style.plate, style.panel, style.skew, style.shadowOffset, null);
-            Touch(frame);
-        }
+        if (frame != null) BarFrame(frame);
         Touch(panel);
 
         Transform background = DirectChild(panel, "ExpBarBackground");
-        if (background != null)
-        {
-            Stretch((RectTransform)background, 8f, 8f, -8f, -8f);
-            Image backgroundImage = background.GetComponent<Image>();
-            if (backgroundImage != null)
-            {
-                backgroundImage.enabled = false;
-                Touch(backgroundImage);
-            }
-            Touch(background);
-
-            Transform fill = DirectChild(background, "ExpBarFill");
-            if (fill != null)
-            {
-                RectTransform fillRect = (RectTransform)fill;
-                fillRect.offsetMin = Vector2.zero;
-                fillRect.offsetMax = Vector2.zero;
-                Image fillImage = fill.GetComponent<Image>();
-                if (fillImage != null)
-                {
-                    fillImage.raycastTarget = false;
-                    style.ApplySprite(fillImage, style.fill, style.cyan, style.skew, Vector2.zero, style.plateStripesBold);
-                    Touch(fillImage);
-                }
-                Touch(fillRect);
-            }
-        }
+        if (background != null) BarFill(background, "ExpBarFill", style.cyan);
 
         Transform level = DirectChild(panel, "LevelText");
         if (level != null)
@@ -147,7 +202,8 @@ public static partial class UIStyleApplier
             TMP_Text levelText = level.GetComponent<TMP_Text>();
             Apply(levelText, UITextRole.Label, style.paper, false);
             levelText.enableAutoSizing = false;
-            levelText.fontSize = 26f;
+            levelText.fontSize = 24f;
+            levelText.margin = Vector4.zero;
             Finish(levelText);
         }
     }
@@ -161,63 +217,65 @@ public static partial class UIStyleApplier
         Stretch(frame, 0f, 0f, 0f, 0f);
         Image frameImage = GetOrAdd<Image>(frame.gameObject);
         frameImage.raycastTarget = false;
-        style.ApplySprite(frameImage, style.plate, style.panel, style.skew, style.shadowOffset, null);
-        Touch(frameImage);
+        BarFrame(frameImage);
 
         Transform background = DirectChild(container, "HealthBarBackground");
-        if (background != null)
-        {
-            Stretch((RectTransform)background, 8f, 8f, -8f, -8f);
-            Image backgroundImage = background.GetComponent<Image>();
-            if (backgroundImage != null)
-            {
-                backgroundImage.enabled = false;
-                Touch(backgroundImage);
-            }
-            Touch(background);
+        if (background != null) BarFill(background, "HealthBarFill", style.good);
 
-            Transform fill = DirectChild(background, "HealthBarFill");
-            if (fill != null)
-            {
-                RectTransform fillRect = (RectTransform)fill;
-                fillRect.offsetMin = Vector2.zero;
-                fillRect.offsetMax = Vector2.zero;
-                Image fillImage = fill.GetComponent<Image>();
-                if (fillImage != null)
-                {
-                    fillImage.raycastTarget = false;
-                    style.ApplySprite(fillImage, style.fill, style.good, style.skew, Vector2.zero, style.plateStripesBold);
-                    Touch(fillImage);
-                }
-                Touch(fillRect);
-            }
-        }
+        MannersFaceUI face = BuildFace(container, new Vector2(0f, 0.5f), new Vector2(-30f, 0f), 54f, false);
+        face.transform.SetAsLastSibling();
 
         HealthBarUI healthUI = container.GetComponent<HealthBarUI>();
         if (healthUI != null)
         {
             var serialized = new SerializedObject(healthUI);
             serialized.FindProperty("blinkColor").colorValue = style.paper;
+            SetBool(serialized, "useStyleColors", true);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             Touch(healthUI);
         }
     }
 
+    private static MannersFaceUI BuildFace(Transform parent, Vector2 anchor, Vector2 position, float size, bool menuMode)
+    {
+        RectTransform face = GetOrCreateChild(parent, StylePrefix + "Face", -1);
+        face.anchorMin = face.anchorMax = anchor;
+        face.pivot = new Vector2(0.5f, 0.5f);
+        face.anchoredPosition = position;
+        face.sizeDelta = new Vector2(size, size);
+        Image screen = GetOrAdd<Image>(face.gameObject);
+        screen.raycastTarget = false;
+        style.ApplySprite(screen, style.faceScreen, Color.white, 0f, Vector2.zero, null);
+        Touch(screen);
+        Touch(face);
+
+        RectTransform eyes = GetOrCreateChild(face, StylePrefix + "Eyes", -1);
+        Stretch(eyes, 0f, 0f, 0f, 0f);
+        Image eyesImage = GetOrAdd<Image>(eyes.gameObject);
+        eyesImage.raycastTarget = false;
+        style.ApplySprite(eyesImage, style.faceCalm, style.cyan, 0f, Vector2.zero, null);
+        Touch(eyesImage);
+
+        MannersFaceUI component = GetOrAdd<MannersFaceUI>(face.gameObject);
+        var serialized = new SerializedObject(component);
+        SetReference(serialized, "eyes", eyesImage);
+        SetBool(serialized, "reactToGame", !menuMode);
+        SetBool(serialized, "maskSlips", menuMode);
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        Touch(component);
+        return component;
+    }
+
     private static void StyleCurrency(RectTransform panel)
     {
         Image image = panel.GetComponent<Image>();
-        if (image != null)
-        {
-            style.ApplySprite(image, style.plate, style.panel, style.skew, style.shadowOffset * 1.4f, null);
-            image.GetComponent<Shadow>().effectColor = style.yellow;
-            Touch(image);
-        }
+        if (image != null) HudPlate(image, style.secondary);
 
         RectTransform icon = GetOrCreateChild(panel, StylePrefix + "Glyph", 0);
         icon.anchorMin = icon.anchorMax = new Vector2(0f, 0.5f);
         icon.pivot = new Vector2(0.5f, 0.5f);
-        icon.anchoredPosition = new Vector2(52f, 0f);
-        icon.sizeDelta = new Vector2(58f, 58f);
+        icon.anchoredPosition = new Vector2(50f, 0f);
+        icon.sizeDelta = new Vector2(54f, 54f);
         Image iconImage = GetOrAdd<Image>(icon.gameObject);
         iconImage.raycastTarget = false;
         style.ApplySprite(iconImage, style.iconCoin, style.yellow, 0f, Vector2.zero, null);
@@ -245,18 +303,24 @@ public static partial class UIStyleApplier
             TMP_Text text = child.GetComponent<TMP_Text>();
             if (text == null) continue;
 
-            Apply(text, UITextRole.Number, child.name.Contains("Diamond") ? style.cyan : style.yellow, true);
-            text.fontSizeMax = counters > 1 ? 24f : 40f;
+            if (counters == 1)
+            {
+                Stretch(text.rectTransform, 0f, 0f, 0f, 0f);
+                Touch(text.rectTransform);
+            }
+
+            Apply(text, UITextRole.Number, child.name.Contains("Diamond") ? Lilac : style.yellow, true);
+            text.fontSizeMax = counters > 1 ? 24f : 38f;
             text.fontSizeMin = counters > 1 ? 14f : 18f;
             text.textWrappingMode = TextWrappingModes.NoWrap;
-            text.margin = new Vector4(70f, 0f, 8f, 0f);
+            text.margin = new Vector4(78f, 0f, 30f, 0f);
             text.alignment = TextAlignmentOptions.Center;
             Finish(text);
         }
     }
 
     private const float MinimapCircleRatio = 0.783f;
-    private const float RingCircleRatio = 440f / 512f;
+    private const float RingCircleRatio = 220f / 256f;
 
     private static void StyleMinimap(RectTransform minimap)
     {
@@ -265,7 +329,7 @@ public static partial class UIStyleApplier
         ring.anchorMin = ring.anchorMax = new Vector2(0.5f, 0.5f);
         ring.pivot = new Vector2(0.5f, 0.5f);
         ring.anchoredPosition = Vector2.zero;
-        ring.sizeDelta = Vector2.one * (visible / RingCircleRatio);
+        ring.sizeDelta = Vector2.one * Snap(visible / RingCircleRatio);
         Image ringImage = GetOrAdd<Image>(ring.gameObject);
         ringImage.raycastTarget = false;
         ringImage.maskable = false;
@@ -280,20 +344,15 @@ public static partial class UIStyleApplier
         Touch(prompt);
 
         Image image = prompt.GetComponent<Image>();
-        if (image != null)
-        {
-            style.ApplySprite(image, style.plate, style.panel, style.skew, style.shadowOffset * 1.4f, null);
-            image.GetComponent<Shadow>().effectColor = style.cyan;
-            Touch(image);
-        }
+        if (image != null) HudPlate(image, style.danger);
 
         TMP_Text text = DirectChildText(prompt);
         if (text != null)
         {
             Apply(text, UITextRole.Label, style.paper, true);
-            text.fontSizeMax = 30f;
+            text.fontSizeMax = 28f;
             text.fontSizeMin = 16f;
-            text.margin = new Vector4(34f, 0f, 34f, 0f);
+            text.margin = new Vector4(48f, 0f, 48f, 0f);
             Finish(text);
         }
     }
@@ -303,6 +362,9 @@ public static partial class UIStyleApplier
         Transform panel = DirectChild(root, "LevelUpPanel");
         if (panel == null) return;
 
+        Image banner = null;
+        Image promptPlate = null;
+
         Transform titleTransform = DirectChild(panel, "LevelUpText");
         if (titleTransform != null)
         {
@@ -310,42 +372,129 @@ public static partial class UIStyleApplier
             TMP_Text title = titleTransform.GetComponent<TMP_Text>();
 
             RectTransform burst = GetOrCreateSibling(titleRect, StylePrefix + "TitleBurst");
-            burst.anchorMin = titleRect.anchorMin;
-            burst.anchorMax = titleRect.anchorMax;
-            burst.pivot = titleRect.pivot;
-            burst.anchoredPosition = titleRect.anchoredPosition;
-            burst.sizeDelta = new Vector2(900f, 270f);
-            Image burstImage = GetOrAdd<Image>(burst.gameObject);
-            burstImage.raycastTarget = false;
-            style.ApplySprite(burstImage, style.burst, style.primary, 0f, style.panelShadowOffset, null);
-            Touch(burstImage);
+            burst.anchorMin = burst.anchorMax = new Vector2(0.5f, 1f);
+            burst.pivot = new Vector2(0.5f, 0.5f);
+            burst.anchoredPosition = new Vector2(0f, -118f);
+            burst.sizeDelta = new Vector2(480f, 112f);
+            banner = GetOrAdd<Image>(burst.gameObject);
+            banner.raycastTarget = false;
+            style.ApplySprite(banner, style.burst, style.primary, 0f, style.panelShadowOffset, null);
+            Touch(banner);
             Touch(burst);
 
-            titleRect.sizeDelta = new Vector2(640f, 110f);
+            titleRect.anchorMin = titleRect.anchorMax = new Vector2(0.5f, 1f);
+            titleRect.pivot = new Vector2(0.5f, 0.5f);
+            titleRect.anchoredPosition = new Vector2(0f, -118f);
+            titleRect.sizeDelta = new Vector2(350f, 74f);
+            title.margin = Vector4.zero;
             Apply(title, UITextRole.Title, style.paper, true);
+            title.fontSizeMax = 58f;
+            title.fontSizeMin = 28f;
+            Finish(title);
             Touch(titleRect);
-
-            LevelUpManager manager = root.GetComponent<LevelUpManager>();
-            if (manager != null)
-            {
-                var serialized = new SerializedObject(manager);
-                SetReference(serialized, "titleBackdrop", burstImage);
-                serialized.ApplyModifiedPropertiesWithoutUndo();
-                Touch(manager);
-            }
         }
 
-        StyleNamedText(panel, "CooldownWarningText", UITextRole.Heading, style.yellow, true);
-        StyleNamedText(panel, "Shop Instructions", UITextRole.Body, style.textDim, false);
+        Transform promptTransform = DirectChild(panel, "Shop Instructions");
+        if (promptTransform != null)
+        {
+            RectTransform promptRect = (RectTransform)promptTransform;
+            if (promptRect.anchorMin.y < 0.99f)
+            {
+                float bottom = promptRect.anchoredPosition.y - promptRect.pivot.y * promptRect.rect.height;
+                float fromTop = ReferenceHeight - (bottom + promptRect.rect.height * 0.5f);
+                promptRect.anchorMin = promptRect.anchorMax = new Vector2(0.5f, 1f);
+                promptRect.pivot = new Vector2(0.5f, 0.5f);
+                promptRect.anchoredPosition = new Vector2(0f, -Snap(fromTop));
+            }
+            promptRect.sizeDelta = new Vector2(1000f, 64f);
+            Touch(promptRect);
+
+            RectTransform plate = GetOrCreateSibling(promptRect, StylePrefix + "PromptPlate");
+            plate.anchorMin = plate.anchorMax = promptRect.anchorMin;
+            plate.pivot = promptRect.pivot;
+            plate.anchoredPosition = promptRect.anchoredPosition;
+            plate.sizeDelta = new Vector2(1040f, 64f);
+            promptPlate = GetOrAdd<Image>(plate.gameObject);
+            promptPlate.raycastTarget = false;
+            style.ApplySprite(promptPlate, style.capsule, style.panel, 0f, style.shadowOffset, null);
+            UIStyle.SetLip(promptPlate, style.danger);
+            Touch(promptPlate);
+            Touch(plate);
+
+            RectTransform glyph = GetOrCreateChild(plate, StylePrefix + "Glyph", 0);
+            glyph.anchorMin = glyph.anchorMax = new Vector2(0f, 0.5f);
+            glyph.pivot = new Vector2(0.5f, 0.5f);
+            glyph.anchoredPosition = new Vector2(50f, 0f);
+            glyph.sizeDelta = new Vector2(40f, 40f);
+            Image glyphImage = GetOrAdd<Image>(glyph.gameObject);
+            glyphImage.raycastTarget = false;
+            style.ApplySprite(glyphImage, style.triangle, style.alert, 0f, Vector2.zero, null);
+            Touch(glyphImage);
+
+            TMP_Text prompt = promptTransform.GetComponent<TMP_Text>();
+            Apply(prompt, UITextRole.Label, style.paper, false);
+            prompt.enableAutoSizing = true;
+            prompt.fontSizeMax = 26f;
+            prompt.fontSizeMin = 16f;
+            prompt.textWrappingMode = TextWrappingModes.Normal;
+            prompt.overflowMode = TextOverflowModes.Truncate;
+            prompt.alignment = TextAlignmentOptions.Center;
+            prompt.margin = new Vector4(84f, 4f, 44f, 4f);
+            Finish(prompt);
+        }
+
+        Transform cooldownTransform = DirectChild(panel, "CooldownWarningText");
+        if (cooldownTransform != null)
+        {
+            RectTransform cooldown = (RectTransform)cooldownTransform;
+            cooldown.anchorMin = cooldown.anchorMax = new Vector2(0.5f, 0f);
+            cooldown.pivot = new Vector2(0.5f, 0.5f);
+            cooldown.anchoredPosition = new Vector2(0f, 192f);
+            cooldown.sizeDelta = new Vector2(900f, 60f);
+            Touch(cooldown);
+            Apply(cooldownTransform.GetComponent<TMP_Text>(), UITextRole.Heading, style.yellow, true);
+        }
+
+        LevelUpManager manager = root.GetComponent<LevelUpManager>();
+        if (manager != null)
+        {
+            var serialized = new SerializedObject(manager);
+            SetReference(serialized, "titleBackdrop", banner);
+            SetReference(serialized, "closeInstructionPlate", promptPlate != null ? promptPlate.gameObject : null);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            Touch(manager);
+        }
 
         foreach (UpgradeButton card in panel.GetComponentsInChildren<UpgradeButton>(true))
         {
             Transform cardTransform = card.transform;
-            StyleNamedText(cardTransform, "UpgradeNameText", UITextRole.Heading, style.paper, true, 20f);
-            StyleNamedText(cardTransform, "DescriptionText", UITextRole.Body, style.textDim, false, 22f);
-            StyleNamedText(cardTransform, "LabelText", UITextRole.Number, style.yellow, true, 20f);
-            StyleNamedText(cardTransform, "ValuesText", UITextRole.Number, style.good, true, 22f);
+            StyleNamedText(cardTransform, "UpgradeNameText", UITextRole.Heading, style.paper, true, 22f);
+            Transform cardName = DirectChild(cardTransform, "UpgradeNameText");
+            if (cardName != null)
+            {
+                TMP_Text nameText = cardName.GetComponent<TMP_Text>();
+                nameText.textWrappingMode = TextWrappingModes.Normal;
+                nameText.fontSizeMax = 26f;
+                nameText.fontSizeMin = 17f;
+                nameText.lineSpacing = -22f;
+                Finish(nameText);
+            }
+            StyleNamedText(cardTransform, "DescriptionText", UITextRole.Body, style.textDim, false, 24f);
+            StyleNamedText(cardTransform, "LabelText", UITextRole.Number, style.yellow, true, 22f);
             StyleNamedText(cardTransform, "CostText", UITextRole.Number, style.yellow, true);
+
+            Transform values = DirectChild(cardTransform, "ValuesText");
+            if (values != null)
+            {
+                TMP_Text valuesText = values.GetComponent<TMP_Text>();
+                Apply(valuesText, UITextRole.Number, style.good, true);
+                valuesText.fontSizeMax = 30f;
+                valuesText.fontSizeMin = 15f;
+                valuesText.textWrappingMode = TextWrappingModes.NoWrap;
+                valuesText.lineSpacing = -18f;
+                valuesText.margin = new Vector4(22f, 0f, 22f, 0f);
+                Finish(valuesText);
+            }
         }
     }
 
@@ -368,6 +517,18 @@ public static partial class UIStyleApplier
         Transform panel = FindDeep(root, "TutorialPanel");
         if (panel == null) return;
 
+        foreach (Button button in panel.GetComponentsInChildren<Button>(true))
+        {
+            TMP_Text label = DirectChildText(button.transform);
+            if (label == null) continue;
+
+            label.textWrappingMode = TextWrappingModes.Normal;
+            label.fontSizeMax = Mathf.Min(label.fontSizeMax, 30f);
+            label.fontSizeMin = 16f;
+            label.lineSpacing = -20f;
+            Finish(label);
+        }
+
         Transform message = DirectChild(panel, "MessageText");
         if (message != null)
         {
@@ -379,6 +540,84 @@ public static partial class UIStyleApplier
                 Finish(text);
             }
         }
+
+        Image backdrop = panel.GetComponent<Image>();
+        if (backdrop != null)
+        {
+            bool blocks = backdrop.raycastTarget;
+            HideGraphic(backdrop);
+            backdrop.raycastTarget = blocks;
+            Touch(backdrop);
+        }
+
+        Vector2 center = new Vector2(0.5f, 0.5f);
+        Vector2 size = ((RectTransform)panel).sizeDelta;
+        float w = size.x;
+        float h = size.y;
+
+        RectTransform echo = GetOrCreateChild(panel, StylePrefix + "ShardEcho", 0);
+        Shard(echo, center, Vector2.zero, size, style.cyan, 3f, 1f, 4.4f, 0.12f, new[]
+        {
+            new Vector2(-50f, -24f),
+            new Vector2(w + 62f, -28f),
+            new Vector2(w + 50f, h + 12f),
+            new Vector2(-42f, h + 36f),
+        });
+
+        RectTransform accent = GetOrCreateChild(panel, StylePrefix + "ShardAccent", 1);
+        Shard(accent, center, Vector2.zero, size, style.cyan, 0f, 1f, 0f, 0.07f, new[]
+        {
+            new Vector2(-30f, -6f),
+            new Vector2(w + 36f, -44f),
+            new Vector2(w + 28f, h * 0.52f),
+            new Vector2(w + 112f, h * 0.74f),
+            new Vector2(w + 20f, h * 0.8f),
+            new Vector2(w + 16f, h - 10f),
+            new Vector2(-32f, h + 14f),
+            new Vector2(-30f, h * 0.36f),
+            new Vector2(-118f, -10f),
+            new Vector2(-22f, 4f),
+        });
+
+        RectTransform ink = GetOrCreateChild(panel, StylePrefix + "ShardInk", 2);
+        Shard(ink, center, Vector2.zero, size, style.ink, 0f, 0.45f, 2.1f, 0.03f, new[]
+        {
+            new Vector2(2f, -12f),
+            new Vector2(w + 16f, -20f),
+            new Vector2(w + 12f, h * 0.6f),
+            new Vector2(w + 70f, h * 0.8f),
+            new Vector2(w + 8f, h * 0.86f),
+            new Vector2(w + 6f, h + 8f),
+            new Vector2(-10f, h + 2f),
+            new Vector2(-8f, h * 0.325f),
+            new Vector2(-98f, 4f),
+            new Vector2(0f, 20f),
+        });
+
+        RectTransform paper = GetOrCreateChild(panel, StylePrefix + "ShardPaper", 3);
+        Shard(paper, center, Vector2.zero, size, style.cream, 0f, 0f, 0f, 0f, new[]
+        {
+            new Vector2(10f, 6f),
+            new Vector2(w, 0f),
+            new Vector2(w - 6f, h),
+            new Vector2(0f, h - 12f),
+            new Vector2(3f, h * 0.28f),
+            new Vector2(-62f, 22f),
+            new Vector2(8f, 40f),
+        });
+    }
+
+    private static void StyleSilhouette(Image image)
+    {
+        if (image == null) return;
+
+        UISilhouette silhouette = GetOrAdd<UISilhouette>(image.gameObject);
+        var serialized = new SerializedObject(silhouette);
+        serialized.FindProperty("color").colorValue = style.ink;
+        serialized.FindProperty("outline").floatValue = style.silhouetteOutline;
+        serialized.FindProperty("offset").vector2Value = style.silhouetteOffset;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        Touch(silhouette);
     }
 
     private static void StyleMainMenu(Transform root)
@@ -389,44 +628,95 @@ public static partial class UIStyleApplier
         Transform title = DirectChild(main, "TitlePanel");
         if (title == null) return;
 
-        RectTransform bolt = GetOrCreateChild(title, StylePrefix + "Bolt", 0);
-        bolt.anchorMin = bolt.anchorMax = new Vector2(0f, 0.5f);
-        bolt.pivot = new Vector2(0.5f, 0.5f);
-        bolt.anchoredPosition = new Vector2(-18f, 34f);
-        bolt.sizeDelta = new Vector2(150f, 250f);
-        bolt.localRotation = Quaternion.Euler(0f, 0f, 14f);
-        Image boltImage = GetOrAdd<Image>(bolt.gameObject);
-        boltImage.raycastTarget = false;
-        style.ApplySprite(boltImage, style.bolt, style.yellow, 0f, style.shadowOffset * 1.4f, null);
-        Touch(boltImage);
-        Touch(bolt);
+        Transform ribbon = DirectChild(title, StylePrefix + "Ribbon");
+        float y = ribbon != null ? ((RectTransform)ribbon).anchoredPosition.y : 0f;
+        MannersFaceUI face = BuildFace(title, new Vector2(0f, 0.5f), new Vector2(34f, y), 168f, true);
+        face.transform.SetAsLastSibling();
 
-        RectTransform spark = GetOrCreateChild(title, StylePrefix + "Spark", -1);
-        spark.anchorMin = spark.anchorMax = new Vector2(1f, 1f);
-        spark.pivot = new Vector2(0.5f, 0.5f);
-        spark.anchoredPosition = new Vector2(-26f, -36f);
-        spark.sizeDelta = new Vector2(92f, 92f);
-        spark.localRotation = Quaternion.Euler(0f, 0f, 12f);
-        Image sparkImage = GetOrAdd<Image>(spark.gameObject);
-        sparkImage.raycastTarget = false;
-        style.ApplySprite(sparkImage, style.spark, style.cyan, 0f, Vector2.zero, null);
-        Touch(sparkImage);
-        Touch(spark);
+        Transform eye = ribbon != null ? DirectChild(ribbon, StylePrefix + "Eye") : null;
+        if (eye != null)
+        {
+            eye.gameObject.SetActive(false);
+            Touch(eye.gameObject);
+        }
     }
 
     private static void StyleOverridePanels(Transform root)
     {
+        foreach (OverrideHudPanel hud in root.GetComponentsInChildren<OverrideHudPanel>(true))
+        {
+            RectTransform panel = (RectTransform)hud.transform;
+            Image body = panel.GetComponent<Image>();
+            if (body != null)
+            {
+                style.ApplySprite(body, style.plate, style.panel, style.skewSoft, style.shadowOffset, null);
+                UIStyle.SetLip(body, style.anomaly);
+                Touch(body);
+            }
+
+            RectTransform tab = GetOrCreateChild(panel, StylePrefix + "Tab", 0);
+            tab.anchorMin = tab.anchorMax = new Vector2(0f, 1f);
+            tab.pivot = new Vector2(0f, 0.5f);
+            tab.anchoredPosition = new Vector2(-10f, -4f);
+            tab.sizeDelta = new Vector2(156f, 30f);
+            Image tabImage = GetOrAdd<Image>(tab.gameObject);
+            tabImage.raycastTarget = false;
+            style.ApplySprite(tabImage, style.plate, style.anomaly, style.skew, Vector2.zero, style.plateStripes);
+            Touch(tabImage);
+            Touch(tab);
+
+            Transform title = DirectChild(panel, "Title");
+            if (title != null)
+            {
+                RectTransform titleRect = (RectTransform)title;
+                titleRect.anchorMin = titleRect.anchorMax = tab.anchorMin;
+                titleRect.pivot = tab.pivot;
+                titleRect.anchoredPosition = tab.anchoredPosition;
+                titleRect.sizeDelta = tab.sizeDelta;
+                Touch(titleRect);
+
+                TMP_Text titleText = title.GetComponent<TMP_Text>();
+                Apply(titleText, UITextRole.Label, style.paper, true);
+                titleText.fontSizeMax = 15f;
+                titleText.fontSizeMin = 9f;
+                titleText.margin = new Vector4(12f, 0f, 12f, 0f);
+                titleText.alignment = TextAlignmentOptions.Center;
+                Finish(titleText);
+            }
+
+            foreach (TMP_Text sign in panel.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (!sign.name.EndsWith("_Txt")) continue;
+
+                sign.enableAutoSizing = false;
+                sign.fontSize = 20f;
+                sign.textWrappingMode = TextWrappingModes.NoWrap;
+                sign.overflowMode = TextOverflowModes.Overflow;
+                Finish(sign);
+            }
+
+            if (!PrefabUtility.IsPartOfPrefabInstance(panel.gameObject)) continue;
+            if (panel.anchorMin.y < 0.99f || panel.pivot.y < 0.99f || panel.anchorMin.x < 0.99f || panel.pivot.x > 0.01f) continue;
+
+            panel.localScale = Vector3.one * OverrideHudScale;
+            panel.anchoredPosition = new Vector2(-OverrideHudLeft, -OverrideHudTop);
+            Touch(panel);
+        }
     }
 
     private static void StyleInitials(Transform root)
     {
+        InitialsEntryUI initials = root.GetComponentInChildren<InitialsEntryUI>(true);
+        if (initials == null) return;
+        if (!PrefabUtility.IsPartOfPrefabInstance(initials.gameObject)) Touch(GetOrAdd<UIOverlay>(initials.gameObject));
+
         Transform cursor = FindDeep(root, "Cursor");
-        if (cursor == null || root.GetComponentInChildren<InitialsEntryUI>(true) == null) return;
+        if (cursor == null) return;
 
         Image image = cursor.GetComponent<Image>();
         if (image != null)
         {
-            image.color = style.primary;
+            image.color = style.cyan;
             Touch(image);
         }
     }
@@ -441,7 +731,7 @@ public static partial class UIStyleApplier
                 serialized.FindProperty("damageColor").colorValue = style.paper;
                 serialized.FindProperty("expColor").colorValue = style.cyan;
                 serialized.FindProperty("coinColor").colorValue = style.yellow;
-                serialized.FindProperty("diamondColor").colorValue = style.primary;
+                serialized.FindProperty("diamondColor").colorValue = Lilac;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 Touch(manager);
             }
@@ -449,6 +739,7 @@ public static partial class UIStyleApplier
             foreach (TutorialManager tutorial in root.GetComponentsInChildren<TutorialManager>(true))
             {
                 var serialized = new SerializedObject(tutorial);
+                StyleSilhouette(serialized.FindProperty("robotImage").objectReferenceValue as Image);
                 SerializedProperty target = serialized.FindProperty("targetTimer");
                 RectTransform current = target != null ? target.objectReferenceValue as RectTransform : null;
                 if (current != null && current.parent != null && current.parent.name == StylePrefix + "TimerPlate")
@@ -463,7 +754,7 @@ public static partial class UIStyleApplier
             {
                 var serialized = new SerializedObject(glitch);
                 serialized.FindProperty("flickerColorA").colorValue = style.cyan;
-                serialized.FindProperty("flickerColorB").colorValue = style.primary;
+                serialized.FindProperty("flickerColorB").colorValue = style.alert;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 Touch(glitch);
             }
@@ -480,6 +771,12 @@ public static partial class UIStyleApplier
     {
         SerializedProperty found = serialized.FindProperty(property);
         if (found != null) found.colorValue = value;
+    }
+
+    private static void SetBool(SerializedObject serialized, string property, bool value)
+    {
+        SerializedProperty found = serialized.FindProperty(property);
+        if (found != null) found.boolValue = value;
     }
 
     public static bool Validate(UIStyle targetStyle, StringBuilder targetReport)

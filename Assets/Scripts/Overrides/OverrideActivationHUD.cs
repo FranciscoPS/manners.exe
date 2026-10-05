@@ -250,7 +250,7 @@ public class OverrideActivationHUD : MonoBehaviour
         {
             style.ApplyFont(tmp, UITextRole.Title);
             tmp.fontStyle = UIStyle.TextStyle(UITextRole.Title);
-            tmp.characterSpacing = 3f;
+            tmp.characterSpacing = style.labelSpacing;
             tmp.extraPadding = true;
             return;
         }
@@ -320,8 +320,8 @@ public class OverrideActivationHUD : MonoBehaviour
         if (style != null)
         {
             style.ApplyPlate(titlePlate, style.panel, style.skew, true, null);
-            titlePlate.GetComponent<Shadow>().effectColor = style.primary;
-            style.ApplyPlate(namePlate, style.primary, style.skew, true, style.plateStripesBold);
+            titlePlate.GetComponent<Shadow>().effectColor = style.anomaly;
+            style.ApplyPlate(namePlate, style.anomaly, style.skew, true, style.plateStripes);
         }
 
         bannerIconRect.gameObject.SetActive(false);

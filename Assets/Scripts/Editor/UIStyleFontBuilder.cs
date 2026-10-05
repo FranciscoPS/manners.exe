@@ -43,21 +43,21 @@ public static class UIStyleFontBuilder
         style.font = asset;
         style.textInk = Preset(asset, "Ink", material =>
         {
-            material.SetFloat("_FaceDilate", 0.27f);
-            material.SetFloat("_OutlineWidth", 0.27f);
+            material.SetFloat("_FaceDilate", 0f);
+            material.SetFloat("_OutlineWidth", 0.085f);
             material.SetColor("_OutlineColor", style.ink);
             material.EnableKeyword("OUTLINE_ON");
             material.EnableKeyword("UNDERLAY_ON");
             material.SetColor("_UnderlayColor", style.ink);
-            material.SetFloat("_UnderlayOffsetX", 0.32f);
-            material.SetFloat("_UnderlayOffsetY", -0.32f);
-            material.SetFloat("_UnderlayDilate", 0.4f);
+            material.SetFloat("_UnderlayOffsetX", 0f);
+            material.SetFloat("_UnderlayOffsetY", -0.42f);
+            material.SetFloat("_UnderlayDilate", 0.03f);
             material.SetFloat("_UnderlaySoftness", 0f);
         });
         style.textInkThin = Preset(asset, "Ink Thin", material =>
         {
-            material.SetFloat("_FaceDilate", 0.1f);
-            material.SetFloat("_OutlineWidth", 0.16f);
+            material.SetFloat("_FaceDilate", -0.03f);
+            material.SetFloat("_OutlineWidth", 0.045f);
             material.SetColor("_OutlineColor", style.ink);
             material.EnableKeyword("OUTLINE_ON");
             material.DisableKeyword("UNDERLAY_ON");

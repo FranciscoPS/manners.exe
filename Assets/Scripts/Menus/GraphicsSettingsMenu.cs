@@ -226,6 +226,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
     {
         UIStyle style = UIStyle.Instance;
 
+        gameObject.AddComponent<UIOverlay>();
         Image scrim = gameObject.AddComponent<Image>();
         scrim.color = new Color(.018f, .025f, .05f, .97f);
         if (style != null)
@@ -257,7 +258,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
 
         if (style != null)
         {
-            Image ribbon = style.CreatePlate("TitleRibbon", content, style.primary, style.skew, true, style.plateStripesBold);
+            Image ribbon = style.CreatePlate("TitleRibbon", content, style.secondary, style.skew, true, style.plateStripes);
             Stretch(ribbon.rectTransform, 0, .905f, .36f, 1);
         }
 
@@ -332,7 +333,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour
         UIStyle style = UIStyle.Instance;
         TextMeshProUGUI caption = CreateText("Label", holder, label, 23, TextAlignmentOptions.Left);
         Stretch(caption.rectTransform, 0, .58f, 1, 1);
-        if (style != null) caption.color = style.yellow;
+        if (style != null) caption.color = style.textDim;
         SettingRow setting = new SettingRow { read = read, available = available };
         setting.previous = CreateButton("Previous", holder, "<", () => Edit(edit, -1));
         Stretch((RectTransform)setting.previous.transform, 0, 0, .125f, .57f);

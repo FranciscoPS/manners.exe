@@ -77,7 +77,7 @@ public static class UIStylePreview
             }
 
             string path = $"Logs/ui-preview-{tag}-{shot.Name}.png";
-            Capture(scene, path, Width, Height);
+            Capture(scene, path, Width, Height, report, shot.Name);
             report.AppendLine($"PREVIEW {tag}: {path}");
         }
 
@@ -98,7 +98,7 @@ public static class UIStylePreview
         return null;
     }
 
-    public static void Capture(Scene scene, string path, int width, int height)
+    public static void Capture(Scene scene, string path, int width, int height, StringBuilder audit = null, string label = null)
     {
         Camera main = null;
         foreach (GameObject root in scene.GetRootGameObjects())
@@ -124,7 +124,7 @@ public static class UIStylePreview
 
             var cameraObject = new GameObject("UI preview camera") { hideFlags = HideFlags.HideAndDontSave };
             created.Add(cameraObject);
-            cameraObject.transform.position = new Vector3(0f, -5000f, 0f);
+            cameraObject.transform.position = new Vector3(12000f, -20000f, 7000f);
             Camera uiCamera = cameraObject.AddComponent<Camera>();
             uiCamera.clearFlags = CameraClearFlags.SolidColor;
             uiCamera.backgroundColor = Color.black;
@@ -166,6 +166,9 @@ public static class UIStylePreview
             uiCamera.Render();
             Canvas.ForceUpdateCanvases();
             uiCamera.Render();
+
+            if (audit != null)
+                UIStyleAudit.Run(uiCamera, width, height, label ?? System.IO.Path.GetFileNameWithoutExtension(path), audit);
 
             RenderTexture.active = finalTexture;
             var texture = new Texture2D(width, height, TextureFormat.RGB24, false);

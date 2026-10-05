@@ -10,7 +10,12 @@ public static class UIStyleSpriteBuilder
 
     private const int PixelsPerUnit = 200;
     private const float S = 2f;
-    private const float Outline = 5f;
+    private const float Outline = 4f;
+    private const float PlateOutline = 5f;
+
+    private static readonly string[] Obsolete = { "bolt", "spark", "dot" };
+    private static readonly Color CharlieGray = new Color32(0x8E, 0x97, 0xAC, 0xFF);
+    private static readonly Color FaceBlack = new Color32(0x08, 0x09, 0x14, 0xFF);
 
     private sealed class Painter
     {
@@ -21,10 +26,10 @@ public static class UIStyleSpriteBuilder
         private readonly float[] b;
         private readonly float[] a;
 
-        public Painter(int width, int height)
+        public Painter(float widthUnits, float heightUnits)
         {
-            this.width = width;
-            this.height = height;
+            width = Mathf.RoundToInt(widthUnits * S);
+            height = Mathf.RoundToInt(heightUnits * S);
             int count = width * height;
             r = new float[count];
             g = new float[count];
@@ -38,7 +43,7 @@ public static class UIStyleSpriteBuilder
             {
                 for (int x = 0; x < width; x++)
                 {
-                    float coverage = Mathf.Clamp01(0.5f - distance(x + 0.5f, y + 0.5f)) * color.a;
+                    float coverage = Mathf.Clamp01(0.5f - distance((x + 0.5f) / S, (y + 0.5f) / S) * S) * color.a;
                     if (coverage <= 0f) continue;
 
                     int i = y * width + x;
@@ -51,7 +56,7 @@ public static class UIStyleSpriteBuilder
             }
         }
 
-        public Color32[] ToPixels(Color bleed)
+        public Texture2D ToTexture(Color bleed)
         {
             var pixels = new Color32[width * height];
             for (int i = 0; i < pixels.Length; i++)
@@ -62,7 +67,11 @@ public static class UIStyleSpriteBuilder
                 else
                     pixels[i] = new Color(bleed.r, bleed.g, bleed.b, 0f);
             }
-            return pixels;
+
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            return texture;
         }
     }
 
@@ -70,41 +79,42 @@ public static class UIStyleSpriteBuilder
     {
         EditorAssetUtility.EnsureFolder(Folder);
 
-        style.plate = Save("plate", BuildPlate(style), Border(16f));
-        style.plateChamfer = Save("plate_chamfer", BuildPlateChamfer(style), Border(20f));
-        style.panelDark = Save("panel_dark", BuildPanel(style, style.panel, style.panelAlt, true), Border(80f));
-        style.panelSmall = Save("panel_small", BuildPanelSmall(style), Border(26f));
-        style.panelPaper = Save("panel_paper", BuildPanel(style, style.paper, Color.Lerp(style.paper, style.secondary, 0.3f), false), Border(80f));
-        style.fill = Save("fill", BuildFill(), new Vector4(5f, 6f, 5f, 6f) * S);
-        style.frame = Save("frame", BuildFrame(style), Border(14f));
-        style.burst = Save("burst", BuildBurst(style), Vector4.zero);
-        style.bolt = Save("bolt", BuildBolt(style), Vector4.zero);
-        style.spark = Save("spark", BuildSpark(style), Vector4.zero);
+        foreach (string name in Obsolete)
+        {
+            string path = $"{Folder}/{name}.png";
+            if (File.Exists(path)) AssetDatabase.DeleteAsset(path);
+        }
+
+        style.plate = Save("plate", BuildPlate(style), Vector4.one * 16f);
+        style.plateChamfer = Save("plate_chamfer", BuildTile(style), Vector4.one * 20f);
+        style.capsule = Save("capsule", BuildCapsule(style), Vector4.one * 22f);
+        style.panelDark = Save("panel_dark", BuildScreen(style, 176f, 22f, 30f, Outline, 6f, 2f, false), Vector4.one * 46f);
+        style.panelSmall = Save("panel_small", BuildScreen(style, 72f, 12f, 14f, 3.5f, 4f, 0f, false), Vector4.one * 26f);
+        style.screenFrame = Save("screen_frame", BuildScreen(style, 176f, 22f, 30f, Outline, 6f, 2f, true), Vector4.one * 46f);
+        style.panelPaper = Save("panel_paper", BuildCharliePanel(style), Vector4.one * 46f);
+        style.fill = Save("fill", BuildFill(), new Vector4(5f, 6f, 5f, 6f));
+        style.frame = Save("frame", BuildFrame(style), Vector4.one * 14f);
+        style.burst = Save("burst", BuildBanner(style), Vector4.zero);
         style.ring = Save("ring", BuildRing(style), Vector4.zero);
+        style.triangle = Save("triangle", BuildTriangle(style), Vector4.zero);
+        style.cursor = Save("cursor", BuildCursor(), Vector4.zero);
         style.arrowDown = Save("arrow_down", BuildArrowDown(style), Vector4.zero);
         style.chevron = Save("chevron", BuildChevron(style), Vector4.zero);
         style.iconClock = Save("icon_clock", BuildClock(style), Vector4.zero);
         style.iconCoin = Save("icon_coin", BuildCoin(style), Vector4.zero);
         style.iconSpeaker = Save("icon_speaker", BuildSpeaker(style), Vector4.zero);
+        style.faceScreen = Save("face_screen", BuildFaceScreen(style), Vector4.zero);
+        style.faceCalm = Save("face_calm", BuildFace(0), Vector4.zero);
+        style.faceHappy = Save("face_happy", BuildFace(1), Vector4.zero);
+        style.faceHurt = Save("face_hurt", BuildFace(2), Vector4.zero);
+        style.faceAngry = Save("face_angry", BuildFace(3), Vector4.zero);
+        style.faceDead = Save("face_dead", BuildFace(4), Vector4.zero);
 
         EditorUtility.SetDirty(style);
-        report.AppendLine($"SPRITES: 16 sprites del estilo generados en {Folder}.");
+        report.AppendLine($"SPRITES: 24 sprites del estilo generados en {Folder}.");
     }
 
-    private static Vector4 Border(float units)
-    {
-        return Vector4.one * (units * S);
-    }
-
-    private static Texture2D ToTexture(Painter painter, Color bleed)
-    {
-        var texture = new Texture2D(painter.width, painter.height, TextureFormat.RGBA32, false);
-        texture.SetPixels32(painter.ToPixels(bleed));
-        texture.Apply();
-        return texture;
-    }
-
-    private static Sprite Save(string name, Texture2D texture, Vector4 border)
+    private static Sprite Save(string name, Texture2D texture, Vector4 borderUnits)
     {
         string path = $"{Folder}/{name}.png";
         File.WriteAllBytes(path, texture.EncodeToPNG());
@@ -115,7 +125,7 @@ public static class UIStyleSpriteBuilder
         importer.textureType = TextureImporterType.Sprite;
         importer.spriteImportMode = SpriteImportMode.Single;
         importer.spritePixelsPerUnit = PixelsPerUnit;
-        importer.spriteBorder = border;
+        importer.spriteBorder = borderUnits * S;
         importer.mipmapEnabled = true;
         importer.filterMode = FilterMode.Trilinear;
         importer.wrapMode = TextureWrapMode.Clamp;
@@ -182,283 +192,235 @@ public static class UIStyleSpriteBuilder
         return Mathf.Sqrt(dx * dx + dy * dy) - radius;
     }
 
-    private static Vector2[] Scale(Vector2[] points)
+    private static float RoundRect(float px, float py, float x0, float y0, float x1, float y1, float topLeft, float topRight, float bottomRight, float bottomLeft)
     {
-        var scaled = new Vector2[points.Length];
-        for (int i = 0; i < points.Length; i++) scaled[i] = points[i] * S;
-        return scaled;
+        float qx = px - (x0 + x1) * 0.5f;
+        float qy = py - (y0 + y1) * 0.5f;
+        float radius = qx >= 0f ? (qy >= 0f ? topRight : bottomRight) : (qy >= 0f ? topLeft : bottomLeft);
+        float dx = Mathf.Abs(qx) - ((x1 - x0) * 0.5f - radius);
+        float dy = Mathf.Abs(qy) - ((y1 - y0) * 0.5f - radius);
+        float outside = Mathf.Sqrt(Mathf.Max(dx, 0f) * Mathf.Max(dx, 0f) + Mathf.Max(dy, 0f) * Mathf.Max(dy, 0f));
+        return Mathf.Min(Mathf.Max(dx, dy), 0f) + outside - radius;
     }
 
-    private static Vector2[] Rect(float x0, float y0, float x1, float y1)
+    private static float CutTopRight(float px, float py, float x1, float y1, float cut)
     {
-        return Scale(new[] { new Vector2(x0, y0), new Vector2(x1, y0), new Vector2(x1, y1), new Vector2(x0, y1) });
-    }
-
-    private static Vector2[] Chamfered(float x0, float y0, float x1, float y1, float cut)
-    {
-        return Scale(new[]
-        {
-            new Vector2(x0, y0), new Vector2(x1 - cut, y0), new Vector2(x1, y0 + cut),
-            new Vector2(x1, y1), new Vector2(x0 + cut, y1), new Vector2(x0, y1 - cut)
-        });
-    }
-
-    private static Color Shade()
-    {
-        return new Color(0.86f, 0.83f, 0.93f, 1f);
+        return ((px - x1) + (py - y1) + cut) * 0.7071f;
     }
 
     private static Texture2D BuildPlate(UIStyle style)
     {
-        const float size = 56f;
-        const float margin = 4f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Rect(margin, margin, size - margin, size - margin);
-        float bandTop = (margin + Outline + 5f) * S;
+        var painter = new Painter(56f, 56f);
+        Func<float, float, float> shape = (x, y) => RoundRect(x, y, 3f, 3f, 53f, 53f, 1.5f, 1.5f, 1.5f, 1.5f);
 
-        painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + Outline * S, Color.white);
-        painter.Paint((x, y) => Mathf.Max(Polygon(shape, x, y) + Outline * S, y - bandTop), Shade());
-        return ToTexture(painter, style.ink);
+        painter.Paint(shape, style.ink);
+        painter.Paint((x, y) => shape(x, y) + PlateOutline, Color.white);
+        painter.Paint((x, y) => Mathf.Max(shape(x, y) + PlateOutline, y - 14f), new Color(0.86f, 0.84f, 0.92f, 1f));
+        return painter.ToTexture(style.ink);
     }
 
-    private static Texture2D BuildPlateChamfer(UIStyle style)
+    private static Texture2D BuildTile(UIStyle style)
     {
-        const float size = 64f;
-        const float margin = 4f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Chamfered(margin, margin, size - margin, size - margin, 12f);
+        var painter = new Painter(64f, 64f);
+        Func<float, float, float> shape = (x, y) => Mathf.Max(RoundRect(x, y, 2f, 2f, 62f, 62f, 10f, 2f, 10f, 10f), CutTopRight(x, y, 62f, 62f, 14f));
 
-        painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + Outline * S, Color.white);
-        return ToTexture(painter, style.ink);
+        painter.Paint(shape, style.ink);
+        painter.Paint((x, y) => shape(x, y) + Outline, Color.white);
+        return painter.ToTexture(style.ink);
     }
 
-    private static Texture2D BuildPanel(UIStyle style, Color fill, Color dots, bool keyline)
+    private static Texture2D BuildCapsule(UIStyle style)
     {
-        const float size = 176f;
-        const float margin = 4f;
-        const float cut = 30f;
-        const float ink = 6f;
-        float key = keyline ? 2.5f : 0f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Chamfered(margin, margin, size - margin, size - margin, cut);
+        var painter = new Painter(64f, 44f);
+        Func<float, float, float> shape = (x, y) => RoundRect(x, y, 2f, 2f, 62f, 42f, 20f, 20f, 20f, 20f);
 
-        if (keyline) painter.Paint((x, y) => Polygon(shape, x, y), style.paper);
-        painter.Paint((x, y) => Polygon(shape, x, y) + key * S, style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + (key + ink) * S, fill);
-
-        float inset = (key + ink + 2f) * S;
-        var topLeft = new Vector2(margin + cut * 0.5f, size - margin - cut * 0.5f) * S;
-        var bottomRight = new Vector2(size - margin - cut * 0.5f, margin + cut * 0.5f) * S;
-        painter.Paint((x, y) => Mathf.Max(Polygon(shape, x, y) + inset, Halftone(x, y, topLeft, new Vector2(0.7071f, -0.7071f))), dots);
-        painter.Paint((x, y) => Mathf.Max(Polygon(shape, x, y) + inset, Halftone(x, y, bottomRight, new Vector2(-0.7071f, 0.7071f))), dots);
-
-        return ToTexture(painter, keyline ? style.paper : style.ink);
+        painter.Paint(shape, style.ink);
+        painter.Paint((x, y) => shape(x, y) + Outline, Color.white);
+        return painter.ToTexture(style.ink);
     }
 
-    private static float Halftone(float px, float py, Vector2 origin, Vector2 direction)
+    private static Texture2D BuildScreen(UIStyle style, float size, float radius, float cut, float ink, float bezel, float innerLine, bool frameOnly)
     {
-        const float spacing = 9f * S;
-        const float extent = 46f * S;
-        const float maxRadius = 3.3f * S;
+        var painter = new Painter(size, size);
+        float x1 = size - 3f;
+        Func<float, float, float> shape = (x, y) => Mathf.Max(RoundRect(x, y, 3f, 3f, x1, x1, radius, 2f, radius, radius), CutTopRight(x, y, x1, x1, cut));
+        Func<float, float, float> band = (x, y) => Mathf.Max(shape(x, y) + ink, -(shape(x, y) + ink + bezel));
 
-        float along = (px - origin.x) * direction.x + (py - origin.y) * direction.y;
-        float t = along / extent;
-        if (t < -0.15f || t > 1f) return 1000f;
+        if (frameOnly)
+        {
+            painter.Paint(band, Color.white);
+            return painter.ToTexture(Color.white);
+        }
 
-        float u = (px + py) * 0.7071f / spacing;
-        float v = (px - py) * 0.7071f / spacing;
-        float cu = (Mathf.Round(u) - u) * spacing;
-        float cv = (Mathf.Round(v) - v) * spacing;
-        float radius = maxRadius * Mathf.Pow(Mathf.Clamp01(1f - t), 0.9f);
-        return Mathf.Sqrt(cu * cu + cv * cv) - radius;
+        painter.Paint(shape, style.ink);
+        painter.Paint((x, y) => shape(x, y) + ink, style.secondary);
+        painter.Paint((x, y) => Mathf.Max(band(x, y), -(CutTopRight(x, y, x1, x1, cut) + ink + bezel + 3f)), style.danger);
+        painter.Paint((x, y) => shape(x, y) + ink + bezel, style.ink);
+        painter.Paint((x, y) => shape(x, y) + ink + bezel + innerLine, style.panel);
+        return painter.ToTexture(style.ink);
     }
 
-    private static Texture2D BuildPanelSmall(UIStyle style)
+    private static Texture2D BuildCharliePanel(UIStyle style)
     {
-        const float size = 72f;
-        const float margin = 4f;
-        const float key = 2f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Chamfered(margin, margin, size - margin, size - margin, 14f);
+        var painter = new Painter(176f, 176f);
+        Func<float, float, float> shape = (x, y) => RoundRect(x, y, 3f, 3f, 173f, 173f, 26f, 26f, 26f, 26f);
 
-        painter.Paint((x, y) => Polygon(shape, x, y), style.paper);
-        painter.Paint((x, y) => Polygon(shape, x, y) + key * S, style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + (key + Outline) * S, style.panel);
-        return ToTexture(painter, style.paper);
+        painter.Paint(shape, style.ink);
+        painter.Paint((x, y) => shape(x, y) + Outline, CharlieGray);
+        painter.Paint((x, y) => shape(x, y) + Outline + 6f, style.ink);
+        painter.Paint((x, y) => shape(x, y) + Outline + 8f, style.cream);
+        return painter.ToTexture(style.ink);
     }
 
     private static Texture2D BuildFill()
     {
-        const float size = 16f;
-        const float margin = 1f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Rect(margin, margin, size - margin, size - margin);
-        float bandTop = (margin + 4f) * S;
-
-        painter.Paint((x, y) => Polygon(shape, x, y), Color.white);
-        painter.Paint((x, y) => Mathf.Max(Polygon(shape, x, y), y - bandTop), Shade());
-        return ToTexture(painter, Color.white);
+        var painter = new Painter(16f, 16f);
+        painter.Paint((x, y) => RoundRect(x, y, 1f, 1f, 15f, 15f, 4f, 4f, 4f, 4f), Color.white);
+        return painter.ToTexture(Color.white);
     }
 
     private static Texture2D BuildFrame(UIStyle style)
     {
-        const float size = 48f;
-        const float margin = 2f;
-        const float key = 2f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Rect(margin, margin, size - margin, size - margin);
+        var painter = new Painter(48f, 48f);
+        Func<float, float, float> shape = (x, y) => RoundRect(x, y, 2f, 2f, 46f, 46f, 8f, 8f, 8f, 8f);
 
-        painter.Paint((x, y) => Mathf.Max(Polygon(shape, x, y), -(Polygon(shape, x, y) + (key + Outline) * S)), style.paper);
-        painter.Paint((x, y) => Mathf.Max(Polygon(shape, x, y) + key * S, -(Polygon(shape, x, y) + (key + Outline) * S)), style.ink);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => Mathf.Max(shape(x, y), -(shape(x, y) + 7f)), style.textDim);
+        painter.Paint((x, y) => Mathf.Max(shape(x, y), -(shape(x, y) + 5.5f)), style.ink);
+        return painter.ToTexture(style.ink);
     }
 
-    private static Texture2D BuildBurst(UIStyle style)
+    private static Texture2D BuildBanner(UIStyle style)
     {
-        const float width = 384f;
-        const float height = 144f;
-        const int spikes = 18;
-        var painter = new Painter((int)(width * S), (int)(height * S));
-        var points = new Vector2[spikes * 2];
-        var random = new System.Random(7);
-        float rx = width * 0.5f - 8f;
-        float ry = height * 0.5f - 8f;
-
-        for (int i = 0; i < points.Length; i++)
+        const float width = 448f;
+        const float height = 112f;
+        const float point = 52f;
+        var painter = new Painter(width, height);
+        var shape = new[]
         {
-            float angle = (i + 0.35f) / points.Length * Mathf.PI * 2f;
-            bool tip = i % 2 == 0;
-            float radius = tip ? 0.86f + (float)random.NextDouble() * 0.14f : 0.6f + (float)random.NextDouble() * 0.1f;
-            points[i] = new Vector2(width * 0.5f + Mathf.Cos(angle) * rx * radius, height * 0.5f + Mathf.Sin(angle) * ry * radius);
-        }
-
-        Array.Reverse(points);
-        Vector2[] shape = Scale(points);
-        painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + 6f * S, Color.white);
-        return ToTexture(painter, style.ink);
-    }
-
-    private static Texture2D BuildBolt(UIStyle style)
-    {
-        var painter = new Painter((int)(96f * S), (int)(160f * S));
-        Vector2[] shape = Scale(new[]
-        {
-            new Vector2(58f, 154f), new Vector2(14f, 74f), new Vector2(44f, 74f), new Vector2(26f, 6f),
-            new Vector2(84f, 96f), new Vector2(52f, 96f), new Vector2(78f, 154f)
-        });
+            new Vector2(4f, height * 0.5f), new Vector2(point, height - 4f), new Vector2(width - point, height - 4f),
+            new Vector2(width - 4f, height * 0.5f), new Vector2(width - point, 4f), new Vector2(point, 4f)
+        };
+        Color line = style.ink;
+        line.a = 0.5f;
 
         painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + Outline * S, Color.white);
-        return ToTexture(painter, style.ink);
-    }
-
-    private static Texture2D BuildSpark(UIStyle style)
-    {
-        const float size = 64f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        var points = new Vector2[8];
-        for (int i = 0; i < 8; i++)
-        {
-            float angle = i / 8f * Mathf.PI * 2f + Mathf.PI * 0.5f;
-            float radius = i % 2 == 0 ? 29f : 9f;
-            points[i] = new Vector2(size * 0.5f + Mathf.Cos(angle) * radius, size * 0.5f + Mathf.Sin(angle) * radius);
-        }
-
-        Vector2[] shape = Scale(points);
-        painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + 4f * S, Color.white);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => Polygon(shape, x, y) + 5f, Color.white);
+        painter.Paint((x, y) => Mathf.Abs(Polygon(shape, x, y) + 12f) - 0.9f, line);
+        return painter.ToTexture(style.ink);
     }
 
     private static Texture2D BuildRing(UIStyle style)
     {
-        const int size = 512;
-        const float outer = 220f;
-        const float unit = outer * 2f / 245f;
+        const float size = 256f;
+        const float outer = 110f;
+        const float center = size * 0.5f;
         var painter = new Painter(size, size);
-        float center = size * 0.5f;
-        float inkWidth = 9f * unit;
-        float keyWidth = 2.5f * unit;
-        float shadow = 9f * unit;
+        var north = new[]
+        {
+            new Vector2(center - 13f, center + outer + 1f), new Vector2(center + 13f, center + outer + 1f), new Vector2(center, center + outer - 21f)
+        };
 
-        painter.Paint((x, y) => Mathf.Max(Circle(x, y, center + shadow, center - shadow, outer), -Circle(x, y, center, center, outer - 2f)), style.ink);
-        painter.Paint((x, y) => Mathf.Max(Circle(x, y, center, center, outer), -Circle(x, y, center, center, outer - inkWidth - keyWidth)), style.paper);
-        painter.Paint((x, y) => Mathf.Max(Circle(x, y, center, center, outer), -Circle(x, y, center, center, outer - inkWidth)), style.ink);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => Mathf.Max(Circle(x, y, center, center - 5f, outer), -Circle(x, y, center, center, outer - 1f)), style.ink);
+        painter.Paint((x, y) => Mathf.Max(Circle(x, y, center, center, outer), -Circle(x, y, center, center, outer - 7.5f)), style.textDim);
+        painter.Paint((x, y) => Mathf.Max(Circle(x, y, center, center, outer), -Circle(x, y, center, center, outer - 6f)), style.ink);
+
+        for (int i = 1; i < 12; i++)
+        {
+            float angle = i / 12f * Mathf.PI * 2f + Mathf.PI * 0.5f;
+            float cos = Mathf.Cos(angle);
+            float sin = Mathf.Sin(angle);
+            float inner = i % 3 == 0 ? outer - 15f : outer - 11f;
+            painter.Paint((x, y) => Segment(x, y, center + cos * (outer - 6f), center + sin * (outer - 6f), center + cos * inner, center + sin * inner, 1.1f), style.textDim);
+        }
+
+        painter.Paint((x, y) => Polygon(north, x, y) - 2.5f, style.ink);
+        painter.Paint((x, y) => Polygon(north, x, y), style.danger);
+        return painter.ToTexture(style.ink);
+    }
+
+    private static Texture2D BuildTriangle(UIStyle style)
+    {
+        var painter = new Painter(48f, 48f);
+        var shape = new[] { new Vector2(24f, 43f), new Vector2(4f, 7f), new Vector2(44f, 7f) };
+
+        painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
+        painter.Paint((x, y) => Polygon(shape, x, y) + 4.5f, Color.white);
+        painter.Paint((x, y) => Segment(x, y, 24f, 30f, 24f, 22f, 1.9f), style.ink);
+        painter.Paint((x, y) => Circle(x, y, 24f, 15.5f, 2.1f), style.ink);
+        return painter.ToTexture(style.ink);
+    }
+
+    private static Texture2D BuildCursor()
+    {
+        var painter = new Painter(16f, 28f);
+        painter.Paint((x, y) => RoundRect(x, y, 0.5f, 0.5f, 15.5f, 27.5f, 1.5f, 1.5f, 1.5f, 1.5f), Color.white);
+        return painter.ToTexture(Color.white);
     }
 
     private static Texture2D BuildArrowDown(UIStyle style)
     {
-        const float size = 96f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Scale(new[]
+        var painter = new Painter(96f, 96f);
+        var shape = new[]
         {
             new Vector2(31f, 88f), new Vector2(31f, 50f), new Vector2(13f, 50f), new Vector2(48f, 8f),
             new Vector2(83f, 50f), new Vector2(65f, 50f), new Vector2(65f, 88f)
-        });
+        };
 
         painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + Outline * S, Color.white);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => Polygon(shape, x, y) + 5f, Color.white);
+        return painter.ToTexture(style.ink);
     }
 
     private static Texture2D BuildChevron(UIStyle style)
     {
-        const float size = 48f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] shape = Scale(new[]
+        var painter = new Painter(48f, 48f);
+        var shape = new[]
         {
             new Vector2(8f, 42f), new Vector2(24f, 24f), new Vector2(8f, 6f), new Vector2(24f, 6f),
             new Vector2(42f, 24f), new Vector2(24f, 42f)
-        });
+        };
 
         painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
-        painter.Paint((x, y) => Polygon(shape, x, y) + 4f * S, Color.white);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => Polygon(shape, x, y) + 4f, Color.white);
+        return painter.ToTexture(style.ink);
     }
 
     private static Texture2D BuildClock(UIStyle style)
     {
-        const float size = 64f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        float c = size * 0.5f * S;
+        var painter = new Painter(64f, 64f);
+        const float c = 32f;
 
-        painter.Paint((x, y) => Circle(x, y, c, c, 28f * S), style.ink);
-        painter.Paint((x, y) => Circle(x, y, c, c, 22f * S), Color.white);
-        painter.Paint((x, y) => Segment(x, y, c, c, c, c + 13f * S, 2.6f * S), style.ink);
-        painter.Paint((x, y) => Segment(x, y, c, c, c + 10f * S, c - 5f * S, 2.6f * S), style.ink);
-        painter.Paint((x, y) => Circle(x, y, c, c, 4f * S), style.ink);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => Circle(x, y, c, c, 28f), style.ink);
+        painter.Paint((x, y) => Circle(x, y, c, c, 23f), Color.white);
+        painter.Paint((x, y) => Segment(x, y, c, c, c, c + 13f, 2.6f), style.ink);
+        painter.Paint((x, y) => Segment(x, y, c, c, c + 10f, c - 5f, 2.6f), style.ink);
+        painter.Paint((x, y) => Circle(x, y, c, c, 4f), style.ink);
+        return painter.ToTexture(style.ink);
     }
 
     private static Texture2D BuildCoin(UIStyle style)
     {
-        const float size = 64f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        float c = size * 0.5f * S;
-        Color detail = new Color(0.62f, 0.5f, 0.45f, 1f);
+        var painter = new Painter(64f, 64f);
+        const float c = 32f;
+        Color detail = new Color(0.52f, 0.5f, 0.42f, 1f);
 
-        painter.Paint((x, y) => Circle(x, y, c, c, 28f * S), style.ink);
-        painter.Paint((x, y) => Circle(x, y, c, c, 22.5f * S), Color.white);
-        painter.Paint((x, y) => Mathf.Abs(Circle(x, y, c, c, 15.5f * S)) - 1.6f * S, detail);
-        painter.Paint((x, y) => Segment(x, y, c, c - 6f * S, c, c + 6f * S, 2.4f * S), detail);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => Circle(x, y, c, c, 28f), style.ink);
+        painter.Paint((x, y) => Circle(x, y, c, c, 23.5f), Color.white);
+        painter.Paint((x, y) => Mathf.Abs(Circle(x, y, c, c, 16f)) - 1.6f, detail);
+        painter.Paint((x, y) => Segment(x, y, c, c - 6f, c, c + 6f, 2.4f), detail);
+        return painter.ToTexture(style.ink);
     }
 
     private static Texture2D BuildSpeaker(UIStyle style)
     {
-        const float size = 64f;
-        var painter = new Painter((int)(size * S), (int)(size * S));
-        Vector2[] body = Scale(new[]
+        var painter = new Painter(64f, 64f);
+        var body = new[]
         {
             new Vector2(8f, 22f), new Vector2(20f, 22f), new Vector2(36f, 8f), new Vector2(36f, 56f),
             new Vector2(20f, 42f), new Vector2(8f, 42f)
-        });
-        float cx = 36f * S;
-        float cy = 32f * S;
+        };
+        const float cx = 36f;
+        const float cy = 32f;
 
         Func<float, float, float, float, float> arc = (x, y, radius, half) =>
         {
@@ -466,12 +428,66 @@ public static class UIStyleSpriteBuilder
             return Mathf.Max(Mathf.Abs(Circle(x, y, cx, cy, radius)) - half, wedge);
         };
 
-        painter.Paint((x, y) => arc(x, y, 13f * S, 4.6f * S), style.ink);
-        painter.Paint((x, y) => arc(x, y, 23f * S, 4.6f * S), style.ink);
-        painter.Paint((x, y) => Polygon(body, x, y) - 4f * S, style.ink);
+        painter.Paint((x, y) => arc(x, y, 13f, 4.6f), style.ink);
+        painter.Paint((x, y) => arc(x, y, 23f, 4.6f), style.ink);
+        painter.Paint((x, y) => Polygon(body, x, y) - 4f, style.ink);
         painter.Paint((x, y) => Polygon(body, x, y), Color.white);
-        painter.Paint((x, y) => arc(x, y, 13f * S, 1.9f * S), Color.white);
-        painter.Paint((x, y) => arc(x, y, 23f * S, 1.9f * S), Color.white);
-        return ToTexture(painter, style.ink);
+        painter.Paint((x, y) => arc(x, y, 13f, 1.9f), Color.white);
+        painter.Paint((x, y) => arc(x, y, 23f, 1.9f), Color.white);
+        return painter.ToTexture(style.ink);
+    }
+
+    private static Texture2D BuildFaceScreen(UIStyle style)
+    {
+        var painter = new Painter(96f, 96f);
+        const float c = 48f;
+
+        painter.Paint((x, y) => Circle(x, y, c, c, 46f), style.ink);
+        painter.Paint((x, y) => Circle(x, y, c, c, 42f), style.secondary);
+        painter.Paint((x, y) => Circle(x, y, c, c, 36f), style.ink);
+        painter.Paint((x, y) => Circle(x, y, c, c, 34f), FaceBlack);
+        return painter.ToTexture(style.ink);
+    }
+
+    private static Texture2D BuildFace(int expression)
+    {
+        var painter = new Painter(96f, 96f);
+        const float left = 34f;
+        const float right = 62f;
+        const float eye = 50f;
+
+        for (int side = 0; side < 2; side++)
+        {
+            float cx = side == 0 ? left : right;
+            float inward = side == 0 ? 1f : -1f;
+
+            switch (expression)
+            {
+                case 0:
+                    painter.Paint((x, y) => Segment(x, y, cx, eye - 6f, cx, eye + 6f, 6.2f), Color.white);
+                    break;
+                case 1:
+                    painter.Paint((x, y) => Mathf.Max(Mathf.Abs(Circle(x, y, cx, eye - 5f, 9f)) - 3.3f, (eye - 3f) - y), Color.white);
+                    break;
+                case 2:
+                    painter.Paint((x, y) => Segment(x, y, cx - 7f * inward, eye + 8f, cx + 6f * inward, eye, 3.2f), Color.white);
+                    painter.Paint((x, y) => Segment(x, y, cx + 6f * inward, eye, cx - 7f * inward, eye - 8f, 3.2f), Color.white);
+                    break;
+                case 3:
+                    var wedge = new[]
+                    {
+                        new Vector2(cx - 10f * inward, eye + 9f), new Vector2(cx + 9f * inward, eye - 1f),
+                        new Vector2(cx + 9f * inward, eye - 9f), new Vector2(cx - 10f * inward, eye - 9f)
+                    };
+                    painter.Paint((x, y) => Polygon(wedge, x, y) - 1f, Color.white);
+                    break;
+                default:
+                    painter.Paint((x, y) => Segment(x, y, cx - 7f, eye + 7f, cx + 7f, eye - 7f, 3f), Color.white);
+                    painter.Paint((x, y) => Segment(x, y, cx - 7f, eye - 7f, cx + 7f, eye + 7f, 3f), Color.white);
+                    break;
+            }
+        }
+
+        return painter.ToTexture(Color.white);
     }
 }

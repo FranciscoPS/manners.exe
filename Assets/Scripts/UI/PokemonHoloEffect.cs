@@ -30,9 +30,13 @@ public class PokemonHoloEffect : MonoBehaviour
         Image shape = transform.parent != null ? transform.parent.GetComponent<Image>() : null;
         if (shape != null && shape.sprite != null)
         {
-            image.sprite = shape.sprite;
+            UIStyle style = UIStyle.Instance;
+            image.sprite = style != null && shape.sprite == style.panelDark && style.screenFrame != null ? style.screenFrame : shape.sprite;
             image.type = shape.type;
             image.pixelsPerUnitMultiplier = shape.pixelsPerUnitMultiplier;
+
+            UISkew skew = shape.GetComponent<UISkew>();
+            if (skew != null) gameObject.AddComponent<UISkew>().Amount = skew.Amount;
         }
 
         if (holoShader == null)

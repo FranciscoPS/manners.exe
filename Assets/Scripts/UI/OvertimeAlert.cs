@@ -15,7 +15,7 @@ public class OvertimeAlert : MonoBehaviour
     [Header("Texto")]
     [SerializeField] private string message = "¡OVERTIME!";
     [Tooltip("Posición vertical del texto (0 = abajo, 1 = arriba). ~0.8 = arriba, sin tapar el centro.")]
-    [SerializeField] private float verticalAnchor = 0.8f;
+    [SerializeField] private float verticalAnchor = 0.68f;
     [SerializeField] private int fontSize = 90;
     [SerializeField] private Color textColor = new Color(1f, 0.12f, 0.12f);
     [Tooltip("Veces por segundo que pulsa el texto (grande/pequeño).")]
@@ -172,10 +172,10 @@ public class OvertimeAlert : MonoBehaviour
             burstObj.transform.SetParent(bannerObj.transform, false);
             RectTransform burstRect = (RectTransform)burstObj.transform;
             burstRect.anchorMin = burstRect.anchorMax = new Vector2(0.5f, 0.5f);
-            burstRect.sizeDelta = new Vector2(fontSize * 10.5f, fontSize * 3.1f);
+            burstRect.sizeDelta = new Vector2(fontSize * 9.6f, fontSize * 2.4f);
             Image burst = burstObj.GetComponent<Image>();
             burst.raycastTarget = false;
-            style.ApplySprite(burst, style.burst, style.danger, 0f, style.panelShadowOffset, null);
+            style.ApplySprite(burst, style.burst, style.danger, 0f, style.panelShadowOffset, style.plateHazard);
         }
 
         GameObject textObj = new GameObject("OvertimeText");
@@ -191,9 +191,8 @@ public class OvertimeAlert : MonoBehaviour
         if (style != null)
         {
             style.ApplyText(text, UITextRole.Title);
-            text.color = style.yellow;
-            text.characterSpacing = 3f;
-            text.extraPadding = true;
+            text.color = style.paper;
+            text.fontStyle |= FontStyles.Italic;
             flashColor = style.danger;
         }
 

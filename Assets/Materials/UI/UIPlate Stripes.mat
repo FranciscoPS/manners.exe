@@ -30,8 +30,8 @@ Material:
     m_Ints: []
     m_Floats:
     - _ColorMask: 15
-    - _FillMax: 0.7
-    - _FillMin: 0.35
+    - _FillMax: 2
+    - _FillMin: 0.3
     - _PatternDuty: 0.5
     - _PatternSize: 30
     - _PatternSlope: 1
@@ -45,6 +45,7 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _PatternAdd: {r: 0, g: 0, b: 0, a: 0}
-    - _PatternMul: {r: 0.88, g: 0.85, b: 0.96, a: 1}
+    - _PatternDir: {r: 1, g: -1, b: 0, a: 0}
+    - _PatternMul: {r: 0.9, g: 0.88, b: 0.95, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

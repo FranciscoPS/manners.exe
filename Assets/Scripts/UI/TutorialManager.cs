@@ -317,18 +317,25 @@ public class TutorialManager : MonoBehaviour
         if (currentStep.stepType == "choice")
         {
             if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(true);
+            if (skipAllButton != null) skipAllButton.gameObject.SetActive(false);
             if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? "Yes" : currentStep.yesButtonLabel;
             if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel) ? "No" : currentStep.noButtonLabel;
         }
         else
         {
             if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(false);
+            if (skipAllButton != null) skipAllButton.gameObject.SetActive(state != TutorialState.Complete);
             if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.nextButtonLabel) ? "Next" : currentStep.nextButtonLabel;
         }
 
         if (currentStep.freezeGame) FreezeGame();
 
-        if (tutorialPanel != null) tutorialPanel.SetActive(true);
+        if (tutorialPanel != null)
+        {
+            bool wasVisible = tutorialPanel.activeSelf;
+            tutorialPanel.SetActive(true);
+            if (wasVisible) UIShard.Pulse(tutorialPanel.transform);
+        }
 
         if (MusicManager.Instance != null) MusicManager.Instance.ReduceVolume();
 

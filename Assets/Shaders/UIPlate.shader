@@ -5,14 +5,14 @@ Shader "UI/Manners Plate"
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
 
-        _PatternMul ("Franja: multiplica el relleno (rgb), intensidad (a)", Color) = (0.82, 0.78, 0.92, 1)
-        _PatternAdd ("Franja: suma al relleno (rgb), intensidad (a)", Color) = (0, 0, 0, 0)
-        _PatternSize ("Periodo de la franja (unidades de canvas)", Float) = 34
-        _PatternDuty ("Proporcion de franja", Range(0, 1)) = 0.5
-        _PatternSlope ("Inclinacion de la franja (dx por dy)", Float) = 1
-        _PatternSpeed ("Velocidad (unidades por segundo)", Float) = 26
-        _FillMin ("Luminancia minima del relleno", Range(0, 1)) = 0.35
-        _FillMax ("Luminancia maxima del relleno", Range(0, 1)) = 0.7
+        _PatternMul ("Trama: multiplica el relleno (rgb), intensidad (a)", Color) = (0.9, 0.9, 0.95, 1)
+        _PatternAdd ("Trama: suma al relleno (rgb), intensidad (a)", Color) = (0, 0, 0, 0)
+        _PatternSize ("Periodo de la trama (unidades de canvas)", Float) = 6
+        _PatternDuty ("Proporcion de linea", Range(0, 1)) = 0.5
+        _PatternDir ("Direccion de la trama (x, y)", Vector) = (0, 1, 0, 0)
+        _PatternSpeed ("Velocidad (unidades por segundo)", Float) = 8
+        _FillMin ("Luminancia minima del relleno con trama", Range(-1, 1)) = 0.3
+        _FillMax ("Luminancia maxima del relleno con trama", Range(0, 2)) = 2
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -98,7 +98,7 @@ Shader "UI/Manners Plate"
             fixed4 _PatternAdd;
             float _PatternSize;
             float _PatternDuty;
-            float _PatternSlope;
+            float4 _PatternDir;
             float _PatternSpeed;
             float _FillMin;
             float _FillMax;
@@ -141,13 +141,14 @@ Shader "UI/Manners Plate"
                 half4 tex = tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd;
                 half4 color = IN.color * tex;
 
-                float coordinate = (IN.worldPosition.x - IN.worldPosition.y * _PatternSlope - _UIStyleTime * _PatternSpeed) / max(_PatternSize, 0.001);
+                float coordinate = (dot(IN.worldPosition.xy, _PatternDir.xy) - _UIStyleTime * _PatternSpeed) / max(_PatternSize, 0.001);
                 float phase = frac(coordinate);
                 float edge = max(fwidth(coordinate), 0.0001);
                 float stripe = smoothstep(0.0, edge, phase) * (1.0 - smoothstep(_PatternDuty, _PatternDuty + edge, phase));
 
                 half luminance = dot(tex.rgb, half3(0.299, 0.587, 0.114));
-                half fillMask = smoothstep(_FillMin, _FillMax, luminance) * stripe;
+                half inside = saturate((luminance - _FillMin) / 0.06) * (1.0 - saturate((luminance - _FillMax) / 0.06));
+                half fillMask = inside * stripe;
 
                 color.rgb *= lerp(half3(1, 1, 1), _PatternMul.rgb, fillMask * _PatternMul.a);
                 color.rgb += _PatternAdd.rgb * (fillMask * _PatternAdd.a);

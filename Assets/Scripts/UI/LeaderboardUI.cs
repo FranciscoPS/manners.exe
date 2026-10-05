@@ -115,10 +115,10 @@ public class LeaderboardUI : MonoBehaviour
         UIStyle style = UIStyle.Instance;
 
         if (rgbTitle && titleText != null)
-            titleText.color = style != null ? style.AccentCycle(_hue) : Color.HSVToRGB(_hue, rgbSaturation, rgbValue);
+            titleText.color = style != null ? style.TextAccentCycle(_hue) : Color.HSVToRGB(_hue, rgbSaturation, rgbValue);
 
         if (rgbEntries && leaderboardText != null)
-            leaderboardText.color = style != null ? style.AccentCycle(_hue + 0.5f) : Color.HSVToRGB((_hue + 0.5f) % 1f, rgbSaturation, rgbValue);
+            leaderboardText.color = style != null ? style.TextAccentCycle(_hue + 0.5f) : Color.HSVToRGB((_hue + 0.5f) % 1f, rgbSaturation, rgbValue);
     }
 
     private void StartAnimations()

@@ -12,6 +12,8 @@ public class HealthBarUI : MonoBehaviour
     [SerializeField] private float blinkDuration = 0.1f;
     [SerializeField] private int blinkCount = 3;
     [SerializeField] private Color blinkColor = Color.red;
+    [Tooltip("El color de la barra sale del estilo y cambia con la vida: verde, naranja y rojo.")]
+    [SerializeField] private bool useStyleColors = false;
 
     [Header("Golpe")]
     [Tooltip("Sacudida de toda la barra (marco y relleno) al recibir daño, en unidades de canvas. 0 = sin sacudida.")]
@@ -58,6 +60,12 @@ public class HealthBarUI : MonoBehaviour
             targetFillAmount = maxHealth > 0 ? currentHealth / maxHealth : 0;
             currentFillAmount = targetFillAmount;
             healthBarFill.rectTransform.anchorMax = new Vector2(currentFillAmount, 1f);
+
+            if (useStyleColors && UIStyle.Instance != null)
+            {
+                originalColor = UIStyle.Instance.HealthColor(currentFillAmount);
+                if (blinkTween == null || !blinkTween.IsActive()) healthBarFill.color = originalColor;
+            }
         }
     }
 
