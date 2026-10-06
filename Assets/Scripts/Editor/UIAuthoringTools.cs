@@ -50,6 +50,8 @@ public static class UIAuthoringTools
     private static void Style() => Select(UIStyleTools.StyleAssetPath);
     [MenuItem("Tools/Manners/UI/Editar/Composición y anchors", false, 206)]
     private static void ContentFrame() => Open("Assets/Prefabs/UI/Layout/ContentFrame.prefab");
+    [MenuItem("Tools/Manners/UI/Editar/HUD de sobrecargas", false, 207)]
+    private static void OverrideHud() => Open("Assets/Prefabs/UI/OverrideHudPanel.prefab");
     [MenuItem("Tools/Manners/Configuraciones/Producción", false, 220)]
     private static void Production() => Select(GameAssetPaths.Production);
     [MenuItem("Tools/Manners/Configuraciones/Sandbox", false, 221)]

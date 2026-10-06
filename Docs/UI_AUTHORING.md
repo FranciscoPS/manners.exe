@@ -80,7 +80,7 @@ La estructura compartida de UI se edita en prefabs; no hace falta duplicarla ent
 
 Las capturas son vistas de edición con ejemplos de datos. Las animaciones, el relleno y la cámara del cofre se comprueban durante Play. El Mapa 2 queda excluido de escenas, validación y pruebas.
 
-La auditoría utiliza cajas de texto y puede señalar la marca diagonal de «Próximamente» del selector de mapas como un cruce con el título de la tarjeta. Esa marca forma parte de la UI actual; debe distinguirse de un texto recortado o de un control que tape otro control.
+La auditoría utiliza cajas de texto y puede señalar la marca diagonal de «Próximamente» del selector de mapas como un cruce con el título de la tarjeta. También detecta el aviso de tienda del HUD detrás de la placa opaca de Gráficos. Esos cruces se revisan en los PNG: deben distinguirse de un texto recortado o de un control visible que tape otro control.
 
 Para añadir otra pantalla, crea su jerarquía en escena o prefab, asigna referencias en Inspector, añade `LocalizedText` a cada texto fijo y usa `LocalizedString` serializado para formatos dinámicos. Reutiliza el estilo actual, el bus de eventos y `UpdateManager` para animaciones continuas. No añadas generadores visuales ni controles duplicados con valores que ya existan en TMP, Image o RectTransform.
 
@@ -93,9 +93,9 @@ Resultados del 6 de octubre de 2026, manteniendo la UI actual:
 | Compilación de código de juego y editor | Sin errores ni advertencias de C# |
 | Referencias, componentes e idiomas | 4 escenas, 11 245 componentes, 608 etiquetas bilingües; 0 errores |
 | Assets reorganizados | 73 GUID de configuraciones y 3 GUID de scripts conservados |
-| Vistas en inglés y español | 96 capturas a 1920×1080, 1280×720 y 2560×1080; sin desbordamientos ni texto fuera de pantalla |
+| Vistas en inglés y español | 336 capturas en siete resoluciones, de 4:3 a 32:9; 0 textos truncados, desbordamientos o textos fuera de pantalla |
 | Regresión inicial | 71 pruebas aprobadas, 0 fallos |
 | Revisión de centrado, anchors y animación | 16 pruebas de UI aprobadas, más 2 pruebas del rótulo bilingüe del HUD; 0 fallos |
 | Recorrido en Play | Opciones, idioma persistente entre escenas, pausa, gráficos, cierre del tutorial, aviso del cofre, pool de daño y cinemática con cámara 3D |
 
-La regresión inicial ejecutó `UIAuthoringTests`, `OverrideCombinationTests`, `GraphicsBudgetTests`, `PerformanceRegressionTests`, `WebBuildRegressionTests` y `ToonEnvironmentTests`. La revisión posterior ejecutó `UIAuthoringTests`, `UIResponsiveLayoutTests`, `UITextCursorTests` y `UIScreenIntroAuthoringTests`, incluyendo el recorrido en Play después de cambiar la jerarquía. Las capturas y los informes locales están en `Logs/UIReview/`; `play-chest.png` muestra el cofre durante Play. No se ejecutó una build ni se cambió la versión de Unity.
+La regresión inicial ejecutó `UIAuthoringTests`, `OverrideCombinationTests`, `GraphicsBudgetTests`, `PerformanceRegressionTests`, `WebBuildRegressionTests` y `ToonEnvironmentTests`. La revisión posterior ejecutó `UIAuthoringTests`, `UIResponsiveLayoutTests`, `UITextCursorTests` y `UIScreenIntroAuthoringTests`, incluyendo el recorrido en Play después de cambiar la jerarquía. Las capturas y los informes locales están en `Logs/UIReview/`; `play-chest.png` muestra el cofre durante Play. Los 28 avisos de cruce corresponden al sello de mapas y al aviso de tienda detrás de Gráficos, en ambos idiomas y las siete resoluciones. No se ejecutó una build ni se cambió la versión de Unity.
