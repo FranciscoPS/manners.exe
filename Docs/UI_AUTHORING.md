@@ -23,6 +23,7 @@ En la cinemática, el tamaño y posición del cofre se ajustan en la **RawImage*
 | Panel de gráficos compartido | `Assets/Prefabs/UI/Settings/GraphicsSettingsPanel.prefab` |
 | Selector de idioma | `Assets/Prefabs/UI/Settings/LanguageSelector.prefab` |
 | Aviso e iconos de sobrecarga | `Assets/Prefabs/UI/Overrides/` |
+| HUD de sobrecargas y su rótulo | `Assets/Prefabs/UI/OverrideHudPanel.prefab → Title` |
 | Tooltip | `Assets/Prefabs/UI/Overlays/HoverTooltip.prefab` |
 | Daño y cantidades flotantes | `Assets/Prefabs/UI/FloatingText.prefab`; colores y pool en `FloatingTextManager` de la escena |
 | Foil, rayos y partículas de cofre | `Assets/Prefabs/UI/Effects/`; materiales en `Assets/Materials/UI/Authored/` |
@@ -75,7 +76,7 @@ La estructura compartida de UI se edita en prefabs; no hace falta duplicarla ent
 
 1. **Tools → Manners → UI → Validar componentes e idiomas** revisa referencias, scripts ausentes, traducciones, destinos del tutorial y recursos de las cuatro escenas soportadas.
 2. **Tools → Manners → UI → Capturar inglés y español** genera 336 vistas y auditoría de texto en `Logs/UIReview/`: 1920×1080, 1280×720, 2560×1080, 1600×1200, 1920×1200, 3440×1440 y 3840×1080. Los nombres incluyen idioma, resolución completa, superficie y panel.
-3. En **Window → General → Test Runner → EditMode**, ejecuta `UIAuthoringTests` para comprobar las referencias y el flujo real de idioma, gráficos, pausa, daño y cofre. `UITextCursorTests` alterna los idiomas con los cursores reales; `UIResponsiveLayoutTests` comprueba centrado, límites, márgenes del HUD y posición y solapes del selector en cinco proporciones. `UIScreenIntroAuthoringTests` verifica los bloques de animación y que el marco no reciba tweens. Conserva también las pruebas de sobrecargas y gráficos existentes.
+3. En **Window → General → Test Runner → EditMode**, ejecuta `UIAuthoringTests` para comprobar las referencias y el flujo real de idioma, gráficos, pausa, daño y cofre. `UITextCursorTests` alterna los idiomas con los cursores reales; `UIResponsiveLayoutTests` comprueba centrado, límites, márgenes del HUD, posición y solapes del selector y que el título de sobrecargas muestre todas sus letras en cinco proporciones. `UIScreenIntroAuthoringTests` verifica los bloques de animación y que el marco no reciba tweens. Conserva también las pruebas de sobrecargas y gráficos existentes.
 
 Las capturas son vistas de edición con ejemplos de datos. Las animaciones, el relleno y la cámara del cofre se comprueban durante Play. El Mapa 2 queda excluido de escenas, validación y pruebas.
 
@@ -94,7 +95,7 @@ Resultados del 6 de octubre de 2026, manteniendo la UI actual:
 | Assets reorganizados | 73 GUID de configuraciones y 3 GUID de scripts conservados |
 | Vistas en inglés y español | 96 capturas a 1920×1080, 1280×720 y 2560×1080; sin desbordamientos ni texto fuera de pantalla |
 | Regresión inicial | 71 pruebas aprobadas, 0 fallos |
-| Revisión de centrado, anchors y animación | 16 pruebas de UI aprobadas, 0 fallos |
+| Revisión de centrado, anchors y animación | 16 pruebas de UI aprobadas, más 2 pruebas del rótulo bilingüe del HUD; 0 fallos |
 | Recorrido en Play | Opciones, idioma persistente entre escenas, pausa, gráficos, cierre del tutorial, aviso del cofre, pool de daño y cinemática con cámara 3D |
 
 La regresión inicial ejecutó `UIAuthoringTests`, `OverrideCombinationTests`, `GraphicsBudgetTests`, `PerformanceRegressionTests`, `WebBuildRegressionTests` y `ToonEnvironmentTests`. La revisión posterior ejecutó `UIAuthoringTests`, `UIResponsiveLayoutTests`, `UITextCursorTests` y `UIScreenIntroAuthoringTests`, incluyendo el recorrido en Play después de cambiar la jerarquía. Las capturas y los informes locales están en `Logs/UIReview/`; `play-chest.png` muestra el cofre durante Play. No se ejecutó una build ni se cambió la versión de Unity.

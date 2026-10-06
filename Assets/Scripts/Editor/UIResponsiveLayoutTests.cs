@@ -24,6 +24,7 @@ public class UIResponsiveLayoutTests
 
     private static IEnumerable<string> Scenes => UIAuthoringTools.Scenes;
     private static IEnumerable<string> GameplayScenes => UIAuthoringTools.Scenes.Skip(1);
+    private static IEnumerable<string> StyledGameplayScenes => UIAuthoringTools.Scenes.Skip(1).Take(2);
 
     [TearDown]
     public void ClosePreviewScene() => EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -156,6 +157,40 @@ public class UIResponsiveLayoutTests
                     float width = Mathf.Min(bounds.xMax, buttonBounds.xMax) - Mathf.Max(bounds.xMin, buttonBounds.xMin);
                     float height = Mathf.Min(bounds.yMax, buttonBounds.yMax) - Mathf.Max(bounds.yMin, buttonBounds.yMin);
                     Assert.IsFalse(width > 2f && height > 2f, location + ": se encima con el botón " + button.name + ".");
+                }
+            }
+        }
+    }
+
+    [TestCaseSource(nameof(StyledGameplayScenes))]
+    public void OverrideHudTitleRendersEveryLetterInBothLanguagesAtDifferentAspectRatios(string path)
+    {
+        Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+        OverrideHudPanel hud = Components<OverrideHudPanel>(scene).FirstOrDefault();
+        Assert.IsNotNull(hud, path + ": falta el HUD de sobrecargas.");
+        EnableAncestors(hud.transform);
+        Transform title = UIEditorHierarchy.Find(hud.transform, "Title");
+        Assert.IsNotNull(title, path + ": falta el título del HUD de sobrecargas.");
+        LocalizedText translation = title.GetComponent<LocalizedText>();
+        TMP_Text text = title.GetComponent<TMP_Text>();
+        Assert.IsNotNull(translation, path + ": el título del HUD necesita ambos idiomas.");
+        Assert.IsNotNull(text, path + ": falta el TMP del título del HUD.");
+
+        using (var viewport = new LayoutViewport(scene))
+        {
+            foreach (GameLanguage language in new[] { GameLanguage.English, GameLanguage.Spanish })
+            {
+                translation.ApplyLanguage(language);
+                string expected = translation.Content.Get(language);
+                foreach (Vector2Int resolution in Resolutions)
+                {
+                    viewport.Resize(resolution);
+                    text.ForceMeshUpdate(true, true);
+                    string location = path + " / " + language + " / " + resolution + " / " + HierarchyPath(title);
+                    AssertInsideViewport(ScreenBounds(text.rectTransform, viewport.Camera), resolution, location);
+                    Assert.IsFalse(text.isTextOverflowing, location + ": el título se desborda.");
+                    string rendered = new string(text.textInfo.characterInfo.Take(text.textInfo.characterCount).Where(glyph => glyph.isVisible).Select(glyph => glyph.character).ToArray());
+                    Assert.AreEqual(expected.ToUpperInvariant(), rendered.ToUpperInvariant(), location + ": el título está truncado o contiene una elipsis.");
                 }
             }
         }

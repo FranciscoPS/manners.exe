@@ -150,6 +150,14 @@ public static class UIBilingualPreview
                 Get<RectTransform>(hud, "bannerIconRect").gameObject.SetActive(false);
             }
         }
+        bool overlayActive = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<UIOverlay>()).Any(overlay => overlay.isActiveAndEnabled);
+        if (overlayActive)
+            foreach (UIHideUnderOverlay hidden in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<UIHideUnderOverlay>()))
+            {
+                if (!hidden.isActiveAndEnabled) continue;
+                CanvasGroup group = hidden.GetComponent<CanvasGroup>();
+                if (group != null) group.alpha = 0f;
+            }
         string surface = path == UIAuthoringTools.Scenes[0] ? "Menu" : "Game";
         foreach (Vector2Int size in Resolutions)
         {
@@ -195,6 +203,11 @@ public static class UIBilingualPreview
         TMP_Text noText = Get<TMP_Text>(tutorial, "choiceNoButtonText");
         string no = Get<LocalizedString>(step, "noLabel").Get(language);
         if (noText != null) noText.text = string.IsNullOrEmpty(no) ? Get<LocalizedString>(tutorial, "noDefault").Get(language) : no;
+        GameObject arrow = Get<GameObject>(tutorial, "arrowObject");
+        bool showArrow = step.showArrow && string.IsNullOrEmpty(step.highlightTarget);
+        if (arrow != null) arrow.SetActive(showArrow);
+        RectTransform arrowTransform = Get<RectTransform>(tutorial, "arrowTransform");
+        if (showArrow && arrowTransform != null) arrowTransform.localEulerAngles = new Vector3(0f, 0f, step.arrowAngle);
     }
 
     private static T Get<T>(object component, string field) => (T)component.GetType().GetField(field, Fields).GetValue(component);

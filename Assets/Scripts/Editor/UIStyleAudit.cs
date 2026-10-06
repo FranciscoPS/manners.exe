@@ -38,7 +38,9 @@ public static class UIStyleAudit
             string path = Path(text.transform);
             entries.Add(new Entry { text = text, rect = rect, path = path });
 
-            if (text.isTextOverflowing && text.overflowMode != TextOverflowModes.Overflow)
+            if (text.isTextTruncated)
+                issues += Line(report, label, "TEXTO RECORTADO", $"{path} \"{Shorten(text.text)}\"");
+            else if (text.isTextOverflowing && text.overflowMode != TextOverflowModes.Overflow)
                 issues += Line(report, label, "NO CABE", $"{path} \"{Shorten(text.text)}\"");
 
             if (text.enableAutoSizing && text.fontSizeMax > 0f && text.fontSize < text.fontSizeMax * 0.62f)
