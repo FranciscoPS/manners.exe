@@ -354,7 +354,11 @@ public class TutorialManager : MonoBehaviour
 
         if (typewriterCoroutine != null) StopCoroutine(typewriterCoroutine);
         if (messageText != null)
-            typewriterCoroutine = StartCoroutine(TypewriterRoutine(currentStep.text));
+        {
+            UIStyle style = UIStyle.Instance;
+            string text = style != null ? style.PaperHighlights(currentStep.text, messageText.color) : currentStep.text;
+            typewriterCoroutine = StartCoroutine(TypewriterRoutine(text));
+        }
 
         PlayRobotAnimation();
 

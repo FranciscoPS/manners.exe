@@ -31,6 +31,9 @@ public sealed class UIStyle : ScriptableObject
 
     public static readonly int TimeId = Shader.PropertyToID("_UIStyleTime");
 
+    private const string ColorTag = "<color=#";
+    private static readonly System.Text.StringBuilder HighlightBuilder = new System.Text.StringBuilder(512);
+
     private static UIStyle instance;
 
     public static UIStyle Instance
@@ -84,6 +87,18 @@ public sealed class UIStyle : ScriptableObject
     public Color cream = new Color32(0xEF, 0xEA, 0xDD, 0xFF);
     [Tooltip("Velo que oscurece el juego detrás de los menús.")]
     public Color scrim = new Color(0.024f, 0.039f, 0.17f, 0.84f);
+
+    [Header("Resaltados sobre el papel de los diálogos")]
+    [Tooltip("Contraste mínimo de una palabra resaltada sobre el papel claro. Los colores del texto que no llegan se cambian por el de su familia (rojos = Danger, morados = Anomaly, el resto abajo).")]
+    [Range(1f, 7f)] public float paperContrast = 3.5f;
+    [Tooltip("Sustituto de amarillos y dorados.")]
+    public Color paperGold = new Color32(0xA8, 0x62, 0x00, 0xFF);
+    [Tooltip("Sustituto de verdes.")]
+    public Color paperGreen = new Color32(0x1F, 0x7A, 0x3A, 0xFF);
+    [Tooltip("Sustituto de cian y turquesa.")]
+    public Color paperCyan = new Color32(0x0B, 0x74, 0x99, 0xFF);
+    [Tooltip("Sustituto de azules.")]
+    public Color paperBlue = new Color32(0x1F, 0x5F, 0xBF, 0xFF);
     [Tooltip("Tinte de los botones desactivados.")]
     public Color disabled = new Color(0.36f, 0.4f, 0.5f, 0.7f);
     [Tooltip("Tinte de la sombra de las casillas: se multiplica por el color de la casilla para dar su tono oscuro.")]
@@ -242,6 +257,59 @@ public sealed class UIStyle : ScriptableObject
         if (ratio > 0.5f) return good;
         if (ratio > 0.25f) return Color.Lerp(primary, good, Smooth((ratio - 0.25f) * 4f));
         return Color.Lerp(alert, primary, Smooth(ratio * 4f));
+    }
+
+    public string PaperHighlights(string richText, Color bodyColor)
+    {
+        if (string.IsNullOrEmpty(richText) || Luminance(bodyColor) > 0.4f) return richText;
+        if (richText.IndexOf(ColorTag, System.StringComparison.OrdinalIgnoreCase) < 0) return richText;
+
+        HighlightBuilder.Clear();
+        int cursor = 0;
+        while (cursor < richText.Length)
+        {
+            int open = richText.IndexOf(ColorTag, cursor, System.StringComparison.OrdinalIgnoreCase);
+            int close = open >= 0 ? richText.IndexOf('>', open) : -1;
+            if (open < 0 || close < 0)
+            {
+                HighlightBuilder.Append(richText, cursor, richText.Length - cursor);
+                break;
+            }
+
+            HighlightBuilder.Append(richText, cursor, open - cursor);
+            int codeStart = open + ColorTag.Length - 1;
+            if (ColorUtility.TryParseHtmlString(richText.Substring(codeStart, close - codeStart), out Color parsed))
+                HighlightBuilder.Append(ColorTag).Append(ColorUtility.ToHtmlStringRGB(PaperHighlight(parsed))).Append('>');
+            else
+                HighlightBuilder.Append(richText, open, close - open + 1);
+            cursor = close + 1;
+        }
+
+        return HighlightBuilder.ToString();
+    }
+
+    public Color PaperHighlight(Color color)
+    {
+        float paper = Luminance(cream) + 0.05f;
+        float word = Luminance(color) + 0.05f;
+        if ((paper > word ? paper / word : word / paper) >= paperContrast) return color;
+
+        Color.RGBToHSV(color, out float hue, out float saturation, out _);
+        if (saturation < 0.15f) return ink;
+
+        float degrees = hue * 360f;
+        if (degrees < 20f || degrees >= 335f) return danger;
+        if (degrees < 70f) return paperGold;
+        if (degrees < 160f) return paperGreen;
+        if (degrees < 200f) return paperCyan;
+        if (degrees < 255f) return paperBlue;
+        return anomaly;
+    }
+
+    private static float Luminance(Color color)
+    {
+        Color linear = color.linear;
+        return 0.2126f * linear.r + 0.7152f * linear.g + 0.0722f * linear.b;
     }
 
     private static float Smooth(float t)
