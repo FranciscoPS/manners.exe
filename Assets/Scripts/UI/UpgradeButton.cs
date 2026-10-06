@@ -31,6 +31,8 @@ public class UpgradeButton : MonoBehaviour
     [SerializeField] private float introOvershoot = 1.3f;
 
     [Header("Component References")]
+    [Tooltip("Casilla de fondo del icono: se oculta junto con el icono cuando la mejora no tiene imagen.")]
+    [SerializeField] private GameObject iconBackdrop;
     private HoldToSelectButton holdToSelectButton;
     private PremiumUpgradeVisuals premiumVisuals;
     private PurchaseEffectFeedback purchaseEffect;
@@ -42,6 +44,34 @@ public class UpgradeButton : MonoBehaviour
     private UpgradeMode currentMode = UpgradeMode.LevelUp;
     private int upgradeCost = 0;
     private bool canAfford = true;
+
+    private static Color Accent(Color fallback, System.Func<UIStyle, Color> pick)
+    {
+        UIStyle style = UIStyle.Instance;
+        return style != null ? pick(style) : fallback;
+    }
+
+    private static Color Dimmed(Color color)
+    {
+        return new Color(color.r * 0.5f, color.g * 0.5f, color.b * 0.5f, color.a);
+    }
+
+    private static Color CostColor(bool affordable)
+    {
+        return affordable ? Accent(new Color(1f, 0.84f, 0f), s => s.yellow) : Accent(new Color(1f, 0.3f, 0.3f), s => s.danger);
+    }
+
+    private static Color LabelColor(bool affordable)
+    {
+        Color color = Accent(new Color(1f, 0.9f, 0.3f, 1f), s => s.yellow);
+        return affordable ? color : Dimmed(color);
+    }
+
+    private static Color ValuesColor(bool affordable)
+    {
+        Color color = Accent(new Color(0.4f, 1f, 0.5f), s => s.good);
+        return affordable ? color : Dimmed(color);
+    }
 
     private void Awake()
     {
@@ -214,7 +244,10 @@ public class UpgradeButton : MonoBehaviour
         if (assignedChestItem == null) return;
 
         if (upgradeNameText != null)
+        {
             upgradeNameText.text = assignedChestItem.itemName;
+            upgradeNameText.color = Accent(Color.white, s => s.paper);
+        }
 
         if (descriptionText != null)
             descriptionText.text = assignedChestItem.description;
@@ -228,6 +261,9 @@ public class UpgradeButton : MonoBehaviour
         {
             iconImage.gameObject.SetActive(false);
         }
+
+        if (iconBackdrop != null && iconImage != null)
+            iconBackdrop.SetActive(iconImage.gameObject.activeSelf);
 
         if (costText != null)
             costText.gameObject.SetActive(false);
@@ -362,6 +398,9 @@ public class UpgradeButton : MonoBehaviour
             iconImage.gameObject.SetActive(false);
         }
 
+        if (iconBackdrop != null && iconImage != null)
+            iconBackdrop.SetActive(iconImage.gameObject.activeSelf);
+
         if (costText != null)
         {
             if (currentMode == UpgradeMode.Shop)
@@ -371,7 +410,7 @@ public class UpgradeButton : MonoBehaviour
                 string coinWord = upgradeCost == 1 ? "moneda" : "monedas";
                 costText.text = $"Costo: {upgradeCost} {coinWord}";
 
-                costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
+                costText.color = CostColor(canAfford);
             }
             else
             {
@@ -381,7 +420,7 @@ public class UpgradeButton : MonoBehaviour
 
         if (labelText != null)
         {
-            labelText.color = canAfford ? new Color(1f, 0.9f, 0.3f, 1f) : new Color(0.5f, 0.45f, 0.15f);
+            labelText.color = LabelColor(canAfford);
 
             string formattedValue = assignedUpgrade.GetFormattedValue(nextLevel);
 
@@ -399,7 +438,7 @@ public class UpgradeButton : MonoBehaviour
         {
 
             valuesText.gameObject.SetActive(true);
-            valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
+            valuesText.color = ValuesColor(canAfford);
 
             if (currentLevel == 0)
             {
@@ -423,12 +462,12 @@ public class UpgradeButton : MonoBehaviour
                 else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot)
                 {
                     int nextBullets = 3;
-                    valuesText.text = $"0% → {nextValue:F1}% (+{nextBullets} balas)";
+                    valuesText.text = $"0% → {nextValue:F1}%\n<size=62%>+{nextBullets} balas</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
                     int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
-                    valuesText.text = $"0% → {nextValue:F1}% · empuja {nextEnemies} enem.";
+                    valuesText.text = $"0% → {nextValue:F1}%\n<size=62%>empuja {nextEnemies} enem.</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
@@ -486,13 +525,13 @@ public class UpgradeButton : MonoBehaviour
                 {
                     int currentBullets = PlayerStatsManager.Instance.GetMultiShotExtraBullets();
                     int nextBullets = 3 + ((nextLevel - 1) / 4) * 3;
-                    valuesText.text = $"{currentUpgradeValue:F1}% (+{currentBullets}) → {nextUpgradeValue:F1}% (+{nextBullets})";
+                    valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%\n<size=62%>+{currentBullets} → +{nextBullets} balas</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
                     int currentEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(currentLevel) + 1;
                     int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
-                    valuesText.text = $"{currentUpgradeValue:F1}% [{currentEnemies} enem.] → {nextUpgradeValue:F1}% [{nextEnemies} enem.]";
+                    valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%\n<size=62%>empuja {currentEnemies} → {nextEnemies} enem.</size>";
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
@@ -530,9 +569,12 @@ public class UpgradeButton : MonoBehaviour
             }
         }
 
-        if (nextLevel >= assignedUpgrade.maxLevel && upgradeNameText != null)
+        if (upgradeNameText != null)
         {
-            upgradeNameText.color = new Color(1f, 0.84f, 0f);
+            bool reachesMax = nextLevel >= assignedUpgrade.maxLevel;
+            upgradeNameText.color = reachesMax
+                ? Accent(new Color(1f, 0.84f, 0f), s => s.yellow)
+                : Accent(Color.white, s => s.paper);
         }
     }
 
@@ -605,17 +647,17 @@ public class UpgradeButton : MonoBehaviour
 
         if (costText != null && currentMode == UpgradeMode.Shop)
         {
-            costText.color = canAfford ? new Color(1f, 0.84f, 0f) : new Color(1f, 0.3f, 0.3f);
+            costText.color = CostColor(canAfford);
         }
 
         if (labelText != null)
         {
-            labelText.color = canAfford ? new Color(1f, 0.9f, 0.3f, 1f) : new Color(0.5f, 0.45f, 0.15f);
+            labelText.color = LabelColor(canAfford);
         }
 
         if (valuesText != null)
         {
-            valuesText.color = canAfford ? new Color(0.4f, 1f, 0.5f) : new Color(0.2f, 0.5f, 0.25f);
+            valuesText.color = ValuesColor(canAfford);
         }
     }
 }

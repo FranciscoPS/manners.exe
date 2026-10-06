@@ -66,9 +66,11 @@ public class OverrideActivationHUD : MonoBehaviour
     private TextMeshProUGUI titleText;
     private CanvasGroup titleGroup;
     private GlitchTextUI titleGlitch;
+    private Image titlePlate;
     private TextMeshProUGUI nameText;
     private CanvasGroup nameGroup;
     private GlitchTextUI nameGlitch;
+    private Image namePlate;
     private TMP_FontAsset resolvedFont;
 
     private readonly Dictionary<OverrideData, RectTransform> cells = new Dictionary<OverrideData, RectTransform>();
@@ -209,6 +211,16 @@ public class OverrideActivationHUD : MonoBehaviour
 
     private void ApplyFont()
     {
+        UIStyle style = UIStyle.Instance;
+        if (style != null && style.font != null)
+        {
+            resolvedFont = style.font;
+            StyleGameText(titleText);
+            StyleGameText(nameText);
+            StyleGameText(bannerFallback);
+            return;
+        }
+
         if (resolvedFont == null)
         {
             resolvedFont = Resources.FindObjectsOfTypeAll<TMP_FontAsset>()
@@ -232,6 +244,16 @@ public class OverrideActivationHUD : MonoBehaviour
     private void StyleGameText(TextMeshProUGUI tmp)
     {
         if (tmp == null || resolvedFont == null) return;
+
+        UIStyle style = UIStyle.Instance;
+        if (style != null && style.font != null)
+        {
+            style.ApplyFont(tmp, UITextRole.Title);
+            tmp.fontStyle = UIStyle.TextStyle(UITextRole.Title);
+            tmp.characterSpacing = style.labelSpacing;
+            tmp.extraPadding = true;
+            return;
+        }
 
         tmp.font = resolvedFont;
         tmp.outlineWidth = outlineWidth;
@@ -287,20 +309,43 @@ public class OverrideActivationHUD : MonoBehaviour
         Stretch(bannerFallback.rectTransform);
         bannerFallback.text = "?";
 
-        titleText = CreateText("Title", banner, titleFontSize, FontStyles.Bold, titleColor);
-        Stretch(titleText.rectTransform);
-        titleGroup = titleText.gameObject.AddComponent<CanvasGroup>();
+        UIStyle style = UIStyle.Instance;
+
+        titleText = CreatePhase("Title", titleFontSize, style != null ? style.yellow : titleColor, out titleGroup, out titlePlate);
         titleGlitch = titleText.gameObject.AddComponent<GlitchTextUI>();
 
-        nameText = CreateText("Name", banner, nameFontSize, FontStyles.Bold, Color.white);
-        Stretch(nameText.rectTransform);
-        nameGroup = nameText.gameObject.AddComponent<CanvasGroup>();
+        nameText = CreatePhase("Name", nameFontSize, style != null ? style.paper : Color.white, out nameGroup, out namePlate);
         nameGlitch = nameText.gameObject.AddComponent<GlitchTextUI>();
 
+        if (style != null)
+        {
+            style.ApplyPlate(titlePlate, style.panel, style.skew, true, null);
+            titlePlate.GetComponent<Shadow>().effectColor = style.anomaly;
+            style.ApplyPlate(namePlate, style.anomaly, style.skew, true, style.plateStripes);
+        }
+
         bannerIconRect.gameObject.SetActive(false);
-        titleText.gameObject.SetActive(false);
-        nameText.gameObject.SetActive(false);
+        titleGroup.gameObject.SetActive(false);
+        nameGroup.gameObject.SetActive(false);
         banner.gameObject.SetActive(false);
+    }
+
+    private TextMeshProUGUI CreatePhase(string phaseName, float fontSize, Color color, out CanvasGroup group, out Image plate)
+    {
+        RectTransform root = CreateRect(phaseName, banner, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+        root.pivot = new Vector2(0.5f, 0.5f);
+        Stretch(root);
+        group = root.gameObject.AddComponent<CanvasGroup>();
+
+        RectTransform plateRect = CreateRect("Plate", root, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(600f, fontSize * 1.75f));
+        plateRect.pivot = new Vector2(0.5f, 0.5f);
+        plate = plateRect.gameObject.AddComponent<Image>();
+        plate.raycastTarget = false;
+        plate.enabled = UIStyle.Instance != null;
+
+        TextMeshProUGUI text = CreateText("Text", root, fontSize, FontStyles.Bold, color);
+        Stretch(text.rectTransform);
+        return text;
     }
 
     private IEnumerator PlayAnnouncement(OverrideData overrideData)
@@ -311,10 +356,10 @@ public class OverrideActivationHUD : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(leadIn);
 
-        yield return PlayTextPhase(titleText, titleGroup, titleGlitch, activatedMessage, titleHold);
+        yield return PlayTextPhase(titleText, titleGroup, titleGlitch, titlePlate, activatedMessage, titleHold);
         yield return new WaitForSecondsRealtime(phaseGap);
 
-        yield return PlayTextPhase(nameText, nameGroup, nameGlitch, overrideData.overrideName, nameHold);
+        yield return PlayTextPhase(nameText, nameGroup, nameGlitch, namePlate, overrideData.overrideName, nameHold);
         yield return new WaitForSecondsRealtime(phaseGap);
 
         ApplyIcon(bannerIcon, bannerFallback, overrideData.icon);
@@ -423,14 +468,20 @@ public class OverrideActivationHUD : MonoBehaviour
         return world;
     }
 
-    private IEnumerator PlayTextPhase(TextMeshProUGUI text, CanvasGroup group, GlitchTextUI glitch, string content, float hold)
+    private IEnumerator PlayTextPhase(TextMeshProUGUI text, CanvasGroup group, GlitchTextUI glitch, Image plate, string content, float hold)
     {
-        RectTransform rect = text.rectTransform;
+        RectTransform rect = (RectTransform)group.transform;
 
         group.alpha = 0f;
         rect.localScale = Vector3.one * 0.15f;
-        text.gameObject.SetActive(true);
+        group.gameObject.SetActive(true);
         glitch.SetText(content);
+
+        if (plate != null && plate.enabled)
+        {
+            text.ForceMeshUpdate();
+            plate.rectTransform.sizeDelta = new Vector2(text.preferredWidth + text.fontSize * 2.4f, text.fontSize * 1.75f);
+        }
 
         Sequence enter = DOTween.Sequence().SetUpdate(true);
         enter.Join(group.DOFade(1f, textIn * 0.6f));
@@ -445,7 +496,7 @@ public class OverrideActivationHUD : MonoBehaviour
         exit.Join(group.DOFade(0f, textOut * 0.85f));
         yield return exit.WaitForCompletion();
 
-        text.gameObject.SetActive(false);
+        group.gameObject.SetActive(false);
         rect.localScale = Vector3.one;
     }
 
@@ -459,6 +510,10 @@ public class OverrideActivationHUD : MonoBehaviour
         Image backdrop = cell.gameObject.AddComponent<Image>();
         backdrop.color = cellBackdropColor;
         backdrop.raycastTarget = false;
+
+        UIStyle style = UIStyle.Instance;
+        if (style != null)
+            style.ApplySprite(backdrop, style.plateChamfer, style.panelAlt, 0f, Vector2.zero, null);
 
         RectTransform iconRect = CreateRect("Icon", cell, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(cellSize - 12f, cellSize - 12f));
         Image icon = iconRect.gameObject.AddComponent<Image>();

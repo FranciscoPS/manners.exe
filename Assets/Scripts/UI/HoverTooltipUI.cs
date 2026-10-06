@@ -72,12 +72,16 @@ public class HoverTooltipUI : MonoBehaviour
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.sizeDelta = new Vector2(340f, 0f);
 
+        UIStyle style = UIStyle.Instance;
+
         Image background = panelObj.GetComponent<Image>();
         background.color = PanelColor;
         background.raycastTarget = false;
+        if (style != null)
+            style.ApplyPanel(background, false);
 
         VerticalLayoutGroup layout = panelObj.GetComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(16, 16, 12, 12);
+        layout.padding = style != null ? new RectOffset(22, 22, 16, 18) : new RectOffset(16, 16, 12, 12);
         layout.spacing = 4f;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
@@ -90,6 +94,13 @@ public class HoverTooltipUI : MonoBehaviour
 
         titleText = CreateText(panelObj.transform, "Title", 22f, FontStyles.Bold, TitleColor);
         bodyText = CreateText(panelObj.transform, "Body", 17f, FontStyles.Normal, BodyColor);
+
+        if (style != null)
+        {
+            style.ApplyText(titleText, UITextRole.Heading);
+            style.ApplyText(bodyText, UITextRole.Body);
+            bodyText.color = style.textDim;
+        }
 
         gameObject.SetActive(false);
     }

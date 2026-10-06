@@ -7,6 +7,9 @@ public class FloatingText : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private float lifetime = 1f;
     [SerializeField] private float fadeStartTime = 0.5f;
+    [Tooltip("Escala con la que aparece el número antes de asentarse en su tamaño normal.")]
+    [SerializeField] private float popScale = 1.2f;
+    [SerializeField] private float popDuration = 0.16f;
 
     private TextMeshProUGUI textMesh;
     private RectTransform rectTransform;
@@ -50,6 +53,9 @@ public class FloatingText : MonoBehaviour
         canvasGroup.alpha = 1f;
 
         rectTransform.position = screenPosition;
+        rectTransform.DOKill();
+        rectTransform.localScale = Vector3.one * popScale;
+        rectTransform.DOScale(1f, popDuration).SetEase(Ease.OutBack).SetUpdate(true);
 
         float randomX = Random.Range(-30f, 30f);
         Vector3 targetPosition = screenPosition + new Vector3(randomX, 150f, 0f);

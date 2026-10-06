@@ -15,7 +15,7 @@ public class OvertimeAlert : MonoBehaviour
     [Header("Texto")]
     [SerializeField] private string message = "¡OVERTIME!";
     [Tooltip("Posición vertical del texto (0 = abajo, 1 = arriba). ~0.8 = arriba, sin tapar el centro.")]
-    [SerializeField] private float verticalAnchor = 0.8f;
+    [SerializeField] private float verticalAnchor = 0.68f;
     [SerializeField] private int fontSize = 90;
     [SerializeField] private Color textColor = new Color(1f, 0.12f, 0.12f);
     [Tooltip("Veces por segundo que pulsa el texto (grande/pequeño).")]
@@ -155,8 +155,31 @@ public class OvertimeAlert : MonoBehaviour
         flashRect.offsetMin = Vector2.zero;
         flashRect.offsetMax = Vector2.zero;
 
+        UIStyle style = UIStyle.Instance;
+
+        GameObject bannerObj = new GameObject("OvertimeBanner", typeof(RectTransform));
+        bannerObj.transform.SetParent(canvasObj.transform, false);
+        textRect = (RectTransform)bannerObj.transform;
+        textRect.anchorMin = new Vector2(0.5f, verticalAnchor);
+        textRect.anchorMax = new Vector2(0.5f, verticalAnchor);
+        textRect.pivot = new Vector2(0.5f, 0.5f);
+        textRect.anchoredPosition = Vector2.zero;
+        textRect.sizeDelta = new Vector2(1200f, 200f);
+
+        if (style != null && style.burst != null)
+        {
+            GameObject burstObj = new GameObject("Burst", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            burstObj.transform.SetParent(bannerObj.transform, false);
+            RectTransform burstRect = (RectTransform)burstObj.transform;
+            burstRect.anchorMin = burstRect.anchorMax = new Vector2(0.5f, 0.5f);
+            burstRect.sizeDelta = new Vector2(fontSize * 9.6f, fontSize * 2.4f);
+            Image burst = burstObj.GetComponent<Image>();
+            burst.raycastTarget = false;
+            style.ApplySprite(burst, style.burst, style.danger, 0f, style.panelShadowOffset, style.plateHazard);
+        }
+
         GameObject textObj = new GameObject("OvertimeText");
-        textObj.transform.SetParent(canvasObj.transform, false);
+        textObj.transform.SetParent(bannerObj.transform, false);
         text = textObj.AddComponent<TextMeshProUGUI>();
         text.alignment = TextAlignmentOptions.Center;
         text.textWrappingMode = TextWrappingModes.NoWrap;
@@ -165,14 +188,21 @@ public class OvertimeAlert : MonoBehaviour
         text.fontStyle = FontStyles.Bold;
         text.raycastTarget = false;
 
-        textRect = text.rectTransform;
-        textRect.anchorMin = new Vector2(0.5f, verticalAnchor);
-        textRect.anchorMax = new Vector2(0.5f, verticalAnchor);
-        textRect.pivot = new Vector2(0.5f, 0.5f);
-        textRect.anchoredPosition = Vector2.zero;
-        textRect.sizeDelta = new Vector2(1200f, 200f);
+        if (style != null)
+        {
+            style.ApplyText(text, UITextRole.Title);
+            text.color = style.paper;
+            text.fontStyle |= FontStyles.Italic;
+            flashColor = style.danger;
+        }
 
-        text.gameObject.SetActive(false);
+        RectTransform labelRect = text.rectTransform;
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = Vector2.one;
+        labelRect.offsetMin = Vector2.zero;
+        labelRect.offsetMax = Vector2.zero;
+
+        bannerObj.SetActive(false);
     }
 
     private void BuildAudio()
@@ -199,7 +229,7 @@ public class OvertimeAlert : MonoBehaviour
         if (text != null)
         {
             text.text = message;
-            text.gameObject.SetActive(true);
+            textRect.gameObject.SetActive(true);
         }
 
         float elapsed = 0f;
@@ -253,7 +283,7 @@ public class OvertimeAlert : MonoBehaviour
             textRect.localScale = Vector3.one;
 
         if (text != null)
-            text.gameObject.SetActive(false);
+            textRect.gameObject.SetActive(false);
 
         routine = null;
     }

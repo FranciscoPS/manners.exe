@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af2ad7ecabbe8424e988ee374a8fa15c, type: 3}
+  m_Name: UIStyle
+  m_EditorClassIdentifier: Assembly-CSharp::UIStyle
+  version: 4
+  ink: {r: 0.023529412, g: 0.039215688, b: 0.16862746, a: 1}
+  panel: {r: 0.07058824, g: 0.08235294, b: 0.18039216, a: 1}
+  panelAlt: {r: 0.13333334, g: 0.16862746, b: 0.32156864, a: 1}
+  primary: {r: 0.7529412, g: 0.33333334, b: 0.16862746, a: 1}
+  secondary: {r: 0.21568628, g: 0.26666668, b: 0.43137255, a: 1}
+  cyan: {r: 0.09803922, g: 0.65882355, b: 0.9019608, a: 1}
+  yellow: {r: 0.92156863, g: 0.91764706, b: 0.63529414, a: 1}
+  danger: {r: 0.70980394, g: 0.16862746, b: 0.11764706, a: 1}
+  alert: {r: 1, g: 0.3529412, b: 0.27058825, a: 1}
+  anomaly: {r: 0.43529412, g: 0.21568628, b: 0.47058824, a: 1}
+  good: {r: 0.43529412, g: 0.8392157, b: 0.627451, a: 1}
+  paper: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
+  textDim: {r: 0.6313726, g: 0.72156864, b: 0.7490196, a: 1}
+  neutral: {r: 0.16862746, g: 0.21176471, b: 0.32941177, a: 1}
+  cream: {r: 0.9372549, g: 0.91764706, b: 0.8666667, a: 1}
+  scrim: {r: 0.024, g: 0.039, b: 0.17, a: 0.84}
+  disabled: {r: 0.36, g: 0.4, b: 0.5, a: 0.7}
+  lipTint: {r: 0.42, g: 0.4, b: 0.5, a: 1}
+  skew: 0.22
+  skewSoft: 0.08
+  shadowOffset: {x: 5, y: -5}
+  panelShadowOffset: {x: 8, y: -8}
+  silhouetteOutline: 4
+  silhouetteOffset: {x: 12, y: -9}
+  plate: {fileID: 21300000, guid: ff88f613a137e1f42a8ae77ed24d5dd7, type: 3}
+  plateChamfer: {fileID: 21300000, guid: 1798156a084516c4f991dacd1bc0af2c, type: 3}
+  capsule: {fileID: 21300000, guid: cab000ed0337e59439629eecc5766520, type: 3}
+  panelDark: {fileID: 21300000, guid: c088a3df6adf3b945963567286d4fbe2, type: 3}
+  panelSmall: {fileID: 21300000, guid: 3b4339e9aecd7a94492b7ee6ea5e492a, type: 3}
+  panelPaper: {fileID: 21300000, guid: 35b1cbc5066e32f4ca166d3d59dad674, type: 3}
+  fill: {fileID: 21300000, guid: f88ae48c08dafec47b266157cd12e168, type: 3}
+  frame: {fileID: 21300000, guid: f1128ad8793361c4a80c7224535044a7, type: 3}
+  screenFrame: {fileID: 21300000, guid: 29df6f0e14cbaa541bee49fc4f4c68fc, type: 3}
+  burst: {fileID: 21300000, guid: 0e40b21922e0316459a8ca75045649d3, type: 3}
+  ring: {fileID: 21300000, guid: 8fd4ad429599471489f5a56ada9001c7, type: 3}
+  triangle: {fileID: 21300000, guid: fdc78b28103c27e4a82ef69d9b26180f, type: 3}
+  cursor: {fileID: 21300000, guid: 0b5c75bcd108d7949996cacc15ac0c88, type: 3}
+  arrowDown: {fileID: 21300000, guid: 2933fc949fc854b4daeae11fd08d6377, type: 3}
+  chevron: {fileID: 21300000, guid: c3de6a69f98f7f942be22e78dba9c90d, type: 3}
+  iconClock: {fileID: 21300000, guid: 2309b733270c7bb4fa9f672dad3d8263, type: 3}
+  iconCoin: {fileID: 21300000, guid: ace0915e1e279ca449e5d347e2a7a11e, type: 3}
+  iconSpeaker: {fileID: 21300000, guid: bcdf2849634dddd4186c9e6d7d655eeb, type: 3}
+  faceScreen: {fileID: 21300000, guid: 879641cbcf479f14980502e136680460, type: 3}
+  faceCalm: {fileID: 21300000, guid: a9e3f05f9ada4d94286c29fa2c9276b3, type: 3}
+  faceHappy: {fileID: 21300000, guid: 97c912d792dbadb42851bbe85056cb84, type: 3}
+  faceHurt: {fileID: 21300000, guid: ba0325b6af033a5428350efa18a1c7c9, type: 3}
+  faceAngry: {fileID: 21300000, guid: 80bf66c67d6365546bbb8f63cdfc0d1d, type: 3}
+  faceDead: {fileID: 21300000, guid: 014ac7d943a924d428a6cccd7088a5f0, type: 3}
+  faceBlinkMin: 0.5
+  faceBlinkMax: 1.3
+  faceGlanceChance: 0.3
+  plateStripes: {fileID: 2100000, guid: d430e91aebc34bc43952064f8be0d819, type: 2}
+  plateStripesBold: {fileID: 2100000, guid: d43288c58c2db194bb133e3181cae20a, type: 2}
+  plateHazard: {fileID: 2100000, guid: 5e15fb9d7b9844e4cabf74ad4e438a3a, type: 2}
+  screenScan: {fileID: 2100000, guid: e16fdd497bb395048a25e8240be5f7b8, type: 2}
+  scrimStripes: {fileID: 2100000, guid: c9327da8e16251b478c1ed326f104697, type: 2}
+  font: {fileID: 11400000, guid: 11819115c02aa5e47b29a8515fa8e1b7, type: 2}
+  textInk: {fileID: 2100000, guid: fceb0490f9a3fa843942b0a5b97b8088, type: 2}
+  textInkThin: {fileID: 2100000, guid: 01c4be658a69c894da432bc4a23657be, type: 2}
+  textPlain: {fileID: 2100000, guid: 02e2cc7160a320a4397c27050cbca50e, type: 2}
+  labelSpacing: 4
+  punchScale: 1.16
+  punchRotation: 4
+  punchDuration: 0.32
+  hoverScale: 1.07
+  hoverRotation: -1.5
+  hoverDuration: 0.14
+  hoverShadow: 1.8
+  pressScale: 0.95
+  introDuration: 0.34
+  introStagger: 0.045
+  introSlide: 70
+  accentCycleSpeed: 0.3
+  shardWobble: 4
+  shardSpeed: 0.35
+  shardFrameRate: 12
+  shardEnterDuration: 0.28

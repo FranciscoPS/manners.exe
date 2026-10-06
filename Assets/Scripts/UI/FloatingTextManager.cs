@@ -15,6 +15,10 @@ public class FloatingTextManager : MonoBehaviour
     [SerializeField] private Color coinColor = new Color(1f, 0.84f, 0f);
     [SerializeField] private Color diamondColor = new Color(0.3f, 0.8f, 1f);
 
+    [Header("Orden de dibujado")]
+    [Tooltip("Orden del canvas de los números flotantes. Negativo = por debajo del HUD y de los menús, para que nunca tapen el cronómetro ni las barras.")]
+    [SerializeField] private int hudSortingOrder = -10;
+
     [Header("Pool Settings")]
     [SerializeField] private int poolSize = 20;
 
@@ -67,7 +71,7 @@ public class FloatingTextManager : MonoBehaviour
 
         worldCanvas = canvasObj.AddComponent<Canvas>();
         worldCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        worldCanvas.sortingOrder = 100;
+        worldCanvas.sortingOrder = hudSortingOrder;
 
         var scaler = canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
         scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
