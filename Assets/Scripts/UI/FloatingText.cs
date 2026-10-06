@@ -11,28 +11,18 @@ public class FloatingText : MonoBehaviour
     [SerializeField] private float popScale = 1.2f;
     [SerializeField] private float popDuration = 0.16f;
 
-    private TextMeshProUGUI textMesh;
+    [SerializeField] private TextMeshProUGUI textMesh;
     private RectTransform rectTransform;
-    private CanvasGroup canvasGroup;
+    [SerializeField] private CanvasGroup canvasGroup;
     private Tween moveTween;
     private Tween fadeTween;
 
     private void Awake()
     {
-        textMesh = GetComponent<TextMeshProUGUI>();
-        if (textMesh == null)
-        {
-        }
-
         rectTransform = GetComponent<RectTransform>();
-        if (rectTransform == null)
-        {
-        }
-
-        canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
         {
-            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            Debug.LogError("FloatingText requiere CanvasGroup en su prefab.", this);
         }
     }
 

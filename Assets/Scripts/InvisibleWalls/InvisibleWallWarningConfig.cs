@@ -79,7 +79,7 @@ public class InvisibleWallWarningConfig : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<InvisibleWallWarningConfig>("InvisibleWallWarningConfig");
+                instance = Resources.Load<InvisibleWallWarningConfig>("InvisibleWallWarningConfig_Production");
 
                 if (instance == null)
                 {

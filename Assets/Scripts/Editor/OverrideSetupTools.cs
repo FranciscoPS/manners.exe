@@ -4,9 +4,9 @@ using UnityEngine;
 
 public static class OverrideSetupTools
 {
-    private const string ConfigFolder = "Assets/Configurations/Overrides";
+    private const string ConfigFolder = "Assets/Configurations/Production/Overrides";
     private const string PrefabFolder = "Assets/Prefabs/Overrides";
-    private const string DatabasePath = "Assets/Resources/OverrideDatabase.asset";
+    private const string DatabasePath = "Assets/Configurations/Production/Resources/OverrideDatabase_Production.asset";
 
     [MenuItem("Tools/Manners/Overrides/Crear sistema de sobrecargas", false, 20)]
     public static void CreateOverrideSystem()

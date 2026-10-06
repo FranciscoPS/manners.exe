@@ -6,7 +6,7 @@ public class GameTimeUI : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI gameTimeText;
-    [Tooltip("Etiqueta OVERTIME (opcional). Si se deja vacia, se crea automaticamente debajo del cronometro.")]
+    [Tooltip("Etiqueta OVERTIME guardada en la escena. Ajusta su TMP directamente.")]
     [SerializeField] private TextMeshProUGUI overtimeLabel;
 
     [Header("Display Settings")]
@@ -78,68 +78,12 @@ public class GameTimeUI : MonoBehaviour
             plate.rectTransform.Punch();
         }
 
-        if (overtimeLabel == null)
-        {
-            overtimeLabel = CreateOvertimeLabel();
-        }
-
         if (overtimeLabel != null)
         {
-            overtimeLabel.text = "OVERTIME";
+            if (overtimeLabel.transform.parent.name == "OvertimeTab") overtimeLabel.transform.parent.gameObject.SetActive(true);
             overtimeLabel.color = overtimeColor;
             overtimeLabel.gameObject.SetActive(true);
         }
     }
 
-    private TextMeshProUGUI CreateOvertimeLabel()
-    {
-        if (gameTimeText == null) return null;
-
-        Transform holder = gameTimeText.transform;
-        UIStyle style = UIStyle.Instance;
-        if (style != null && style.capsule != null)
-        {
-            Image tab = style.CreatePlate("OvertimeTab", holder, style.panel, 0f, false, null);
-            style.ApplySprite(tab, style.capsule, style.panel, 0f, Vector2.zero, null);
-            RectTransform tabRect = tab.rectTransform;
-            tabRect.anchorMin = new Vector2(0.5f, 0f);
-            tabRect.anchorMax = new Vector2(0.5f, 0f);
-            tabRect.pivot = new Vector2(0.5f, 1f);
-            tabRect.anchoredPosition = new Vector2(0f, -10f);
-            tabRect.sizeDelta = new Vector2(250f, 44f);
-            holder = tab.transform;
-        }
-
-        GameObject labelObj = new GameObject("OvertimeLabel");
-        labelObj.transform.SetParent(holder, false);
-
-        TextMeshProUGUI label = labelObj.AddComponent<TextMeshProUGUI>();
-        label.font = gameTimeText.font;
-        label.fontSharedMaterial = gameTimeText.fontSharedMaterial;
-        label.fontSize = gameTimeText.fontSize * 0.55f;
-        label.alignment = TextAlignmentOptions.Center;
-        label.fontStyle = gameTimeText.fontStyle;
-        label.characterSpacing = gameTimeText.characterSpacing;
-        label.raycastTarget = false;
-
-        RectTransform rt = label.rectTransform;
-        if (holder != gameTimeText.transform)
-        {
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            label.fontSize = 24f;
-            label.margin = Vector4.zero;
-            return label;
-        }
-
-        rt.anchorMin = new Vector2(0.5f, 0f);
-        rt.anchorMax = new Vector2(0.5f, 0f);
-        rt.pivot = new Vector2(0.5f, 1f);
-        rt.anchoredPosition = new Vector2(0f, -8f);
-        rt.sizeDelta = new Vector2(300f, 40f);
-
-        return label;
-    }
 }

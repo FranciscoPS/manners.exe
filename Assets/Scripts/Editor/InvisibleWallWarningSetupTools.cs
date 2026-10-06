@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 public static class InvisibleWallWarningSetupTools
 {
-    internal const string ConfigPath = "Assets/Resources/InvisibleWallWarningConfig.asset";
+    internal const string ConfigPath = "Assets/Configurations/Production/Resources/InvisibleWallWarningConfig_Production.asset";
     internal const string PrefabPath = "Assets/Prefabs/VFX/InvisibleWallWarning.prefab";
     private const string MaterialFolder = "Assets/VFX/InvisibleWall";
     private const string HexShaderPath = "Assets/Shaders/WallWarningHex.shader";

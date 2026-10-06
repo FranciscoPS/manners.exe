@@ -19,9 +19,9 @@ public class AudioSettingsMenu : MonoBehaviour
     [SerializeField] private TextMeshProUGUI sfxValueText;
 
     [Header("Titles (shown before percentage)")]
-    [SerializeField] private string masterTitle = "Master control";
-    [SerializeField] private string musicTitle = "Music control";
-    [SerializeField] private string sfxTitle = "SFX control";
+    [SerializeField] private LocalizedString masterTitleLocalized = new LocalizedString("Master volume", "Volumen general");
+    [SerializeField] private LocalizedString musicTitleLocalized = new LocalizedString("Music volume", "Volumen música");
+    [SerializeField] private LocalizedString sfxTitleLocalized = new LocalizedString("SFX volume", "Volumen SFX");
 
     private const string MASTER_VOLUME_KEY = "MasterVolume";
     private const string MUSIC_VOLUME_KEY = "MusicVolume";
@@ -56,7 +56,7 @@ public class AudioSettingsMenu : MonoBehaviour
         applier.Initialize(musicVolume, sfxVolume);
     }
 
-    private class AudioSettingsApplier : MonoBehaviour
+    private class AudioSettingsApplier : MonoBehaviour, IUpdateable
     {
         private float musicVolume;
         private float sfxVolume;
@@ -71,7 +71,10 @@ public class AudioSettingsMenu : MonoBehaviour
             startTime = Time.realtimeSinceStartup;
         }
 
-        private void Update()
+        public bool IsActive => isActiveAndEnabled;
+        private void OnEnable() => UpdateManager.Instance?.Register(this);
+        private void OnDisable() => UpdateManager.Instance?.Unregister(this);
+        public void OnUpdate(float deltaTime)
         {
             if (applied) return;
 
@@ -107,6 +110,7 @@ public class AudioSettingsMenu : MonoBehaviour
 
     private void OnEnable()
     {
+        GameLocalization.LanguageChanged += RefreshLanguage;
         LoadSettings();
 
         if (!listenersAdded)
@@ -244,7 +248,7 @@ public class AudioSettingsMenu : MonoBehaviour
     {
         if (masterValueText != null)
         {
-            masterValueText.text = masterTitle + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
+            masterValueText.text = masterTitleLocalized.Value + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
         }
     }
 
@@ -252,7 +256,7 @@ public class AudioSettingsMenu : MonoBehaviour
     {
         if (musicValueText != null)
         {
-            musicValueText.text = musicTitle + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
+            musicValueText.text = musicTitleLocalized.Value + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
         }
     }
 
@@ -260,7 +264,14 @@ public class AudioSettingsMenu : MonoBehaviour
     {
         if (sfxValueText != null)
         {
-            sfxValueText.text = sfxTitle + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
+            sfxValueText.text = sfxTitleLocalized.Value + ": " + Mathf.RoundToInt(value * 100f).ToString() + "%";
         }
+    }
+    private void OnDisable() => GameLocalization.LanguageChanged -= RefreshLanguage;
+    private void RefreshLanguage()
+    {
+        UpdateMasterText(masterSlider != null ? masterSlider.value : AudioListener.volume);
+        UpdateMusicText(musicSlider != null ? musicSlider.value : PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, 0.5f));
+        UpdateSFXText(sfxSlider != null ? sfxSlider.value : PlayerPrefs.GetFloat(SFX_VOLUME_KEY, 0.8f));
     }
 }

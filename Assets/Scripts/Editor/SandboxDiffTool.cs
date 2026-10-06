@@ -49,13 +49,13 @@ public static class SandboxDiffTool
         public readonly Dictionary<Object, Object> sandboxToProduction = new Dictionary<Object, Object>();
     }
 
-    private const string ProductionBalancePath = "Assets/Resources/GameBalanceConfig.asset";
-    private const string ProductionUpgradeDatabasePath = "Assets/Resources/UpgradeDatabase.asset";
-    private const string ProductionOverrideDatabasePath = "Assets/Resources/OverrideDatabase.asset";
-    private const string ProductionChestOpeningConfigPath = "Assets/Resources/ChestOpeningConfig.asset";
-    private const string ProductionOverridesFolder = "Assets/Configurations/Overrides";
-    private const string ProductionConfigurationsFolder = "Assets/Configurations/";
-    private const string ProductionResourcesFolder = "Assets/Resources/";
+    private const string ProductionBalancePath = "Assets/Configurations/Production/Resources/GameBalanceConfig_Production.asset";
+    private const string ProductionUpgradeDatabasePath = "Assets/Configurations/Production/Resources/UpgradeDatabase_Production.asset";
+    private const string ProductionOverrideDatabasePath = "Assets/Configurations/Production/Resources/OverrideDatabase_Production.asset";
+    private const string ProductionChestOpeningConfigPath = "Assets/Configurations/Production/Resources/ChestOpeningConfig_Production.asset";
+    private const string ProductionOverridesFolder = "Assets/Configurations/Production/Overrides";
+    private const string ProductionConfigurationsFolder = "Assets/Configurations/Production/";
+    private const string ProductionResourcesFolder = "Assets/Configurations/Production/Resources/";
 
     public static DiffResult Compare()
     {
@@ -206,7 +206,11 @@ public static class SandboxDiffTool
 
     private static void AddPair(DiffResult result, string label, Object production, Object sandbox)
     {
-        if (production == null || sandbox == null) return;
+        if (production == null || sandbox == null)
+        {
+            Debug.LogWarning($"[SandboxSync] Falta la contraparte de {label}.");
+            return;
+        }
 
         result.pairs.Add(new AssetPair { label = label, production = production, sandbox = sandbox });
         result.productionToSandbox[production] = sandbox;
@@ -236,7 +240,7 @@ public static class SandboxDiffTool
 
     private static T LoadCounterpart<T>(Object source, string folder) where T : Object
     {
-        string fileName = Path.GetFileName(AssetDatabase.GetAssetPath(source));
+        string fileName = GameAssetPaths.SandboxFileName(AssetDatabase.GetAssetPath(source));
         return AssetDatabase.LoadAssetAtPath<T>($"{folder}/{fileName}");
     }
 

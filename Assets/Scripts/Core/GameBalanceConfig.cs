@@ -43,7 +43,7 @@ public class GameBalanceConfig : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<GameBalanceConfig>("GameBalanceConfig");
+                instance = Resources.Load<GameBalanceConfig>("GameBalanceConfig_Production");
             }
             return instance;
         }

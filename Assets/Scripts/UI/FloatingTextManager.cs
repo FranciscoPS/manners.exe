@@ -15,14 +15,10 @@ public class FloatingTextManager : MonoBehaviour
     [SerializeField] private Color coinColor = new Color(1f, 0.84f, 0f);
     [SerializeField] private Color diamondColor = new Color(0.3f, 0.8f, 1f);
 
-    [Header("Orden de dibujado")]
-    [Tooltip("Orden del canvas de los números flotantes. Negativo = por debajo del HUD y de los menús, para que nunca tapen el cronómetro ni las barras.")]
-    [SerializeField] private int hudSortingOrder = -10;
-
     [Header("Pool Settings")]
     [SerializeField] private int poolSize = 20;
 
-    private Canvas worldCanvas;
+    [SerializeField] private Canvas worldCanvas;
     private Queue<FloatingText> textPool = new Queue<FloatingText>();
     private Camera mainCamera;
 
@@ -40,15 +36,11 @@ public class FloatingTextManager : MonoBehaviour
 
         FindMainCamera();
 
-        CreateWorldCanvas();
-
         if (worldCanvas != null)
         {
             InitializePool();
         }
-        else
-        {
-        }
+        else Debug.LogError("Asigna el canvas de números flotantes de la escena.", this);
     }
 
     private void FindMainCamera()
@@ -60,25 +52,6 @@ public class FloatingTextManager : MonoBehaviour
         {
             mainCamera = FindFirstObjectByType<Camera>();
         }
-    }
-
-    private void CreateWorldCanvas()
-    {
-
-        GameObject canvasObj = new GameObject("FloatingTextCanvas");
-        canvasObj.transform.SetParent(transform);
-        canvasObj.transform.localPosition = Vector3.zero;
-
-        worldCanvas = canvasObj.AddComponent<Canvas>();
-        worldCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        worldCanvas.sortingOrder = hudSortingOrder;
-
-        var scaler = canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
-        scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
-
     }
 
     private void InitializePool()
@@ -99,10 +72,7 @@ public class FloatingTextManager : MonoBehaviour
         GameObject obj = Instantiate(floatingTextPrefab, worldCanvas.transform);
         FloatingText floatingText = obj.GetComponent<FloatingText>();
 
-        if (floatingText == null)
-        {
-            floatingText = obj.AddComponent<FloatingText>();
-        }
+        if (floatingText == null) { Destroy(obj); return null; }
 
         obj.SetActive(false);
         textPool.Enqueue(floatingText);
@@ -114,11 +84,9 @@ public class FloatingTextManager : MonoBehaviour
     {
         if (textPool.Count == 0)
         {
-            // Creation queues an inactive entry. Borrow through the same path as
-            // prewarmed entries so it cannot also be handed to the next caller.
             CreateNewFloatingText();
         }
-
+        if (textPool.Count == 0) return null;
         FloatingText text = textPool.Dequeue();
         text.gameObject.SetActive(true);
         return text;

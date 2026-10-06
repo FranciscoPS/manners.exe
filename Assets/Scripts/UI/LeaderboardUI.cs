@@ -4,9 +4,9 @@ using TMPro;
 using UnityEngine;
 using DG.Tweening;
 
-public class LeaderboardUI : MonoBehaviour
+public class LeaderboardUI : MonoBehaviour, IUpdateable
 {
-    [Header("Referencias (se auto-detectan si se dejan vacías)")]
+    [Header("Referencias de escena")]
     [Tooltip("Texto donde se listan los 5 puntajes. Hijo 'Scores'.")]
     [SerializeField] private TextMeshProUGUI leaderboardText;
     [Tooltip("Título del panel. Hijo 'Title'.")]
@@ -17,7 +17,7 @@ public class LeaderboardUI : MonoBehaviour
     [SerializeField] private GameObject legendObject;
 
     [Header("Título")]
-    [SerializeField] private string titleString = "Top 5 jugadores";
+
     [SerializeField] private bool titlePulse = true;
     [SerializeField] private float titlePulseScale = 1.18f;
     [SerializeField] private float titlePulseDuration = 0.8f;
@@ -38,6 +38,10 @@ public class LeaderboardUI : MonoBehaviour
     [SerializeField] private float panelPulseScale = 1.03f;
     [SerializeField] private float panelPulseDuration = 1.6f;
 
+    [SerializeField] private LocalizedString[] ranks = { new LocalizedString("1ST", "1.º"), new LocalizedString("2ND", "2.º"), new LocalizedString("3RD", "3.º"), new LocalizedString("4TH", "4.º"), new LocalizedString("5TH", "5.º") };
+    private void RefreshLanguage() => RenderEntries(GlobalLeaderboardService.Instance.GetCachedTop());
+    private string RankLabel(int rank) => ranks != null && rank > 0 && rank <= ranks.Length ? ranks[rank - 1].Value : rank.ToString();
+
     private bool _started;
     private float _hue;
     private Tween _titleTween;
@@ -51,22 +55,6 @@ public class LeaderboardUI : MonoBehaviour
 
     private void Awake()
     {
-        ResolveReferences();
-    }
-
-    private void ResolveReferences()
-    {
-        if (titleText == null)
-        {
-            Transform t = transform.Find("Title");
-            if (t != null) titleText = t.GetComponent<TextMeshProUGUI>();
-        }
-        if (legendObject == null)
-        {
-            Transform t = transform.Find("Instructions");
-            if (t != null) legendObject = t.gameObject;
-        }
-        if (panelRect == null) panelRect = GetComponent<RectTransform>();
         if (titleText != null) _titleRect = titleText.rectTransform;
     }
 
@@ -75,7 +63,7 @@ public class LeaderboardUI : MonoBehaviour
         _started = true;
 
         if (titleText != null)
-            titleText.text = titleString;
+            titleText.GetComponent<LocalizedText>()?.Apply();
 
         if (hideLegend && legendObject != null)
             legendObject.SetActive(false);
@@ -86,6 +74,8 @@ public class LeaderboardUI : MonoBehaviour
 
     private void OnEnable()
     {
+        UpdateManager.Instance?.Register(this);
+        GameLocalization.LanguageChanged += RefreshLanguage;
 
         if (_started)
         {
@@ -96,6 +86,8 @@ public class LeaderboardUI : MonoBehaviour
 
     private void OnDisable()
     {
+        UpdateManager.Instance?.Unregister(this);
+        GameLocalization.LanguageChanged -= RefreshLanguage;
         StopAnimations();
     }
 
@@ -104,7 +96,8 @@ public class LeaderboardUI : MonoBehaviour
         StopAnimations();
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+    public void OnUpdate(float deltaTime)
     {
         if (!_started) return;
         if (!rgbTitle && !rgbEntries) return;
@@ -191,17 +184,17 @@ public class LeaderboardUI : MonoBehaviour
         return ColorUtility.ToHtmlStringRGB(c);
     }
 
-    private static string FormatEntry(int rank, LeaderboardEntry e)
+    private string FormatEntry(int rank, LeaderboardEntry e)
     {
         string hex = RankHex(rank);
         string time = LeaderboardEntry.FormatTime(e.SurvivalTime);
         string initials = string.IsNullOrEmpty(e.Initials) ? "---" : e.Initials;
-        return $"<color=#{hex}><b>{rank}{LeaderboardEntry.RankSuffix(rank)}</b></color>   <b>{time}</b>   " +
+        return $"<color=#{hex}><b>{RankLabel(rank)}</b></color>   <b>{time}</b>   " +
                $"<color=#FFFFFFCC>{initials}</color>";
     }
 
-    private static string FormatEmpty(int rank)
+    private string FormatEmpty(int rank)
     {
-        return $"<color=#FFFFFF44><b>{rank}{LeaderboardEntry.RankSuffix(rank)}</b>   --:--   ---</color>";
+        return $"<color=#FFFFFF44><b>{RankLabel(rank)}</b>   --:--   ---</color>";
     }
 }

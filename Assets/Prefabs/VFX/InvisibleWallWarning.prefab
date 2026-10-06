@@ -51,7 +51,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WarningMarquee
   label: {fileID: 6502914543495923502}
-  message: WARNING
+  messageEnglish: WARNING
+  messageSpanish: ADVERTENCIA
   separator: '  //  '
   repetitions: 10
   scrollSpeed: 90
@@ -106,7 +107,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WarningMarquee
   label: {fileID: 8681951241035654385}
-  message: WARNING
+  messageEnglish: WARNING
+  messageSpanish: ADVERTENCIA
   separator: '  //  '
   repetitions: 10
   scrollSpeed: -90
@@ -226,8 +228,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'WARNING  //  WARNING  //  WARNING  //  WARNING  //  WARNING  //  WARNING 
-    //  WARNING  //  WARNING  //  WARNING  //  WARNING  //  '
+  m_text: 'ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  // 
+    ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA 
+    //  ADVERTENCIA  //  '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 43978dfc1fb424de78d9af9713f0ad94, type: 2}
@@ -595,6 +598,8 @@ MonoBehaviour:
   marquees:
   - {fileID: 3740022074828502925}
   - {fileID: 5790320183562518456}
+  panelSortingOrder: 1
+  stripesSortingOrder: 2
 --- !u!1 &5781713684546644331
 GameObject:
   m_ObjectHideFlags: 0
@@ -801,8 +806,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'WARNING  //  WARNING  //  WARNING  //  WARNING  //  WARNING  //  WARNING 
-    //  WARNING  //  WARNING  //  WARNING  //  WARNING  //  '
+  m_text: 'ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  // 
+    ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA  //  ADVERTENCIA 
+    //  ADVERTENCIA  //  '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2d79f4c45cdc44a4090f37491c18c1f6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 43978dfc1fb424de78d9af9713f0ad94, type: 2}

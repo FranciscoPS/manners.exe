@@ -625,7 +625,7 @@ public static partial class UIStyleApplier
         Transform main = DirectChild(root, "MainMenuPanel");
         if (main == null) return;
 
-        Transform title = DirectChild(main, "TitlePanel");
+        Transform title = UIEditorHierarchy.Find(main, "TitlePanel");
         if (title == null) return;
 
         Transform ribbon = DirectChild(title, StylePrefix + "Ribbon");

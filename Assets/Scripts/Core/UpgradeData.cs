@@ -1,3 +1,4 @@
+using UnityEngine.Serialization;
 using UnityEngine;
 
 public enum UpgradeType
@@ -17,9 +18,13 @@ public enum UpgradeType
 public class UpgradeData : ScriptableObject
 {
     [Header("Identity")]
-    public string upgradeName = "Upgrade Name";
+    [FormerlySerializedAs("upgradeName")] [SerializeField] private string upgradeNameSpanish = "Upgrade Name";
+    [SerializeField] [TextArea(1, 6)] private string upgradeNameEnglish = "";
+    public string upgradeName { get => GameLocalization.Language == GameLanguage.Spanish || string.IsNullOrEmpty(upgradeNameEnglish) ? upgradeNameSpanish : upgradeNameEnglish; set => upgradeNameSpanish = value; }
     [TextArea(2, 4)]
-    public string description = "Upgrade description";
+    [FormerlySerializedAs("description")] [SerializeField] private string descriptionSpanish = "Upgrade description";
+    [SerializeField] [TextArea(1, 6)] private string descriptionEnglish = "";
+    public string description { get => GameLocalization.Language == GameLanguage.Spanish || string.IsNullOrEmpty(descriptionEnglish) ? descriptionSpanish : descriptionEnglish; set => descriptionSpanish = value; }
     public UpgradeType upgradeType;
     public Sprite icon;
 

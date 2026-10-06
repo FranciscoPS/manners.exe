@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8157806635282648231}
   - component: {fileID: 8680801333062226553}
   - component: {fileID: 996319560151493557}
+  - component: {fileID: 2460762991787807325}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -95,9 +96,9 @@ MonoBehaviour:
   m_fontSize: 16
   m_fontSizeBase: 16
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 14
+  m_fontSizeMax: 16
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -111,7 +112,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -137,6 +138,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &2460762991787807325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187196714921411771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: SPC
+    spanish: ESP
+  inspectorPreview: 0
 --- !u!1 &408661760544091188
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,7 +336,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -334,6 +353,7 @@ GameObject:
   - component: {fileID: 3668053807319550996}
   - component: {fileID: 6148843260598562612}
   - component: {fileID: 1854671392601182017}
+  - component: {fileID: 7827835973753398310}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -418,9 +438,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -434,7 +454,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -460,6 +480,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7827835973753398310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1042066687226597118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: D
+    spanish: D
+  inspectorPreview: 0
 --- !u!1 &1083387855714156539
 GameObject:
   m_ObjectHideFlags: 0
@@ -471,6 +507,7 @@ GameObject:
   - component: {fileID: 9099064808468250660}
   - component: {fileID: 5331799511349582347}
   - component: {fileID: 4856247616628256786}
+  - component: {fileID: 2045087682405687658}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -555,9 +592,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -571,7 +608,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -597,6 +634,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &2045087682405687658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083387855714156539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: M
+    spanish: M
+  inspectorPreview: 0
 --- !u!1 &1251882066706415594
 GameObject:
   m_ObjectHideFlags: 0
@@ -779,7 +832,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -965,7 +1020,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -1069,6 +1126,7 @@ GameObject:
   - component: {fileID: 838894548628242658}
   - component: {fileID: 3873180505802628899}
   - component: {fileID: 1011441426149094701}
+  - component: {fileID: 6849172468002739880}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -1153,9 +1211,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -1169,7 +1227,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -1195,6 +1253,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6849172468002739880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1946408244035122110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: O
+    spanish: O
+  inspectorPreview: 0
 --- !u!1 &2094315305738488052
 GameObject:
   m_ObjectHideFlags: 0
@@ -1206,6 +1280,7 @@ GameObject:
   - component: {fileID: 1723313387309405645}
   - component: {fileID: 3948642478009051180}
   - component: {fileID: 8255748782392033956}
+  - component: {fileID: 7528602554932784394}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -1290,9 +1365,9 @@ MonoBehaviour:
   m_fontSize: 16
   m_fontSizeBase: 16
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 14
+  m_fontSizeMax: 16
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -1306,7 +1381,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -1332,6 +1407,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7528602554932784394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094315305738488052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: END
+    spanish: FIN
+  inspectorPreview: 0
 --- !u!1 &2221962909330506121
 GameObject:
   m_ObjectHideFlags: 0
@@ -1514,7 +1605,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -1529,6 +1622,7 @@ GameObject:
   - component: {fileID: 7590978410553775670}
   - component: {fileID: 8367426068592803524}
   - component: {fileID: 7724026311114583159}
+  - component: {fileID: 3519256329092854036}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -1613,9 +1707,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -1629,7 +1723,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -1655,6 +1749,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3519256329092854036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2275496854329324967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: X
+    spanish: X
+  inspectorPreview: 0
 --- !u!1 &2343880340218971962
 GameObject:
   m_ObjectHideFlags: 0
@@ -1666,6 +1776,7 @@ GameObject:
   - component: {fileID: 7271510310011623271}
   - component: {fileID: 5286661499607109465}
   - component: {fileID: 1392071238238970376}
+  - component: {fileID: 5216835186044852018}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -1750,9 +1861,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -1766,7 +1877,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -1792,6 +1903,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5216835186044852018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2343880340218971962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: H
+    spanish: H
+  inspectorPreview: 0
 --- !u!1 &2462883492460790466
 GameObject:
   m_ObjectHideFlags: 0
@@ -1804,6 +1931,7 @@ GameObject:
   - component: {fileID: 6483231372693259258}
   - component: {fileID: 2422924136169961036}
   - component: {fileID: 3985043165249712549}
+  - component: {fileID: 6762861393263679050}
   m_Layer: 0
   m_Name: Slot2
   m_TagString: Untagged
@@ -1909,7 +2037,7 @@ MonoBehaviour:
   m_fontSizeBase: 64
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 32
+  m_fontSizeMin: 38.4
   m_fontSizeMax: 64
   m_fontStyle: 16
   m_HorizontalAlignment: 2
@@ -1924,7 +2052,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -1950,6 +2078,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6762861393263679050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2462883492460790466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: _
+    spanish: _
+  inspectorPreview: 0
 --- !u!1 &2498519369141746633
 GameObject:
   m_ObjectHideFlags: 0
@@ -1961,6 +2105,7 @@ GameObject:
   - component: {fileID: 8117676935544450244}
   - component: {fileID: 2763287616123236931}
   - component: {fileID: 966757154272798183}
+  - component: {fileID: 4177237831705025607}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -2045,9 +2190,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -2061,7 +2206,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -2087,6 +2232,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4177237831705025607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2498519369141746633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: P
+    spanish: P
+  inspectorPreview: 0
 --- !u!1 &2589273488602561079
 GameObject:
   m_ObjectHideFlags: 0
@@ -2269,7 +2430,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -2284,6 +2447,7 @@ GameObject:
   - component: {fileID: 3113877465525100330}
   - component: {fileID: 4242645142048907291}
   - component: {fileID: 2976016413613911013}
+  - component: {fileID: 1005325193896343089}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -2368,9 +2532,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -2384,7 +2548,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -2410,6 +2574,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1005325193896343089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2662192742879918449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: K
+    spanish: K
+  inspectorPreview: 0
 --- !u!1 &2769726017975012666
 GameObject:
   m_ObjectHideFlags: 0
@@ -2592,7 +2772,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -2778,7 +2960,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -2793,6 +2977,7 @@ GameObject:
   - component: {fileID: 9092071639986144260}
   - component: {fileID: 4391662167502296618}
   - component: {fileID: 4140901386306825169}
+  - component: {fileID: 5748979936231846032}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -2877,9 +3062,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -2893,7 +3078,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -2919,6 +3104,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5748979936231846032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2936412439266877975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: I
+    spanish: I
+  inspectorPreview: 0
 --- !u!1 &2996354114364023336
 GameObject:
   m_ObjectHideFlags: 0
@@ -2952,7 +3153,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3630794227561461876}
-  - {fileID: 2123652719929284355}
+  - {fileID: 3735081439037140281}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3003,7 +3204,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4981ec29f7d80fb43a7699108e03ec81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIScreenIntro
-  blocks: []
+  blocks:
+  - {fileID: 2123652719929284355}
 --- !u!114 &5047346715393252367
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3102,6 +3304,7 @@ GameObject:
   - component: {fileID: 230091836805583884}
   - component: {fileID: 7106129274121290699}
   - component: {fileID: 4657481256117435754}
+  - component: {fileID: 128490960552048846}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -3186,9 +3389,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -3202,7 +3405,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -3228,6 +3431,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &128490960552048846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3640264922915868740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: L
+    spanish: L
+  inspectorPreview: 0
 --- !u!1 &3703724271993502654
 GameObject:
   m_ObjectHideFlags: 0
@@ -3410,7 +3629,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -3596,7 +3817,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -3611,6 +3834,7 @@ GameObject:
   - component: {fileID: 4705485552658858906}
   - component: {fileID: 8780326332075139151}
   - component: {fileID: 5425718658598823615}
+  - component: {fileID: 6064160704397355311}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -3695,9 +3919,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -3711,7 +3935,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -3737,6 +3961,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6064160704397355311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3959871314350461115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: Y
+    spanish: Y
+  inspectorPreview: 0
 --- !u!1 &4084988827262748727
 GameObject:
   m_ObjectHideFlags: 0
@@ -3919,7 +4159,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -4105,7 +4347,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -4120,6 +4364,7 @@ GameObject:
   - component: {fileID: 1427947538882262402}
   - component: {fileID: 8488378364431057502}
   - component: {fileID: 3529121510859657896}
+  - component: {fileID: 3495139365674960733}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -4204,9 +4449,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -4220,7 +4465,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -4246,6 +4491,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3495139365674960733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4430281781109784398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: V
+    spanish: V
+  inspectorPreview: 0
 --- !u!1 &4471474124522037275
 GameObject:
   m_ObjectHideFlags: 0
@@ -4428,7 +4689,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -4614,7 +4877,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -4629,6 +4894,7 @@ GameObject:
   - component: {fileID: 2591492452218344915}
   - component: {fileID: 2425189336895407236}
   - component: {fileID: 6913573643406790329}
+  - component: {fileID: 1046996726948472677}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -4713,9 +4979,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -4729,7 +4995,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -4755,6 +5021,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1046996726948472677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5348272130105728207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: B
+    spanish: B
+  inspectorPreview: 0
 --- !u!1 &5511155050521780085
 GameObject:
   m_ObjectHideFlags: 0
@@ -4937,7 +5219,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -5123,7 +5407,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -5309,7 +5595,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -5495,7 +5783,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -5510,6 +5800,7 @@ GameObject:
   - component: {fileID: 740384725257413863}
   - component: {fileID: 3783066429907272727}
   - component: {fileID: 7229713222280477039}
+  - component: {fileID: 5230676685827505522}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -5594,9 +5885,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -5610,7 +5901,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -5636,6 +5927,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5230676685827505522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6050778776319432768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: U
+    spanish: U
+  inspectorPreview: 0
 --- !u!1 &6383657037165472482
 GameObject:
   m_ObjectHideFlags: 0
@@ -5647,6 +5954,7 @@ GameObject:
   - component: {fileID: 8891927680182491857}
   - component: {fileID: 8879465591401872343}
   - component: {fileID: 4227149430865241236}
+  - component: {fileID: 1595410310527090755}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -5731,9 +6039,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -5747,7 +6055,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -5773,6 +6081,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1595410310527090755
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6383657037165472482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: S
+    spanish: S
+  inspectorPreview: 0
 --- !u!1 &6499574815504140094
 GameObject:
   m_ObjectHideFlags: 0
@@ -5784,6 +6108,7 @@ GameObject:
   - component: {fileID: 7876379176145471967}
   - component: {fileID: 9050409175352238411}
   - component: {fileID: 4120969574417238198}
+  - component: {fileID: 3365877276773149020}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -5868,9 +6193,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -5884,7 +6209,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -5910,6 +6235,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3365877276773149020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6499574815504140094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: N
+    spanish: N
+  inspectorPreview: 0
 --- !u!1 &6511048479781393204
 GameObject:
   m_ObjectHideFlags: 0
@@ -6092,7 +6433,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -6107,6 +6450,7 @@ GameObject:
   - component: {fileID: 5939777333585264634}
   - component: {fileID: 4518737692565473989}
   - component: {fileID: 6225670526191360130}
+  - component: {fileID: 8941185586986580170}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -6191,9 +6535,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -6207,7 +6551,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -6233,6 +6577,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8941185586986580170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564855390587828177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: R
+    spanish: R
+  inspectorPreview: 0
 --- !u!1 &6639763453883242043
 GameObject:
   m_ObjectHideFlags: 0
@@ -6415,7 +6775,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -6430,6 +6792,7 @@ GameObject:
   - component: {fileID: 2466941493776182658}
   - component: {fileID: 5545535761529593360}
   - component: {fileID: 251961538819196735}
+  - component: {fileID: 4292588227735147148}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -6514,9 +6877,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -6530,7 +6893,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -6556,6 +6919,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4292588227735147148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6897611605822577734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: Q
+    spanish: Q
+  inspectorPreview: 0
 --- !u!1 &6999472438472277597
 GameObject:
   m_ObjectHideFlags: 0
@@ -6567,6 +6946,7 @@ GameObject:
   - component: {fileID: 3863308523305348067}
   - component: {fileID: 7239717299751295554}
   - component: {fileID: 1835604390865851656}
+  - component: {fileID: 1158843980977333509}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -6651,9 +7031,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -6667,7 +7047,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -6693,6 +7073,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1158843980977333509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6999472438472277597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: F
+    spanish: F
+  inspectorPreview: 0
 --- !u!1 &7074104827042532439
 GameObject:
   m_ObjectHideFlags: 0
@@ -6875,7 +7271,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -6890,6 +7288,7 @@ GameObject:
   - component: {fileID: 3713870729356711423}
   - component: {fileID: 566335926099192103}
   - component: {fileID: 6001744571863082392}
+  - component: {fileID: 6294656676322617808}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -6974,9 +7373,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -6990,7 +7389,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -7016,6 +7415,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6294656676322617808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7099661761548380322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: A
+    spanish: A
+  inspectorPreview: 0
 --- !u!1 &7125540595167152858
 GameObject:
   m_ObjectHideFlags: 0
@@ -7027,6 +7442,7 @@ GameObject:
   - component: {fileID: 3628549710927990908}
   - component: {fileID: 4838896215372624476}
   - component: {fileID: 964160623669818714}
+  - component: {fileID: 6568729128763877293}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -7111,9 +7527,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -7127,7 +7543,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -7153,6 +7569,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6568729128763877293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7125540595167152858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: W
+    spanish: W
+  inspectorPreview: 0
 --- !u!1 &7160909641756043152
 GameObject:
   m_ObjectHideFlags: 0
@@ -7188,7 +7620,7 @@ RectTransform:
   - {fileID: 966168976810450815}
   - {fileID: 9004935503366191108}
   - {fileID: 1026473910871236462}
-  m_Father: {fileID: 7020404466293308590}
+  m_Father: {fileID: 3735081439037140281}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -7259,6 +7691,7 @@ GameObject:
   - component: {fileID: 5509277460172939976}
   - component: {fileID: 1340683292428338533}
   - component: {fileID: 176998600049793837}
+  - component: {fileID: 3058926244923751322}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -7343,9 +7776,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -7359,7 +7792,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -7385,6 +7818,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3058926244923751322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7200687143295203686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: T
+    spanish: T
+  inspectorPreview: 0
 --- !u!1 &7257654454006674746
 GameObject:
   m_ObjectHideFlags: 0
@@ -7396,6 +7845,7 @@ GameObject:
   - component: {fileID: 6279374581109474576}
   - component: {fileID: 5785427840493385825}
   - component: {fileID: 1988716753501064319}
+  - component: {fileID: 1498873971068305714}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -7480,9 +7930,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -7496,7 +7946,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -7522,6 +7972,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1498873971068305714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7257654454006674746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: G
+    spanish: G
+  inspectorPreview: 0
 --- !u!1 &7291436549188369626
 GameObject:
   m_ObjectHideFlags: 0
@@ -7704,7 +8170,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -7890,7 +8358,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -8076,7 +8546,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -8262,7 +8734,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -8278,6 +8752,7 @@ GameObject:
   - component: {fileID: 5364055366225660929}
   - component: {fileID: 7218536031529004530}
   - component: {fileID: 4073091495237328055}
+  - component: {fileID: 558426987356699951}
   m_Layer: 0
   m_Name: Slot0
   m_TagString: Untagged
@@ -8383,7 +8858,7 @@ MonoBehaviour:
   m_fontSizeBase: 64
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 32
+  m_fontSizeMin: 38.4
   m_fontSizeMax: 64
   m_fontStyle: 16
   m_HorizontalAlignment: 2
@@ -8398,7 +8873,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -8424,6 +8899,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &558426987356699951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7707704885221367559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: _
+    spanish: _
+  inspectorPreview: 0
 --- !u!1 &7723554060064328203
 GameObject:
   m_ObjectHideFlags: 0
@@ -8435,6 +8926,7 @@ GameObject:
   - component: {fileID: 453042312011335493}
   - component: {fileID: 867957933691056636}
   - component: {fileID: 1701341353051922219}
+  - component: {fileID: 1282084330874244260}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -8519,9 +9011,9 @@ MonoBehaviour:
   m_fontSize: 16
   m_fontSizeBase: 16
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 14
+  m_fontSizeMax: 16
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -8535,7 +9027,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -8561,6 +9053,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1282084330874244260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7723554060064328203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: DEL
+    spanish: BOR
+  inspectorPreview: 0
 --- !u!1 &7746718361444426826
 GameObject:
   m_ObjectHideFlags: 0
@@ -8572,6 +9080,7 @@ GameObject:
   - component: {fileID: 777499202559916330}
   - component: {fileID: 2352415559247647574}
   - component: {fileID: 1604645495507931544}
+  - component: {fileID: 13244457254225203}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -8656,9 +9165,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -8672,7 +9181,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -8698,6 +9207,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &13244457254225203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7746718361444426826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: J
+    spanish: J
+  inspectorPreview: 0
 --- !u!1 &7930498963461857722
 GameObject:
   m_ObjectHideFlags: 0
@@ -8709,6 +9234,7 @@ GameObject:
   - component: {fileID: 5368679808504676173}
   - component: {fileID: 8861801257268575518}
   - component: {fileID: 7517701999503783347}
+  - component: {fileID: 6444991281326819643}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -8793,9 +9319,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -8809,7 +9335,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -8835,6 +9361,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6444991281326819643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7930498963461857722}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: C
+    spanish: C
+  inspectorPreview: 0
 --- !u!1 &7947007708924385513
 GameObject:
   m_ObjectHideFlags: 0
@@ -9017,7 +9559,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -9032,6 +9576,7 @@ GameObject:
   - component: {fileID: 6424798144904681122}
   - component: {fileID: 2049342494361160787}
   - component: {fileID: 1551372372210177063}
+  - component: {fileID: 101946804954457724}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -9116,9 +9661,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -9132,7 +9677,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -9158,6 +9703,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &101946804954457724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7972444820214703285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: Z
+    spanish: Z
+  inspectorPreview: 0
 --- !u!1 &8091077697386639562
 GameObject:
   m_ObjectHideFlags: 0
@@ -9170,6 +9731,7 @@ GameObject:
   - component: {fileID: 2542829138532242338}
   - component: {fileID: 3893614374310384926}
   - component: {fileID: 362598468582707554}
+  - component: {fileID: 1314179956496839866}
   m_Layer: 0
   m_Name: Slot1
   m_TagString: Untagged
@@ -9275,7 +9837,7 @@ MonoBehaviour:
   m_fontSizeBase: 64
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 32
+  m_fontSizeMin: 38.4
   m_fontSizeMax: 64
   m_fontStyle: 16
   m_HorizontalAlignment: 2
@@ -9290,7 +9852,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -9316,6 +9878,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1314179956496839866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8091077697386639562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: _
+    spanish: _
+  inspectorPreview: 0
 --- !u!1 &8127034889692982397
 GameObject:
   m_ObjectHideFlags: 0
@@ -9498,7 +10076,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -9749,7 +10329,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -9935,7 +10517,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -9950,6 +10534,7 @@ GameObject:
   - component: {fileID: 6139958406964225471}
   - component: {fileID: 8696814197061573179}
   - component: {fileID: 4916926589318779083}
+  - component: {fileID: 9156643693739966564}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -10034,9 +10619,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 16.800001
+  m_fontSizeMax: 28
   m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -10050,7 +10635,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -10076,6 +10661,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &9156643693739966564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8519977695401948884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: E
+    spanish: E
+  inspectorPreview: 0
 --- !u!1 &8537399022543048305
 GameObject:
   m_ObjectHideFlags: 0
@@ -10258,7 +10859,9 @@ MonoBehaviour:
   pressScale: 0.95
   hoverShadow: 1.8
   changeTextOnHover: 0
-  hoverText: "Pr\xF3ximamente"
+  hoverTextLocalized:
+    english: Coming soon
+    spanish: "Pr\xF3ximamente"
   tmpText: {fileID: 0}
   uiText: {fileID: 0}
   replacementText: {fileID: 0}
@@ -10348,6 +10951,7 @@ GameObject:
   - component: {fileID: 1366343158151380418}
   - component: {fileID: 6448486149337370768}
   - component: {fileID: 2151636906139370441}
+  - component: {fileID: 6990348837265233148}
   m_Layer: 0
   m_Name: Title
   m_TagString: Untagged
@@ -10402,7 +11006,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\xA1Nuevo r\xE9cord! Escribe tus iniciales"
+  m_text: New record! Enter your initials
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 11819115c02aa5e47b29a8515fa8e1b7, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: fceb0490f9a3fa843942b0a5b97b8088, type: 2}
@@ -10433,7 +11037,7 @@ MonoBehaviour:
   m_fontSizeBase: 42
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 22
+  m_fontSizeMin: 26.400002
   m_fontSizeMax: 44
   m_fontStyle: 16
   m_HorizontalAlignment: 2
@@ -10448,7 +11052,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -10474,3 +11078,124 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6990348837265233148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9163140418329856474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300f97e155de75e4dbeca91866b2e7ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  content:
+    english: New record! Enter your initials
+    spanish: "\xA1Nuevo r\xE9cord! Escribe tus iniciales"
+  inspectorPreview: 0
+--- !u!1001 &7544443513800614039
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7020404466293308590}
+    m_Modifications:
+    - target: {fileID: 3069683927736778102, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_Name
+      value: ContentFrame
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2123652719929284355}
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+--- !u!224 &3735081439037140281 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 6586113824118754734, guid: a4759a84d81adcc4e901b0a3466ca0ee, type: 3}
+  m_PrefabInstance: {fileID: 7544443513800614039}
+  m_PrefabAsset: {fileID: 0}

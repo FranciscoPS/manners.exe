@@ -10,17 +10,26 @@ public class ChestOpeningSequence : MonoBehaviour
     private static ChestOpeningSequence instance;
     private static bool isQuitting = false;
 
-    private GameObject canvasRoot;
-    private Image dimOverlay;
-    private Image flashOverlay;
-    private CanvasGroup promptGroup;
-    private CanvasGroup skipHintGroup;
-    private TextMeshProUGUI promptText;
-    private TextMeshProUGUI skipHintText;
-    private RadiantAuraVFX aura;
-    private CanvasGroup auraGroup;
-    private ChestShowcase showcase;
+    [SerializeField] private GameObject canvasRoot;
+    [SerializeField] private Image dimOverlay;
+    [SerializeField] private Image flashOverlay;
+    [SerializeField] private CanvasGroup promptGroup;
+    [SerializeField] private CanvasGroup skipHintGroup;
+    [SerializeField] private TextMeshProUGUI promptText;
+    [SerializeField] private TextMeshProUGUI skipHintText;
+    [SerializeField] private RadiantAuraVFX aura;
+    [SerializeField] private CanvasGroup auraGroup;
+    [SerializeField] private ChestShowcase showcase;
+    [SerializeField] private ParticleSystem chestBurstPrefab;
+    private ParticleSystem chestBurst;
 
+    [Header("Textos de la cinemática")]
+    [SerializeField] private LocalizedString skipHint = new LocalizedString("Press {0} to skip", "Pulsa {0} para saltar");
+    [SerializeField] private LocalizedString spaceKey = new LocalizedString("Space", "Espacio");
+
+    [SerializeField, Range(0, 1)] private float dimOpacity = .82f;
+    private Color dimBaseColor;
+    private Color flashBaseColor;
     private bool skipRequested;
     private float promptHue;
 
@@ -40,16 +49,15 @@ public class ChestOpeningSequence : MonoBehaviour
         }
 
         EnsureExists();
-        instance.StartCoroutine(instance.RunSequence(chestInstance, onComplete));
+        if (instance != null) instance.StartCoroutine(instance.RunSequence(chestInstance, onComplete));
+        else onComplete?.Invoke();
     }
 
     private static void EnsureExists()
     {
         if (instance != null) return;
 
-        GameObject go = new GameObject("ChestOpeningSequence");
-        instance = go.AddComponent<ChestOpeningSequence>();
-        DontDestroyOnLoad(go);
+        instance = RuntimeUIPrefabs.Spawn(p => p.chestOpeningSequence);
     }
 
     private void Awake()
@@ -61,8 +69,10 @@ public class ChestOpeningSequence : MonoBehaviour
         }
 
         instance = this;
+        dimBaseColor = dimOverlay.color;
+        flashBaseColor = flashOverlay.color;
         DontDestroyOnLoad(gameObject);
-        BuildUI();
+
     }
 
     private void OnApplicationQuit()
@@ -76,176 +86,11 @@ public class ChestOpeningSequence : MonoBehaviour
             instance = null;
     }
 
-    private void BuildUI()
-    {
-        canvasRoot = new GameObject("ChestOpeningCanvas");
-        canvasRoot.transform.SetParent(transform, false);
-        canvasRoot.AddComponent<UIOverlay>();
-
-        Canvas canvas = canvasRoot.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 300;
-
-        CanvasScaler scaler = canvasRoot.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
-
-        dimOverlay = CreateFullscreenImage("DimOverlay", Color.clear);
-        dimOverlay.raycastTarget = false;
-        SetupVignetteMaterial(dimOverlay);
-
-        GameObject auraObj = new GameObject("Aura", typeof(RectTransform));
-        auraObj.transform.SetParent(canvasRoot.transform, false);
-        RectTransform auraRect = auraObj.GetComponent<RectTransform>();
-        auraRect.anchorMin = auraRect.anchorMax = new Vector2(0.5f, 0.5f);
-        auraRect.pivot = new Vector2(0.5f, 0.5f);
-        auraRect.sizeDelta = new Vector2(1650f, 1650f);
-        auraRect.anchoredPosition = Vector2.zero;
-
-        auraGroup = auraObj.AddComponent<CanvasGroup>();
-        auraGroup.blocksRaycasts = false;
-        auraGroup.interactable = false;
-
-        aura = auraObj.AddComponent<RadiantAuraVFX>();
-        aura.SizeMultiplier = 1f;
-        aura.RaySegments = 18;
-        aura.HoleRadius = 0.5f;
-        aura.HoleSoftness = 0.35f;
-        aura.Initialize(auraRect);
-
-        BuildChestView();
-        BuildPromptText();
-
-        flashOverlay = CreateFullscreenImage("FlashOverlay", Color.clear);
-        flashOverlay.raycastTarget = false;
-
-        canvasRoot.SetActive(false);
-    }
-
-    private static void SetupVignetteMaterial(Image target)
-    {
-        Shader shader = Shader.Find("UI/RadialVignette");
-        if (shader == null) return;
-
-        Material mat = new Material(shader);
-        mat.SetFloat("_InnerRadius", 0.55f);
-        mat.SetFloat("_OuterRadius", 1.7f);
-
-        Vector2 size = target.rectTransform.rect.size;
-        float minDim = Mathf.Max(1f, Mathf.Min(size.x, size.y));
-        mat.SetVector("_RectSize", new Vector4(size.x / minDim, size.y / minDim, 0f, 0f));
-
-        target.material = mat;
-    }
-
-    private Image CreateFullscreenImage(string objName, Color color)
-    {
-        GameObject go = new GameObject(objName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        go.transform.SetParent(canvasRoot.transform, false);
-
-        RectTransform rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-
-        Image img = go.GetComponent<Image>();
-        img.color = color;
-        return img;
-    }
-
-    private void BuildChestView()
-    {
-        GameObject viewObj = new GameObject("ChestView", typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
-        viewObj.transform.SetParent(canvasRoot.transform, false);
-
-        RectTransform viewRect = viewObj.GetComponent<RectTransform>();
-        viewRect.anchorMin = viewRect.anchorMax = new Vector2(0.5f, 0.5f);
-        viewRect.pivot = new Vector2(0.5f, 0.5f);
-        viewRect.anchoredPosition = Vector2.zero;
-
-        RawImage chestView = viewObj.GetComponent<RawImage>();
-        chestView.raycastTarget = false;
-
-        showcase = ChestShowcase.Create(transform, chestView);
-    }
-
-    private void BuildPromptText()
-    {
-        GameObject textObj = new GameObject("PromptText", typeof(RectTransform));
-        textObj.transform.SetParent(canvasRoot.transform, false);
-
-        promptGroup = textObj.AddComponent<CanvasGroup>();
-
-        RectTransform rt = textObj.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 0.14f);
-        rt.anchorMax = new Vector2(0.5f, 0.14f);
-        rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(1200f, 160f);
-        rt.anchoredPosition = Vector2.zero;
-
-        promptText = textObj.AddComponent<TextMeshProUGUI>();
-        promptText.alignment = TextAlignmentOptions.Center;
-        promptText.fontSize = 64;
-        promptText.fontStyle = FontStyles.Bold;
-        promptText.raycastTarget = false;
-        promptText.text = "";
-
-        GameObject hintObj = new GameObject("SkipHintText", typeof(RectTransform));
-        hintObj.transform.SetParent(canvasRoot.transform, false);
-
-        RectTransform hintRect = hintObj.GetComponent<RectTransform>();
-        hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 0.5f);
-        hintRect.pivot = new Vector2(0.5f, 0.5f);
-        hintRect.sizeDelta = new Vector2(1000f, 50f);
-
-        skipHintGroup = hintObj.AddComponent<CanvasGroup>();
-        skipHintText = hintObj.AddComponent<TextMeshProUGUI>();
-        skipHintText.alignment = TextAlignmentOptions.Center;
-        skipHintText.fontSize = 64;
-        skipHintText.color = new Color32(255, 0, 0, 255);
-        skipHintText.raycastTarget = false;
-        skipHintText.text = "";
-
-        UIStyle style = UIStyle.Instance;
-        if (style != null)
-        {
-            style.ApplyText(promptText, UITextRole.Title);
-            promptText.characterSpacing = style.labelSpacing;
-            promptText.extraPadding = true;
-            style.ApplyFont(skipHintText, UITextRole.Label);
-            skipHintText.color = style.alert;
-            skipHintText.fontStyle = FontStyles.UpperCase;
-            skipHintText.characterSpacing = style.labelSpacing;
-            skipHintText.extraPadding = true;
-            skipHintText.textWrappingMode = TextWrappingModes.NoWrap;
-            skipHintText.enableAutoSizing = true;
-            skipHintText.fontSizeMax = 52f;
-            skipHintText.fontSizeMin = 30f;
-            hintRect.sizeDelta = new Vector2(1160f, 90f);
-            return;
-        }
-
-        TMP_FontAsset[] loadedFonts = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
-        for (int i = 0; i < loadedFonts.Length; i++)
-        {
-            if (loadedFonts[i].name == "Orbitron-ExtraBold SDF")
-            {
-                skipHintText.font = loadedFonts[i];
-                return;
-            }
-        }
-
-        Debug.LogError("No se encontró la fuente TMP Orbitron-ExtraBold SDF para la indicación del cofre.");
-    }
-
-    private static string KeyLabel(Key key)
+    private string KeyLabel(Key key)
     {
         switch (key)
         {
-            case Key.Space: return "Espacio";
+            case Key.Space: return spaceKey.Value;
             case Key.Enter: return "Enter";
             case Key.Escape: return "Esc";
             default: return key.ToString();
@@ -266,14 +111,14 @@ public class ChestOpeningSequence : MonoBehaviour
         promptHue = UnityEngine.Random.value;
 
         canvasRoot.SetActive(true);
-        dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, 0f);
+        dimOverlay.color = new Color(dimBaseColor.r, dimBaseColor.g, dimBaseColor.b, 0f);
         flashOverlay.color = Color.clear;
         promptGroup.alpha = 1f;
         skipHintGroup.alpha = 1f;
         auraGroup.alpha = 1f;
-        promptText.text = config.promptMessage;
-        skipHintText.text = config.allowSkip ? string.Format(config.skipHintMessage, KeyLabel(config.skipKey)) : "";
-        skipHintText.rectTransform.anchoredPosition = new Vector2(0f, 315f);
+        promptText.GetComponent<LocalizedText>()?.Apply();
+        skipHintText.text = config.allowSkip ? skipHint.Format(KeyLabel(config.skipKey)) : "";
+
         aura.SpinMultiplier = 0.3f;
         aura.Play();
         showcase.TryBegin(config);
@@ -396,7 +241,7 @@ public class ChestOpeningSequence : MonoBehaviour
 
     private void UpdateAnticipation(ChestOpeningConfig config, float t)
     {
-        dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, config.dimColor.a * t);
+        dimOverlay.color = new Color(dimBaseColor.r, dimBaseColor.g, dimBaseColor.b, dimOpacity * t);
         aura.SpinMultiplier = Mathf.Lerp(0.3f, 1f, t);
         UpdatePromptPulse(t);
     }
@@ -412,7 +257,7 @@ public class ChestOpeningSequence : MonoBehaviour
     private void UpdateFlash(ChestOpeningConfig config, float t)
     {
         float flashT = t < 1f ? 1f - Mathf.Abs(t * 2f - 1f) : 0f;
-        flashOverlay.color = new Color(config.flashColor.r, config.flashColor.g, config.flashColor.b, flashT);
+        flashOverlay.color = new Color(flashBaseColor.r, flashBaseColor.g, flashBaseColor.b, flashT);
     }
 
     private IEnumerator RunFadeOutPhase(ChestOpeningConfig config, float duration)
@@ -426,7 +271,7 @@ public class ChestOpeningSequence : MonoBehaviour
         while (elapsed < duration)
         {
             float t = elapsed / duration;
-            dimOverlay.color = new Color(config.dimColor.r, config.dimColor.g, config.dimColor.b, Mathf.Lerp(startDim, 0f, t));
+            dimOverlay.color = new Color(dimBaseColor.r, dimBaseColor.g, dimBaseColor.b, Mathf.Lerp(startDim, 0f, t));
             promptGroup.alpha = Mathf.Lerp(startPrompt, 0f, t);
             skipHintGroup.alpha = Mathf.Lerp(startSkipHint, 0f, t);
             auraGroup.alpha = Mathf.Lerp(startAura, 0f, t);
@@ -499,76 +344,12 @@ public class ChestOpeningSequence : MonoBehaviour
         MusicManager.Instance.PlaySFXOneShot(clip, volume);
     }
 
-    private static void SpawnWorldBurst(Vector3 position)
+    private void SpawnWorldBurst(Vector3 position)
     {
-        GameObject go = new GameObject("ChestBurstVFX");
-        go.transform.position = position + Vector3.up * 1.2f;
-
-        ParticleSystem ps = go.AddComponent<ParticleSystem>();
-        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-
-        var main = ps.main;
-        main.duration = 1.2f;
-        main.loop = false;
-        main.useUnscaledTime = true;
-        main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.1f);
-        main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 7f);
-        main.startSize = new ParticleSystem.MinMaxCurve(0.3f, 0.9f);
-        main.startColor = Color.white;
-        main.gravityModifier = -0.15f;
-        main.maxParticles = 60;
-        main.playOnAwake = false;
-
-        var emission = ps.emission;
-        emission.rateOverTime = 0f;
-        emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 40, 60) });
-
-        var shape = ps.shape;
-        shape.shapeType = ParticleSystemShapeType.Sphere;
-        shape.radius = 0.3f;
-
-        var colorOverLifetime = ps.colorOverLifetime;
-        colorOverLifetime.enabled = true;
-        Gradient gradient = new Gradient();
-        gradient.SetKeys(
-            new GradientColorKey[]
-            {
-                new GradientColorKey(new Color(1f, 0.95f, 0.6f), 0f),
-                new GradientColorKey(new Color(1f, 0.6f, 1f), 0.5f),
-                new GradientColorKey(new Color(0.5f, 0.8f, 1f), 1f)
-            },
-            new GradientAlphaKey[]
-            {
-                new GradientAlphaKey(1f, 0f),
-                new GradientAlphaKey(1f, 0.6f),
-                new GradientAlphaKey(0f, 1f)
-            });
-        colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradient);
-
-        ParticleSystemRenderer renderer = ps.GetComponent<ParticleSystemRenderer>();
-        renderer.renderMode = ParticleSystemRenderMode.Billboard;
-        renderer.sortMode = ParticleSystemSortMode.Distance;
-
-        Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-        if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
-
-        if (shader != null)
-        {
-            Material mat = new Material(shader);
-            mat.mainTexture = RadiantAuraVFX.GetOrCreateSoftDotTexture();
-            mat.SetFloat("_Surface", 1);
-            mat.SetFloat("_BlendOp", 0);
-            mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
-            mat.SetFloat("_ZWrite", 0);
-            mat.renderQueue = 3000;
-            renderer.material = mat;
-        }
-
-        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        renderer.receiveShadows = false;
-
-        ps.Play();
-        Destroy(go, 2.5f);
+        if (chestBurstPrefab == null) return;
+        if (chestBurst == null) chestBurst = Instantiate(chestBurstPrefab);
+        chestBurst.transform.position = position + Vector3.up * 1.2f;
+        chestBurst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        chestBurst.Play();
     }
 }

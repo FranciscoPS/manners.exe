@@ -25,7 +25,7 @@ public enum UITextRole
 [CreateAssetMenu(fileName = "UIStyle", menuName = "Game/Estilo de la interfaz")]
 public sealed class UIStyle : ScriptableObject
 {
-    public const string ResourceName = "UIStyle";
+    public const string ResourceName = "UI/UIStyle_Production";
     public const string PlateShaderName = "UI/Manners Plate";
     public const int IdentityVersion = 4;
 
@@ -457,14 +457,4 @@ public sealed class UIStyle : ScriptableObject
             ApplyText(label, UITextRole.Label);
     }
 
-    public Image CreatePlate(string objectName, Transform parent, Color color, float skewAmount, bool shadow = true, Material material = null)
-    {
-        GameObject go = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        go.transform.SetParent(parent, false);
-
-        Image image = go.GetComponent<Image>();
-        image.raycastTarget = false;
-        ApplyPlate(image, color, skewAmount, shadow, material);
-        return image;
-    }
 }

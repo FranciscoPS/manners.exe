@@ -11,14 +11,25 @@ public enum UpgradeMode
 
 public class UpgradeButton : MonoBehaviour
 {
-    private TextMeshProUGUI upgradeNameText;
-    private TextMeshProUGUI descriptionText;
-    private TextMeshProUGUI labelText;
-    private TextMeshProUGUI valuesText;
-    private TextMeshProUGUI costText;
-    private Image iconImage;
-    private Button button;
-    private CanvasGroup canvasGroup;
+    [Header("Textos editables por idioma")]
+    [SerializeField] private LocalizedString itemLabel = new LocalizedString("SPECIAL ITEM!", "¡ÍTEM ESPECIAL!");
+    [SerializeField] private LocalizedString upgradeLevel = new LocalizedString("{0} Lv.{1}", "{0} lvl.{1}");
+    [SerializeField] private LocalizedString costLabel = new LocalizedString("Cost: {0} {1}", "Costo: {0} {1}");
+    [SerializeField] private LocalizedString coinSingular = new LocalizedString("coin", "moneda");
+    [SerializeField] private LocalizedString coinPlural = new LocalizedString("coins", "monedas");
+    [SerializeField] private LocalizedString multiFirst = new LocalizedString("0% → {0:F1}%\n<size=62%>+{1} bullets</size>", "0% → {0:F1}%\n<size=62%>+{1} balas</size>");
+    [SerializeField] private LocalizedString chainFirst = new LocalizedString("0% → {0:F1}%\n<size=62%>pushes {1} enemies</size>", "0% → {0:F1}%\n<size=62%>empuja {1} enem.</size>");
+    [SerializeField] private LocalizedString multiNext = new LocalizedString("{0:F1}% → {1:F1}%\n<size=62%>+{2} → +{3} bullets</size>", "{0:F1}% → {1:F1}%\n<size=62%>+{2} → +{3} balas</size>");
+    [SerializeField] private LocalizedString chainNext = new LocalizedString("{0:F1}% → {1:F1}%\n<size=62%>pushes {2} → {3} enemies</size>", "{0:F1}% → {1:F1}%\n<size=62%>empuja {2} → {3} enem.</size>");
+
+    [SerializeField] private TextMeshProUGUI upgradeNameText;
+    [SerializeField] private TextMeshProUGUI descriptionText;
+    [SerializeField] private TextMeshProUGUI labelText;
+    [SerializeField] private TextMeshProUGUI valuesText;
+    [SerializeField] private TextMeshProUGUI costText;
+    [SerializeField] private Image iconImage;
+    [SerializeField] private Button button;
+    [SerializeField] private CanvasGroup canvasGroup;
     private RectTransform rectTransform;
 
     [Header("Disabled Settings")]
@@ -33,8 +44,8 @@ public class UpgradeButton : MonoBehaviour
     [Header("Component References")]
     [Tooltip("Casilla de fondo del icono: se oculta junto con el icono cuando la mejora no tiene imagen.")]
     [SerializeField] private GameObject iconBackdrop;
-    private HoldToSelectButton holdToSelectButton;
-    private PremiumUpgradeVisuals premiumVisuals;
+    [SerializeField] private HoldToSelectButton holdToSelectButton;
+    [SerializeField] private PremiumUpgradeVisuals premiumVisuals;
     private PurchaseEffectFeedback purchaseEffect;
 
     private UpgradeData assignedUpgrade;
@@ -75,21 +86,16 @@ public class UpgradeButton : MonoBehaviour
 
     private void Awake()
     {
-        button = GetComponent<Button>();
-        canvasGroup = GetComponent<CanvasGroup>();
         rectTransform = GetComponent<RectTransform>();
 
         if (canvasGroup == null)
         {
-            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            Debug.LogError("Asigna CanvasGroup en la tarjeta.", this);
         }
-
-        holdToSelectButton = GetComponent<HoldToSelectButton>();
-        premiumVisuals = GetComponent<PremiumUpgradeVisuals>();
 
         if (premiumVisuals == null)
         {
-            premiumVisuals = gameObject.AddComponent<PremiumUpgradeVisuals>();
+            Debug.LogError("Asigna PremiumUpgradeVisuals en la tarjeta.", this);
         }
 
         purchaseEffect = GetComponent<PurchaseEffectFeedback>();
@@ -111,33 +117,6 @@ public class UpgradeButton : MonoBehaviour
             }
         }
 
-        TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
-        Image[] allImages = GetComponentsInChildren<Image>();
-
-        foreach (var img in allImages)
-        {
-            if (img.gameObject.name.Contains("Icon"))
-            {
-                iconImage = img;
-                break;
-            }
-        }
-
-        foreach (var text in allTexts)
-        {
-            string name = text.gameObject.name;
-
-            if (name.Contains("Name") || name.Contains("Title"))
-                upgradeNameText = text;
-            else if (name.Contains("Description") || name.Contains("Desc"))
-                descriptionText = text;
-            else if (name.Contains("Label") || name.Contains("Status"))
-                labelText = text;
-            else if (name.Contains("Value") || name.Contains("Stats") || name.Contains("Number"))
-                valuesText = text;
-            else if (name.Contains("Cost") || name.Contains("Price"))
-                costText = text;
-        }
     }
 
     public void Setup(UpgradeData upgrade, int currentUpgradeLevel, UpgradeMode mode = UpgradeMode.LevelUp)
@@ -167,7 +146,6 @@ public class UpgradeButton : MonoBehaviour
             upgradeCost = upgrade.CalculateShopCostForLevel(nextLevel);
         }
 
-        EnsureReferences();
         EnsureCostTextOpaque();
         CheckAffordability();
         UpdateUI();
@@ -216,8 +194,6 @@ public class UpgradeButton : MonoBehaviour
         }
 
         gameObject.SetActive(true);
-
-        EnsureReferences();
 
         canAfford = true;
         upgradeCost = 0;
@@ -273,46 +249,8 @@ public class UpgradeButton : MonoBehaviour
 
         if (labelText != null)
         {
-            labelText.text = "¡ÍTEM ESPECIAL!";
+            labelText.text = itemLabel.Value;
             labelText.color = assignedChestItem.accentColor;
-        }
-    }
-
-    private void EnsureReferences()
-    {
-        if (upgradeNameText != null && descriptionText != null) return;
-
-        if (button == null)
-        {
-            button = GetComponent<Button>();
-        }
-
-        TextMeshProUGUI[] allTexts = GetComponentsInChildren<TextMeshProUGUI>();
-        Image[] allImages = GetComponentsInChildren<Image>();
-
-        foreach (var img in allImages)
-        {
-            if (img.gameObject.name.Contains("Icon"))
-            {
-                iconImage = img;
-                break;
-            }
-        }
-
-        foreach (var text in allTexts)
-        {
-            string name = text.gameObject.name;
-
-            if (name.Contains("Name") || name.Contains("Title"))
-                upgradeNameText = text;
-            else if (name.Contains("Description") || name.Contains("Desc"))
-                descriptionText = text;
-            else if (name.Contains("Label") || name.Contains("Status"))
-                labelText = text;
-            else if (name.Contains("Value") || name.Contains("Stats") || name.Contains("Number"))
-                valuesText = text;
-            else if (name.Contains("Cost") || name.Contains("Price"))
-                costText = text;
         }
     }
 
@@ -320,7 +258,7 @@ public class UpgradeButton : MonoBehaviour
     {
         if (costText == null) return;
         CanvasGroup cg = costText.GetComponent<CanvasGroup>();
-        if (cg == null) cg = costText.gameObject.AddComponent<CanvasGroup>();
+        if (cg == null) return;
         cg.ignoreParentGroups = true;
         cg.alpha = 1f;
     }
@@ -380,7 +318,7 @@ public class UpgradeButton : MonoBehaviour
 
         if (upgradeNameText != null)
         {
-            upgradeNameText.text = $"{assignedUpgrade.upgradeName} lvl.{nextLevel}";
+            upgradeNameText.text = upgradeLevel.Format(assignedUpgrade.upgradeName, nextLevel);
         }
 
         if (descriptionText != null)
@@ -407,8 +345,8 @@ public class UpgradeButton : MonoBehaviour
             {
                 costText.gameObject.SetActive(true);
 
-                string coinWord = upgradeCost == 1 ? "moneda" : "monedas";
-                costText.text = $"Costo: {upgradeCost} {coinWord}";
+                string coinWord = upgradeCost == 1 ? coinSingular.Value : coinPlural.Value;
+                costText.text = costLabel.Format(upgradeCost, coinWord);
 
                 costText.color = CostColor(canAfford);
             }
@@ -462,12 +400,12 @@ public class UpgradeButton : MonoBehaviour
                 else if (assignedUpgrade.upgradeType == UpgradeType.MultiShot)
                 {
                     int nextBullets = 3;
-                    valuesText.text = $"0% → {nextValue:F1}%\n<size=62%>+{nextBullets} balas</size>";
+                    valuesText.text = multiFirst.Format(nextValue, nextBullets);
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
                     int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
-                    valuesText.text = $"0% → {nextValue:F1}%\n<size=62%>empuja {nextEnemies} enem.</size>";
+                    valuesText.text = chainFirst.Format(nextValue, nextEnemies);
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
@@ -525,13 +463,13 @@ public class UpgradeButton : MonoBehaviour
                 {
                     int currentBullets = PlayerStatsManager.Instance.GetMultiShotExtraBullets();
                     int nextBullets = 3 + ((nextLevel - 1) / 4) * 3;
-                    valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%\n<size=62%>+{currentBullets} → +{nextBullets} balas</size>";
+                    valuesText.text = multiNext.Format(currentUpgradeValue, nextUpgradeValue, currentBullets, nextBullets);
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.Knockback)
                 {
                     int currentEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(currentLevel) + 1;
                     int nextEnemies = PlayerStatsManager.Instance.GetKnockbackChainJumpsForLevel(nextLevel) + 1;
-                    valuesText.text = $"{currentUpgradeValue:F1}% → {nextUpgradeValue:F1}%\n<size=62%>empuja {currentEnemies} → {nextEnemies} enem.</size>";
+                    valuesText.text = chainNext.Format(currentUpgradeValue, nextUpgradeValue, currentEnemies, nextEnemies);
                 }
                 else if (assignedUpgrade.upgradeType == UpgradeType.ExplosiveShot)
                 {
@@ -659,5 +597,12 @@ public class UpgradeButton : MonoBehaviour
         {
             valuesText.color = ValuesColor(canAfford);
         }
+    }
+    private void OnEnable() => GameLocalization.LanguageChanged += RefreshLanguage;
+    private void OnDisable() => GameLocalization.LanguageChanged -= RefreshLanguage;
+    private void RefreshLanguage()
+    {
+        if (assignedChestItem != null) UpdateChestUI();
+        else UpdateUI();
     }
 }

@@ -28,7 +28,7 @@ public class UpgradeDatabase : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<UpgradeDatabase>("UpgradeDatabase");
+                instance = Resources.Load<UpgradeDatabase>("UpgradeDatabase_Production");
             }
             return instance;
         }

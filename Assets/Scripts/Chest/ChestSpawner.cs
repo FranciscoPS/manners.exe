@@ -224,6 +224,6 @@ public class ChestSpawner : MonoBehaviour, IUpdateable
             activeChest.AddComponent<ChestPickup>();
         }
 
-        ChestAnnouncement.Show("¡Un cofre ha aparecido en el centro del mapa!");
+        ChestAnnouncement.Show();
     }
 }

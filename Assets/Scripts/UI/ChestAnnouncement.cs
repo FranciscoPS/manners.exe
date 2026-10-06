@@ -16,15 +16,11 @@ public class ChestAnnouncement : MonoBehaviour
     [SerializeField] private float pulseMinScale = 0.9f;
     [SerializeField] private float pulseMaxScale = 1.15f;
 
-    [Header("Style")]
-    [SerializeField] private int fontSize = 54;
-    [SerializeField] private Color textColor = new Color(1f, 0.85f, 0.2f);
-    [SerializeField] private float verticalAnchor = 0.78f;
-
-    private TMP_Text text;
-    private RectTransform textRect;
-    private CanvasGroup group;
-    private UnityEngine.UI.Image plate;
+    [Header("Referencias visuales del prefab")]
+    [SerializeField] private TMP_Text text;
+    [SerializeField] private RectTransform textRect;
+    [SerializeField] private CanvasGroup group;
+    [SerializeField] private UnityEngine.UI.Image plate;
     private Coroutine routine;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -34,20 +30,18 @@ public class ChestAnnouncement : MonoBehaviour
         isQuitting = false;
     }
 
-    public static void Show(string message)
+    public static void Show()
     {
         if (isQuitting) return;
         EnsureExists();
-        instance.ShowInternal(message);
+        if (instance != null) instance.ShowInternal();
     }
 
     private static void EnsureExists()
     {
         if (instance != null) return;
 
-        GameObject go = new GameObject("ChestAnnouncement");
-        instance = go.AddComponent<ChestAnnouncement>();
-        DontDestroyOnLoad(go);
+        instance = RuntimeUIPrefabs.Spawn(p => p.chestAnnouncement);
     }
 
     private void Awake()
@@ -60,7 +54,7 @@ public class ChestAnnouncement : MonoBehaviour
 
         instance = this;
         DontDestroyOnLoad(gameObject);
-        BuildUI();
+
     }
 
     private void OnApplicationQuit()
@@ -74,84 +68,9 @@ public class ChestAnnouncement : MonoBehaviour
             instance = null;
     }
 
-    private void BuildUI()
-    {
-        GameObject canvasObj = new GameObject("ChestAnnouncementCanvas");
-        canvasObj.transform.SetParent(transform, false);
-
-        Canvas canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 200;
-
-        var scaler = canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
-        scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
-
-        UIStyle style = UIStyle.Instance;
-
-        GameObject bannerObj = new GameObject("AnnouncementBanner", typeof(RectTransform));
-        bannerObj.transform.SetParent(canvasObj.transform, false);
-        group = bannerObj.AddComponent<CanvasGroup>();
-        group.blocksRaycasts = false;
-        group.interactable = false;
-
-        textRect = (RectTransform)bannerObj.transform;
-        textRect.anchorMin = new Vector2(0.5f, verticalAnchor);
-        textRect.anchorMax = new Vector2(0.5f, verticalAnchor);
-        textRect.pivot = new Vector2(0.5f, 0.5f);
-        textRect.anchoredPosition = Vector2.zero;
-        textRect.sizeDelta = new Vector2(1400f, 200f);
-
-        if (style != null)
-        {
-            plate = style.CreatePlate("Plate", bannerObj.transform, style.panel, style.skew, true, null);
-            plate.GetComponent<UnityEngine.UI.Shadow>().effectColor = style.yellow;
-            plate.rectTransform.anchorMin = plate.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        }
-
-        GameObject textObj = new GameObject("AnnouncementText");
-        textObj.transform.SetParent(bannerObj.transform, false);
-
-        text = textObj.AddComponent<TextMeshProUGUI>();
-        text.alignment = TextAlignmentOptions.Center;
-        text.textWrappingMode = TextWrappingModes.Normal;
-        text.fontSize = fontSize;
-        text.color = textColor;
-        text.fontStyle = FontStyles.Bold;
-        text.raycastTarget = false;
-
-        if (style != null)
-        {
-            style.ApplyText(text, UITextRole.Title);
-            text.color = style.yellow;
-            text.characterSpacing = 3f;
-            text.extraPadding = true;
-        }
-
-        RectTransform labelRect = text.rectTransform;
-        labelRect.anchorMin = Vector2.zero;
-        labelRect.anchorMax = Vector2.one;
-        labelRect.offsetMin = Vector2.zero;
-        labelRect.offsetMax = Vector2.zero;
-
-        bannerObj.SetActive(false);
-    }
-
-    private void ShowInternal(string message)
+    private void ShowInternal()
     {
         if (text == null) return;
-
-        text.text = message;
-
-        if (plate != null)
-        {
-            textRect.gameObject.SetActive(true);
-            text.ForceMeshUpdate();
-            Vector2 size = text.GetPreferredValues(message, textRect.sizeDelta.x - 120f, 0f);
-            plate.rectTransform.sizeDelta = new Vector2(size.x + fontSize * 2.2f, size.y + fontSize * 0.7f);
-        }
 
         if (routine != null)
             StopCoroutine(routine);

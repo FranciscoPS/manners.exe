@@ -5,13 +5,16 @@ using DG.Tweening;
 
 public class ExperienceUI : MonoBehaviour, IUpdateable
 {
+    [Header("Textos editables por idioma")]
+    [SerializeField] private LocalizedString levelLabel = new LocalizedString("Level ", "Nivel ");
+
     [Header("Animation Settings")]
     [SerializeField] private float fillSpeed = 5f;
 
-    private Image expBarFill;
-    private TextMeshProUGUI levelText;
-    private TextMeshProUGUI expText;
-    private RectTransform barRect;
+    [SerializeField] private Image expBarFill;
+    [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI expText;
+    [SerializeField] private RectTransform barRect;
 
     private PlayerExperience playerExperience;
 
@@ -23,45 +26,6 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
     private string cachedExpText = "";
     private int lastCurrentExp = -1;
     private int lastRequiredExp = -1;
-
-    private void Awake()
-    {
-        Transform expBarPanel = transform.Find("ExpBarPanel");
-        if (expBarPanel == null) return;
-
-        barRect = expBarPanel as RectTransform;
-
-        Image[] allImages = expBarPanel.GetComponentsInChildren<Image>(true);
-        foreach (var img in allImages)
-        {
-            if (img.gameObject.name.Contains("ExpBarFill") || img.gameObject.name.Contains("Fill"))
-            {
-                expBarFill = img;
-                break;
-            }
-        }
-
-        TextMeshProUGUI[] allTexts = expBarPanel.GetComponentsInChildren<TextMeshProUGUI>(true);
-        foreach (var txt in allTexts)
-        {
-            string txtName = txt.gameObject.name.ToLower();
-            if (txtName.Contains("level") || txtName.Contains("lvl") || txtName.Contains("nivel"))
-            {
-                levelText = txt;
-                break;
-            }
-        }
-
-        foreach (var txt in allTexts)
-        {
-            string txtName = txt.gameObject.name.ToLower();
-            if ((txtName.Contains("exp") || txtName.Contains("xp")) && !txtName.Contains("level") && !txtName.Contains("nivel"))
-            {
-                expText = txt;
-                break;
-            }
-        }
-    }
 
     private void Start()
     {
@@ -119,7 +83,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
         if (levelText != null && playerExperience != null)
         {
             int level = playerExperience.GetCurrentLevel();
-            levelText.text = "Nivel " + level;
+            levelText.text = levelLabel.Value + level;
         }
 
         if (expText != null && (currentExp != lastCurrentExp || requiredExp != lastRequiredExp))
@@ -138,7 +102,7 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
 
         if (levelText != null)
         {
-            levelText.text = "Nivel " + newLevel;
+            levelText.text = levelLabel.Value + newLevel;
         }
 
         if (barRect != null)
@@ -147,5 +111,11 @@ public class ExperienceUI : MonoBehaviour, IUpdateable
             barRect.localScale = Vector3.one;
             barRect.DOPunchScale(new Vector3(0.012f, 0.35f, 0f), 0.4f, 6, 0.6f).SetUpdate(true);
         }
+    }
+    private void OnEnable() => GameLocalization.LanguageChanged += RefreshLanguage;
+    private void OnDisable() => GameLocalization.LanguageChanged -= RefreshLanguage;
+    private void RefreshLanguage()
+    {
+        if (levelText != null && playerExperience != null) levelText.text = levelLabel.Value + playerExperience.GetCurrentLevel();
     }
 }

@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 
 public static class ToonEnvironmentTools
 {
-    public const string StyleAssetPath = "Assets/Resources/ToonEnvironmentStyle.asset";
+    public const string StyleAssetPath = "Assets/Configurations/Production/Resources/ToonEnvironmentStyle_Production.asset";
     public const string ReportPath = "Logs/toon-style-report.txt";
     public const string ValidationPath = "Logs/toon-style-validation.txt";
 

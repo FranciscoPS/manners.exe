@@ -3,21 +3,17 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using TMPro;
 
-public class HoverTooltipUI : MonoBehaviour
+public class HoverTooltipUI : MonoBehaviour, IUpdateable
 {
     private static HoverTooltipUI instance;
 
-    private RectTransform selfRect;
     private RectTransform canvasRect;
     private Canvas ownerCanvas;
-    private RectTransform panelRect;
-    private TextMeshProUGUI titleText;
-    private TextMeshProUGUI bodyText;
+    [SerializeField] private RectTransform panelRect;
+    [SerializeField] private TextMeshProUGUI titleText;
+    [SerializeField] private TextMeshProUGUI bodyText;
 
-    private static readonly Vector2 CursorOffset = new Vector2(24f, -24f);
-    private static readonly Color PanelColor = new Color(0.04f, 0.05f, 0.14f, 0.96f);
-    private static readonly Color TitleColor = Color.white;
-    private static readonly Color BodyColor = new Color(0.82f, 0.85f, 0.95f, 1f);
+    [SerializeField] private Vector2 cursorOffset = new Vector2(24f, -24f);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -42,82 +38,13 @@ public class HoverTooltipUI : MonoBehaviour
         if (instance != null) return instance;
         if (canvas == null) return null;
 
-        GameObject root = new GameObject("HoverTooltip", typeof(RectTransform));
-        root.transform.SetParent(canvas.transform, false);
-        root.transform.SetAsLastSibling();
-
-        instance = root.AddComponent<HoverTooltipUI>();
-        instance.Build(canvas);
+        HoverTooltipUI prefab = Resources.Load<RuntimeUIPrefabs>("UI/RuntimeUIPrefabs_Production")?.hoverTooltip;
+        if (prefab == null) return null;
+        instance = Instantiate(prefab, canvas.transform, false);
+        instance.ownerCanvas = canvas;
+        instance.canvasRect = canvas.transform as RectTransform;
 
         return instance;
-    }
-
-    private void Build(Canvas canvas)
-    {
-        ownerCanvas = canvas;
-        canvasRect = canvas.transform as RectTransform;
-
-        selfRect = (RectTransform)transform;
-        selfRect.anchorMin = Vector2.zero;
-        selfRect.anchorMax = Vector2.one;
-        selfRect.offsetMin = Vector2.zero;
-        selfRect.offsetMax = Vector2.zero;
-
-        GameObject panelObj = new GameObject("Panel", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
-        panelObj.transform.SetParent(transform, false);
-
-        panelRect = (RectTransform)panelObj.transform;
-        panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-        panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRect.pivot = new Vector2(0f, 1f);
-        panelRect.sizeDelta = new Vector2(340f, 0f);
-
-        UIStyle style = UIStyle.Instance;
-
-        Image background = panelObj.GetComponent<Image>();
-        background.color = PanelColor;
-        background.raycastTarget = false;
-        if (style != null)
-            style.ApplyPanel(background, false);
-
-        VerticalLayoutGroup layout = panelObj.GetComponent<VerticalLayoutGroup>();
-        layout.padding = style != null ? new RectOffset(22, 22, 16, 18) : new RectOffset(16, 16, 12, 12);
-        layout.spacing = 4f;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-        layout.childForceExpandWidth = true;
-        layout.childForceExpandHeight = false;
-
-        ContentSizeFitter fitter = panelObj.GetComponent<ContentSizeFitter>();
-        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        titleText = CreateText(panelObj.transform, "Title", 22f, FontStyles.Bold, TitleColor);
-        bodyText = CreateText(panelObj.transform, "Body", 17f, FontStyles.Normal, BodyColor);
-
-        if (style != null)
-        {
-            style.ApplyText(titleText, UITextRole.Heading);
-            style.ApplyText(bodyText, UITextRole.Body);
-            bodyText.color = style.textDim;
-        }
-
-        gameObject.SetActive(false);
-    }
-
-    private static TextMeshProUGUI CreateText(Transform parent, string name, float size, FontStyles style, Color color)
-    {
-        GameObject go = new GameObject(name, typeof(RectTransform));
-        go.transform.SetParent(parent, false);
-
-        TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.fontSize = size;
-        tmp.fontStyle = style;
-        tmp.color = color;
-        tmp.textWrappingMode = TextWrappingModes.Normal;
-        tmp.raycastTarget = false;
-
-        return tmp;
     }
 
     private void ShowInternal(string title, string body)
@@ -132,7 +59,10 @@ public class HoverTooltipUI : MonoBehaviour
         UpdatePosition();
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+    private void OnEnable() { UpdateManager.Instance?.Register(this); GameLocalization.LanguageChanged += Hide; }
+    private void OnDisable() { UpdateManager.Instance?.Unregister(this); GameLocalization.LanguageChanged -= Hide; }
+    public void OnUpdate(float deltaTime)
     {
         if (gameObject.activeSelf)
             UpdatePosition();
@@ -147,7 +77,7 @@ public class HoverTooltipUI : MonoBehaviour
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, eventCamera, out Vector2 localPoint);
 
-        panelRect.anchoredPosition = ClampToCanvas(localPoint + CursorOffset);
+        panelRect.anchoredPosition = ClampToCanvas(localPoint + cursorOffset);
     }
 
     private Vector2 ClampToCanvas(Vector2 position)

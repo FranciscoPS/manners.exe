@@ -20,12 +20,13 @@ public class PremiumUpgradeVisuals : MonoBehaviour
 
     private RectTransform rectTransform;
     private Tween pulseTween;
-    private RadiantAuraVFX aura;
-    private PokemonHoloEffect holo;
+    [SerializeField] private RadiantAuraVFX aura;
+    [SerializeField] private PokemonHoloEffect holo;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
+        if (aura != null) { aura.TrackTarget = rectTransform; aura.Initialize(rectTransform); }
     }
 
     public void SetPremium(bool premium, UpgradeMode mode = UpgradeMode.LevelUp)
@@ -47,67 +48,17 @@ public class PremiumUpgradeVisuals : MonoBehaviour
     {
         if (useHolo)
         {
-            if (holo == null)
-            {
-                holo = CreateHolo();
-            }
-
-            holo.Play();
+            holo?.Play();
             aura?.Stop();
         }
         else
         {
-            if (aura == null)
-            {
-                aura = CreateAura();
-            }
-
-            aura.Play();
+            aura?.Play();
             holo?.Stop();
         }
 
         if (usePulse)
             StartPulseAnimation();
-    }
-
-    private PokemonHoloEffect CreateHolo()
-    {
-        GameObject holoObj = new GameObject("HoloFoil", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        holoObj.transform.SetParent(rectTransform, false);
-        holoObj.transform.SetAsLastSibling();
-
-        RectTransform holoRect = holoObj.GetComponent<RectTransform>();
-        holoRect.anchorMin = Vector2.zero;
-        holoRect.anchorMax = Vector2.one;
-        holoRect.offsetMin = Vector2.zero;
-        holoRect.offsetMax = Vector2.zero;
-
-        return holoObj.AddComponent<PokemonHoloEffect>();
-    }
-
-    private RadiantAuraVFX CreateAura()
-    {
-        Transform parent = rectTransform.parent != null ? rectTransform.parent : rectTransform;
-
-        GameObject auraObj = new GameObject("CardAura", typeof(RectTransform));
-        auraObj.transform.SetParent(parent, false);
-        auraObj.transform.SetSiblingIndex(Mathf.Max(0, rectTransform.GetSiblingIndex()));
-
-        RectTransform auraRect = auraObj.GetComponent<RectTransform>();
-        auraRect.anchorMin = rectTransform.anchorMin;
-        auraRect.anchorMax = rectTransform.anchorMax;
-        auraRect.pivot = rectTransform.pivot;
-        auraRect.anchoredPosition = rectTransform.anchoredPosition;
-        auraRect.sizeDelta = rectTransform.sizeDelta;
-
-        LayoutElement layoutElement = auraObj.AddComponent<LayoutElement>();
-        layoutElement.ignoreLayout = true;
-
-        RadiantAuraVFX newAura = auraObj.AddComponent<RadiantAuraVFX>();
-        newAura.TrackTarget = rectTransform;
-        newAura.Initialize(auraRect);
-
-        return newAura;
     }
 
     private void DisablePremiumEffects()
@@ -136,6 +87,13 @@ public class PremiumUpgradeVisuals : MonoBehaviour
         {
             rectTransform.localScale = Vector3.one;
         }
+    }
+
+    private void OnDisable()
+    {
+        aura?.Stop();
+        holo?.Stop();
+        StopAnimations();
     }
 
     private void OnDestroy()

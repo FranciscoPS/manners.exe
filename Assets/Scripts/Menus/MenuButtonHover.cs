@@ -20,7 +20,7 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     [Header("Texto al hover")]
     [SerializeField] private bool changeTextOnHover = false;
-    [SerializeField] private string hoverText = "Próximamente";
+    [SerializeField] private LocalizedString hoverTextLocalized = new LocalizedString("Coming soon", "Próximamente");
     [SerializeField] private TextMeshProUGUI tmpText;
     [SerializeField] private Text uiText;
     [SerializeField] private TextMeshProUGUI replacementText;
@@ -100,14 +100,16 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
             if (replacementText != null)
             {
                 replacementText.gameObject.SetActive(true);
+                if (tmpText != null) tmpText.gameObject.SetActive(false);
+                if (uiText != null) uiText.gameObject.SetActive(false);
                 textChanged = true;
             }
             else if (hasText)
             {
                 if (tmpText != null)
-                    tmpText.text = hoverText;
+                    tmpText.text = hoverTextLocalized.Value;
                 else if (uiText != null)
-                    uiText.text = hoverText;
+                    uiText.text = hoverTextLocalized.Value;
 
                 textChanged = true;
             }
@@ -174,11 +176,13 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
         if (replacementText != null)
         {
             replacementText.gameObject.SetActive(false);
+            if (tmpText != null) tmpText.gameObject.SetActive(true);
+            if (uiText != null) uiText.gameObject.SetActive(true);
         }
         else
         {
             if (tmpText != null)
-                tmpText.text = originalText;
+                { LocalizedText localized = tmpText.GetComponent<LocalizedText>(); if (localized != null) localized.Apply(); else tmpText.text = originalText; }
             else if (uiText != null)
                 uiText.text = originalText;
         }
