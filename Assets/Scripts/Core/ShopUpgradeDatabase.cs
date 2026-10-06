@@ -12,7 +12,7 @@ public class ShopUpgradeDatabase : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<ShopUpgradeDatabase>("ShopUpgradeDatabase");
+                instance = Resources.Load<ShopUpgradeDatabase>("ShopUpgradeDatabase_Production");
             }
             return instance;
         }

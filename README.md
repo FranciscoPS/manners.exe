@@ -4,11 +4,13 @@ La revisión actual de rendimiento y del merge está en [REVISION_M4_PRO.md](Doc
 
 Juego tipo *bullet-heaven* (estilo Vampire Survivors) hecho en **Unity 6 (URP)** con **WebGL** como plataforma objetivo y cámara en perspectiva inclinada.
 
+La UI actual es editable en escenas y prefabs y tiene **inglés/español**; el idioma inicial es inglés y se cambia en **Opciones** o **Pausa**. La guía [UI_AUTHORING.md](Docs/UI_AUTHORING.md) explica dónde editar textos, placas, spritesheets, daño flotante y tutorial desde Inspector. **Tools → Manners → UI → Editar** abre directamente los prefabs principales.
+
 Este documento resume, a grandes rasgos, **cómo está pensado el código**: los patrones de diseño, la arquitectura y las reglas que se siguen, para que cualquiera que entre al proyecto entienda rápido la forma de trabajar. (El código no lleva comentarios; la intención se documenta aquí y con nombres claros.)
 
 ## Filosofía general
 - **El rendimiento manda (objetivo WebGL).** Se evita el *garbage collection* por frame (buffers reutilizables, físicas `NonAlloc`, referencias cacheadas) y se cuida el batching. Si algo corre cada frame, se piensa su costo.
-- **Datos fuera del código.** El balance y el contenido viven en *assets* (ScriptableObjects), no en constantes incrustadas. Ajustar el juego = editar assets, no recompilar.
+- **Datos fuera del código.** El balance vive en ScriptableObjects y la UI en componentes de escenas/prefabs con referencias serializadas. Los textos bilingües se editan junto a su TMP o en el controlador que formatea sus valores.
 - **Bajo acoplamiento.** Los sistemas se comunican por eventos; no se conocen entre sí directamente.
 
 ## Patrones de diseño principales
@@ -30,6 +32,9 @@ Los sistemas globales (`GameTimeManager`, `MusicManager`, `EnemySpawnManager`, �
 ### 5. Bus de eventos — `GameEvents` (Observer)
 Un punto estático con eventos C# (`OnMatchTimeExpired`, `OnChestSpawned`, `OnShopLocationChanged`, …). Quien produce el evento lo dispara; quien le interesa se suscribe. Mantiene los sistemas desacoplados.
 
+### 6. UI e idiomas
+`GameLocalization` guarda el idioma y publica cambios. `LocalizedText` actualiza etiquetas fijas; `LocalizedString` contiene formatos dinámicos editables. Los controladores activan o instancian prefabs ya diseñados. Los avisos persistentes salen del registro `RuntimeUIPrefabs_Production`; sus objetos visuales no se crean por código. Las animaciones continuas se registran en `UpdateManager` y las transiciones usan DOTween/coroutines. El daño reutiliza un pool; el estallido del cofre reutiliza su ParticleSystem.
+
 ## Reglas y convenciones
 - **Tiempo de juego vs. tiempo real:** la lógica de partida usa `GameTimeManager.GetGameTime()` (escalado por `timeScale`, se congela en pausa/tutorial/level-up), no el reloj real, para que todo quede sincronizado.
 - **Sin asignaciones por frame** en rutas calientes: buffers `static` reutilizables y `Physics.*NonAlloc`.
@@ -39,5 +44,10 @@ Un punto estático con eventos C# (`OnMatchTimeExpired`, `OnChestSpawned`, `OnSh
 
 ## Estructura
 - `Assets/Scripts/` — código del juego (Core, Enemy, Player, UI, Combat, Camera, Chest, Menus…).
-- `Assets/Configurations/` — ScriptableObjects de balance (enemigos, oleadas, orbes, proyectiles).
-- `Assets/Resources/` — assets cargados en runtime (balance, base de datos de SFX, prefabs por nombre).
+- `Assets/Scripts/Localization/` — servicio y componentes de idioma.
+- `Assets/Prefabs/UI/` — componentes visuales reales, separados por Notifications, Chest, Settings, Overrides, Overlays y Effects.
+- `Assets/Configurations/Production/` — datos de producción con sufijo `_Production`; los globales se encuentran en su subcarpeta `Resources/`.
+- `Assets/Configurations/Sandbox/` — copias independientes con sufijo `_Sandbox`, conectadas por `SandboxTuning`.
+- `Assets/Resources/` — recursos auxiliares y del proveedor que conservan su carga original.
+
+Los GUID y los identificadores de progreso se conservan al reorganizar assets. El Mapa 2 está pausado: sus archivos permanecen en sus carpetas originales. Los valores del sandbox solo pasan a producción con **Tools → Manners → Sandbox → 4**.

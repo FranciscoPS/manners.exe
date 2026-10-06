@@ -56,7 +56,6 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Fade")]
     [SerializeField] private float fadeDuration = 0.8f;
-    [SerializeField] private int overlaySortingOrder = 1000;
 
     private Dictionary<MenuScreen, GameObject> screenDictionary;
 
@@ -67,9 +66,9 @@ public class MainMenuUIManager : MonoBehaviour
     private GameObject currentTiendaSubPanel;
     private GameObject currentPersonalizacionSubPanel;
 
-    private GameObject fadeOverlay;
-    private CanvasGroup fadeCanvasGroup;
-    private GraphicsSettingsMenu graphicsSettings;
+    [SerializeField] private GameObject fadeOverlay;
+    [SerializeField] private CanvasGroup fadeCanvasGroup;
+    [SerializeField] private GraphicsSettingsMenu graphicsSettings;
 
     private void Awake()
     {
@@ -124,19 +123,10 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void Start()
     {
-        graphicsSettings = GraphicsSettingsMenu.Install(optionsPanel,
-            () => ShowScreen(MenuScreen.Graphics), BackToOptions);
+        if (graphicsSettings != null) graphicsSettings.Closed += BackToOptions;
         if (graphicsSettings != null)
             screenDictionary[MenuScreen.Graphics] = graphicsSettings.gameObject;
 
-        if (mapSelection != null)
-        {
-            foreach (Button btn in mapSelection.GetComponentsInChildren<Button>(true))
-            {
-                if (btn.GetComponent<MenuButtonHover>() == null)
-                    btn.gameObject.AddComponent<MenuButtonHover>();
-            }
-        }
     }
 
     private bool IsOptionsSubscreen(MenuScreen screen)
@@ -429,6 +419,8 @@ public class MainMenuUIManager : MonoBehaviour
         currentPersonalizacionSubPanel = null;
     }
 
+    public void OnGraphicsButtonPressed() => ShowScreen(MenuScreen.Graphics);
+
     public void BackToOptions()
     {
         ShowScreen(MenuScreen.Options);
@@ -535,7 +527,8 @@ public class MainMenuUIManager : MonoBehaviour
     public void LevelSelection(int sceneIndex)
     {
         MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
-        CreateFadeOverlayIfNeeded();
+        if (fadeOverlay == null || fadeCanvasGroup == null) return;
+        DontDestroyOnLoad(fadeOverlay);
 
         fadeCanvasGroup.alpha = 0f;
         fadeOverlay.SetActive(true);
@@ -561,39 +554,6 @@ public class MainMenuUIManager : MonoBehaviour
 #endif
     }
 
-    private void CreateFadeOverlayIfNeeded()
-    {
-        if (fadeCanvasGroup != null) return;
-
-        fadeOverlay = new GameObject("MainMenu_FadeOverlay");
-        DontDestroyOnLoad(fadeOverlay);
-
-        Canvas canvas = fadeOverlay.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = overlaySortingOrder;
-
-        fadeOverlay.AddComponent<CanvasScaler>();
-        fadeOverlay.AddComponent<GraphicRaycaster>();
-
-        fadeCanvasGroup = fadeOverlay.AddComponent<CanvasGroup>();
-        fadeCanvasGroup.alpha = 0f;
-
-        GameObject imgObj = new GameObject("FadeImage");
-        imgObj.transform.SetParent(fadeOverlay.transform, false);
-
-        RectTransform rt = imgObj.AddComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-
-        Image img = imgObj.AddComponent<Image>();
-        img.color = UIStyle.Instance != null ? UIStyle.Instance.ink : Color.black;
-
-        fadeOverlay.AddComponent<FadeOverlayController>();
-
-        fadeOverlay.SetActive(false);
-    }
 }
 
 public enum MenuScreen

@@ -4,9 +4,15 @@ using UnityEngine.Serialization;
 [CreateAssetMenu(fileName = "Override", menuName = "Game/Override")]
 public class OverrideData : ScriptableObject
 {
+    [SerializeField, HideInInspector] private string persistentId;
+    public string PersistentId => string.IsNullOrEmpty(persistentId) ? GameAssetPaths.BaseName(name) : persistentId;
     [Header("Identidad")]
-    [FormerlySerializedAs("synergyName")] public string overrideName = "Override Name";
-    [TextArea(2, 4)] public string description = "";
+    [FormerlySerializedAs("synergyName")] [FormerlySerializedAs("overrideName")] [SerializeField] private string overrideNameSpanish = "Override Name";
+    [SerializeField] [TextArea(1, 6)] private string overrideNameEnglish = "";
+    public string overrideName { get => GameLocalization.Language == GameLanguage.Spanish || string.IsNullOrEmpty(overrideNameEnglish) ? overrideNameSpanish : overrideNameEnglish; set => overrideNameSpanish = value; }
+    [TextArea(2, 4)] [FormerlySerializedAs("description")] [SerializeField] private string descriptionSpanish = "";
+    [SerializeField] [TextArea(1, 6)] private string descriptionEnglish = "";
+    public string description { get => GameLocalization.Language == GameLanguage.Spanish || string.IsNullOrEmpty(descriptionEnglish) ? descriptionSpanish : descriptionEnglish; set => descriptionSpanish = value; }
     public Sprite icon;
 
     [Header("Requisitos (dos mejoras al nivel indicado)")]

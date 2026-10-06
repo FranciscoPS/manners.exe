@@ -4,6 +4,9 @@ using TMPro;
 
 public class CurrencyUI : MonoBehaviour
 {
+    [Header("Textos editables por idioma")]
+    [SerializeField] private LocalizedString gemLabel = new LocalizedString("Gems: {0}", "Gemas: {0}");
+
     [Header("Coin UI")]
     [SerializeField] private TextMeshProUGUI coinText;
 
@@ -64,7 +67,7 @@ public class CurrencyUI : MonoBehaviour
     {
         if (diamondText == null) return;
 
-        diamondText.text = $"Gemas: {amount}";
+        diamondText.text = gemLabel.Format(amount);
 
         if (diamondInitialized)
             PlayPunch(diamondText.rectTransform);
@@ -78,5 +81,11 @@ public class CurrencyUI : MonoBehaviour
             panelRect.Punch();
         else
             textRect.PunchScale(punchScale, punchDuration);
+    }
+    private void OnEnable() => GameLocalization.LanguageChanged += RefreshLanguage;
+    private void OnDisable() => GameLocalization.LanguageChanged -= RefreshLanguage;
+    private void RefreshLanguage()
+    {
+        if (CurrencyManager.Instance != null) UpdateDiamondDisplay(CurrencyManager.Instance.CurrentDiamonds);
     }
 }

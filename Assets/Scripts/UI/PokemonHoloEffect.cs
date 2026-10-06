@@ -2,20 +2,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Image))]
-public class PokemonHoloEffect : MonoBehaviour
+public class PokemonHoloEffect : MonoBehaviour, IUpdateable
 {
     [Header("Holo Foil")]
     [SerializeField] private float scrollSpeed = 0.35f;
-    [SerializeField] private float rainbowRepeats = 1f;
-    [Tooltip("Ancho, en unidades de canvas, que ocupa una repetición del arcoíris.")]
-    [SerializeField] private float rainbowSpan = 420f;
-    [SerializeField] private float diagonalAngleDegrees = 45f;
-    [SerializeField] private float saturation = 0.9f;
-    [SerializeField] private float sheenIntensity = 0.55f;
-    [SerializeField] private float minBrightness = 0.55f;
-
-    private static Shader holoShader;
-
     private Image image;
     private Material material;
     private float offset;
@@ -24,38 +14,11 @@ public class PokemonHoloEffect : MonoBehaviour
     private void Awake()
     {
         image = GetComponent<Image>();
-        image.raycastTarget = false;
-        image.color = Color.white;
-
-        Image shape = transform.parent != null ? transform.parent.GetComponent<Image>() : null;
-        if (shape != null && shape.sprite != null)
+        if (image.material != null && image.material != Graphic.defaultGraphicMaterial)
         {
-            UIStyle style = UIStyle.Instance;
-            image.sprite = style != null && shape.sprite == style.panelDark && style.screenFrame != null ? style.screenFrame : shape.sprite;
-            image.type = shape.type;
-            image.pixelsPerUnitMultiplier = shape.pixelsPerUnitMultiplier;
-
-            UISkew skew = shape.GetComponent<UISkew>();
-            if (skew != null) gameObject.AddComponent<UISkew>().Amount = skew.Amount;
-        }
-
-        if (holoShader == null)
-            holoShader = Shader.Find("UI/PokemonHolo");
-
-        if (holoShader != null)
-        {
-            material = new Material(holoShader);
-            material.SetFloat("_Angle", diagonalAngleDegrees * Mathf.Deg2Rad);
-            material.SetFloat("_Frequency", rainbowRepeats);
-            material.SetFloat("_Span", Mathf.Max(1f, rainbowSpan));
-            material.SetFloat("_Saturation", saturation);
-            material.SetFloat("_Intensity", sheenIntensity);
-            material.SetFloat("_MinBrightness", minBrightness);
+            material = new Material(image.material);
             image.material = material;
         }
-
-        if (!playing)
-            gameObject.SetActive(false);
     }
 
     public void Play()
@@ -70,7 +33,10 @@ public class PokemonHoloEffect : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+    private void OnEnable() => UpdateManager.Instance?.Register(this);
+    private void OnDisable() => UpdateManager.Instance?.Unregister(this);
+    public void OnUpdate(float deltaTime)
     {
         if (!playing || material == null) return;
 
@@ -80,6 +46,7 @@ public class PokemonHoloEffect : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (!Application.isPlaying) return;
         if (material != null) Destroy(material);
     }
 }

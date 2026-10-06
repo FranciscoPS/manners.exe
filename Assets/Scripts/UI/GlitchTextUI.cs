@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class GlitchTextUI : MonoBehaviour
+public class GlitchTextUI : MonoBehaviour, IUpdateable
 {
     private enum Phase { Idle, Burst }
 
@@ -52,6 +52,7 @@ public class GlitchTextUI : MonoBehaviour
     [Tooltip("Cuánto varía la inclinación de la placa en cada frame de la ráfaga.")]
     [SerializeField] private float companionSkewJitter = 0.09f;
 
+    private LocalizedText localizedText;
     private Phase phase;
     private float phaseTimer;
     private float stepTimer;
@@ -70,6 +71,9 @@ public class GlitchTextUI : MonoBehaviour
             target = GetComponent<TextMeshProUGUI>();
 
         if (target == null) return;
+        localizedText = target.GetComponent<LocalizedText>();
+        if (localizedText != null) { localizedText.Applied += RefreshLocalized; localizedText.Apply(); }
+        UpdateManager.Instance?.Register(this);
 
         Capture();
         phase = Phase.Idle;
@@ -78,7 +82,19 @@ public class GlitchTextUI : MonoBehaviour
 
     private void OnDisable()
     {
+        if (localizedText != null) localizedText.Applied -= RefreshLocalized;
+        UpdateManager.Instance?.Unregister(this);
         Restore();
+    }
+
+    private void RefreshLocalized()
+    {
+        string content = target.text;
+        Restore();
+        target.text = content;
+        Capture();
+        phase = Phase.Idle;
+        phaseTimer = Random.Range(idleMin, idleMax);
     }
 
     public void SetText(string text)
@@ -94,7 +110,9 @@ public class GlitchTextUI : MonoBehaviour
         phaseTimer = Random.Range(idleMin, idleMax);
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+
+    public void OnUpdate(float deltaTime)
     {
         if (!captured) return;
 

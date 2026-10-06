@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class WarningMarquee : MonoBehaviour
 {
@@ -7,7 +8,8 @@ public class WarningMarquee : MonoBehaviour
     [Tooltip("Texto TMP que se desplaza. La fuente, el tamaño, el color, el espaciado y el material (brillo) se editan directamente en ese componente.")]
     [SerializeField] private TMP_Text label;
     [Tooltip("Mensaje que se repite. La fuente pixel solo tiene ASCII sin acentos (A-Z, 0-9 y signos básicos).")]
-    [SerializeField] private string message = "WARNING";
+    [FormerlySerializedAs("message"), SerializeField] private string messageEnglish = "WARNING";
+    [SerializeField] private string messageSpanish = "ADVERTENCIA";
     [Tooltip("Separador entre repeticiones. La fuente pixel no tiene •, ▶ ni ⚠: usa / - > | _ : o espacios.")]
     [SerializeField] private string separator = "  //  ";
     [Tooltip("Cuántas veces se repite el mensaje dentro del texto. Tiene que cubrir el ancho de la franja más una repetición: súbelo si ves un hueco en el borde.")]
@@ -22,6 +24,9 @@ public class WarningMarquee : MonoBehaviour
     private float period;
     private float offset;
     private bool measured;
+
+    private void OnEnable() { GameLocalization.LanguageChanged += ApplyMessage; ApplyMessage(); }
+    private void OnDisable() => GameLocalization.LanguageChanged -= ApplyMessage;
 
     private void Awake()
     {
@@ -71,7 +76,7 @@ public class WarningMarquee : MonoBehaviour
 
     private string ComposeMessage()
     {
-        string unit = message + separator;
+        string unit = (GameLocalization.Language == GameLanguage.Spanish ? messageSpanish : messageEnglish) + separator;
         System.Text.StringBuilder builder = new System.Text.StringBuilder(unit.Length * repetitions);
         for (int i = 0; i < repetitions; i++)
             builder.Append(unit);

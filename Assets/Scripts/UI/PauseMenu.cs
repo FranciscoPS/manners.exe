@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
-public class PauseMenu : MonoBehaviour
+public class PauseMenu : MonoBehaviour, IUpdateable
 {
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
@@ -24,15 +24,14 @@ public class PauseMenu : MonoBehaviour
     private GameObject currentHelpSubPanel;
     private LevelUpManager levelUpManager;
     private PlayerHealth playerHealth;
-    private GraphicsSettingsMenu graphicsSettings;
+    [SerializeField] private GraphicsSettingsMenu graphicsSettings;
 
     private bool reducedVolumeApplied = false;
     private bool audioSettingsChangedWhilePaused = false;
 
     void Start()
     {
-        graphicsSettings = GraphicsSettingsMenu.Install(pausePanel,
-            OnGraphicsButtonPressed, OnGraphicsReturnButtonPressed);
+        if (graphicsSettings != null) graphicsSettings.Closed += OnGraphicsReturnButtonPressed;
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
@@ -55,6 +54,7 @@ public class PauseMenu : MonoBehaviour
     private void OnDestroy()
     {
         AudioSettingsMenu.AudioSettingsChanged -= OnAudioSettingsChanged;
+        if (graphicsSettings != null) graphicsSettings.Closed -= OnGraphicsReturnButtonPressed;
     }
 
     private void OnAudioSettingsChanged()
@@ -63,9 +63,12 @@ public class PauseMenu : MonoBehaviour
         audioSettingsChangedWhilePaused = true;
     }
 
-    void Update()
+    public bool IsActive => isActiveAndEnabled;
+    private void OnEnable() => UpdateManager.Instance?.Register(this);
+    private void OnDisable() => UpdateManager.Instance?.Unregister(this);
+
+    public void OnUpdate(float deltaTime)
     {
-        // The graphics panel owns Escape while open, including the frame it closes.
         if ((graphicsSettings != null && graphicsSettings.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame)
             return;
 

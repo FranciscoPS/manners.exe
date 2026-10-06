@@ -14,7 +14,7 @@ public static class OverridePanelSetupTools
     private const string PrefabFolder = "Assets/Prefabs/UI";
     private const string PrefabPath = PrefabFolder + "/OverrideHintsPanel.prefab";
     private const string InitialsPrefabPath = PrefabFolder + "/InitialsEntryUI.prefab";
-    private const string OverrideConfigFolder = "Assets/Configurations/Overrides";
+    private const string OverrideConfigFolder = "Assets/Configurations/Production/Overrides";
 
     private const string MenuScreenName = "SobrecargasMenuPanel";
     private const string MenuTitle = "Sobrecargas";

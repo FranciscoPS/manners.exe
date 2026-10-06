@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 [CreateAssetMenu(fileName = "ToonEnvironmentStyle", menuName = "Game/Estilo toon del entorno")]
 public sealed class ToonEnvironmentStyle : ScriptableObject
 {
-    public const string ResourceName = "ToonEnvironmentStyle";
+    public const string ResourceName = "ToonEnvironmentStyle_Production";
     public const string ShaderName = "Manners/Toon Environment";
     public const string CharacterShaderName = "Manners/Toon Character";
     public const string TerrainShaderName = "Manners/Toon Terrain";

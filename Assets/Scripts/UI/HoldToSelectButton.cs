@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
+public class HoldToSelectButton : MonoBehaviour, IUpdateable, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
     [Header("References")]
     [SerializeField] private Image fillOverlayImage;
@@ -66,7 +66,10 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         }
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+    private void OnEnable() => UpdateManager.Instance?.Register(this);
+    private void OnDisable() { UpdateManager.Instance?.Unregister(this); ResetHold(); }
+    public void OnUpdate(float deltaTime)
     {
         if (isHolding && button != null && button.interactable)
         {

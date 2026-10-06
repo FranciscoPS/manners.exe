@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 public static class UIStyleTools
 {
-    public const string StyleAssetPath = "Assets/Resources/UIStyle.asset";
+    public const string StyleAssetPath = "Assets/Configurations/Production/Resources/UI/UIStyle_Production.asset";
     public const string MaterialFolder = "Assets/Materials/UI";
     public const string ReportPath = "Logs/ui-style-report.txt";
 
@@ -100,7 +100,7 @@ public static class UIStyleTools
         UIStyle style = AssetDatabase.LoadAssetAtPath<UIStyle>(StyleAssetPath);
         if (style != null) return style;
 
-        EditorAssetUtility.EnsureFolder("Assets/Resources");
+        EditorAssetUtility.EnsureFolder(GameAssetPaths.UIResources);
         style = ScriptableObject.CreateInstance<UIStyle>();
         AssetDatabase.CreateAsset(style, StyleAssetPath);
         return style;
