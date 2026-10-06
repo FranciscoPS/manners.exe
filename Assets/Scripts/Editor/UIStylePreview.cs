@@ -92,7 +92,7 @@ public static class UIStylePreview
         {
             if (root.name != rootName) continue;
             if (slash < 0) return root;
-            Transform found = root.transform.Find(path.Substring(slash + 1));
+            Transform found = UIEditorHierarchy.Find(root.transform, path.Substring(slash + 1));
             if (found != null) return found.gameObject;
         }
         return null;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class UIScreenIntro : MonoBehaviour
 {
-    [Tooltip("Bloques que entran en cascada al mostrarse la pantalla. Vacío = los hijos directos que no ocupan toda la pantalla.")]
+    [Tooltip("Referencias editables de los componentes reales que entran en cascada. Ajusta su orden; no incluyas ContentFrame ni objetos controlados por AspectRatioFitter. Vacío = hijos directos que no ocupan toda la pantalla.")]
     [SerializeField] private RectTransform[] blocks;
 
     private Vector2[] restPositions;

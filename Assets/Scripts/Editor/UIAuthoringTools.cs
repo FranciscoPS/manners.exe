@@ -48,6 +48,8 @@ public static class UIAuthoringTools
     private static void Floating() => Open("Assets/Prefabs/UI/FloatingText.prefab");
     [MenuItem("Tools/Manners/UI/Editar/Estilo y sprites", false, 205)]
     private static void Style() => Select(UIStyleTools.StyleAssetPath);
+    [MenuItem("Tools/Manners/UI/Editar/Composición y anchors", false, 206)]
+    private static void ContentFrame() => Open("Assets/Prefabs/UI/Layout/ContentFrame.prefab");
     [MenuItem("Tools/Manners/Configuraciones/Producción", false, 220)]
     private static void Production() => Select(GameAssetPaths.Production);
     [MenuItem("Tools/Manners/Configuraciones/Sandbox", false, 221)]

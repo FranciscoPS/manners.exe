@@ -30,6 +30,7 @@ En la cinemática, el tamaño y posición del cofre se ajustan en la **RawImage*
 | HUD, pausa, tarjetas, tienda y Game Over | `LEVEL 1.unity → Canvas` |
 | Diálogo del tutorial | `LEVEL 1.unity → TutorialCanvas`; referencias y los 41 pasos bilingües en `TutorialManager` |
 | Sprites del estilo actual | `Assets/Sprites/UI/Style/` |
+| Área compartida de composición | `Assets/Prefabs/UI/Layout/ContentFrame.prefab` |
 
 Las referencias a textos, imágenes, grupos y botones están serializadas. Los controladores ya no buscan hijos por nombre para reemplazar tus referencias visuales al iniciar. Cada tarjeta conserva sus componentes de selección, relleno, foil, aura y feedback. Los números flotantes reutilizan su pool y tienen un canvas real en las escenas.
 
@@ -44,6 +45,18 @@ El primer inicio usa inglés. El selector está en **Opciones** y en **Pausa**, 
 Los textos fijos usan **LocalizedText** junto al TMP. Los textos que incluyen números o cambian de modo tienen pares **English/Spanish** en su controlador: `LevelUpManager`, `UpgradeButton`, `GameOverUI`, `GraphicsSettingsMenu`, `AudioSettingsMenu`, `CurrencyUI`, `ExperienceUI`, `PlayerStatsHUD` y `ChestOpeningSequence`. Los nombres y descripciones de mejoras, objetos de cofre y sobrecargas se editan en sus assets. El tutorial tiene sus pasos y botones en el componente `TutorialManager`; ya no carga un JSON separado.
 
 Cambiar idioma actualiza el contenido mediante eventos. No reinicia un paso del tutorial, no repite descubrimientos ni vuelve a consultar la clasificación por cambiar los textos. `OverrideData.PersistentId` mantiene la identidad de los desbloqueos separada del idioma y del nombre del archivo.
+
+## Anchors, centrado y proporciones de pantalla
+
+Los menús y ventanas conservan sus raíces de pantalla completa y contienen un **ContentFrame** real. Su **AspectRatioFitter**, en **Fit In Parent** con proporción **16:9**, mantiene juntos títulos, subtítulos y controles. Los **CanvasScaler** usan **Scale With Screen Size**, referencia **1920×1080** y **Expand**. La composición conserva sus proporciones en 4:3, 16:10, 16:9, ultrawide y 32:9; los fondos y velos cubren toda la pantalla.
+
+Para ajustar una pantalla, abre su panel y entra en **ContentFrame**. Cambia los RectTransform de sus hijos desde Inspector; el fitter controla el tamaño del marco. Los encabezados y sus subtítulos comparten el eje central. Los márgenes del TMP del subtítulo son simétricos; el chevron sigue siendo una Image independiente a la izquierda. El cursor de consola sigue el borde real del último carácter al cambiar texto, idioma o tamaño, también durante la edición. Su separación y parpadeo se ajustan en **UITextCursor**.
+
+**Tools → Manners → UI → Editar → Composición y anchors** abre el prefab compartido. En **UIScreenIntro → Blocks**, los títulos y controles reales están asignados en el orden de su animación. Puedes ajustar esa lista desde Inspector; el `ContentFrame` y los objetos con `AspectRatioFitter` deben quedar fuera de ella para que la entrada no compita con el ajuste de proporción.
+
+El HUD se ancla al viewport: minimapa y estadísticas arriba a la izquierda, monedas arriba a la derecha y temporizador arriba al centro. Estos elementos conservan su distancia al borde en unidades de Canvas. Evita combinar un anchor porcentual cercano al borde derecho con un gran offset negativo para simular una columna izquierda: esa columna se desplaza al ensanchar la pantalla.
+
+Al crear un panel nuevo, conserva su fondo de pantalla completa y coloca dentro una instancia de `ContentFrame.prefab` con los controles. Las referencias existentes de los controladores apuntan a los componentes reales; las herramientas de Editor resuelven los contenidos de ese marco mediante `UIEditorHierarchy`.
 
 ## Configuraciones
 
@@ -61,8 +74,8 @@ La estructura compartida de UI se edita en prefabs; no hace falta duplicarla ent
 ## Comprobar cambios
 
 1. **Tools → Manners → UI → Validar componentes e idiomas** revisa referencias, scripts ausentes, traducciones, destinos del tutorial y recursos de las cuatro escenas soportadas.
-2. **Tools → Manners → UI → Capturar inglés y español** genera vistas y auditoría de texto en `Logs/UIReview/`: 1920×1080, 1280×720 y 2560×1080.
-3. En **Window → General → Test Runner → EditMode**, ejecuta `UIAuthoringTests` para comprobar las referencias y el flujo real de idioma, gráficos, pausa, daño y cofre. Conserva también las pruebas de sobrecargas y gráficos existentes.
+2. **Tools → Manners → UI → Capturar inglés y español** genera 336 vistas y auditoría de texto en `Logs/UIReview/`: 1920×1080, 1280×720, 2560×1080, 1600×1200, 1920×1200, 3440×1440 y 3840×1080. Los nombres incluyen idioma, resolución completa, superficie y panel.
+3. En **Window → General → Test Runner → EditMode**, ejecuta `UIAuthoringTests` para comprobar las referencias y el flujo real de idioma, gráficos, pausa, daño y cofre. `UITextCursorTests` alterna los idiomas con los cursores reales; `UIResponsiveLayoutTests` comprueba centrado, límites, márgenes del HUD y posición y solapes del selector en cinco proporciones. `UIScreenIntroAuthoringTests` verifica los bloques de animación y que el marco no reciba tweens. Conserva también las pruebas de sobrecargas y gráficos existentes.
 
 Las capturas son vistas de edición con ejemplos de datos. Las animaciones, el relleno y la cámara del cofre se comprueban durante Play. El Mapa 2 queda excluido de escenas, validación y pruebas.
 
@@ -77,10 +90,11 @@ Resultados del 6 de octubre de 2026, manteniendo la UI actual:
 | Comprobación | Resultado |
 | --- | --- |
 | Compilación de código de juego y editor | Sin errores ni advertencias de C# |
-| Referencias, componentes e idiomas | 4 escenas, 11 205 componentes, 608 etiquetas bilingües; 0 errores |
+| Referencias, componentes e idiomas | 4 escenas, 11 245 componentes, 608 etiquetas bilingües; 0 errores |
 | Assets reorganizados | 73 GUID de configuraciones y 3 GUID de scripts conservados |
 | Vistas en inglés y español | 96 capturas a 1920×1080, 1280×720 y 2560×1080; sin desbordamientos ni texto fuera de pantalla |
-| Regresión automatizada | 71 pruebas aprobadas, 0 fallos |
+| Regresión inicial | 71 pruebas aprobadas, 0 fallos |
+| Revisión de centrado, anchors y animación | 16 pruebas de UI aprobadas, 0 fallos |
 | Recorrido en Play | Opciones, idioma persistente entre escenas, pausa, gráficos, cierre del tutorial, aviso del cofre, pool de daño y cinemática con cámara 3D |
 
-La regresión ejecutó `UIAuthoringTests`, `OverrideCombinationTests`, `GraphicsBudgetTests`, `PerformanceRegressionTests`, `WebBuildRegressionTests` y `ToonEnvironmentTests`. Las capturas y los informes locales están en `Logs/UIReview/`; `play-chest.png` muestra el cofre durante Play. Los seis avisos de cruce de la auditoría corresponden únicamente al sello diagonal existente del selector de mapas. No se ejecutó una build ni se cambió la versión de Unity.
+La regresión inicial ejecutó `UIAuthoringTests`, `OverrideCombinationTests`, `GraphicsBudgetTests`, `PerformanceRegressionTests`, `WebBuildRegressionTests` y `ToonEnvironmentTests`. La revisión posterior ejecutó `UIAuthoringTests`, `UIResponsiveLayoutTests`, `UITextCursorTests` y `UIScreenIntroAuthoringTests`, incluyendo el recorrido en Play después de cambiar la jerarquía. Las capturas y los informes locales están en `Logs/UIReview/`; `play-chest.png` muestra el cofre durante Play. No se ejecutó una build ni se cambió la versión de Unity.

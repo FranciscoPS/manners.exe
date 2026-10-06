@@ -326,7 +326,7 @@ public static partial class UIStyleApplier
             {
                 style.ApplySprite(image, style.panelPaper, Color.white, 0f, Vector2.zero, null);
             }
-            else if (go.GetComponent<HorizontalLayoutGroup>() != null && go.transform.parent != null && go.transform.parent.name == "MainMenuPanel")
+            else if (go.GetComponent<HorizontalLayoutGroup>() != null && HasPanelParent(go.transform, "MainMenuPanel"))
             {
                 Color dock = style.panel;
                 dock.a = 0.94f;
@@ -904,7 +904,7 @@ public static partial class UIStyleApplier
             RectTransform sub = GetOrCreateChild(host, StylePrefix + "SubRibbon", 3);
             sub.anchorMin = sub.anchorMax = new Vector2(0.5f, 0.5f);
             sub.pivot = new Vector2(0.5f, 0.5f);
-            sub.anchoredPosition = new Vector2(Snap(hostRect.width * 0.05f), Snap(subBounds.center.y - hostRect.center.y));
+            sub.anchoredPosition = new Vector2(0f, Snap(subBounds.center.y - hostRect.center.y));
             sub.sizeDelta = new Vector2(Snap(hostRect.width * 0.66f), Snap(Mathf.Max(subSize * 1.45f, 52f)));
             Image subImage = GetOrAdd<Image>(sub.gameObject);
             subImage.raycastTarget = false;
@@ -928,7 +928,7 @@ public static partial class UIStyleApplier
             subtitle.rectTransform.anchoredPosition = sub.anchoredPosition;
             subtitle.rectTransform.sizeDelta = sub.sizeDelta - new Vector2(24f, 8f);
             Apply(subtitle, UITextRole.Heading, style.textDim, true);
-            subtitle.margin = new Vector4(48f, 0f, 16f, 0f);
+            subtitle.margin = new Vector4(48f, 0f, 48f, 0f);
             subtitle.alignment = TextAlignmentOptions.Center;
             Touch(subtitle.rectTransform);
             Finish(subtitle);
@@ -936,10 +936,11 @@ public static partial class UIStyleApplier
 
         title.rectTransform.anchorMin = title.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         title.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        bool faceTitle = host.parent != null && host.parent.name == "MainMenuPanel";
-        float leftPad = faceTitle ? 150f : lean + 46f;
+        bool faceTitle = HasPanelParent(host, "MainMenuPanel");
         float rightPad = lean + 46f;
-        title.rectTransform.anchoredPosition = ribbon.anchoredPosition + new Vector2((leftPad - rightPad) * 0.5f, 0f);
+        float leftPad = faceTitle ? (150f + rightPad) * 0.5f : rightPad;
+        rightPad = leftPad;
+        title.rectTransform.anchoredPosition = ribbon.anchoredPosition;
         title.rectTransform.sizeDelta = ribbon.sizeDelta - new Vector2(leftPad + rightPad, 14f);
         title.margin = Vector4.zero;
         Apply(title, UITextRole.Title, style.paper, true);
@@ -969,6 +970,13 @@ public static partial class UIStyleApplier
     }
 
     private const float CursorGap = 1f;
+
+    private static bool HasPanelParent(Transform target, string panelName)
+    {
+        Transform parent = target.parent;
+        if (parent != null && parent.name == "ContentFrame") parent = parent.parent;
+        return parent != null && parent.name == panelName;
+    }
 
     private static void Shard(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size, Color color, float stroke, float motion, float phase, float enterDelay, Vector2[] pixels)
     {
@@ -1015,9 +1023,41 @@ public static partial class UIStyleApplier
 
     private static void EnsureIntro(GameObject go)
     {
-        if (go.GetComponent<UIScreenIntro>() != null) return;
-        Touch(go.AddComponent<UIScreenIntro>());
-        Touch(go);
+        UIScreenIntro intro = go.GetComponent<UIScreenIntro>();
+        if (intro == null)
+        {
+            intro = go.AddComponent<UIScreenIntro>();
+            Touch(intro);
+            Touch(go);
+        }
+        AuthorIntroBlocks(intro);
+    }
+
+    internal static bool AuthorIntroBlocks(UIScreenIntro intro)
+    {
+        Transform frame = intro.transform.Find("ContentFrame");
+        if (frame == null) return false;
+        var serialized = new SerializedObject(intro);
+        SerializedProperty blocks = serialized.FindProperty("blocks");
+        bool valid = blocks.arraySize > 0;
+        for (int i = 0; i < blocks.arraySize && valid; i++)
+        {
+            RectTransform block = blocks.GetArrayElementAtIndex(i).objectReferenceValue as RectTransform;
+            valid = block != null && block.IsChildOf(frame) && block.GetComponent<AspectRatioFitter>() == null;
+        }
+        if (valid) return false;
+        var targets = new List<RectTransform>();
+        foreach (Transform child in frame)
+        {
+            RectTransform rect = child as RectTransform;
+            if (rect != null && !IsFullStretch(rect)) targets.Add(rect);
+        }
+        blocks.arraySize = targets.Count;
+        for (int i = 0; i < targets.Count; i++) blocks.GetArrayElementAtIndex(i).objectReferenceValue = targets[i];
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        if (PrefabUtility.IsPartOfPrefabInstance(intro)) PrefabUtility.RecordPrefabInstancePropertyModifications(intro);
+        EditorUtility.SetDirty(intro);
+        return true;
     }
 
     private static string SpriteKey(Image image)
@@ -1101,9 +1141,7 @@ public static partial class UIStyleApplier
 
     private static Transform DirectChild(Transform parent, string name)
     {
-        foreach (Transform child in parent)
-            if (child.name == name) return child;
-        return null;
+        return UIEditorHierarchy.Find(parent, name);
     }
 
     private static bool HasDirectChild<T>(Transform parent) where T : Component

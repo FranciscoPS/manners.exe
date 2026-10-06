@@ -33,7 +33,6 @@ public static class OverridePanelSetupTools
         "Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity",
         "Assets/Scenes/CityTest.unity",
         "Assets/Scenes/Sandbox.unity",
-        "Assets/Scenes/MilitaryBase.unity",
     };
 
     private static readonly (string rowName, string assetName)[] RowToOverrideAsset =
@@ -198,12 +197,17 @@ public static class OverridePanelSetupTools
     public static void PlaceHudPanelInOpenScene()
     {
         Scene scene = EditorSceneManager.GetActiveScene();
+        if (!GameOverScenePaths.Contains(scene.path))
+        {
+            Debug.LogError("[OverridePanelSetup] Abre una escena compatible: Sandbox, LEVEL 1 o CityTest.");
+            return;
+        }
 
         LevelUpManager levelUpManager = Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
         Canvas canvas = levelUpManager != null ? levelUpManager.GetComponentInParent<Canvas>() : null;
         if (canvas == null)
         {
-            Debug.LogError("[OverridePanelSetup] La escena abierta no tiene un Canvas con LevelUpManager; abre una escena de nivel (Sandbox, LEVEL 1, CityTest o MilitaryBase).");
+            Debug.LogError("[OverridePanelSetup] La escena abierta no tiene un Canvas con LevelUpManager; abre una escena de nivel (Sandbox, LEVEL 1 o CityTest).");
             return;
         }
 
@@ -270,7 +274,7 @@ public static class OverridePanelSetupTools
             return null;
         }
 
-        Transform statsPanel = panel.transform.Find("StatsPanel");
+        Transform statsPanel = UIEditorHierarchy.Find(panel.transform, "StatsPanel");
         Transform right = statsPanel != null ? statsPanel.Find("Combat stats") : null;
         Transform left = statsPanel != null ? statsPanel.Find("RunStats") : null;
         Transform leftList = left != null ? left.Find("StatsText") : null;
@@ -396,21 +400,22 @@ public static class OverridePanelSetupTools
         }
 
         Transform rootT = root.transform;
-        Transform background = rootT.Find("Background");
-        Transform title = rootT.Find("Title") ?? FindDeep(rootT, "Title");
-        Transform row = rootT.Find("InitialsRow") ?? FindDeep(rootT, "InitialsRow");
-        Transform grid = rootT.Find("Grid") ?? FindDeep(rootT, "Grid");
-        Transform cursor = rootT.Find("Cursor") ?? FindDeep(rootT, "Cursor");
+        Transform contentRoot = ContentRoot(rootT);
+        Transform background = UIEditorHierarchy.Find(rootT, "Background");
+        Transform title = UIEditorHierarchy.Find(rootT, "Title") ?? FindDeep(rootT, "Title");
+        Transform row = UIEditorHierarchy.Find(rootT, "InitialsRow") ?? FindDeep(rootT, "InitialsRow");
+        Transform grid = UIEditorHierarchy.Find(rootT, "Grid") ?? FindDeep(rootT, "Grid");
+        Transform cursor = UIEditorHierarchy.Find(rootT, "Cursor") ?? FindDeep(rootT, "Cursor");
 
-        Transform dialog = rootT.Find("Dialog");
+        Transform dialog = UIEditorHierarchy.Find(rootT, "Dialog");
         if (dialog == null)
         {
             GameObject dialogObj = new GameObject("Dialog", typeof(RectTransform), typeof(Image));
-            dialogObj.transform.SetParent(rootT, false);
+            dialogObj.transform.SetParent(contentRoot, false);
             dialog = dialogObj.transform;
         }
 
-        dialog.SetSiblingIndex(background != null ? background.GetSiblingIndex() + 1 : 0);
+        dialog.SetSiblingIndex(background != null && background.parent == dialog.parent ? background.GetSiblingIndex() + 1 : 0);
 
         RectTransform dialogRect = (RectTransform)dialog;
         dialogRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -510,7 +515,7 @@ public static class OverridePanelSetupTools
 
     private static void DestroyChild(Transform parent, string name)
     {
-        Transform child = parent.Find(name);
+        Transform child = UIEditorHierarchy.Find(parent, name);
         if (child == null) return;
 
         Object.DestroyImmediate(child.gameObject);
@@ -557,9 +562,10 @@ public static class OverridePanelSetupTools
 
     private static void RestoreHelpInstanceParent(GameObject helpInstance, Transform helpPanel)
     {
-        if (helpInstance.transform.parent == helpPanel) return;
+        Transform contentRoot = ContentRoot(helpPanel);
+        if (helpInstance.transform.parent == contentRoot) return;
 
-        helpInstance.transform.SetParent(helpPanel, false);
+        helpInstance.transform.SetParent(contentRoot, false);
         helpInstance.transform.SetAsLastSibling();
     }
 
@@ -606,7 +612,7 @@ public static class OverridePanelSetupTools
 
     private static List<TextMeshProUGUI> TitleTexts(Transform screen)
     {
-        Transform titlePanel = screen.Find("TitlePanel");
+        Transform titlePanel = UIEditorHierarchy.Find(screen, "TitlePanel");
         if (titlePanel == null) return null;
 
         return titlePanel
@@ -617,15 +623,21 @@ public static class OverridePanelSetupTools
 
     private static void ReplaceContentWithPrefab(Transform screen, GameObject prefabAsset)
     {
-        Transform oldContent = screen.Find("Text");
-        int siblingIndex = oldContent != null ? oldContent.GetSiblingIndex() : screen.childCount;
+        Transform contentRoot = ContentRoot(screen);
+        Transform oldContent = UIEditorHierarchy.Find(screen, "Text");
+        int siblingIndex = oldContent != null ? oldContent.GetSiblingIndex() : contentRoot.childCount;
 
-        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset, screen);
+        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset, contentRoot);
         instance.transform.SetSiblingIndex(siblingIndex);
         instance.SetActive(true);
 
         if (oldContent != null)
             Object.DestroyImmediate(oldContent.gameObject);
+    }
+
+    private static Transform ContentRoot(Transform root)
+    {
+        return UIEditorHierarchy.Find(root, "ContentFrame") ?? root;
     }
 
     private static void RewireMainMenuButton(Transform mainPanel, MainMenuUIManager manager)

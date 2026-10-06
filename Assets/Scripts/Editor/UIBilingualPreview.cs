@@ -14,8 +14,24 @@ using Object = UnityEngine.Object;
 public static class UIBilingualPreview
 {
     private const BindingFlags Fields = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-    private static readonly string[] MenuPanels = { "MainMenuPanel", "OptionsPanel", "AudioPanel", "ControlesPanel", "MapSelectionPanel", "SobrecargasMenuPanel", "GraphicsSettingsPanel" };
-    private static readonly string[] GamePanels = { "HUD", "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "Tutorial" };
+    private static readonly string[] MenuPanels =
+    {
+        "MainMenuPanel", "OptionsPanel", "AudioPanel", "ControlesPanel", "MapSelectionPanel", "SobrecargasMenuPanel",
+        "GraphicsSettingsPanel", "UpgradesPanel", "TiendaPanel", "CreditosPanel", "AyudaPanel", "PersonalizacionPanel"
+    };
+    private static readonly string[] GamePanels =
+    {
+        "HUD", "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "Tutorial", "AudioPanel", "AyudaPanel", "GraphicsSettingsPanel"
+    };
+    private static readonly string[] ModalPanels =
+    {
+        "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "GraphicsSettingsPanel", "AudioPanel", "AyudaPanel"
+    };
+    private static readonly Vector2Int[] Resolutions =
+    {
+        new Vector2Int(1920, 1080), new Vector2Int(1280, 720), new Vector2Int(2560, 1080),
+        new Vector2Int(1600, 1200), new Vector2Int(1920, 1200), new Vector2Int(3440, 1440), new Vector2Int(3840, 1080)
+    };
 
     [MenuItem("Tools/Manners/UI/Capturar inglés y español", false, 231)]
     public static void CaptureFromMenu()
@@ -39,12 +55,9 @@ public static class UIBilingualPreview
             foreach (GameLanguage language in new[] { GameLanguage.English, GameLanguage.Spanish })
             {
                 GameLocalization.SetLanguage(language);
-                foreach (Vector2Int size in new[] { new Vector2Int(1920, 1080), new Vector2Int(1280, 720), new Vector2Int(2560, 1080) })
-                {
-                    foreach (string panel in MenuPanels) Shot(UIAuthoringTools.Scenes[0], panel, language, size, report);
-                    foreach (string panel in GamePanels) Shot(UIAuthoringTools.Scenes[1], panel, language, size, report);
-                    foreach (string notification in new[] { "ChestAnnouncement", "OvertimeAlert", "OverrideActivationHUD" }) Shot(UIAuthoringTools.Scenes[1], notification, language, size, report);
-                }
+                foreach (string panel in MenuPanels) CapturePanel(UIAuthoringTools.Scenes[0], panel, language, report);
+                foreach (string panel in GamePanels) CapturePanel(UIAuthoringTools.Scenes[1], panel, language, report);
+                foreach (string notification in new[] { "ChestAnnouncement", "OvertimeAlert", "OverrideActivationHUD" }) CapturePanel(UIAuthoringTools.Scenes[1], notification, language, report);
             }
         }
         finally
@@ -56,34 +69,45 @@ public static class UIBilingualPreview
         }
         Debug.Log("Bilingual UI previews saved in Logs/UIReview.");
     }
-    private static void Shot(string path, string panel, GameLanguage language, Vector2Int size, StringBuilder report)
+    private static void CapturePanel(string path, string panel, GameLanguage language, StringBuilder report)
     {
         Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
         Transform canvas = scene.GetRootGameObjects().First(r => r.name == "Canvas").transform;
         if (path == UIAuthoringTools.Scenes[0])
         {
             foreach (Transform child in canvas) child.gameObject.SetActive(child.name == panel || child.name == "StyleMenuBacking" || child.name == "StyleMenuDecoration");
-            if (panel == "SobrecargasMenuPanel") SetActive(canvas.Find(panel + "/OverrideHintsPanel"), true);
+            if (panel == "SobrecargasMenuPanel") SetActive(UIEditorHierarchy.Find(canvas, panel + "/OverrideHintsPanel"), true);
+            if (panel == "UpgradesPanel")
+            {
+                SetActive(UIEditorHierarchy.Find(canvas, panel + "/NormalPanel"), true);
+                SetActive(UIEditorHierarchy.Find(canvas, panel + "/PremiumPanel"), false);
+                SetActive(UIEditorHierarchy.Find(canvas, panel + "/NormalPanel/RPPanel"), true);
+            }
+            if (panel == "TiendaPanel")
+            {
+                SetActive(UIEditorHierarchy.Find(canvas, panel + "/Skins"), true);
+                SetActive(UIEditorHierarchy.Find(canvas, panel + "/CompraGemasPanel"), false);
+            }
+            if (panel == "PersonalizacionPanel") SetActive(UIEditorHierarchy.Find(canvas, panel + "/Skins"), true);
         }
         else
         {
-            foreach (string name in new[] { "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "GraphicsSettingsPanel" }) SetActive(canvas.Find(name), name == panel);
+            foreach (string name in ModalPanels) SetActive(UIEditorHierarchy.Find(canvas, name), name == panel);
             TutorialManager tutorial = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<TutorialManager>(true)).FirstOrDefault();
             if (tutorial != null)
             {
                 GameObject tutorialPanel = Get<GameObject>(tutorial, "tutorialPanel"); tutorialPanel.SetActive(panel == "Tutorial");
-                if (panel == "Tutorial")
-                {
-                    TutorialStep[] steps = Get<TutorialStep[]>(tutorial, "steps");
-                    Get<TMP_Text>(tutorial, "messageText").text = steps.OrderByDescending(s => s.text.Length).First().text;
-                    Get<TMP_Text>(tutorial, "messageText").maxVisibleCharacters = int.MaxValue;
-                }
             }
         }
+        if (panel == "AyudaPanel")
+            foreach (string name in new[] { "MovimientoPanel", "ExperienciaPanel", "EnemigosPanel", "MejorasPanel" })
+                SetActive(UIEditorHierarchy.Find(canvas, panel + "/" + name), name == "MovimientoPanel");
         foreach (GameObject root in scene.GetRootGameObjects())
         {
             foreach (LocalizedText text in root.GetComponentsInChildren<LocalizedText>(true)) text.ApplyLanguage(language);
             foreach (LanguageSelector selector in root.GetComponentsInChildren<LanguageSelector>(true)) Get<TMP_Text>(selector, "valueLabel").text = language == GameLanguage.Spanish ? "Español" : "English";
+            foreach (AudioSettingsMenu audio in root.GetComponentsInChildren<AudioSettingsMenu>(true)) PreviewAudio(audio, language);
+            if (panel == "Tutorial") foreach (TutorialManager tutorial in root.GetComponentsInChildren<TutorialManager>(true)) PreviewTutorial(tutorial, language);
             foreach (CanvasGroup group in root.GetComponentsInChildren<CanvasGroup>(true)) if (group.name.Contains("GameOver") || group.name.Contains("Initials")) group.alpha = 1;
             foreach (ExperienceUI experience in root.GetComponentsInChildren<ExperienceUI>(true)) Get<TMP_Text>(experience, "levelText").text = Get<LocalizedString>(experience, "levelLabel").Value + "1";
             foreach (GameOverUI over in root.GetComponentsInChildren<GameOverUI>(true))
@@ -126,9 +150,53 @@ public static class UIBilingualPreview
                 Get<RectTransform>(hud, "bannerIconRect").gameObject.SetActive(false);
             }
         }
-        string tag = language + "-" + size.x + "-" + panel;
-        UIStylePreview.Capture(scene, "Logs/UIReview/" + tag + ".png", size.x, size.y, report, tag);
+        string surface = path == UIAuthoringTools.Scenes[0] ? "Menu" : "Game";
+        foreach (Vector2Int size in Resolutions)
+        {
+            string tag = language + "-" + size.x + "x" + size.y + "-" + surface + "-" + panel;
+            UIStylePreview.Capture(scene, "Logs/UIReview/" + tag + ".png", size.x, size.y, report, tag);
+        }
+        File.WriteAllText("Logs/UIReview/layout.txt", report.ToString());
+        Debug.Log($"UI preview: {language}, {surface}, {panel}, {Resolutions.Length} resolutions completed.");
     }
-    private static T Get<T>(Object component, string field) => (T)component.GetType().GetField(field, Fields).GetValue(component);
+
+    private static void PreviewAudio(AudioSettingsMenu audio, GameLanguage language)
+    {
+        string[] sliders = { "masterSlider", "musicSlider", "sfxSlider" };
+        string[] texts = { "masterValueText", "musicValueText", "sfxValueText" };
+        string[] titles = { "masterTitleLocalized", "musicTitleLocalized", "sfxTitleLocalized" };
+        string[] preferences = { "MasterVolume", "MusicVolume", "SFXVolume" };
+        float[] defaults = { 1f, .5f, .8f };
+        for (int i = 0; i < texts.Length; i++)
+        {
+            float volume = PlayerPrefs.GetFloat(preferences[i], defaults[i]);
+            Slider slider = Get<Slider>(audio, sliders[i]);
+            if (slider != null) slider.SetValueWithoutNotify(volume);
+            TMP_Text text = Get<TMP_Text>(audio, texts[i]);
+            if (text != null) text.text = Get<LocalizedString>(audio, titles[i]).Get(language) + ": " + Mathf.RoundToInt(volume * 100f) + "%";
+        }
+    }
+
+    private static void PreviewTutorial(TutorialManager tutorial, GameLanguage language)
+    {
+        TutorialStep step = Get<TutorialStep[]>(tutorial, "steps").OrderByDescending(value => Get<LocalizedString>(value, "message").Get(language).Length).First();
+        TMP_Text message = Get<TMP_Text>(tutorial, "messageText");
+        string content = Get<LocalizedString>(step, "message").Get(language);
+        UIStyle style = UIStyle.Instance;
+        message.text = style != null ? style.PaperHighlights(content, message.color) : content;
+        message.maxVisibleCharacters = int.MaxValue;
+        bool choice = step.stepType == "choice";
+        string next = Get<LocalizedString>(step, choice ? "yesLabel" : "nextLabel").Get(language);
+        if (string.IsNullOrEmpty(next)) next = Get<LocalizedString>(tutorial, choice ? "yesDefault" : "nextDefault").Get(language);
+        TMP_Text nextText = Get<TMP_Text>(tutorial, "nextButtonText");
+        if (nextText != null) nextText.text = next;
+        Button noButton = Get<Button>(tutorial, "choiceNoButton");
+        if (noButton != null) noButton.gameObject.SetActive(choice);
+        TMP_Text noText = Get<TMP_Text>(tutorial, "choiceNoButtonText");
+        string no = Get<LocalizedString>(step, "noLabel").Get(language);
+        if (noText != null) noText.text = string.IsNullOrEmpty(no) ? Get<LocalizedString>(tutorial, "noDefault").Get(language) : no;
+    }
+
+    private static T Get<T>(object component, string field) => (T)component.GetType().GetField(field, Fields).GetValue(component);
     private static void SetActive(Transform target, bool active) { if (target != null) target.gameObject.SetActive(active); }
 }
