@@ -163,14 +163,14 @@ export async function runBuilds(config, runtime = {}) {
   let stopped = false;
   let failure;
 
-  async function request(path, { method = 'GET', body, allowDownload = false, cleanup = false, attempts = 3, timeoutMs = 30_000 } = {}) {
+  async function request(path, { method = 'GET', body, allowDownload = false, allowLog = false, cleanup = false, attempts = 3, timeoutMs = 30_000 } = {}) {
     for (let attempt = 0; attempt < attempts; attempt++) {
       let response;
       try {
         const timeout = AbortSignal.timeout(timeoutMs);
         response = await fetchImpl(`${API}${path}`, {
           method,
-          headers: { Authorization: authorization, Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+          headers: { Authorization: authorization, Accept: allowLog ? 'text/plain, application/json' : 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
           body: body ? JSON.stringify(body) : undefined,
           redirect: 'manual',
           signal: runtime.signal && !cleanup ? AbortSignal.any([runtime.signal, timeout]) : timeout,
@@ -180,17 +180,62 @@ export async function runBuilds(config, runtime = {}) {
         throw new Error(method === 'POST' ? 'No se pudo confirmar la solicitud de build. No se reintentó para evitar duplicados; revisa Build History en Unity.' : 'No se pudo contactar con la API de Unity.');
       }
       if (method === 'GET' && (response.status === 429 || response.status >= 500) && attempt + 1 < attempts) {
-        await response.body?.cancel();
+        if (!response.bodyUsed) await response.body?.cancel();
         const retryAfter = Number(response.headers.get('retry-after'));
         await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter, 30) * 1_000 : (attempt + 1) * 2_000);
         continue;
       }
-      if (!response.ok && !(allowDownload && response.status === 303)) {
+      if (!response.ok && !(allowDownload && response.status === 303) && !(allowLog && [303, 307].includes(response.status))) {
         const hints = { 401: 'Comprueba las claves de la cuenta de servicio.', 403: 'Asigna el rol Automation User al proyecto.', 404: 'Comprueba Organization ID, Project ID y Build Target IDs.', 409: 'Ya existe una build pendiente. No se reutiliza ni se cancela una build ajena.' };
         throw new Error(`Unity API: HTTP ${response.status}. ${hints[response.status] || 'Revisa la configuración en Unity Cloud.'}`);
       }
+      if (allowLog) return response;
       if (response.status === 204) return undefined;
       try { return await response.json(); } catch { throw new Error('Unity devolvió una respuesta JSON no válida.'); }
+    }
+  }
+
+  function checkAssignedVersion(build, target, result) {
+    if (build.unityVersion === undefined || build.unityVersion === null || build.unityVersion === '') return;
+    const version = typeof build.unityVersion === 'string' ? build.unityVersion.replaceAll('_', '.') : '';
+    const observed = /^\d+\.\d+\.\d+[abfp]\d+$/.test(version) ? version : 'sin versión exacta';
+    result.assignedUnityVersion = observed;
+    if (version !== config.unityVersion) throw new Error(`${target.key}: Unity asignó ${observed}; se requiere ${config.unityVersion}.`);
+  }
+
+  async function editorVersionFromLog(buildPath, target) {
+    try {
+      let response = await request(`${buildPath}/log?redirect=manual&withHtml=false&compact=false`, { allowLog: true });
+      if (response.status !== 200) {
+        const url = response.status === 202 ? (await response.json())?.redirect_url : response.headers.get('location');
+        if (!response.bodyUsed) await response.body?.cancel();
+        const signedUrl = new URL(url);
+        if (signedUrl.protocol !== 'https:' || signedUrl.username || signedUrl.password) throw new Error();
+        response = await fetchImpl(signedUrl.href, {
+          redirect: 'follow',
+          signal: runtime.signal ? AbortSignal.any([runtime.signal, AbortSignal.timeout(30_000)]) : AbortSignal.timeout(30_000),
+        });
+      }
+      if (!response.ok || !response.body) throw new Error();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let prefix = '';
+      let bytes = 0;
+      try {
+        while (bytes < 2_097_152) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          const remaining = 2_097_152 - bytes;
+          const chunk = value.subarray(0, remaining);
+          bytes += chunk.length;
+          prefix += decoder.decode(chunk, { stream: true });
+          const match = prefix.match(/\b(?:Unity Editor version:|Initialize engine version:)\s*(\d+\.\d+\.\d+[abfp]\d+)(?=[\s(])/);
+          if (match) return match[1];
+        }
+      } finally { await reader.cancel().catch(() => {}); }
+      throw new Error();
+    } catch {
+      throw new Error(`${target.key}: no se pudo comprobar la versión del Editor en el log de Unity; no se descargarán ni publicarán sus archivos.`);
     }
   }
 
@@ -239,13 +284,14 @@ export async function runBuilds(config, runtime = {}) {
         try {
           const targetPath = `${root}/${encodeURIComponent(target.id)}`;
           const startedAt = now();
-          const requested = await request(`${targetPath}/builds`, { method: 'POST', body: { commit: config.commit, unityVersion: config.unityVersion, clean: config.clean, delay: 0, ...(config.branch ? { branch: config.branch } : {}) } });
+          const requested = await request(`${targetPath}/builds`, { method: 'POST', body: { commit: config.commit, unityVersion: config.unityVersion.replaceAll('.', '_'), clean: config.clean, delay: 0, ...(config.branch ? { branch: config.branch } : {}) } });
           const record = Array.isArray(requested) && requested.length === 1 ? requested[0] : undefined;
           if (!record || record.buildtargetid !== target.id || !Number.isInteger(record.build) || record.build <= 0) throw new Error('La respuesta de Unity no identifica una única build del target solicitado; revisa Build History.');
           const buildPath = `${targetPath}/builds/${record.build}`;
           active.set(buildPath, { key: target.key, number: record.build, path: buildPath });
           result.build = record.build;
           if (record.requestedRevision && record.requestedRevision.toLowerCase() !== config.commit) throw new Error(`${target.key}: Unity no aceptó el commit solicitado.`);
+          checkAssignedVersion(record, target, result);
           while (!stopped) {
             if (now() - startedAt >= config.timeoutMs) throw new Error(`${target.key}: se agotó el tiempo máximo de build.`);
             const build = await request(buildPath);
@@ -271,13 +317,20 @@ export async function runBuilds(config, runtime = {}) {
               }
               throw buildError;
             }
+            if (build.buildStatus === 'success') active.delete(buildPath);
+            checkAssignedVersion(build, target, result);
             if (build.buildStatus === 'success') {
-              active.delete(buildPath);
               if (build.lastBuiltRevision?.toLowerCase() !== config.commit) throw new Error(`${target.key}: el commit realmente compilado no coincide; no se descargarán ni publicarán sus archivos.`);
-              for (const builtVersion of [build.unityVersion, build.localUnityVersion].filter(Boolean)) {
-                if (typeof builtVersion !== 'string' || builtVersion.replaceAll('_', '.') !== config.unityVersion) throw new Error(`${target.key}: la versión de Unity compilada no coincide.`);
+              if (build.localUnityVersion !== undefined && build.localUnityVersion !== null) {
+                const projectVersion = typeof build.localUnityVersion === 'string' ? build.localUnityVersion.replaceAll('_', '.') : '';
+                if (projectVersion !== config.unityVersion) throw new Error(`${target.key}: la versión del proyecto detectada por Unity no coincide.`);
+                result.projectUnityVersion = projectVersion;
               }
               result.revision = build.lastBuiltRevision;
+              result.unityVersion = await editorVersionFromLog(buildPath, target);
+              if (result.unityVersion !== config.unityVersion) throw new Error(`${target.key}: el Editor ejecutó Unity ${result.unityVersion}; se requiere ${config.unityVersion}. No se descargarán ni publicarán sus archivos.`);
+              logger(`${target.key}: Editor Unity ${result.unityVersion} comprobado en el log.`);
+              if (stopped) throw new Error('Otra plataforma falló o la ejecución fue cancelada.');
               const archive = selectArchive(await request(`${buildPath}/artifacts`));
               const signed = await request(`${buildPath}/download/${encodeURIComponent(archive.filename)}`, { allowDownload: true });
               if (stopped) throw new Error('Otra plataforma falló o la ejecución fue cancelada.');
@@ -314,10 +367,10 @@ export async function runBuilds(config, runtime = {}) {
       await writeFile(resolve(config.outputDir, 'unity-build-results.json'), `${JSON.stringify({ commit: config.commit, unityVersion: config.unityVersion, warnings, ...(failure ? { error: failure.message } : {}), builds: results }, null, 2)}\n`);
     }
     if (config.summaryPath) {
-      const rows = results.map(result => `| ${result.target} | ${result.build || '-'} | ${result.status} | ${result.archive || '-'} |`);
+      const rows = results.map(result => `| ${result.target} | ${result.build || '-'} | ${result.status} | ${result.unityVersion || '-'} | ${result.archive || '-'} |`);
       const validationSummary = warnings.length ? 'Versión, plataforma y disparadores verificados sin solicitar builds.\n' : 'Configuración verificada sin solicitar builds.\n';
       const warningSummary = warnings.length ? `\n${warnings.map(warning => `- ${warning}`).join('\n')}\n` : '';
-      await appendFile(config.summaryPath, `\nUnity Build Automation · ${config.unityVersion}\n\nCommit: \`${config.commit}\`\n\n${config.validateOnly && !failure ? validationSummary : '| Plataforma | Build | Estado | Archivo |\n|---|---:|---|---|\n' + rows.join('\n') + '\n'}${warningSummary}${failure ? '\nLa validación o la build falló; consulta el error del paso.\n' : ''}`);
+      await appendFile(config.summaryPath, `\nUnity Build Automation · ${config.unityVersion}\n\nCommit: \`${config.commit}\`\n\n${config.validateOnly && !failure ? validationSummary : '| Plataforma | Build | Estado | Editor comprobado | Archivo |\n|---|---:|---|---|---|\n' + rows.join('\n') + '\n'}${warningSummary}${failure ? '\nLa validación o la build falló; consulta el error del paso.\n' : ''}`);
     }
   }
 }

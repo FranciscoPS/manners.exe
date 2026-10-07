@@ -9,6 +9,8 @@ import { downloadArchive, loadConfig, runBuilds, selectArchive, validateTarget }
 const definitions = JSON.parse(await readFile(new URL('../unity-build-targets.json', import.meta.url), 'utf8'));
 const commit = 'a'.repeat(40);
 const unityVersion = '6000.3.5f2';
+const unityVersionId = unityVersion.replaceAll('.', '_');
+const editorLog = `Unity Editor version: ${unityVersion} (revision)\nInitialize engine version: ${unityVersion} (revision)\n`;
 const zip = Buffer.alloc(22);
 zip.set([0x50, 0x4b, 0x05, 0x06]);
 const md5 = createHash('md5').update(zip).digest('hex');
@@ -71,7 +73,7 @@ function fakeApi(config, override = async () => undefined) {
     const handled = await override(call, calls);
     if (handled !== undefined) return handled;
     if (parsed.hostname === 'storage.example') return new Response(zip);
-    const match = parsed.pathname.match(/\/buildtargets\/([^/]+)(?:\/builds(?:\/(\d+)(?:\/(artifacts|download|failures)(?:\/(.+))?)?)?)?$/);
+    const match = parsed.pathname.match(/\/buildtargets\/([^/]+)(?:\/builds(?:\/(\d+)(?:\/(artifacts|download|failures|log)(?:\/(.+))?)?)?)?$/);
     assert.ok(match, `Unexpected API request ${method} ${url}`);
     const target = config.targets.find(item => item.id === decodeURIComponent(match[1]));
     assert.ok(target, `Unexpected target ${match[1]}`);
@@ -82,6 +84,7 @@ function fakeApi(config, override = async () => undefined) {
     if (match[3] === 'artifacts') return json([{ key: 'primary', files: [{ filename: `${target.key}.zip`, size: zip.length, md5sum: md5 }] }]);
     if (match[3] === 'download') return json({ url: `https://storage.example/${target.key}.zip?signature=temporary` }, 303);
     if (match[3] === 'failures') return json({ failures: [] });
+    if (match[3] === 'log') return new Response(editorLog, { headers: { 'content-type': 'text/plain' } });
     return json(buildRecord(target, number));
   };
   return { calls, fetchImpl, logger: () => {}, sleep: async () => {} };
@@ -167,7 +170,7 @@ test('configured releases pin the checkout SHA and Unity version and download 30
   assert.equal(posts.length, config.targets.length);
   assert.deepEqual(api.calls.slice(0, config.targets.length).map(call => call.path.split('/').at(-1)), config.targets.map(target => target.id));
   for (const call of posts) {
-    assert.deepEqual(JSON.parse(call.options.body), { commit, unityVersion, clean: true, delay: 0, branch: 'develop' });
+    assert.deepEqual(JSON.parse(call.options.body), { commit, unityVersion: unityVersionId, clean: true, delay: 0, branch: 'develop' });
     assert.equal(call.options.headers.Authorization, `Basic ${Buffer.from('test-key:test-secret').toString('base64')}`);
     assert.equal(call.options.redirect, 'manual');
   }
@@ -198,7 +201,7 @@ test('a release tag requests Windows, macOS and WebGL from its exact SHA without
   const posts = api.calls.filter(call => call.method === 'POST');
   assert.equal(posts.length, config.targets.length);
   for (const call of posts) {
-    assert.deepEqual(JSON.parse(call.options.body), { commit, unityVersion, clean: false, delay: 0 });
+    assert.deepEqual(JSON.parse(call.options.body), { commit, unityVersion: unityVersionId, clean: false, delay: 0 });
   }
   assert.equal(result.commit, commit);
   assert.ok(result.builds.every(build => build.status === 'success' && build.revision === commit));
@@ -389,6 +392,166 @@ test('a successful build with underscore version metadata downloads the artifact
   assert.equal(api.calls.filter(call => call.path.endsWith('/artifacts')).length, 1);
   assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'storage.example').length, 1);
 });
+
+test('the Editor log prevents publishing a different runtime patch even when API metadata matches or is missing', async t => {
+  for (const metadataMissing of [false, true]) {
+    const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+    const api = fakeApi(config, async call => {
+      if (call.method === 'POST') return json([buildRecord(config.targets[0], 101, { buildStatus: 'queued', unityVersion: metadataMissing ? undefined : unityVersion })], 202);
+      if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { unityVersion: metadataMissing ? undefined : unityVersion, localUnityVersion: metadataMissing ? undefined : unityVersion }));
+      if (call.path.endsWith('/log')) return new Response('ProjectVersion.txt detected 6000.3.5f2\nUnity Editor version: 6000.3.25f1 (revision)\n');
+    });
+    await assert.rejects(runBuilds(config, api), /Editor ejecutó Unity 6000\.3\.25f1; se requiere 6000\.3\.5f2/);
+    assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+    assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'storage.example').length, 0);
+    const report = JSON.parse(await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8'));
+    assert.equal(report.builds[0].unityVersion, '6000.3.25f1');
+    assert.equal(report.builds[0].assignedUnityVersion, metadataMissing ? undefined : unityVersion);
+    assert.equal(report.builds[0].projectUnityVersion, metadataMissing ? undefined : unityVersion);
+    assert.ok(!report.builds[0].archive);
+  }
+});
+
+test('an exact Editor log is sufficient when assigned and detected project versions are absent', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  config.summaryPath = join(config.outputDir, 'summary.md');
+  const api = fakeApi(config, async call => {
+    if (call.method === 'POST') return json([buildRecord(config.targets[0], 101, { buildStatus: 'queued', unityVersion: undefined })], 202);
+    if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { unityVersion: undefined, localUnityVersion: undefined }));
+    if (call.path.endsWith('/log')) return new Response(`Initialize engine version: ${unityVersion} (revision)\n`);
+  });
+  const result = await runBuilds(config, api);
+  assert.equal(result.builds[0].unityVersion, unityVersion);
+  assert.equal(result.builds[0].assignedUnityVersion, undefined);
+  assert.equal(result.builds[0].projectUnityVersion, undefined);
+  assert.equal(result.builds[0].sha256, sha256);
+  const logIndex = api.calls.findIndex(call => call.path.endsWith('/log'));
+  const artifactsIndex = api.calls.findIndex(call => call.path.endsWith('/artifacts'));
+  assert.ok(logIndex >= 0 && artifactsIndex > logIndex);
+  const summary = await readFile(config.summaryPath, 'utf8');
+  assert.match(summary, /Editor comprobado/);
+  assert.ok(summary.includes(`| web | 101 | success | ${unityVersion} |`));
+});
+
+test('streamed Editor headers split across chunks are verified and recorded separately from project metadata', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  let reads = 0;
+  let canceled = false;
+  const chunks = ['setup output\nUnity Editor vers', 'ion: 6000.3.', '5f2', ' (revision)\nprivate-log-sentinel'];
+  const api = fakeApi(config, async call => {
+    if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { unityVersion: unityVersionId, localUnityVersion: unityVersionId }));
+    if (call.path.endsWith('/log')) return new Response(new ReadableStream({
+      pull(controller) {
+        if (reads === chunks.length) return;
+        controller.enqueue(new TextEncoder().encode(chunks[reads++]));
+      },
+      cancel() { canceled = true; },
+    }));
+  });
+  const logs = [];
+  const result = await runBuilds(config, { ...api, logger: message => logs.push(message) });
+  assert.equal(reads, chunks.length);
+  assert.equal(canceled, true);
+  assert.equal(result.builds[0].unityVersion, unityVersion);
+  assert.equal(result.builds[0].assignedUnityVersion, unityVersion);
+  assert.equal(result.builds[0].projectUnityVersion, unityVersion);
+  const report = await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8');
+  assert.ok(!`${logs.join('\n')}\n${report}`.includes('private-log-sentinel'));
+});
+
+for (const status of [202, 303, 307]) {
+  test(`Editor log HTTP ${status} follows the signed storage URL without forwarding API credentials`, async t => {
+    const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+    const signedUrl = 'https://logs.example/unity.log?signature=private-signature';
+    const api = fakeApi(config, async call => {
+      if (call.path.endsWith('/log')) return status === 202 ? json({ redirect_url: signedUrl }, status) : new Response(null, { status, headers: { location: signedUrl } });
+      if (new URL(call.url).hostname === 'logs.example') return new Response(editorLog);
+    });
+    const result = await runBuilds(config, api);
+    assert.equal(result.builds[0].unityVersion, unityVersion);
+    const log = api.calls.find(call => call.path.endsWith('/log'));
+    const query = new URL(log.url).searchParams;
+    assert.equal(query.get('redirect'), 'manual');
+    assert.equal(query.get('withHtml'), 'false');
+    assert.equal(query.get('compact'), 'false');
+    assert.ok(log.options.headers.Authorization.startsWith('Basic '));
+    const storage = api.calls.filter(call => new URL(call.url).hostname === 'logs.example');
+    assert.equal(storage.length, 1);
+    assert.equal(storage[0].options.headers, undefined);
+    assert.equal(storage[0].options.body, undefined);
+    assert.equal(storage[0].options.redirect, 'follow');
+    assert.ok(storage[0].options.signal instanceof AbortSignal);
+    assert.ok(!JSON.stringify(result).includes('private-signature'));
+  });
+}
+
+test('missing, unavailable or unsafe Editor logs refuse artifacts and do not expose raw log text or credentials', async t => {
+  for (const scenario of ['missing header', 'HTTP 404', 'HTTP 302', 'malformed JSON', 'missing redirect URL', 'HTTP storage URL', 'URL credentials', 'storage unavailable', 'network failure', 'invalid version suffix']) {
+    const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+    const logs = [];
+    const api = fakeApi(config, async call => {
+      if (call.path.endsWith('/log')) {
+        if (scenario === 'HTTP 404') return new Response(`private-log-sentinel ${config.secret}`, { status: 404 });
+        if (scenario === 'HTTP 302') return new Response(null, { status: 302, headers: { location: 'https://logs.example/private-log-sentinel' } });
+        if (scenario === 'malformed JSON') return new Response('{private-log-sentinel', { status: 202 });
+        if (scenario === 'missing redirect URL') return json({ unknown: 'private-log-sentinel' }, 202);
+        if (scenario === 'HTTP storage URL') return json({ redirect_url: 'http://logs.example/private-log-sentinel' }, 202);
+        if (scenario === 'URL credentials') return json({ redirect_url: `https://user:${config.secret}@logs.example/private-log-sentinel` }, 202);
+        if (scenario === 'storage unavailable') return json({ redirect_url: 'https://logs.example/private-log-sentinel?token=private-token' }, 202);
+        if (scenario === 'network failure') throw new TypeError(`private-log-sentinel ${config.keyId} ${config.secret}`);
+        if (scenario === 'invalid version suffix') return new Response(`Unity Editor version: ${unityVersion}evil private-log-sentinel\n`);
+        return new Response(`ProjectVersion.txt: ${unityVersion}\nprivate-log-sentinel ${config.secret}`);
+      }
+      if (new URL(call.url).hostname === 'logs.example') return new Response('private-log-sentinel', { status: 403 });
+    });
+    let error;
+    try { await runBuilds(config, { ...api, logger: message => logs.push(message) }); } catch (caught) { error = caught; }
+    assert.ok(error, scenario);
+    assert.match(error.message, /no se pudo comprobar la versión del Editor/);
+    assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0, scenario);
+    assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'storage.example').length, 0, scenario);
+    const report = await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8');
+    const surfaced = `${error.message}\n${logs.join('\n')}\n${report}`;
+    for (const sensitive of [config.keyId, config.secret, 'private-log-sentinel', 'private-token', 'https://logs.example', 'http://logs.example']) assert.ok(!surfaced.includes(sensitive), `${scenario} exposed ${sensitive}`);
+    if (['HTTP 302', 'malformed JSON', 'missing redirect URL', 'HTTP storage URL', 'URL credentials'].includes(scenario)) assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'logs.example').length, 0, scenario);
+  }
+});
+
+test('Editor version verification stops at the log prefix limit and cancels the stream without publishing', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  let canceled = false;
+  const api = fakeApi(config, async call => {
+    if (call.path.endsWith('/log')) return new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(' '.repeat(2_097_152)));
+        controller.enqueue(new TextEncoder().encode(editorLog));
+      },
+      cancel() { canceled = true; },
+    }));
+  });
+  await assert.rejects(runBuilds(config, api), /no se pudo comprobar la versión del Editor/);
+  assert.equal(canceled, true);
+  assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+});
+
+for (const phase of ['creation', 'started']) {
+  test(`a wrong assigned Unity patch during ${phase} cancels owned builds and does not launch WebGL`, async t => {
+    const config = await configuration(t);
+    const api = fakeApi(config, async call => {
+      if (phase === 'creation' && call.method === 'POST' && call.path.includes(`/${config.targets[1].id}/builds`)) return json([buildRecord(config.targets[1], 102, { buildStatus: 'queued', unityVersion: '6000_3_25f1' })], 202);
+      if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { buildStatus: 'building' }));
+      if (call.method === 'GET' && /\/builds\/102$/.test(call.path)) return json(buildRecord(config.targets[1], 102, { buildStatus: 'started', unityVersion: '6000_3_25f1' }));
+    });
+    await assert.rejects(runBuilds(config, api), /mac: Unity asignó 6000\.3\.25f1; se requiere 6000\.3\.5f2/);
+    const canceled = new Set(api.calls.filter(call => call.method === 'DELETE').map(call => call.path.split('/').at(-1)));
+    assert.deepEqual(canceled, new Set(['101', '102']));
+    assert.equal(api.calls.filter(call => call.method === 'POST').length, 2);
+    assert.equal(api.calls.filter(call => /target-web\/builds$/.test(call.path)).length, 0);
+    assert.equal(api.calls.filter(call => /\/log|\/artifacts|\/download\//.test(call.path)).length, 0);
+    const report = JSON.parse(await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8'));
+    assert.equal(report.builds.find(build => build.target === 'mac').assignedUnityVersion, '6000.3.25f1');
+  });
+}
 
 test('preflight reports every target problem before triggering builds without exposing repository credentials', async t => {
   const config = await configuration(t);
