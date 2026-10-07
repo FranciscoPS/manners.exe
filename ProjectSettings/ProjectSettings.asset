@@ -930,7 +930,13 @@ PlayerSettings:
   XboxOneOverrideIdentityName: 
   XboxOneOverrideIdentityPublisher: 
   vrEditorSettings: {}
-  cloudServicesEnabled: {}
+  cloudServicesEnabled:
+    Build: 0
+    Game Performance: 0
+    Legacy Analytics: 0
+    Purchasing: 0
+    UDP: 0
+    Unity Ads: 0
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 
@@ -952,11 +958,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 4bc8a7f8-b532-4903-b52c-b1e839e5105d
+  cloudProjectId: 7c68d06f-d4d8-4b8b-b758-e411552e8b95
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
   projectName: manners.exe
-  organizationId: unity_212c9b4096558d930bca
+  organizationId: fperalta96
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
