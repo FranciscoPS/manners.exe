@@ -211,7 +211,7 @@ for (const [label, change] of [
   ['wrong Unity patch', remote => { remote.settings.unityVersion = '6000.3.6f1'; }],
   ['missing platform', remote => { delete remote.platform; }],
   ['wrong platform', remote => { remote.platform = 'android'; }],
-  ['automatic patch fallback', remote => { remote.settings.fallbackPatchVersion = true; }],
+  ['automatic version detection', remote => { remote.settings.autoDetectUnityVersion = true; }],
   ['independent scheduled builds', remote => { remote.settings.buildSchedule = { isEnabled: true }; }],
   ['wrong project subfolder', remote => { remote.settings.scm.subdirectory = 'Assets'; }],
 ]) {
@@ -238,6 +238,133 @@ test('validates repository identity and accepts GitHub SSH URLs', async t => {
   assert.doesNotThrow(() => validateTarget(target, remote, config));
   remote.settings.scm.url = 'https://github.com/someone/unrelated.git';
   assert.throws(() => validateTarget(target, remote, config), /repositorio correcto/);
+});
+
+for (const [label, repository] of [
+  ['full_name', { full_name: 'FranciscoPS/manners.exe' }],
+  ['clone_url', { clone_url: 'https://github.com/FranciscoPS/manners.exe.git' }],
+]) {
+  test(`accepts GitHub OAuth repository ${label} without a legacy SCM URL`, async t => {
+    const config = await configuration(t, { validateOnly: true });
+    const api = fakeApi(config, async call => {
+      const target = config.targets.find(item => call.path.endsWith(`/${item.id}`));
+      if (target) {
+        const remote = remoteTarget(target, config);
+        remote.settings.scm = { oauth: { github: { repository } } };
+        return json(remote);
+      }
+    });
+    const result = await runBuilds(config, api);
+    assert.deepEqual(result.validated, config.targets.map(target => target.key));
+    assert.equal(api.calls.length, config.targets.length);
+    assert.ok(api.calls.every(call => call.method === 'GET'));
+  });
+}
+
+test('inherits project-level GitHub OAuth identity and requests project settings only once', async t => {
+  const config = await configuration(t, { validateOnly: true });
+  const projectPath = `/v2/orgs/${config.orgId}/projects/${config.projectId}`;
+  const api = fakeApi(config, async call => {
+    if (call.path === projectPath) return json({ projectid: config.projectId, settings: { scm: { oauth: { github: { repository: { full_name: config.repository } } } } } });
+    const target = config.targets.find(item => call.path.endsWith(`/${item.id}`));
+    if (target) {
+      const remote = remoteTarget(target, config);
+      remote.settings.scm = { branch: 'master', subdirectory: '' };
+      return json(remote);
+    }
+  });
+  const result = await runBuilds(config, api);
+  assert.deepEqual(result.validated, config.targets.map(target => target.key));
+  assert.equal(api.calls.filter(call => call.path === projectPath).length, 1);
+  assert.equal(api.calls.length, config.targets.length + 1);
+  assert.equal(api.calls.filter(call => call.method !== 'GET').length, 0);
+});
+
+test('an explicit wrong target repository cannot be hidden by a correct project default', async t => {
+  const config = await configuration(t);
+  const remote = remoteTarget(config.targets[0], config);
+  remote.settings.scm.url = 'https://github.com/someone/unrelated.git';
+  assert.throws(() => validateTarget(config.targets[0], remote, config, { url: `https://github.com/${config.repository}.git` }), /repositorio correcto/);
+});
+
+test('conflicting explicit SCM and OAuth repository identities are rejected', async t => {
+  const config = await configuration(t);
+  const remote = remoteTarget(config.targets[0], config);
+  remote.settings.scm.oauth = { github: { repository: { full_name: 'someone/unrelated' } } };
+  assert.throws(() => validateTarget(config.targets[0], remote, config), /repositorio correcto/);
+});
+
+test('an opaque connection cannot inherit project identity and gets a precise diagnostic', async t => {
+  const config = await configuration(t, { validateOnly: true });
+  const api = fakeApi(config, async call => {
+    const target = config.targets.find(item => call.path.endsWith(`/${item.id}`));
+    if (target) {
+      const remote = remoteTarget(target, config);
+      remote.connectionId = 'opaque-connection';
+      remote.settings.scm = { branch: 'master' };
+      return json(remote);
+    }
+  });
+  await assert.rejects(runBuilds(config, api), error => /no expone el repositorio de esta conexión/.test(error.message) && !/repositorio correcto/.test(error.message));
+  assert.equal(api.calls.length, config.targets.length);
+  assert.ok(api.calls.every(call => call.method === 'GET' && call.path.includes('/buildtargets/')));
+  const remote = remoteTarget(config.targets[0], config);
+  remote.connectionId = 'opaque-connection';
+  remote.settings.scm = {};
+  assert.throws(() => validateTarget(config.targets[0], remote, config, { url: `https://github.com/${config.repository}.git` }), /no expone el repositorio de esta conexión/);
+});
+
+test('accepts equivalent underscore Unity versions and inactive fallback patch settings', async t => {
+  const config = await configuration(t);
+  const remote = remoteTarget(config.targets[0], config);
+  remote.settings.unityVersion = '6000_3_5f2';
+  remote.settings.autoDetectUnityVersion = false;
+  remote.settings.fallbackPatchVersion = true;
+  assert.doesNotThrow(() => validateTarget(config.targets[0], remote, config));
+});
+
+test('a successful build with underscore version metadata downloads the artifact for the correct SHA', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  const api = fakeApi(config, async call => {
+    if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) {
+      return json(buildRecord(config.targets[0], 101, { unityVersion: '6000_3_5f2', localUnityVersion: '6000_3_5f2' }));
+    }
+  });
+  const result = await runBuilds(config, api);
+  assert.equal(result.builds[0].revision, commit);
+  assert.equal(result.builds[0].status, 'success');
+  assert.equal(result.builds[0].sha256, sha256);
+  assert.deepEqual(await readFile(join(config.outputDir, result.builds[0].archive)), zip);
+  assert.equal(api.calls.filter(call => call.path.endsWith('/artifacts')).length, 1);
+  assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'storage.example').length, 1);
+});
+
+test('preflight reports every target problem before triggering builds without exposing repository credentials', async t => {
+  const config = await configuration(t);
+  const api = fakeApi(config, async call => {
+    const target = config.targets.find(item => call.path.endsWith(`/${item.id}`));
+    if (target) {
+      const remote = remoteTarget(target, config);
+      remote.settings.unityVersion = '6000.3.6f1';
+      remote.settings.autoBuild = true;
+      remote.settings.buildSchedule = { isEnabled: true };
+      remote.settings.scm = {
+        url: 'https://repository-user:synthetic-password@github.com/someone/unrelated.git',
+        oauth: { github: { token: 'synthetic-oauth-token', repository: { full_name: 'someone/unrelated' } } },
+      };
+      return json(remote);
+    }
+  });
+  await assert.rejects(runBuilds(config, api), error => {
+    for (const target of config.targets) assert.ok(error.message.includes(`${target.key}:`));
+    assert.match(error.message, /6000\.3\.6f1/);
+    assert.match(error.message, /Auto-build/);
+    assert.match(error.message, /Build schedule/);
+    for (const sensitive of ['synthetic-password', 'synthetic-oauth-token', 'test-secret', 'https://', 'repository-user']) assert.ok(!error.message.includes(sensitive));
+    return true;
+  });
+  assert.equal(api.calls.length, config.targets.length);
+  assert.equal(api.calls.filter(call => call.method === 'POST').length, 0);
 });
 
 for (const [label, overrides] of [

@@ -46,17 +46,38 @@ export function loadConfig(env, { definitions, unityVersion, commit, projectId }
   };
 }
 
-export function validateTarget(target, remote, config) {
+function githubRepository(value) {
+  if (typeof value !== 'string') return undefined;
+  const repository = value.trim().replace(/^git@github\.com:/i, '').replace(/^ssh:\/\/git@github\.com\//i, '').replace(/^https?:\/\/github\.com\//i, '').replace(/\.git\/?$/i, '').replace(/\/$/, '');
+  return /^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repository) ? repository.toLowerCase() : undefined;
+}
+
+function repositoryIdentities(scm) {
+  const oauthRepository = scm?.oauth?.github?.repository;
+  return [scm?.url, scm?.url_buildjob, oauthRepository?.full_name, oauthRepository?.clone_url]
+    .filter(value => typeof value === 'string' && value.trim())
+    .map(githubRepository);
+}
+
+export function validateTarget(target, remote, config, projectScm) {
   const problems = [];
   const settings = remote.settings || {};
   if (remote.buildtargetid !== target.id) problems.push('el ID devuelto no coincide');
   if (remote.enabled !== true) problems.push('el target está deshabilitado');
   if (!target.platforms.includes(remote.platform)) problems.push('la plataforma no coincide');
-  if (settings.unityVersion !== config.unityVersion || settings.autoDetectUnityVersion === true || settings.fallbackPatchVersion === true) problems.push(`fija Unity ${config.unityVersion}, sin autodetección ni fallback de parche`);
-  if (settings.autoBuild === true || settings.buildSchedule?.isEnabled === true) problems.push('desactiva Auto-build y los horarios; GitHub controla los disparos');
+  const selectedVersion = typeof settings.unityVersion === 'string' ? settings.unityVersion.replaceAll('_', '.') : '';
+  if (selectedVersion !== config.unityVersion) {
+    const observedVersion = /^\d+\.\d+\.\d+[abfp]\d+$/.test(selectedVersion) ? selectedVersion : 'sin versión exacta';
+    problems.push(`fija Unity ${config.unityVersion} (actual: ${observedVersion})`);
+  }
+  if (settings.autoDetectUnityVersion === true) problems.push('desactiva Auto detect Unity version; GitHub fija la versión exacta');
+  if (settings.autoBuild === true) problems.push('desactiva Auto-build; GitHub controla los disparos');
+  if (settings.buildSchedule?.isEnabled === true) problems.push('desactiva Build schedule; GitHub controla los disparos');
   if (!['', '.', './'].includes(settings.scm?.subdirectory || '')) problems.push('deja Project subfolder vacío; el proyecto está en la raíz del repositorio');
-  const repository = (settings.scm?.url || '').replace(/^git@github\.com:/i, '').replace(/^ssh:\/\/git@github\.com\//i, '').replace(/^https?:\/\/github\.com\//i, '').replace(/\.git\/?$/i, '').replace(/\/$/, '');
-  if (repository.toLowerCase() !== config.repository.toLowerCase()) problems.push('conecta el repositorio correcto en Source Control');
+  const targetRepositories = repositoryIdentities(settings.scm);
+  const repositories = targetRepositories.length ? targetRepositories : remote.connectionId ? [] : repositoryIdentities(projectScm);
+  if (!repositories.length) problems.push(remote.connectionId ? 'la API no expone el repositorio de esta conexión; comprueba Source Control del target' : 'Unity no expone un repositorio seleccionado; comprueba Source Control del proyecto y guarda con Save');
+  else if (repositories.some(repository => repository !== config.repository.toLowerCase())) problems.push('conecta el repositorio correcto en Source Control');
   if (problems.length) throw new Error(`${target.key}: ${problems.join('; ')}.`);
 }
 
@@ -160,11 +181,19 @@ export async function runBuilds(config, runtime = {}) {
   const onAbort = () => { stopped = true; failure ||= new Error('La ejecución fue cancelada.'); };
   runtime.signal?.addEventListener('abort', onAbort, { once: true });
   try {
+    let project;
+    const validationErrors = [];
     for (const target of config.targets) {
       const remote = await request(`${root}/${encodeURIComponent(target.id)}`);
-      validateTarget(target, remote, config);
-      logger(`${target.key}: configuración verificada, Unity ${config.unityVersion}.`);
+      if (!repositoryIdentities(remote.settings?.scm).length && !remote.connectionId) project ||= await request(root.replace(/\/buildtargets$/, ''));
+      try {
+        validateTarget(target, remote, config, project?.settings?.scm);
+        logger(`${target.key}: configuración verificada, Unity ${config.unityVersion}.`);
+      } catch (error) {
+        validationErrors.push(error.message);
+      }
     }
+    if (validationErrors.length) throw new Error(validationErrors.join('\n'));
     if (config.validateOnly) return { commit: config.commit, validated: config.targets.map(target => target.key), builds: [] };
     if (runtime.signal?.aborted) throw new Error('La ejecución fue cancelada.');
     await mkdir(config.outputDir, { recursive: true });
@@ -199,7 +228,7 @@ export async function runBuilds(config, runtime = {}) {
               active.delete(buildPath);
               if (build.lastBuiltRevision?.toLowerCase() !== config.commit) throw new Error(`${target.key}: el commit realmente compilado no coincide; no se descargarán ni publicarán sus archivos.`);
               for (const builtVersion of [build.unityVersion, build.localUnityVersion].filter(Boolean)) {
-                if (builtVersion !== config.unityVersion) throw new Error(`${target.key}: la versión de Unity compilada no coincide.`);
+                if (typeof builtVersion !== 'string' || builtVersion.replaceAll('_', '.') !== config.unityVersion) throw new Error(`${target.key}: la versión de Unity compilada no coincide.`);
               }
               result.revision = build.lastBuiltRevision;
               const archive = selectArchive(await request(`${buildPath}/artifacts`));
