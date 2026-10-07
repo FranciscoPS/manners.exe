@@ -21,6 +21,15 @@ export function loadConfig(env, { definitions, unityVersion, commit, projectId }
   if (!selectedProjectId) throw new Error('Vincula el proyecto con Unity Cloud o configura UNITY_PROJECT_ID en GitHub Actions.');
   if (!/^[a-f0-9]{40}$/i.test(commit)) throw new Error('Se requiere el SHA completo del commit del checkout.');
   if (!/^\d+\.\d+\.\d+[abfp]\d+$/.test(unityVersion)) throw new Error('ProjectVersion.txt no contiene una versión válida de Unity.');
+  const existingBuild = Number(env.BUILD_EXISTING_BUILD_NUMBER || 0);
+  if (!Number.isSafeInteger(existingBuild) || existingBuild < 0) throw new Error('El número de build existente debe ser un entero positivo, o 0 para compilar.');
+  const expectedCommit = env.BUILD_EXPECTED_COMMIT?.trim() || '';
+  if (existingBuild > 0) {
+    if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch') throw new Error('Recuperar una build existente sólo está permitido en una ejecución manual.');
+    if (targets.length !== 1) throw new Error('Para recuperar una build existente, selecciona una sola plataforma.');
+    if (env.BUILD_VALIDATE_ONLY === 'true') throw new Error('Desmarca validate_only para recuperar el ZIP de una build existente.');
+    if (!/^[a-f0-9]{40}$/i.test(expectedCommit)) throw new Error('Indica el SHA completo de la build existente en expected_commit.');
+  } else if (expectedCommit) throw new Error('expected_commit sólo se utiliza al recuperar una build existente. Las compilaciones nuevas usan el commit del checkout.');
   const timeoutMinutes = Number(env.BUILD_TIMEOUT_MINUTES || 90);
   if (!Number.isInteger(timeoutMinutes) || timeoutMinutes < 1 || timeoutMinutes > 100) throw new Error('El tiempo máximo debe estar entre 1 y 100 minutos por build.');
   const configuredTargets = targets.map(target => ({ ...target, id: env[target.variable].trim() }));
@@ -34,7 +43,9 @@ export function loadConfig(env, { definitions, unityVersion, commit, projectId }
     secret: env.UNITY_SERVICE_ACCOUNT_SECRET.trim(),
     repository: env.GITHUB_REPOSITORY || 'FranciscoPS/manners.exe',
     unityVersion,
-    commit: commit.toLowerCase(),
+    commit: (existingBuild ? expectedCommit : commit).toLowerCase(),
+    pipelineCommit: commit.toLowerCase(),
+    existingBuild,
     branch: env.BUILD_BRANCH || '',
     clean: env.BUILD_CLEAN === 'true',
     timeoutMs: timeoutMinutes * 60_000,
@@ -115,9 +126,22 @@ export function selectArchive(artifacts) {
   return files[0];
 }
 
+function decodeMd5(value) {
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value !== 'string') throw new Error('Unity publicó un checksum MD5 con un formato no reconocido.');
+  const checksum = value.trim();
+  if (/^[a-f0-9]{32}$/i.test(checksum)) return Buffer.from(checksum, 'hex');
+  if (/^[a-z0-9+/]{22}(?:==)?$/i.test(checksum)) {
+    const decoded = Buffer.from(checksum, 'base64');
+    if (decoded.length === 16 && decoded.toString('base64').replace(/=+$/, '') === checksum.replace(/=+$/, '')) return decoded;
+  }
+  throw new Error('Unity publicó un checksum MD5 con un formato no reconocido.');
+}
+
 export async function downloadArchive(url, destination, { fetchImpl = fetch, signal, expectedSize, expectedMd5 } = {}) {
   const storageUrl = new URL(url);
   if (storageUrl.protocol !== 'https:' || storageUrl.username || storageUrl.password) throw new Error('Unity devolvió una URL de descarga no válida.');
+  const expectedDigest = decodeMd5(expectedMd5);
   const response = await fetchImpl(storageUrl.href, { redirect: 'follow', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(1_800_000)]) : AbortSignal.timeout(1_800_000) });
   if (!response.ok || !response.body) throw new Error(`No se pudo descargar el ZIP: HTTP ${response.status}.`);
   await mkdir(dirname(destination), { recursive: true });
@@ -140,9 +164,10 @@ export async function downloadArchive(url, destination, { fetchImpl = fetch, sig
     try { await handle.read(magic, 0, 4, 0); } finally { await handle.close(); }
     if (magic[0] !== 0x50 || magic[1] !== 0x4b || bytes < 22) throw new Error('El archivo descargado no es un ZIP válido.');
     if (Number(expectedSize) > 0 && bytes !== Number(expectedSize)) throw new Error('El tamaño del ZIP no coincide con el publicado por Unity.');
-    if (expectedMd5 && md5.digest('hex') !== expectedMd5.toLowerCase()) throw new Error('El checksum del ZIP no coincide con el publicado por Unity.');
+    const computedMd5 = md5.digest();
+    if (expectedDigest && !computedMd5.equals(expectedDigest)) throw new Error(`El checksum del ZIP no coincide con el publicado por Unity (esperado: ${expectedDigest.toString('hex')}; descargado: ${computedMd5.toString('hex')}).`);
     await rename(temporary, destination);
-    return { bytes, sha256: sha256.digest('hex') };
+    return { bytes, md5: computedMd5.toString('hex'), sha256: sha256.digest('hex') };
   } catch (error) {
     await rm(temporary, { force: true });
     throw error;
@@ -279,22 +304,27 @@ export async function runBuilds(config, runtime = {}) {
     async function worker() {
       while (!stopped && cursor < config.targets.length) {
         const target = config.targets[cursor++];
-        const result = { target: target.key, targetId: target.id, status: 'requesting' };
+        const result = { target: target.key, targetId: target.id, status: config.existingBuild ? 'recovering' : 'requesting', ...(config.existingBuild ? { recovered: true } : {}) };
         results.push(result);
         try {
           const targetPath = `${root}/${encodeURIComponent(target.id)}`;
           const startedAt = now();
-          const requested = await request(`${targetPath}/builds`, { method: 'POST', body: { commit: config.commit, unityVersion: config.unityVersion.replaceAll('.', '_'), clean: config.clean, delay: 0, ...(config.branch ? { branch: config.branch } : {}) } });
-          const record = Array.isArray(requested) && requested.length === 1 ? requested[0] : undefined;
-          if (!record || record.buildtargetid !== target.id || !Number.isInteger(record.build) || record.build <= 0) throw new Error('La respuesta de Unity no identifica una única build del target solicitado; revisa Build History.');
+          const requested = config.existingBuild
+            ? await request(`${targetPath}/builds/${config.existingBuild}`)
+            : await request(`${targetPath}/builds`, { method: 'POST', body: { commit: config.commit, unityVersion: config.unityVersion.replaceAll('.', '_'), clean: config.clean, delay: 0, ...(config.branch ? { branch: config.branch } : {}) } });
+          const record = config.existingBuild ? requested : Array.isArray(requested) && requested.length === 1 ? requested[0] : undefined;
+          if (!record || record.buildtargetid !== target.id || !Number.isInteger(record.build) || record.build <= 0 || (config.existingBuild && record.build !== config.existingBuild)) throw new Error('La respuesta de Unity no identifica una única build del target solicitado; revisa Build History.');
           const buildPath = `${targetPath}/builds/${record.build}`;
-          active.set(buildPath, { key: target.key, number: record.build, path: buildPath });
+          if (!config.existingBuild) active.set(buildPath, { key: target.key, number: record.build, path: buildPath });
           result.build = record.build;
+          if (config.existingBuild && record.buildStatus !== 'success') throw new Error(`${target.key} #${record.build}: sólo se puede recuperar una build que ya terminó con success.`);
           if (record.requestedRevision && record.requestedRevision.toLowerCase() !== config.commit) throw new Error(`${target.key}: Unity no aceptó el commit solicitado.`);
           checkAssignedVersion(record, target, result);
+          let recoveredRecord = config.existingBuild ? record : undefined;
           while (!stopped) {
             if (now() - startedAt >= config.timeoutMs) throw new Error(`${target.key}: se agotó el tiempo máximo de build.`);
-            const build = await request(buildPath);
+            const build = recoveredRecord || await request(buildPath);
+            recoveredRecord = undefined;
             if (stopped) throw new Error('Otra plataforma falló o la ejecución fue cancelada.');
             if (build.buildtargetid !== target.id || build.build !== record.build || !target.platforms.includes(build.platform)) throw new Error(`${target.key}: Unity devolvió una build diferente de la solicitada.`);
             result.status = build.buildStatus;
@@ -332,6 +362,9 @@ export async function runBuilds(config, runtime = {}) {
               logger(`${target.key}: Editor Unity ${result.unityVersion} comprobado en el log.`);
               if (stopped) throw new Error('Otra plataforma falló o la ejecución fue cancelada.');
               const archive = selectArchive(await request(`${buildPath}/artifacts`));
+              const publishedDigest = decodeMd5(archive.md5sum);
+              if (publishedDigest) result.publishedMd5 = publishedDigest.toString('hex');
+              logger(`${target.key}: MD5 del ZIP publicado en formato ${publishedDigest ? /^[a-f0-9]{32}$/i.test(archive.md5sum.trim()) ? 'hexadecimal' : 'Base64' : 'no disponible'}.`);
               const signed = await request(`${buildPath}/download/${encodeURIComponent(archive.filename)}`, { allowDownload: true });
               if (stopped) throw new Error('Otra plataforma falló o la ejecución fue cancelada.');
               const url = typeof signed === 'string' ? signed : signed?.url;
@@ -364,13 +397,13 @@ export async function runBuilds(config, runtime = {}) {
     runtime.signal?.removeEventListener('abort', onAbort);
     if (!config.validateOnly) {
       await mkdir(config.outputDir, { recursive: true });
-      await writeFile(resolve(config.outputDir, 'unity-build-results.json'), `${JSON.stringify({ commit: config.commit, unityVersion: config.unityVersion, warnings, ...(failure ? { error: failure.message } : {}), builds: results }, null, 2)}\n`);
+      await writeFile(resolve(config.outputDir, 'unity-build-results.json'), `${JSON.stringify({ commit: config.commit, pipelineCommit: config.pipelineCommit, unityVersion: config.unityVersion, warnings, ...(failure ? { error: failure.message } : {}), builds: results }, null, 2)}\n`);
     }
     if (config.summaryPath) {
       const rows = results.map(result => `| ${result.target} | ${result.build || '-'} | ${result.status} | ${result.unityVersion || '-'} | ${result.archive || '-'} |`);
       const validationSummary = warnings.length ? 'Versión, plataforma y disparadores verificados sin solicitar builds.\n' : 'Configuración verificada sin solicitar builds.\n';
       const warningSummary = warnings.length ? `\n${warnings.map(warning => `- ${warning}`).join('\n')}\n` : '';
-      await appendFile(config.summaryPath, `\nUnity Build Automation · ${config.unityVersion}\n\nCommit: \`${config.commit}\`\n\n${config.validateOnly && !failure ? validationSummary : '| Plataforma | Build | Estado | Editor comprobado | Archivo |\n|---|---:|---|---|---|\n' + rows.join('\n') + '\n'}${warningSummary}${failure ? '\nLa validación o la build falló; consulta el error del paso.\n' : ''}`);
+      await appendFile(config.summaryPath, `\nUnity Build Automation · ${config.unityVersion}\n\nCommit: \`${config.commit}\`\n\n${config.existingBuild ? 'Recuperación de una build existente; no se solicitaron compilaciones.\n\n' : ''}${config.validateOnly && !failure ? validationSummary : '| Plataforma | Build | Estado | Editor comprobado | Archivo |\n|---|---:|---|---|---|\n' + rows.join('\n') + '\n'}${warningSummary}${failure ? '\nLa validación o la build falló; consulta el error del paso.\n' : ''}`);
     }
   }
 }

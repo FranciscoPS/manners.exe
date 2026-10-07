@@ -14,7 +14,9 @@ const editorLog = `Unity Editor version: ${unityVersion} (revision)\nInitialize 
 const zip = Buffer.alloc(22);
 zip.set([0x50, 0x4b, 0x05, 0x06]);
 const md5 = createHash('md5').update(zip).digest('hex');
+const md5Base64 = Buffer.from(md5, 'hex').toString('base64');
 const sha256 = createHash('sha256').update(zip).digest('hex');
+const recoveredCommit = 'b'.repeat(40);
 
 function environment(overrides = {}) {
   return {
@@ -39,6 +41,17 @@ async function configuration(t, overrides = {}, env = {}, metadata = {}) {
   return { ...loadConfig(environment(env), { definitions, unityVersion, commit, ...metadata }), outputDir, ...overrides };
 }
 
+function recoveryEnvironment(overrides = {}) {
+  return {
+    GITHUB_EVENT_NAME: 'workflow_dispatch',
+    BUILD_PLATFORMS: 'mac',
+    BUILD_VALIDATE_ONLY: 'false',
+    BUILD_EXISTING_BUILD_NUMBER: '3',
+    BUILD_EXPECTED_COMMIT: recoveredCommit,
+    ...overrides,
+  };
+}
+
 function json(value, status = 200, headers = {}) {
   return new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json', ...headers } });
 }
@@ -61,6 +74,10 @@ function opaqueTarget(target, config) {
 
 function buildRecord(target, number, overrides = {}) {
   return { buildtargetid: target.id, build: number, platform: target.platforms[0], buildStatus: 'success', lastBuiltRevision: commit, unityVersion, ...overrides };
+}
+
+function recoveredBuildRecord(config, overrides = {}) {
+  return buildRecord(config.targets[0], config.existingBuild, { requestedRevision: config.commit, lastBuiltRevision: config.commit, localUnityVersion: unityVersion, ...overrides });
 }
 
 function fakeApi(config, override = async () => undefined) {
@@ -205,6 +222,146 @@ test('a release tag requests Windows, macOS and WebGL from its exact SHA without
   }
   assert.equal(result.commit, commit);
   assert.ok(result.builds.every(build => build.status === 'success' && build.revision === commit));
+});
+
+test('recovery config uses its explicit source SHA and retains the distinct pipeline SHA', () => {
+  const config = loadConfig(environment(recoveryEnvironment({ BUILD_EXPECTED_COMMIT: ` ${recoveredCommit.toUpperCase()} ` })), { definitions, unityVersion, commit });
+  assert.equal(config.existingBuild, 3);
+  assert.equal(config.commit, recoveredCommit);
+  assert.equal(config.pipelineCommit, commit);
+  assert.equal(config.validateOnly, false);
+  assert.deepEqual(config.targets.map(target => target.key), ['mac']);
+  const fresh = loadConfig(environment({ GITHUB_EVENT_NAME: 'release' }), { definitions, unityVersion, commit });
+  assert.equal(fresh.commit, commit);
+  assert.equal(fresh.pipelineCommit, commit);
+  assert.equal(fresh.existingBuild, 0);
+});
+
+test('recovery rejects nonmanual events, multiple targets, validation-only, invalid numbers and incomplete source SHAs', () => {
+  for (const [overrides, message] of [
+    [{ GITHUB_EVENT_NAME: 'release' }, /ejecución manual/],
+    [{ GITHUB_EVENT_NAME: 'push' }, /ejecución manual/],
+    [{ GITHUB_EVENT_NAME: '' }, /ejecución manual/],
+    [{ BUILD_PLATFORMS: 'all' }, /una sola plataforma/],
+    [{ BUILD_VALIDATE_ONLY: 'true' }, /validate_only/],
+    [{ BUILD_EXISTING_BUILD_NUMBER: '-1' }, /entero positivo/],
+    [{ BUILD_EXISTING_BUILD_NUMBER: '1.5' }, /entero positivo/],
+    [{ BUILD_EXISTING_BUILD_NUMBER: 'NaN' }, /entero positivo/],
+    [{ BUILD_EXISTING_BUILD_NUMBER: '9007199254740992' }, /entero positivo/],
+    [{ BUILD_EXPECTED_COMMIT: '' }, /SHA completo/],
+    [{ BUILD_EXPECTED_COMMIT: 'b'.repeat(39) }, /SHA completo/],
+    [{ BUILD_EXPECTED_COMMIT: 'refs/tags/v1.0.0' }, /SHA completo/],
+    [{ BUILD_EXISTING_BUILD_NUMBER: '0' }, /expected_commit sólo/],
+  ]) {
+    assert.throws(() => loadConfig(environment(recoveryEnvironment(overrides)), { definitions, unityVersion, commit }), message);
+  }
+});
+
+test('a completed build is recovered using only GETs and records its source SHA, verified hashes and pipeline SHA', async t => {
+  const config = await configuration(t, {}, recoveryEnvironment());
+  config.summaryPath = join(config.outputDir, 'summary.md');
+  const api = fakeApi(config, async call => {
+    if (call.method === 'GET' && call.path.endsWith('/builds/3')) return json(recoveredBuildRecord(config));
+    if (call.path.endsWith('/artifacts')) return json([{ key: 'primary', files: [{ filename: 'existing-mac.zip', size: zip.length, md5sum: md5Base64 }] }]);
+  });
+  const logs = [];
+  const result = await runBuilds(config, { ...api, logger: message => logs.push(message) });
+  assert.ok(api.calls.every(call => call.method === 'GET'));
+  assert.equal(api.calls.filter(call => call.path.endsWith('/builds/3')).length, 1);
+  assert.equal(api.calls.filter(call => /\/builds\/101/.test(call.path)).length, 0);
+  assert.equal(result.commit, recoveredCommit);
+  assert.equal(result.builds[0].recovered, true);
+  assert.equal(result.builds[0].build, 3);
+  assert.equal(result.builds[0].revision, recoveredCommit);
+  assert.equal(result.builds[0].unityVersion, unityVersion);
+  assert.equal(result.builds[0].md5, md5);
+  assert.equal(result.builds[0].publishedMd5, md5);
+  assert.equal(result.builds[0].sha256, sha256);
+  assert.ok(logs.some(message => message.includes('formato Base64')));
+  assert.deepEqual(await readFile(join(config.outputDir, result.builds[0].archive)), zip);
+  const report = JSON.parse(await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8'));
+  assert.equal(report.commit, recoveredCommit);
+  assert.equal(report.pipelineCommit, commit);
+  assert.equal(report.builds[0].recovered, true);
+  const summary = await readFile(config.summaryPath, 'utf8');
+  assert.match(summary, /Recuperación de una build existente/);
+  assert.ok(summary.includes(recoveredCommit));
+});
+
+test('recovery refuses builds that are not already successful without polling, starting or canceling them', async t => {
+  for (const buildStatus of ['queued', 'building', 'failure', 'canceled']) {
+    const config = await configuration(t, {}, recoveryEnvironment());
+    const api = fakeApi(config, async call => {
+      if (call.path.endsWith('/builds/3')) return json(recoveredBuildRecord(config, { buildStatus }));
+    });
+    await assert.rejects(runBuilds(config, api), /sólo se puede recuperar una build que ya terminó con success/);
+    assert.ok(api.calls.every(call => call.method === 'GET'));
+    assert.equal(api.calls.filter(call => call.path.endsWith('/builds/3')).length, 1);
+    assert.equal(api.calls.filter(call => /\/log|\/failures|\/artifacts|\/download\//.test(call.path)).length, 0);
+  }
+});
+
+test('recovery rejects wrong build identity, SHA or version without downloading artifacts or canceling the existing build', async t => {
+  for (const mismatch of [
+    { build: 4 },
+    { buildtargetid: 'another-target' },
+    { platform: 'android' },
+    { requestedRevision: commit },
+    { lastBuiltRevision: commit },
+    { lastBuiltRevision: undefined },
+    { unityVersion: '6000_3_25f1' },
+    { localUnityVersion: '6000.3.25f1' },
+  ]) {
+    const config = await configuration(t, {}, recoveryEnvironment());
+    const api = fakeApi(config, async call => {
+      if (call.path.endsWith('/builds/3')) return json(recoveredBuildRecord(config, mismatch));
+    });
+    await assert.rejects(runBuilds(config, api));
+    assert.ok(api.calls.every(call => call.method === 'GET'));
+    assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+    assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'storage.example').length, 0);
+  }
+});
+
+test('recovery requires the runtime Editor version and never cancels a completed build with a wrong Editor log', async t => {
+  const config = await configuration(t, {}, recoveryEnvironment());
+  const api = fakeApi(config, async call => {
+    if (call.path.endsWith('/builds/3')) return json(recoveredBuildRecord(config));
+    if (call.path.endsWith('/log')) return new Response('Unity Editor version: 6000.3.25f1 (revision)\n');
+  });
+  await assert.rejects(runBuilds(config, api), /Editor ejecutó Unity 6000\.3\.25f1/);
+  assert.ok(api.calls.every(call => call.method === 'GET'));
+  assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+});
+
+test('timeout and cancellation of recovery leave the existing Unity build untouched', async t => {
+  for (const scenario of ['timeout', 'abort']) {
+    const config = await configuration(t, { timeoutMs: 100 }, recoveryEnvironment());
+    const abort = new AbortController();
+    let clock = 0;
+    const api = fakeApi(config, async call => {
+      if (call.path.endsWith('/builds/3')) {
+        if (scenario === 'abort') abort.abort();
+        return json(recoveredBuildRecord(config));
+      }
+    });
+    await assert.rejects(runBuilds(config, { ...api, signal: abort.signal, now: () => { const value = clock; clock += 100; return value; } }), scenario === 'timeout' ? /tiempo máximo/ : /cancelada/);
+    assert.ok(api.calls.every(call => call.method === 'GET'));
+    assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+  }
+});
+
+test('a checksum mismatch during recovery removes the ZIP and never starts or cancels a Unity build', async t => {
+  const config = await configuration(t, {}, recoveryEnvironment());
+  const api = fakeApi(config, async call => {
+    if (call.path.endsWith('/builds/3')) return json(recoveredBuildRecord(config));
+    if (call.path.endsWith('/artifacts')) return json([{ key: 'primary', files: [{ filename: 'existing-mac.zip', size: zip.length, md5sum: '0'.repeat(32) }] }]);
+  });
+  await assert.rejects(runBuilds(config, api), /checksum del ZIP no coincide/);
+  assert.ok(api.calls.every(call => call.method === 'GET'));
+  const archive = join(config.outputDir, `${config.targets[0].artifactName}.zip`);
+  await assert.rejects(stat(archive), { code: 'ENOENT' });
+  await assert.rejects(stat(`${archive}.partial`), { code: 'ENOENT' });
 });
 
 test('validation-only checks all targets without triggering or downloading builds', async t => {
@@ -787,6 +944,84 @@ test('requires a unique primary ZIP rather than selecting a log or secondary art
   assert.equal(selectArchive([{ primary: true, files: [{ filename: 'build.log' }, { filename: 'release.zip' }] }, { key: 'secondary', files: [{ filename: 'debug.zip' }] }]).filename, 'release.zip');
   assert.throws(() => selectArchive([{ key: 'primary', files: [{ filename: 'a.zip' }, { filename: 'b.zip' }] }]), /exactamente un ZIP/);
   assert.throws(() => selectArchive([{ key: 'secondary', files: [{ filename: 'a.zip' }] }]), /exactamente un ZIP/);
+});
+
+test('MD5 verification accepts equivalent hex and case-sensitive Base64 with or without padding', async t => {
+  assert.notEqual(md5Base64, md5Base64.toLowerCase());
+  for (const expectedMd5 of [md5, md5.toUpperCase(), md5Base64, md5Base64.replace(/=+$/, ''), ` \t${md5Base64}\n `]) {
+    const config = await configuration(t);
+    const destination = join(config.outputDir, 'verified.zip');
+    const downloaded = await downloadArchive('https://storage.example/release.zip', destination, {
+      expectedMd5,
+      expectedSize: zip.length,
+      fetchImpl: async () => new Response(zip),
+    });
+    assert.deepEqual(downloaded, { bytes: zip.length, md5, sha256 });
+    assert.deepEqual(await readFile(destination), zip);
+  }
+});
+
+test('invalid and noncanonical published MD5 formats are rejected before a storage request', async t => {
+  const config = await configuration(t);
+  let requests = 0;
+  const invalid = [
+    'test-secret',
+    'Z'.repeat(32),
+    'ab12',
+    `${md5Base64.slice(0, 8)} ${md5Base64.slice(8)}`,
+    `${md5Base64.slice(0, 22)}=`,
+    `${md5Base64}==`,
+    `${'_'.repeat(22)}==`,
+    'AAAAAAAAAAAAAAAAAAAAAB==',
+    1234,
+    { checksum: md5 },
+  ];
+  for (const expectedMd5 of invalid) {
+    await assert.rejects(downloadArchive('https://storage.example/private-signature', join(config.outputDir, 'invalid.zip'), {
+      expectedMd5,
+      fetchImpl: async () => { requests++; return new Response(zip); },
+    }), error => /checksum MD5 con un formato no reconocido/.test(error.message) && !error.message.includes('test-secret') && !error.message.includes('private-signature'));
+  }
+  assert.equal(requests, 0);
+  await assert.rejects(stat(join(config.outputDir, 'invalid.zip')), { code: 'ENOENT' });
+  await assert.rejects(stat(join(config.outputDir, 'invalid.zip.partial')), { code: 'ENOENT' });
+});
+
+test('different Base64 hashes and corrupted ZIP bytes still fail with safe hexadecimal diagnostics and remove partial files', async t => {
+  const config = await configuration(t);
+  const differentBase64 = md5Base64.replace(/[a-z]/i, letter => letter === letter.toUpperCase() ? letter.toLowerCase() : letter.toUpperCase());
+  assert.notEqual(differentBase64, md5Base64);
+  const corrupted = Buffer.from(zip);
+  corrupted[10] = 1;
+  for (const [data, expectedMd5] of [[zip, differentBase64], [corrupted, md5Base64]]) {
+    const destination = join(config.outputDir, 'mismatch.zip');
+    await assert.rejects(downloadArchive('https://storage.example/private-signature?token=test-secret', destination, {
+      expectedMd5,
+      expectedSize: zip.length,
+      fetchImpl: async () => new Response(data),
+    }), error => {
+      assert.match(error.message, /checksum del ZIP no coincide/);
+      assert.ok(error.message.includes(`esperado: ${Buffer.from(expectedMd5, 'base64').toString('hex')}`));
+      assert.ok(error.message.includes(`descargado: ${createHash('md5').update(data).digest('hex')}`));
+      assert.ok(!error.message.includes('private-signature'));
+      assert.ok(!error.message.includes('test-secret'));
+      return true;
+    });
+    await assert.rejects(stat(destination), { code: 'ENOENT' });
+    await assert.rejects(stat(`${destination}.partial`), { code: 'ENOENT' });
+  }
+});
+
+test('invalid artifact checksums stop recovery before requesting a signed download URL', async t => {
+  const config = await configuration(t, {}, recoveryEnvironment());
+  const api = fakeApi(config, async call => {
+    if (call.path.endsWith('/builds/3')) return json(recoveredBuildRecord(config));
+    if (call.path.endsWith('/artifacts')) return json([{ key: 'primary', files: [{ filename: 'existing-mac.zip', size: zip.length, md5sum: 'test-secret' }] }]);
+  });
+  await assert.rejects(runBuilds(config, api), error => /checksum MD5 con un formato no reconocido/.test(error.message) && !error.message.includes('test-secret'));
+  assert.ok(api.calls.every(call => call.method === 'GET'));
+  assert.equal(api.calls.filter(call => /\/download\//.test(call.path)).length, 0);
+  assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'storage.example').length, 0);
 });
 
 for (const [label, data, expected] of [
