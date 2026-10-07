@@ -82,6 +82,32 @@ export function validateTarget(target, remote, config, projectScm) {
   return { repositoryVerified: repositories.length > 0 };
 }
 
+function diagnosticText(value, config, limit) {
+  if (typeof value !== 'string') return '';
+  let safe = value;
+  for (const secret of [config.keyId, config.secret, Buffer.from(`${config.keyId}:${config.secret}`).toString('base64')].filter(Boolean)) safe = safe.replaceAll(secret, '[redactado]');
+  return safe
+    .replace(/\b(?:github_pat_|gh[opusr]_)[a-z0-9_]+/gi, '[redactado]')
+    .replace(/\b(?:Bearer|Basic)\s+[a-z0-9_.~+/=-]+/gi, '[redactado]')
+    .replace(/\b(?:token|password|secret|authorization|api[_-]?key)\s*[:=]\s*[^\s,;]+/gi, '[redactado]')
+    .replace(/(?:https?|ssh|git):\/\/[^\s<>"']+|\bgit@[^\s<>"']+/gi, '[URL omitida]')
+    .replace(/\p{C}/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim().slice(0, limit);
+}
+
+function describeFailures(items, config) {
+  if (!Array.isArray(items)) return '';
+  const candidates = items.filter(item => item && typeof item === 'object');
+  const matched = candidates.filter(item => item.stageMatch === true);
+  return (matched.length ? matched : candidates).slice(0, 3).map(item => {
+    const name = diagnosticText(item.displayName, config, 200);
+    const stage = [item.stage, item.step].map(value => diagnosticText(value, config, 60)).filter(Boolean).join('/');
+    const message = diagnosticText(item.publicMessage, config, 1_200);
+    return [name, stage ? `[${stage}]` : '', message].filter(Boolean).join(': ');
+  }).filter(Boolean).join('; ');
+}
+
 export function selectArchive(artifacts) {
   if (!Array.isArray(artifacts)) throw new Error('La lista de artefactos de Unity no es válida.');
   const files = artifacts.filter(artifact => artifact.primary === true || artifact.key === 'primary').flatMap(artifact => artifact.files || []).filter(file => /\.zip$/i.test(file.filename || ''));
@@ -137,11 +163,11 @@ export async function runBuilds(config, runtime = {}) {
   let stopped = false;
   let failure;
 
-  async function request(path, { method = 'GET', body, allowDownload = false, cleanup = false } = {}) {
-    for (let attempt = 0; attempt < 3; attempt++) {
+  async function request(path, { method = 'GET', body, allowDownload = false, cleanup = false, attempts = 3, timeoutMs = 30_000 } = {}) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
       let response;
       try {
-        const timeout = AbortSignal.timeout(30_000);
+        const timeout = AbortSignal.timeout(timeoutMs);
         response = await fetchImpl(`${API}${path}`, {
           method,
           headers: { Authorization: authorization, Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
@@ -150,10 +176,10 @@ export async function runBuilds(config, runtime = {}) {
           signal: runtime.signal && !cleanup ? AbortSignal.any([runtime.signal, timeout]) : timeout,
         });
       } catch {
-        if (method === 'GET' && attempt < 2 && !runtime.signal?.aborted) { await sleep((attempt + 1) * 2_000); continue; }
+        if (method === 'GET' && attempt + 1 < attempts && !runtime.signal?.aborted) { await sleep((attempt + 1) * 2_000); continue; }
         throw new Error(method === 'POST' ? 'No se pudo confirmar la solicitud de build. No se reintentó para evitar duplicados; revisa Build History en Unity.' : 'No se pudo contactar con la API de Unity.');
       }
-      if (method === 'GET' && (response.status === 429 || response.status >= 500) && attempt < 2) {
+      if (method === 'GET' && (response.status === 429 || response.status >= 500) && attempt + 1 < attempts) {
         await response.body?.cancel();
         const retryAfter = Number(response.headers.get('retry-after'));
         await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter, 30) * 1_000 : (attempt + 1) * 2_000);
@@ -229,7 +255,21 @@ export async function runBuilds(config, runtime = {}) {
             logger(`${target.key} #${record.build}: ${build.buildStatus} (${Math.floor((now() - startedAt) / 60_000)} min).`);
             if (build.buildStatus === 'failure' || build.buildStatus === 'canceled') {
               active.delete(buildPath);
-              throw new Error(`${target.key} #${record.build}: ${build.buildStatus}. Revisa los logs en Unity Build History.`);
+              const buildError = new Error(`${target.key} #${record.build}: ${build.buildStatus}. Revisa los logs en Unity Build History.`);
+              failure ||= buildError;
+              stopped = true;
+              await cancelOwnBuilds();
+              if (build.buildStatus === 'failure') {
+                try {
+                  let cause = describeFailures(build.failureDetails, config);
+                  if (!cause) {
+                    const details = await request(`${buildPath}/failures`, { attempts: 1, timeoutMs: 10_000 });
+                    cause = describeFailures(details?.failures, config);
+                  }
+                  if (cause) buildError.message = `${target.key} #${record.build}: failure. ${cause}. Revisa los logs en Unity Build History.`;
+                } catch {}
+              }
+              throw buildError;
             }
             if (build.buildStatus === 'success') {
               active.delete(buildPath);

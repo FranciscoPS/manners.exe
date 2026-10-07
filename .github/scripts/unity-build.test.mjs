@@ -71,7 +71,7 @@ function fakeApi(config, override = async () => undefined) {
     const handled = await override(call, calls);
     if (handled !== undefined) return handled;
     if (parsed.hostname === 'storage.example') return new Response(zip);
-    const match = parsed.pathname.match(/\/buildtargets\/([^/]+)(?:\/builds(?:\/(\d+)(?:\/(artifacts|download)(?:\/(.+))?)?)?)?$/);
+    const match = parsed.pathname.match(/\/buildtargets\/([^/]+)(?:\/builds(?:\/(\d+)(?:\/(artifacts|download|failures)(?:\/(.+))?)?)?)?$/);
     assert.ok(match, `Unexpected API request ${method} ${url}`);
     const target = config.targets.find(item => item.id === decodeURIComponent(match[1]));
     assert.ok(target, `Unexpected target ${match[1]}`);
@@ -81,6 +81,7 @@ function fakeApi(config, override = async () => undefined) {
     if (method === 'DELETE') return new Response(null, { status: 204 });
     if (match[3] === 'artifacts') return json([{ key: 'primary', files: [{ filename: `${target.key}.zip`, size: zip.length, md5sum: md5 }] }]);
     if (match[3] === 'download') return json({ url: `https://storage.example/${target.key}.zip?signature=temporary` }, 303);
+    if (match[3] === 'failures') return json({ failures: [] });
     return json(buildRecord(target, number));
   };
   return { calls, fetchImpl, logger: () => {}, sleep: async () => {} };
@@ -517,6 +518,106 @@ test('a peer failure blocks download after another successful status was already
   await assert.rejects(runBuilds(config, api), /failure/);
   assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
   assert.deepEqual(api.calls.filter(call => call.method === 'DELETE').map(call => call.path.split('/').at(-1)), ['102']);
+});
+
+test('inline failure details prioritize matching stages and expose only bounded sanitized diagnostics', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  const encodedCredential = Buffer.from(`${config.keyId}:${config.secret}`).toString('base64');
+  const pat = `github_pat_${'A'.repeat(60)}`;
+  const details = [
+    { displayName: 'Unrelated indicator excluded by limit', stageMatch: false, publicMessage: 'wrong-stage-sentinel' },
+    { displayName: 'Git Checkout Error', stageMatch: true, stage: 'checkout', step: 'git-clone', publicMessage: `Git authentication failed\n${config.secret} ${config.keyId} Basic ${encodedCredential} ${pat} token=synthetic-assignment https://repo.example/private?secret=private-url-sentinel`, rawLog: 'raw-log-sentinel', token: 'raw-token-sentinel' },
+    { displayName: 'Connection indicator', stageMatch: true, publicMessage: 'Repository unavailable' },
+    { displayName: 'Checkout indicator', stageMatch: true, publicMessage: 'Unable to retrieve revision' },
+  ];
+  const logs = [];
+  const api = fakeApi(config, async call => {
+    if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { buildStatus: 'failure', failureDetails: details }));
+  });
+  let error;
+  try { await runBuilds(config, { ...api, logger: message => logs.push(message) }); } catch (caught) { error = caught; }
+  assert.ok(error);
+  assert.match(error.message, /web #101: failure/);
+  assert.match(error.message, /Git Checkout Error/);
+  assert.match(error.message, /Git authentication failed/);
+  assert.ok(!error.message.includes('Unrelated indicator excluded by limit'));
+  const report = JSON.parse(await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8'));
+  assert.match(report.builds[0].error, /Git Checkout Error/);
+  const surfaced = `${error.message}\n${logs.join('\n')}\n${JSON.stringify(report)}`;
+  for (const sensitive of [config.secret, config.keyId, encodedCredential, pat, 'synthetic-assignment', 'private-url-sentinel', 'raw-log-sentinel', 'raw-token-sentinel', 'https://repo.example']) assert.ok(!surfaced.includes(sensitive), `Diagnostic exposed ${sensitive}`);
+  assert.equal(api.calls.filter(call => call.path.endsWith('/failures')).length, 0);
+  assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+});
+
+test('fetches categorized failure details only after stopping peers and never launches the remaining platform', async t => {
+  const config = await configuration(t);
+  const api = fakeApi(config, async call => {
+    if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { buildStatus: 'building' }));
+    if (call.method === 'GET' && /\/builds\/102$/.test(call.path)) return json(buildRecord(config.targets[1], 102, { buildStatus: 'failure' }));
+    if (call.path.endsWith('/102/failures')) return json({ failures: [{ displayName: 'Git Checkout Error', stage: 'checkout', step: 'git-clone', publicMessage: 'Git authentication failed', stageMatch: true }] });
+  });
+  await assert.rejects(runBuilds(config, api), error => /mac #102: failure/.test(error.message) && /Git authentication failed/.test(error.message));
+  const cancelIndex = api.calls.findIndex(call => call.method === 'DELETE' && call.path.endsWith('/101'));
+  const diagnosticsIndex = api.calls.findIndex(call => call.path.endsWith('/102/failures'));
+  assert.ok(cancelIndex >= 0 && diagnosticsIndex > cancelIndex);
+  assert.equal(api.calls.filter(call => call.path.endsWith('/failures')).length, 1);
+  assert.equal(api.calls.filter(call => call.method === 'POST').length, 2);
+  assert.equal(api.calls.filter(call => /target-web\/builds$/.test(call.path)).length, 0);
+  assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+});
+
+test('unavailable, empty or malformed diagnostics preserve the original failure and peer cancellation without retries', async t => {
+  for (const diagnosticResponse of [
+    () => json({ error: 'forbidden' }, 403),
+    () => json({ error: 'not found' }, 404),
+    () => json({ error: 'unavailable' }, 503),
+    () => { throw new TypeError('diagnostic network failure'); },
+    () => new Response('{malformed', { status: 200 }),
+    () => json({ failures: [] }),
+  ]) {
+    const config = await configuration(t);
+    const api = fakeApi(config, async call => {
+      if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { buildStatus: 'building' }));
+      if (call.method === 'GET' && /\/builds\/102$/.test(call.path)) return json(buildRecord(config.targets[1], 102, { buildStatus: 'failure' }));
+      if (call.path.endsWith('/102/failures')) return diagnosticResponse();
+    });
+    await assert.rejects(runBuilds(config, api), error => /mac #102: failure/.test(error.message) && !/Unity API: HTTP|JSON no válida|contactar con la API/.test(error.message));
+    assert.equal(api.calls.filter(call => call.path.endsWith('/failures')).length, 1);
+    assert.deepEqual(api.calls.filter(call => call.method === 'DELETE').map(call => call.path.split('/').at(-1)), ['101']);
+    assert.equal(api.calls.filter(call => call.method === 'POST').length, 2);
+    assert.equal(api.calls.filter(call => /target-web\/builds$/.test(call.path)).length, 0);
+    const report = JSON.parse(await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8'));
+    assert.match(report.error, /mac #102: failure/);
+  }
+});
+
+test('canceled builds do not fetch failure diagnostics or delete an already terminal build', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  const api = fakeApi(config, async call => {
+    if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { buildStatus: 'canceled', failureDetails: [{ displayName: 'Unused cancellation diagnostic' }] }));
+  });
+  await assert.rejects(runBuilds(config, api), /web #101: canceled/);
+  assert.equal(api.calls.filter(call => call.path.endsWith('/failures')).length, 0);
+  assert.equal(api.calls.filter(call => call.method === 'DELETE').length, 0);
+  assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+});
+
+test('oversized multiline failure messages remain bounded and omit raw fields', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  const api = fakeApi(config, async call => {
+    if (call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, {
+      buildStatus: 'failure',
+      failureDetails: [{ displayName: `Configuration Error ${'D'.repeat(4_000)}`, stage: 'configure\nstage', step: 'configure\nstep', publicMessage: `Configuration invalid\n${'M'.repeat(15_000)}`, rawLog: 'never-print-raw-log' }],
+    }));
+  });
+  await assert.rejects(runBuilds(config, api), error => {
+    assert.match(error.message, /Configuration Error/);
+    assert.ok(error.message.length < 1_500);
+    assert.ok(!error.message.includes('configure\nstage'));
+    assert.ok(!error.message.includes('configure\nstep'));
+    assert.ok(!error.message.includes('never-print-raw-log'));
+    return true;
+  });
 });
 
 test('requires a unique primary ZIP rather than selecting a log or secondary artifact', () => {
