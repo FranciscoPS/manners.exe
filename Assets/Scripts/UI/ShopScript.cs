@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ShopScript : MonoBehaviour
+public class ShopScript : MonoBehaviour, IUpdateable
 {
     [Header("UI")]
     [SerializeField] private GameObject interactionText;
@@ -22,7 +22,7 @@ public class ShopScript : MonoBehaviour
     {
         openShopAction = new InputAction(
             name: "OpenShop",
-            binding: "<Keyboard>/p"
+            binding: "<Keyboard>/space"
         );
 
         if (levelUpManager == null)
@@ -43,6 +43,7 @@ public class ShopScript : MonoBehaviour
 
     private void OnEnable()
     {
+        UpdateManager.Instance?.Register(this);
         if (openShopAction != null)
         {
             openShopAction.Enable();
@@ -51,9 +52,17 @@ public class ShopScript : MonoBehaviour
 
     private void OnDisable()
     {
+        UpdateManager.Instance?.Unregister(this);
         if (openShopAction != null)
         {
             openShopAction.Disable();
+        }
+
+        playerInRange = false;
+        shopOpen = false;
+        if (interactionText != null)
+        {
+            interactionText.SetActive(false);
         }
     }
 
@@ -70,7 +79,8 @@ public class ShopScript : MonoBehaviour
         }
     }
 
-    private void Update()
+    bool IUpdateable.IsActive => isActiveAndEnabled;
+    public void OnUpdate(float deltaTime)
     {
         if (openShopAction == null || !openShopAction.triggered)
             return;

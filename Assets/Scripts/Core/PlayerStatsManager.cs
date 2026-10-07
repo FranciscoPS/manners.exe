@@ -327,7 +327,18 @@ public class PlayerStatsManager : MonoBehaviour
         int knockbackLevel = GetUpgradeLevel(UpgradeType.Knockback);
         if (knockbackLevel <= 0) return 0f;
 
-        return 5f + (knockbackLevel - 1) * 0.5f;
+        return 7f + (knockbackLevel - 1) * 0.8f;
+    }
+
+    public int GetKnockbackChainJumps()
+    {
+        return GetKnockbackChainJumpsForLevel(GetUpgradeLevel(UpgradeType.Knockback));
+    }
+
+    public int GetKnockbackChainJumpsForLevel(int knockbackLevel)
+    {
+        if (knockbackLevel <= 0) return 0;
+        return 7 + (knockbackLevel - 1) * 6;
     }
 
     public Dictionary<UpgradeType, int> GetAllUpgradeLevels()

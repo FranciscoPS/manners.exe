@@ -134,6 +134,7 @@ public class AutoAttackSystem : MonoBehaviour, IUpdateable
         float explosionRadius = 0f;
         float knockbackProb = 0f;
         float knockbackForce = 0f;
+        int knockbackChainJumps = 0;
 
         if (PlayerStatsManager.Instance != null)
         {
@@ -143,6 +144,7 @@ public class AutoAttackSystem : MonoBehaviour, IUpdateable
             explosionRadius = PlayerStatsManager.Instance.GetExplosionRadius();
             knockbackProb = PlayerStatsManager.Instance.GetKnockbackProbability();
             knockbackForce = PlayerStatsManager.Instance.GetKnockbackForce();
+            knockbackChainJumps = PlayerStatsManager.Instance.GetKnockbackChainJumps();
         }
 
         int totalBullets = 1;
@@ -173,7 +175,7 @@ public class AutoAttackSystem : MonoBehaviour, IUpdateable
 
                 bool hasKnockback = knockbackProb > 0f && Random.Range(0f, 100f) < knockbackProb;
                 float bulletKnockback = hasKnockback ? knockbackForce : 0f;
-                projectile.SetKnockback(bulletKnockback, hasKnockback);
+                projectile.SetKnockback(bulletKnockback, hasKnockback, knockbackChainJumps);
             }
         }
     }

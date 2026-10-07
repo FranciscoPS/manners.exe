@@ -1,0 +1,94 @@
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "InvisibleWallWarningConfig", menuName = "Game/Invisible Wall Warning Config")]
+public class InvisibleWallWarningConfig : ScriptableObject
+{
+    [Header("=== ACTIVACIÓN ===")]
+    [Tooltip("Distancia en metros entre el borde del jugador y la pared a la que el aviso empieza a aparecer (quieto o moviéndose en paralelo a la pared).")]
+    [Min(0.1f)] public float activationDistance = 9f;
+    [Tooltip("Distancia en metros a la que el aviso llega a su intensidad máxima estando quieto. 0 = solo al tocar la pared.")]
+    [Min(0f)] public float fullIntensityDistance = 1f;
+    [Tooltip("Segundos antes del choque en los que el aviso ya debe estar al máximo al acercarse corriendo: la distancia de intensidad máxima crece con la velocidad hacia la pared × este valor.")]
+    [Min(0f)] public float fullIntensityLeadSeconds = 0.35f;
+    [Tooltip("Anticipación en segundos: la distancia de activación crece con la velocidad a la que el jugador se acerca a la pared (velocidad × este valor). Así, al huir rápido hacia un callejón el aviso aparece antes. 0 = sin anticipación.")]
+    [Min(0f)] public float lookAheadSeconds = 0.6f;
+    [Tooltip("Máximo de metros que la anticipación puede sumar a la distancia de activación.")]
+    [Min(0f)] public float maxLookAheadDistance = 12f;
+    [Tooltip("Si el jugador se acerca en diagonal, la zona se adelanta a lo largo de la pared hacia el punto donde va a chocar (hasta estos segundos de movimiento). Al tocar la pared queda justo frente al jugador. 0 = siempre frente al jugador.")]
+    [Min(0f)] public float impactLeadSeconds = 0.5f;
+
+    [Header("=== TRANSICIONES ===")]
+    [Tooltip("Velocidad de aparición (intensidad por segundo). Más alto = aparece de golpe.")]
+    [Min(0.01f)] public float fadeInSpeed = 5f;
+    [Tooltip("Velocidad de desaparición (intensidad por segundo) al alejarse de la pared.")]
+    [Min(0.01f)] public float fadeOutSpeed = 2.5f;
+    [Tooltip("Segundos que el aviso espera ya invisible antes de desactivarse, para no encenderlo y apagarlo cada frame en el límite de activación.")]
+    [Min(0f)] public float hideDelay = 0.3f;
+    [Tooltip("Qué tan rápido la zona recupera su posición frente al jugador cuando cambia la anticipación o llega al extremo del muro. Más alto = más pegada; 0 = sin suavizado.")]
+    [Min(0f)] public float followSharpness = 14f;
+    [Tooltip("Intensidad (0-1) a partir de la cual aparecen las franjas de WARNING. Por debajo solo se ven los hexágonos.")]
+    [Range(0f, 0.95f)] public float stripesAppearAt = 0.25f;
+
+    [Header("=== ZONA ALREDEDOR DEL JUGADOR ===")]
+    [Tooltip("Metros que la zona sobresale a cada lado del ancho del jugador (medido con su collider). En muros más cortos que la zona, la zona se recorta al largo del muro.")]
+    [Min(0f)] public float sidePadding = 1.5f;
+    [Tooltip("Metros que la zona sobresale por encima de la cabeza del jugador.")]
+    [Min(0f)] public float topPadding = 1f;
+    [Tooltip("Metros que la zona baja por debajo de los pies del jugador, para que nazca del piso.")]
+    [Min(0f)] public float bottomExtension = 0.1f;
+    [Tooltip("Separación en metros entre la zona y la cara de la pared, para que no parpadee contra ella.")]
+    [Min(0f)] public float surfaceOffset = 0.05f;
+
+    [Header("=== CAMPO DE HEXÁGONOS ===")]
+    [Tooltip("Largo en metros del campo de hexágonos sobre la pared, centrado en el jugador (o en el punto donde va a chocar). Cubre la pared visible para que se lea por dónde pasa el límite y planear la ruta; las franjas de WARNING quedan encima, del ancho de la zona. Se recorta en los extremos del muro. 40 ≈ el ancho de la pantalla.")]
+    [Min(0f)] public float fieldLength = 40f;
+    [Tooltip("Alto total en metros del campo de hexágonos, medido desde el piso hacia arriba. Solo cambia los hexágonos: las franjas de WARNING se quedan alrededor del jugador. 0 = el mismo alto que la zona del jugador.")]
+    [Min(0f)] public float fieldHeight = 0f;
+
+    [Header("=== BANDA EN EL PISO ===")]
+    [Tooltip("Metros que la banda de hexágonos se extiende por el piso desde la base de la pared hacia el jugador. Es lo que se lee en los muros que la cámara ve de canto (este/oeste). 0 = sin banda.")]
+    [Min(0f)] public float groundDepth = 1.6f;
+    [Tooltip("Altura en metros de la banda sobre los pies del jugador, para que no parpadee contra el piso.")]
+    public float groundHeightOffset = 0.03f;
+
+    [Header("=== VISIBILIDAD ===")]
+    [Tooltip("Opacidad del panel de hexágonos cuando la pared queda entre la cámara y el jugador (paredes del lado de la cámara), para no tapar al jugador. 1 = igual que en las demás paredes.")]
+    [Range(0f, 1f)] public float panelOpacityBetweenCameraAndPlayer = 0.77f;
+    [Tooltip("Opacidad de las franjas de WARNING cuando la pared queda entre la cámara y el jugador. Más baja que la del panel porque la franja superior cruza el cuerpo del jugador en pantalla.")]
+    [Range(0f, 1f)] public float stripesOpacityBetweenCameraAndPlayer = 0.42f;
+    [Tooltip("Ocultar los avisos cuando el jugador muere.")]
+    public bool hideWhenPlayerDies = true;
+
+    private static InvisibleWallWarningConfig instance;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+    }
+
+    public static void OverrideInstance(InvisibleWallWarningConfig config)
+    {
+        if (config == null) return;
+        instance = config;
+    }
+
+    public static InvisibleWallWarningConfig Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = Resources.Load<InvisibleWallWarningConfig>("InvisibleWallWarningConfig_Production");
+
+                if (instance == null)
+                {
+                    instance = CreateInstance<InvisibleWallWarningConfig>();
+                    Debug.LogWarning("[InvisibleWallWarningConfig] No se encontró 'Resources/InvisibleWallWarningConfig'. Usando valores por defecto embebidos. Ejecuta 'Tools > Manners > Muros invisibles > 1. Crear assets del aviso' para poder editarlo desde el Inspector.");
+                }
+            }
+
+            return instance;
+        }
+    }
+}

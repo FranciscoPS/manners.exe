@@ -24,33 +24,10 @@ public class PurchaseEffectFeedback : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
         backgroundImage = GetComponent<Image>();
 
-        if (flashImage == null)
-        {
-            CreateFlashImage();
-        }
-
         if (backgroundImage != null)
         {
             originalColor = backgroundImage.color;
         }
-    }
-
-    private void CreateFlashImage()
-    {
-        GameObject flashObj = new GameObject("FlashImage");
-        flashObj.transform.SetParent(transform, false);
-
-        RectTransform flashRect = flashObj.AddComponent<RectTransform>();
-        flashRect.anchorMin = Vector2.zero;
-        flashRect.anchorMax = Vector2.one;
-        flashRect.sizeDelta = Vector2.zero;
-        flashRect.anchoredPosition = Vector2.zero;
-
-        flashImage = flashObj.AddComponent<Image>();
-        flashImage.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
-        flashImage.raycastTarget = false;
-
-        flashRect.SetAsFirstSibling();
     }
 
     public void PlayPurchaseEffect()
@@ -74,12 +51,6 @@ public class PurchaseEffectFeedback : MonoBehaviour
     {
         if (rectTransform == null) return;
 
-        rectTransform.DOKill();
-
-        Sequence scaleSequence = DOTween.Sequence();
-        scaleSequence.SetUpdate(true);
-
-        scaleSequence.Append(rectTransform.DOScale(punchScale, scaleDuration / 2f).SetEase(Ease.OutBack));
-        scaleSequence.Append(rectTransform.DOScale(1f, scaleDuration / 2f).SetEase(Ease.InOutSine));
+        rectTransform.PunchScale(punchScale, scaleDuration);
     }
 }

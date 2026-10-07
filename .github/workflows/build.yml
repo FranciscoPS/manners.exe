@@ -1,74 +1,107 @@
-name: Build Windows and Mac
+name: Build Windows, Mac and Web
 
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Plataforma de la build
+        type: choice
+        options: [all, windows, mac, web]
+        default: all
+      validate_only:
+        description: Solo verificar la conexión y los targets, sin consumir minutos de build
+        type: boolean
+        default: true
+      clean:
+        description: Reimportar el proyecto sin reutilizar la caché de Unity Cloud
+        type: boolean
+        default: false
+      timeout_minutes:
+        description: Tiempo máximo por plataforma (1 a 100 minutos)
+        type: number
+        default: 90
+      existing_build_number:
+        description: Recuperar una build ya terminada (0 para compilar)
+        type: number
+        default: 0
+      expected_commit:
+        description: SHA completo de la build existente (sólo para recuperar)
+        type: string
+        default: ''
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: unity-cloud-builds-${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
   build:
-    name: Build for ${{ matrix.targetPlatform }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        include:
-          - targetPlatform: StandaloneWindows64
-            artifactName: manners-windows
-          - targetPlatform: StandaloneOSX
-            artifactName: manners-mac
-
+    name: Unity Build Automation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout pipeline and project settings
+        uses: actions/checkout@v7
         with:
-          lfs: true
+          sparse-checkout: |
+            .github
+            ProjectSettings
+          lfs: false
+          persist-credentials: false
 
-      - name: Cache Library
-        uses: actions/cache@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
-          path: Library
-          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-${{ matrix.targetPlatform }}-
-            Library-
+          node-version: '24'
+          package-manager-cache: false
 
-      - name: Check secrets
-        run: |
-          echo "UNITY_LICENSE set: ${{ secrets.UNITY_LICENSE != '' }}"
-          echo "UNITY_EMAIL set: ${{ secrets.UNITY_EMAIL != '' }}"
-          echo "UNITY_PASSWORD set: ${{ secrets.UNITY_PASSWORD != '' }}"
+      - name: Verify cloud orchestration
+        run: node --test .github/scripts/unity-build.test.mjs
 
-      - name: Build project
-        uses: game-ci/unity-builder@v4
+      - name: Build or validate Unity Cloud targets
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          targetPlatform: ${{ matrix.targetPlatform }}
-          buildName: manners
-          unityVersion: 6000.3.5f2
+          UNITY_ORG_ID: ${{ vars.UNITY_ORG_ID }}
+          UNITY_PROJECT_ID: ${{ vars.UNITY_PROJECT_ID }}
+          UNITY_BUILD_TARGET_WINDOWS: ${{ vars.UNITY_BUILD_TARGET_WINDOWS }}
+          UNITY_BUILD_TARGET_MAC: ${{ vars.UNITY_BUILD_TARGET_MAC }}
+          UNITY_BUILD_TARGET_WEB: ${{ vars.UNITY_BUILD_TARGET_WEB }}
+          UNITY_SERVICE_ACCOUNT_KEY_ID: ${{ secrets.UNITY_SERVICE_ACCOUNT_KEY_ID }}
+          UNITY_SERVICE_ACCOUNT_SECRET: ${{ secrets.UNITY_SERVICE_ACCOUNT_SECRET }}
+          BUILD_PLATFORMS: ${{ inputs.platform || 'all' }}
+          BUILD_BRANCH: ${{ github.ref_type == 'branch' && github.ref_name || '' }}
+          BUILD_VALIDATE_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.validate_only }}
+          BUILD_CLEAN: ${{ inputs.clean || false }}
+          BUILD_TIMEOUT_MINUTES: ${{ inputs.timeout_minutes || 90 }}
+          BUILD_EXISTING_BUILD_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.existing_build_number || 0 }}
+          BUILD_EXPECTED_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_commit || '' }}
+        run: node .github/scripts/unity-build.mjs
 
-      - name: Zip build
+      - name: Verify downloaded ZIP files
+        if: success() && !(github.event_name == 'workflow_dispatch' && inputs.validate_only)
         run: |
-          cd build/${{ matrix.targetPlatform }}
-          zip -r ../../${{ matrix.artifactName }}.zip .
+          for archive in builds/cloud/*.zip; do
+            unzip -t "$archive" > /dev/null
+          done
 
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release'
+      - name: Upload build artifacts and results
+        if: always()
+        uses: actions/upload-artifact@v7
         with:
-          files: ${{ matrix.artifactName }}.zip
+          name: manners-cloud-${{ github.run_id }}-${{ github.run_attempt }}
+          path: builds/cloud/*
+          if-no-files-found: ignore
+          retention-days: 14
 
-      - name: Upload artifact (manual run)
-        uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch'
-        with:
-          name: ${{ matrix.artifactName }}
-          path: ${{ matrix.artifactName }}.zip
-          retention-days: 30
+      - name: Attach verified builds to release
+        if: success() && github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" builds/cloud/*.zip builds/cloud/unity-build-results.json --clobber

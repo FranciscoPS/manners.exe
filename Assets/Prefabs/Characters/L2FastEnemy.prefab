@@ -44,7 +44,6 @@ GameObject:
   - component: {fileID: 6190908423056691718}
   - component: {fileID: 7114533053708017834}
   - component: {fileID: 2742775524479765140}
-  - component: {fileID: 7874276846551241774}
   - component: {fileID: 8035881140933493113}
   m_Layer: 3
   m_Name: L2FastEnemy
@@ -141,29 +140,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79b963095cbb44542a92e2a4ce4c70aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolable
---- !u!205 &7874276846551241774
-LODGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7510731991543114636}
-  serializedVersion: 2
-  m_LocalReferencePoint: {x: 0, y: 0, z: 0}
-  m_Size: 1
-  m_FadeMode: 0
-  m_AnimateCrossFading: 0
-  m_LastLODIsBillboard: 0
-  m_LODs:
-  - screenRelativeHeight: 0.0465625
-    fadeTransitionWidth: 0
-    renderers:
-    - renderer: {fileID: 0}
-    - renderer: {fileID: 0}
-    - renderer: {fileID: 0}
-    - renderer: {fileID: 0}
-    - renderer: {fileID: 0}
-  m_Enabled: 1
 --- !u!136 &8035881140933493113
 CapsuleCollider:
   m_ObjectHideFlags: 0

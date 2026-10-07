@@ -1,19 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Componente por edificio que permite desvanecerlo cuando algo (enemigo o jugador)
-/// queda oculto detrás de él respecto a la cámara.
-///
-/// Dos modos de funcionamiento:
-///  - Modo dither (preferido): si alguno de los materiales del edificio expone la
-///    propiedad "_Fade" (p. ej. un shader URP con screen-door dithering), el fade se
-///    aplica vía MaterialPropertyBlock. No instancia materiales -> cero GC y conserva
-///    el batching.
-///  - Modo fallback (por defecto, sin shader especial): instancia los materiales una
-///    sola vez (cacheados, sin asignaciones por frame), los pasa a transparente y anima
-///    el alpha. Al revelarse por completo restaura los materiales compartidos para
-///    reactivar el batching.
-/// </summary>
 [DisallowMultipleComponent]
 public class BuildingFader : MonoBehaviour
 {
@@ -21,35 +8,49 @@ public class BuildingFader : MonoBehaviour
     [Tooltip("Incluir renderers de los hijos (normalmente sí, el visual cuelga del root).")]
     [SerializeField] private bool affectsChildRenderers = true;
 
-    // Opacidad mínima cuando el edificio está totalmente 'oculto'. La controla
-    // de forma global el BuildingTransparencyManager (no es por edificio).
-    private float minVisibleAlpha = 0.6f;
+    [Tooltip("Renderers hijos que no se desvanecen con el edificio ni cuentan para detectar si tapa algo. Por ejemplo, la esfera de rango de la tienda, cuyo material controla ShopVisualFeedback.")]
+    [SerializeField] private Renderer[] excludedRenderers = new Renderer[0];
+
+    [Header("Opacidad propia")]
+    [Tooltip("Activo: este edificio usa su propia opacidad al tapar al jugador o a enemigos, en vez de la global del BuildingTransparencyManager. Para edificios importantes que no deben perderse de vista, como la tienda.")]
+    [SerializeField] private bool useOwnMinVisibleAlpha = false;
+
+    [Tooltip("Opacidad de este edificio cuando tapa algo (solo con 'Use Own Min Visible Alpha' activo). 0 = invisible, 1 = opaco. Se puede ajustar en Play Mode y se ve al instante.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float ownMinVisibleAlpha = 0.7f;
+
+    private float globalMinVisibleAlpha = 0.6f;
 
     private static readonly int FadeID = Shader.PropertyToID("_Fade");
     private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorID = Shader.PropertyToID("_Color");
 
     private Renderer[] renderers;
-    private Material[][] sharedMatsPerRenderer; // materiales originales compartidos
-    private Material[][] fadeMatsPerRenderer;   // instancias transparentes (lazy)
+    private Material[][] sharedMatsPerRenderer;
+    private Material[][] fadeMatsPerRenderer;
+    private readonly Dictionary<Material, Material> fadeMaterials = new Dictionary<Material, Material>();
     private bool fadeMatsBuilt = false;
     private bool usingFadeMats = false;
 
-    private bool useFadeProperty = false; // Modo dither
+    private bool useFadeProperty = false;
     private MaterialPropertyBlock mpb;
 
-    private float currentFade = 0f; // 0 = visible, 1 = oculto
+    private float currentFade = 0f;
     private float targetFade = 0f;
     private bool suspended = false;
 
     public Bounds WorldBounds { get; private set; }
     public bool NeedsTick => !Mathf.Approximately(currentFade, targetFade);
 
+    private float MinVisibleAlpha => useOwnMinVisibleAlpha ? ownMinVisibleAlpha : globalMinVisibleAlpha;
+
     private void Awake()
     {
-        renderers = affectsChildRenderers
+        Renderer[] found = affectsChildRenderers
             ? GetComponentsInChildren<Renderer>(true)
             : GetComponents<Renderer>();
+        renderers = System.Array.FindAll(found, r => !ToonEnvironmentStyle.IsGroundShadow(r)
+            && System.Array.IndexOf(excludedRenderers, r) < 0);
 
         sharedMatsPerRenderer = new Material[renderers.Length][];
         for (int i = 0; i < renderers.Length; i++)
@@ -57,7 +58,6 @@ public class BuildingFader : MonoBehaviour
             sharedMatsPerRenderer[i] = renderers[i] != null ? renderers[i].sharedMaterials : System.Array.Empty<Material>();
         }
 
-        // Detectar si existe un shader con soporte de "_Fade" (modo dither).
         for (int i = 0; i < renderers.Length && !useFadeProperty; i++)
         {
             var mats = sharedMatsPerRenderer[i];
@@ -75,7 +75,6 @@ public class BuildingFader : MonoBehaviour
         RecalculateBounds();
     }
 
-    /// <summary>Recalcula el bounding box combinado en espacio de mundo (edificios estáticos: solo una vez).</summary>
     public void RecalculateBounds()
     {
         bool has = false;
@@ -103,42 +102,43 @@ public class BuildingFader : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (fadeMatsPerRenderer == null) return;
-        for (int i = 0; i < fadeMatsPerRenderer.Length; i++)
+        foreach (Material material in fadeMaterials.Values)
         {
-            var arr = fadeMatsPerRenderer[i];
-            if (arr == null) continue;
-            for (int j = 0; j < arr.Length; j++)
-                if (arr[j] != null) Destroy(arr[j]);
+            if (material == null) continue;
+            if (Application.isPlaying) Destroy(material);
+            else DestroyImmediate(material);
         }
+        fadeMaterials.Clear();
     }
 
-    /// <summary>Llamado por el manager cada tick de detección.</summary>
     public void SetOccluded(bool occluded)
     {
         if (suspended) return;
         targetFade = occluded ? 1f : 0f;
     }
 
-    /// <summary>Interpolación suave del fade. Lo invoca el manager cada frame mientras NeedsTick.</summary>
     public void Tick(float deltaTime, float speed, float minAlpha)
     {
         if (suspended) return;
-        minVisibleAlpha = minAlpha;
+        globalMinVisibleAlpha = minAlpha;
         currentFade = Mathf.MoveTowards(currentFade, targetFade, speed * deltaTime);
         Apply();
     }
 
-    /// <summary>
-    /// Reaplica el alpha con un nuevo valor mínimo sin animar (para ajustes en vivo
-    /// desde el inspector del manager mientras el edificio ya está oculto).
-    /// </summary>
     public void ForceApply(float minAlpha)
     {
         if (suspended) return;
-        minVisibleAlpha = minAlpha;
+        globalMinVisibleAlpha = minAlpha;
         Apply();
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (!Application.isPlaying || renderers == null || suspended) return;
+        Apply();
+    }
+#endif
 
     private void Apply()
     {
@@ -155,7 +155,6 @@ public class BuildingFader : MonoBehaviour
             return;
         }
 
-        // Modo fallback: instanciar/transparentar materiales.
         if (currentFade <= 0.0001f)
         {
             if (usingFadeMats) RestoreShared();
@@ -164,14 +163,8 @@ public class BuildingFader : MonoBehaviour
 
         if (!usingFadeMats) SwitchToFadeMats();
 
-        float alpha = Mathf.Lerp(1f, minVisibleAlpha, currentFade);
-        for (int i = 0; i < fadeMatsPerRenderer.Length; i++)
-        {
-            var mats = fadeMatsPerRenderer[i];
-            if (mats == null) continue;
-            for (int j = 0; j < mats.Length; j++)
-                SetMaterialAlpha(mats[j], alpha);
-        }
+        float alpha = Mathf.Lerp(1f, MinVisibleAlpha, currentFade);
+        foreach (Material material in fadeMaterials.Values) SetMaterialAlpha(material, alpha);
     }
 
     private void SwitchToFadeMats()
@@ -180,7 +173,7 @@ public class BuildingFader : MonoBehaviour
         for (int i = 0; i < renderers.Length; i++)
         {
             if (renderers[i] != null && fadeMatsPerRenderer[i] != null)
-                renderers[i].materials = fadeMatsPerRenderer[i];
+                renderers[i].sharedMaterials = fadeMatsPerRenderer[i];
         }
         usingFadeMats = true;
     }
@@ -194,8 +187,14 @@ public class BuildingFader : MonoBehaviour
             var inst = new Material[shared.Length];
             for (int j = 0; j < shared.Length; j++)
             {
-                inst[j] = shared[j] != null ? new Material(shared[j]) : null;
-                if (inst[j] != null) SetupTransparentMaterial(inst[j]);
+                if (shared[j] == null) continue;
+                if (!fadeMaterials.TryGetValue(shared[j], out Material material))
+                {
+                    material = new Material(shared[j]);
+                    SetupTransparentMaterial(material);
+                    fadeMaterials.Add(shared[j], material);
+                }
+                inst[j] = material;
             }
             fadeMatsPerRenderer[i] = inst;
         }
@@ -219,10 +218,6 @@ public class BuildingFader : MonoBehaviour
         targetFade = 0f;
     }
 
-    /// <summary>
-    /// Llamado por BuildingsScript al iniciar la secuencia de destrucción: deja de
-    /// gestionar el fade y devuelve los materiales compartidos para no interferir.
-    /// </summary>
     public void SuspendForDestruction()
     {
         suspended = true;

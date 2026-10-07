@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
-public class PauseMenu : MonoBehaviour
+public class PauseMenu : MonoBehaviour, IUpdateable
 {
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
@@ -24,12 +24,15 @@ public class PauseMenu : MonoBehaviour
     private GameObject currentHelpSubPanel;
     private LevelUpManager levelUpManager;
     private PlayerHealth playerHealth;
+    [SerializeField] private GraphicsSettingsMenu graphicsSettings;
 
     private bool reducedVolumeApplied = false;
     private bool audioSettingsChangedWhilePaused = false;
 
     void Start()
     {
+        if (graphicsSettings != null) graphicsSettings.Closed += OnGraphicsReturnButtonPressed;
+
         if (pausePanel != null)
             pausePanel.SetActive(false);
 
@@ -51,6 +54,7 @@ public class PauseMenu : MonoBehaviour
     private void OnDestroy()
     {
         AudioSettingsMenu.AudioSettingsChanged -= OnAudioSettingsChanged;
+        if (graphicsSettings != null) graphicsSettings.Closed -= OnGraphicsReturnButtonPressed;
     }
 
     private void OnAudioSettingsChanged()
@@ -59,8 +63,15 @@ public class PauseMenu : MonoBehaviour
         audioSettingsChangedWhilePaused = true;
     }
 
-    void Update()
+    public bool IsActive => isActiveAndEnabled;
+    private void OnEnable() => UpdateManager.Instance?.Register(this);
+    private void OnDisable() => UpdateManager.Instance?.Unregister(this);
+
+    public void OnUpdate(float deltaTime)
     {
+        if ((graphicsSettings != null && graphicsSettings.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame)
+            return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
 
@@ -200,6 +211,26 @@ public class PauseMenu : MonoBehaviour
         currentHelpSubPanel = null;
     }
 
+    public void OnGraphicsButtonPressed()
+    {
+        if (graphicsSettings == null) return;
+        isPaused = true;
+        Time.timeScale = 0f;
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (helpPanel != null) helpPanel.SetActive(false);
+        if (audioPanel != null) audioPanel.SetActive(false);
+        DeactivateAllHelpSubPanels();
+        currentHelpSubPanel = null;
+        graphicsSettings.gameObject.SetActive(true);
+    }
+
+    private void OnGraphicsReturnButtonPressed()
+    {
+        if (pausePanel != null) pausePanel.SetActive(true);
+        isPaused = true;
+        Time.timeScale = 0f;
+    }
+
     public void OnAudioButtonPressed()
     {
         isPaused = true;
@@ -298,6 +329,8 @@ public class PauseMenu : MonoBehaviour
     }
     private void CloseAllPauseUI()
     {
+        if (graphicsSettings != null) graphicsSettings.gameObject.SetActive(false);
+
         if (pausePanel != null) pausePanel.SetActive(false);
         if (helpPanel != null) helpPanel.SetActive(false);
         if (audioPanel != null) audioPanel.SetActive(false);

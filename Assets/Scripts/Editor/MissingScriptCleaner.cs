@@ -50,9 +50,6 @@ public class MissingScriptCleaner : EditorWindow
         EditorGUILayout.TextArea(reportText, GUILayout.ExpandHeight(true));
         EditorGUILayout.EndScrollView();
 
-        // Run heavy work / modal dialogs OUTSIDE the layout Begin/End region.
-        // Doing this inside a button callback can interrupt IMGUI mid-pass and
-        // leave the GUIClip stack unbalanced ("pushing more GUIClips than popping").
         if (Event.current.type == EventType.Repaint && (pendingFind || pendingRemove))
         {
             bool doFind = pendingFind;

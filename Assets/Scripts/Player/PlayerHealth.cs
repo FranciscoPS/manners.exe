@@ -24,6 +24,12 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
     public bool IsDead => isDead;
+    public bool IsInvulnerable => testInvulnerable;
+
+    public void SetInvulnerable(bool value)
+    {
+        testInvulnerable = value;
+    }
 
     private int consecutiveHits = 0;
     private float lastHitTime = -999f;
@@ -109,7 +115,6 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
     {
         if (isDead) return;
 
-        // TEST: invulnerabilidad permanente para pruebas.
         if (testInvulnerable) return;
 
         if (isInvulnerable)
@@ -161,6 +166,15 @@ public class PlayerHealth : MonoBehaviour, IUpdateable
         {
             Die();
         }
+    }
+
+    public void Kill()
+    {
+        if (isDead) return;
+
+        currentHealth = 0f;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        Die();
     }
 
     public void Heal(float amount)

@@ -1,0 +1,20 @@
+[
+  {
+    "key": "windows",
+    "platforms": ["standalonewindows64"],
+    "variable": "UNITY_BUILD_TARGET_WINDOWS",
+    "artifactName": "manners-windows"
+  },
+  {
+    "key": "mac",
+    "platforms": ["standaloneosx", "standaloneosxuniversal"],
+    "variable": "UNITY_BUILD_TARGET_MAC",
+    "artifactName": "manners-mac"
+  },
+  {
+    "key": "web",
+    "platforms": ["webgl"],
+    "variable": "UNITY_BUILD_TARGET_WEB",
+    "artifactName": "manners-web"
+  }
+]

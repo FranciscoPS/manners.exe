@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7aa9ba2a9fa82d644a7534cfdebaa77e, type: 3}
+  m_Name: UpgradeDatabase_Sandbox
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeDatabase
+  allUpgrades:
+  - {fileID: 11400000, guid: 3ce3d7e59e7dd4a0aa5554832febf71d, type: 2}
+  - {fileID: 11400000, guid: 608458d596fb049e2929c1a5627af0a9, type: 2}
+  - {fileID: 11400000, guid: 4acc0793c52cd4c3780b6834fceb36e6, type: 2}
+  - {fileID: 11400000, guid: f13d6ca83aba84646a5614ef4847d6f6, type: 2}
+  - {fileID: 11400000, guid: 38cf43645f4c94952bb5229e12b3a76e, type: 2}
+  - {fileID: 11400000, guid: c870f06cfc4384f5596718c9f0ac5883, type: 2}
+  - {fileID: 11400000, guid: 20be461358d3048329964f1ff29fdfb4, type: 2}
+  - {fileID: 11400000, guid: 95e189c5cdacd49049a82ba2055cffa3, type: 2}
+  - {fileID: 11400000, guid: a4599d2582f8540e79179a89f9b48d04, type: 2}
+  optionsPerLevelUp: 3
+  preventDuplicates: 1
+  minPlayerLevel: 1

@@ -10,7 +10,8 @@ public class TutorialStep
 
     public string id = "";
 
-    public string text = "";
+    [SerializeField] private LocalizedString message;
+    public string text => message.Value;
 
     public bool showArrow = false;
 
@@ -19,9 +20,12 @@ public class TutorialStep
     public bool freezeGame = true;
 
     public string stepType = "normal";
-    public string nextButtonLabel = "Next";
-    public string yesButtonLabel = "Yes";
-    public string noButtonLabel = "No";
+    [SerializeField] private LocalizedString nextLabel;
+    public string nextButtonLabel => nextLabel.Value;
+    [SerializeField] private LocalizedString yesLabel;
+    public string yesButtonLabel => yesLabel.Value;
+    [SerializeField] private LocalizedString noLabel;
+    public string noButtonLabel => noLabel.Value;
 
     public string nextStepId = "";
 
@@ -76,6 +80,12 @@ public class TutorialManager : MonoBehaviour
     [SerializeField][Range(0f, 1f)] private float typingVolume = 0.4f;
     [SerializeField][Range(0.75f, 1.25f)] private float typingPitch = 1.0f;
 
+    [Header("Robot Animation")]
+    [Tooltip("Arrastra aquí: la Image del robot dentro de TutorialPanel")]
+    [SerializeField] private Image robotImage;
+    [Tooltip("Se reproduce una sola vez cada vez que el robot empieza a hablar (cuando el texto comienza a escribirse)")]
+    [SerializeField] private SpriteAnimationData robotTalkAnimation;
+
     [Header("HUD Highlight Targets")]
     [Tooltip("Arrastra aquí: CurrencyPanel")]
     [SerializeField] private RectTransform targetCurrencyPanel;
@@ -94,6 +104,12 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private float highlightPulseScale = 1.12f;
     [SerializeField] private float highlightPulseDuration = 0.55f;
 
+    [Header("Pasos del tutorial (contenido editable)")]
+    [SerializeField] private TutorialStep[] steps;
+    [SerializeField] private LocalizedString nextDefault = new LocalizedString("Next", "Siguiente");
+    [SerializeField] private LocalizedString yesDefault = new LocalizedString("Yes", "Sí");
+    [SerializeField] private LocalizedString noDefault = new LocalizedString("No", "No");
+    public TutorialStep[] Steps => steps;
     private TutorialStepList data;
     private int currentStepIndex = -1;
     private TutorialStep currentStep;
@@ -136,24 +152,21 @@ public class TutorialManager : MonoBehaviour
 
     private Coroutine typewriterCoroutine;
     private bool isTyping = false;
-    private AudioSource typingSource;
+    [SerializeField] private AudioSource typingSource;
+
+    private Coroutine robotAnimationCoroutine;
 
     private Coroutine pulseCoroutine;
     private RectTransform currentHighlightTarget;
     private Vector3 highlightOriginalScale;
     private Canvas tempHighlightCanvas;
-    private bool addedTempCanvas;
+    private bool previousHighlightSorting;
+    private int previousHighlightOrder;
 
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-
-        typingSource = gameObject.AddComponent<AudioSource>();
-        typingSource.playOnAwake = false;
-        typingSource.loop = false;
-        typingSource.spatialBlend = 0f;
-        typingSource.priority = 64;
 
         GameEvents.OnChestSpawned += OnChestSpawned_Tutorial;
     }
@@ -213,13 +226,7 @@ public class TutorialManager : MonoBehaviour
 
     private bool LoadDataAndValidate()
     {
-        TextAsset jsonAsset = Resources.Load<TextAsset>("TutorialData");
-        if (jsonAsset == null)
-        {
-            state = TutorialState.Complete; return false;
-        }
-
-        data = JsonUtility.FromJson<TutorialStepList>(jsonAsset.text);
+        data = new TutorialStepList { steps = steps };
         if (data == null || data.steps == null || data.steps.Length == 0)
         {
             state = TutorialState.Complete; return false;
@@ -309,18 +316,25 @@ public class TutorialManager : MonoBehaviour
         if (currentStep.stepType == "choice")
         {
             if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(true);
-            if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? "Yes" : currentStep.yesButtonLabel;
-            if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel) ? "No" : currentStep.noButtonLabel;
+            if (skipAllButton != null) skipAllButton.gameObject.SetActive(false);
+            if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.yesButtonLabel) ? yesDefault.Value : currentStep.yesButtonLabel;
+            if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel) ? noDefault.Value : currentStep.noButtonLabel;
         }
         else
         {
             if (choiceNoButton != null) choiceNoButton.gameObject.SetActive(false);
-            if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.nextButtonLabel) ? "Next" : currentStep.nextButtonLabel;
+            if (skipAllButton != null) skipAllButton.gameObject.SetActive(state != TutorialState.Complete);
+            if (nextButtonText != null) nextButtonText.text = string.IsNullOrEmpty(currentStep.nextButtonLabel) ? nextDefault.Value : currentStep.nextButtonLabel;
         }
 
         if (currentStep.freezeGame) FreezeGame();
 
-        if (tutorialPanel != null) tutorialPanel.SetActive(true);
+        if (tutorialPanel != null)
+        {
+            bool wasVisible = tutorialPanel.activeSelf;
+            tutorialPanel.SetActive(true);
+            if (wasVisible) UIShard.Pulse(tutorialPanel.transform);
+        }
 
         if (MusicManager.Instance != null) MusicManager.Instance.ReduceVolume();
 
@@ -339,7 +353,13 @@ public class TutorialManager : MonoBehaviour
 
         if (typewriterCoroutine != null) StopCoroutine(typewriterCoroutine);
         if (messageText != null)
-            typewriterCoroutine = StartCoroutine(TypewriterRoutine(currentStep.text));
+        {
+            UIStyle style = UIStyle.Instance;
+            string text = style != null ? style.PaperHighlights(currentStep.text, messageText.color) : currentStep.text;
+            typewriterCoroutine = StartCoroutine(TypewriterRoutine(text));
+        }
+
+        PlayRobotAnimation();
 
         GameEvents.TriggerTutorialStepShown(currentStep.id);
     }
@@ -368,15 +388,9 @@ public class TutorialManager : MonoBehaviour
         highlightOriginalScale = target.localScale;
 
         tempHighlightCanvas = target.GetComponent<Canvas>();
-        if (tempHighlightCanvas == null)
-        {
-            tempHighlightCanvas = target.gameObject.AddComponent<Canvas>();
-            addedTempCanvas = true;
-        }
-        else
-        {
-            addedTempCanvas = false;
-        }
+        if (tempHighlightCanvas == null) return;
+        previousHighlightSorting = tempHighlightCanvas.overrideSorting;
+        previousHighlightOrder = tempHighlightCanvas.sortingOrder;
         tempHighlightCanvas.overrideSorting = true;
         tempHighlightCanvas.sortingOrder = 9999;
 
@@ -393,10 +407,8 @@ public class TutorialManager : MonoBehaviour
 
             if (tempHighlightCanvas != null)
             {
-                if (addedTempCanvas)
-                    Destroy(tempHighlightCanvas);
-                else
-                    tempHighlightCanvas.overrideSorting = false;
+                tempHighlightCanvas.overrideSorting = previousHighlightSorting;
+                tempHighlightCanvas.sortingOrder = previousHighlightOrder;
                 tempHighlightCanvas = null;
             }
 
@@ -475,6 +487,44 @@ public class TutorialManager : MonoBehaviour
         isTyping = false;
     }
 
+    private void PlayRobotAnimation()
+    {
+        StopRobotAnimation();
+        if (robotImage == null || robotTalkAnimation == null || !robotTalkAnimation.HasFrames) return;
+        robotAnimationCoroutine = StartCoroutine(RobotAnimationRoutine());
+    }
+
+    private void StopRobotAnimation()
+    {
+        if (robotAnimationCoroutine == null) return;
+        StopCoroutine(robotAnimationCoroutine);
+        robotAnimationCoroutine = null;
+    }
+
+    private IEnumerator RobotAnimationRoutine()
+    {
+        Sprite[] frames = robotTalkAnimation.Frames;
+        int lastFrame = frames.Length - 1;
+        int loopStartFrame = robotTalkAnimation.LoopStartFrame;
+        float frameDuration = robotTalkAnimation.FrameDuration;
+        int frame = 0;
+        float frameElapsed = 0f;
+        robotImage.sprite = frames[frame];
+
+        while (frame < lastFrame || isTyping)
+        {
+            yield return null;
+            frameElapsed += Mathf.Min(Time.unscaledDeltaTime, frameDuration);
+            if (frameElapsed < frameDuration) continue;
+
+            frameElapsed -= frameDuration;
+            frame = frame < lastFrame ? frame + 1 : loopStartFrame;
+            robotImage.sprite = frames[frame];
+        }
+
+        robotAnimationCoroutine = null;
+    }
+
     private void EnterWaitingForCoins()
     {
         UnfreezeGame();
@@ -517,9 +567,7 @@ public class TutorialManager : MonoBehaviour
 
     private void OnChestSpawned_Tutorial()
     {
-        // Solo mostrar el paso del cofre si el tutorial está habilitado y en curso.
-        // Sin esto, el evento del cofre se dispara también en partidas normales
-        // (cuando el tutorial está desactivado o ya completado).
+
         if (TutorialConfig.Instance == null || !TutorialConfig.Instance.TutorialEnabled) return;
         if (state == TutorialState.Inactive || state == TutorialState.Complete) return;
 
@@ -643,6 +691,7 @@ public class TutorialManager : MonoBehaviour
     private void HidePanel()
     {
         SkipTypewriter();
+        StopRobotAnimation();
         StopHighlight();
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
 
@@ -724,5 +773,20 @@ public class TutorialManager : MonoBehaviour
     {
         PlayerPrefs.DeleteKey(TUTORIAL_DONE_KEY);
         PlayerPrefs.Save();
+    }
+    private void OnEnable() => GameLocalization.LanguageChanged += RefreshLanguage;
+    private void OnDisable() => GameLocalization.LanguageChanged -= RefreshLanguage;
+    private void RefreshLanguage()
+    {
+        if (state != TutorialState.ShowingStep || currentStep == null || messageText == null) return;
+        if (nextButtonText != null) nextButtonText.text = currentStep.stepType == "choice"
+            ? (string.IsNullOrEmpty(currentStep.yesButtonLabel) ? yesDefault.Value : currentStep.yesButtonLabel)
+            : (string.IsNullOrEmpty(currentStep.nextButtonLabel) ? nextDefault.Value : currentStep.nextButtonLabel);
+        if (choiceNoButtonText != null) choiceNoButtonText.text = string.IsNullOrEmpty(currentStep.noButtonLabel) ? noDefault.Value : currentStep.noButtonLabel;
+        UIStyle style = UIStyle.Instance;
+        string text = style != null ? style.PaperHighlights(currentStep.text, messageText.color) : currentStep.text;
+        if (typewriterCoroutine != null) StopCoroutine(typewriterCoroutine);
+        if (isTyping) typewriterCoroutine = StartCoroutine(TypewriterRoutine(text));
+        else { messageText.text = text; messageText.maxVisibleCharacters = int.MaxValue; }
     }
 }

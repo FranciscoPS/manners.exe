@@ -5,6 +5,9 @@ using System;
 public class GameBalanceConfig : ScriptableObject
 {
 
+    // Cada entrada reemplaza (no complementa) los drops definidos en el EnemyConfiguration
+    // de ese enemyType mientras currentWave caiga en [fromWave, toWave]. Si ningún entry
+    // matchea, EnemyHealth usa los valores del EnemyConfiguration del enemigo como fallback.
     [System.Serializable]
     public class EnemyDropConfig
     {
@@ -40,13 +43,22 @@ public class GameBalanceConfig : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<GameBalanceConfig>("GameBalanceConfig");
-                if (instance == null)
-                {
-                }
+                instance = Resources.Load<GameBalanceConfig>("GameBalanceConfig_Production");
             }
             return instance;
         }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+    }
+
+    public static void OverrideInstance(GameBalanceConfig config)
+    {
+        if (config == null) return;
+        instance = config;
     }
 
     [Header("=== INITIAL PLAYER STATS ===")]

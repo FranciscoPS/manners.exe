@@ -33,9 +33,15 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     private Vector3 separation = Vector3.zero;
 
+    private float slowMultiplier = 1f;
+    private float slowEndTime = -1f;
+    private float controlResistance = 0f;
+
     [Header("Movement")]
     [Tooltip("Distancia a la que el enemigo se detiene alrededor del jugador. Evita que todos converjan en el mismo punto.")]
     [SerializeField] private float attackRadius = 1.5f;
+    [Tooltip("Cada cuánto (seg) se recalcula el destino del NavMeshAgent. Bajarlo hace que persigan al jugador con más precisión pero cuesta más CPU con muchos enemigos activos.")]
+    [SerializeField] private float pathUpdateInterval = 0.2f;
 
     private const float StuckCheckInterval = 5f;
     private const float StuckMoveThreshold = 0.8f;
@@ -45,21 +51,41 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     private float   stuckTimer        = 0f;
     private Vector3 lastCheckPosition;
 
+    private float pathUpdateTimer = 0f;
+
     public float ContactDamage => contactDamage;
 
     public bool IsActive => gameObject.activeInHierarchy && enabled;
 
-    // --- API para el sistema de separación entre enemigos ---
-    /// <summary>True si el enemigo debe participar en la separación (activo y sin knockback).</summary>
     public bool WantsSeparation => IsActive && !isKnockedBack;
 
-    /// <summary>El EnemySeparationManager deja aquí el vector de repulsión (u/seg en el plano XZ).</summary>
+    public bool IsSlowed => Time.time < slowEndTime && slowMultiplier < 1f;
+    public bool IsFrozen => Time.time < slowEndTime && slowMultiplier <= 0.001f;
+
     public void SetSeparation(Vector3 value) => separation = value;
 
-    public void SetStats(float newMoveSpeed, float newContactDamage)
+    public void ApplySlow(float multiplier, float duration)
+    {
+        float resisted = Mathf.Lerp(Mathf.Clamp01(multiplier), 1f, controlResistance);
+        float resistedDuration = duration * (1f - controlResistance);
+        bool strongerSlowStillActive = Time.time < slowEndTime && slowMultiplier < resisted;
+
+        if (strongerSlowStillActive) return;
+
+        slowMultiplier = resisted;
+        slowEndTime = Time.time + resistedDuration;
+    }
+
+    private float CurrentSpeedMultiplier()
+    {
+        return Time.time < slowEndTime ? slowMultiplier : 1f;
+    }
+
+    public void SetStats(float newMoveSpeed, float newContactDamage, float newControlResistance)
     {
         moveSpeed = newMoveSpeed;
         contactDamage = newContactDamage;
+        controlResistance = Mathf.Clamp01(newControlResistance);
 
         if (agent != null)
         {
@@ -105,9 +131,13 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         separation = Vector3.zero;
 
+        slowMultiplier = 1f;
+        slowEndTime = -1f;
+
         isDetouring       = false;
         stuckTimer        = 0f;
         lastCheckPosition = transform.position;
+        pathUpdateTimer   = Random.Range(0f, pathUpdateInterval);
 
         if (agent != null)
         {
@@ -119,13 +149,13 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         if (rb != null)
         {
             rb.isKinematic = useNavMesh;
-            rb.linearVelocity = Vector3.zero;
+            if (!rb.isKinematic) rb.linearVelocity = Vector3.zero;
         }
 
         if (UpdateManager.Instance != null)
         {
             UpdateManager.Instance.Register(this as IUpdateable);
-            UpdateManager.Instance.Register(this as IFixedUpdateable);
+            if (!useNavMesh && rb != null) UpdateManager.Instance.Register(this as IFixedUpdateable);
         }
 
         EnemySeparationManager.Register(this);
@@ -145,7 +175,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-
+        if (deltaTime <= 0f) return;
         if (player == null)
         {
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
@@ -164,6 +194,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (useNavMesh && agent != null && agent.isOnNavMesh)
         {
+            agent.speed = moveSpeed * CurrentSpeedMultiplier();
+
             stuckTimer += deltaTime;
             if (stuckTimer >= StuckCheckInterval)
             {
@@ -180,15 +212,20 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             }
             else
             {
-                Vector3 toPlayer = player.position - transform.position;
-                toPlayer.y = 0f;
-                Vector3 destination = toPlayer.magnitude > attackRadius
-                    ? player.position - toPlayer.normalized * attackRadius
-                    : transform.position;
-                agent.SetDestination(destination);
+                pathUpdateTimer += deltaTime;
+                if (pathUpdateTimer >= pathUpdateInterval)
+                {
+                    pathUpdateTimer = 0f;
+
+                    Vector3 toPlayer = player.position - transform.position;
+                    toPlayer.y = 0f;
+                    Vector3 destination = toPlayer.magnitude > attackRadius
+                        ? player.position - toPlayer.normalized * attackRadius
+                        : transform.position;
+                    agent.SetDestination(destination);
+                }
             }
 
-            // Separación entre enemigos: empuje lateral para no fundirse en un punto.
             if (separation.sqrMagnitude > 0.0001f)
             {
                 agent.Move(new Vector3(separation.x, 0f, separation.z) * deltaTime);
@@ -198,7 +235,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         Vector3 direction = player.position - transform.position;
         direction.y = 0f;
 
-        if (direction.sqrMagnitude > 0.001f)
+        if (direction.sqrMagnitude > 0.001f && CurrentSpeedMultiplier() > 0f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
 
@@ -233,16 +270,18 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (!useNavMesh && rb != null && player != null)
         {
+            float currentSpeed = moveSpeed * CurrentSpeedMultiplier();
             Vector3 direction = (player.position - transform.position).normalized;
             rb.linearVelocity = new Vector3(
-                direction.x * moveSpeed + separation.x,
+                direction.x * currentSpeed + separation.x,
                 rb.linearVelocity.y,
-                direction.z * moveSpeed + separation.z);
+                direction.z * currentSpeed + separation.z);
         }
     }
 
     public void WarpTo(Vector3 position)
     {
+        if (isKnockedBack) EndKnockback();
         isKnockedBack = false;
         knockbackTimer = 0f;
         knockbackVelocity = Vector3.zero;
@@ -262,7 +301,9 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     {
         if (player == null || agent == null || !agent.isOnNavMesh)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] IGNORADO — player={player != null} agent={agent != null} onNavMesh={agent?.isOnNavMesh}");
+#endif
             return;
         }
 
@@ -280,11 +321,15 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         {
             isDetouring = true;
             agent.SetDestination(hit.position);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] Desviando a {hit.position} (dist al jugador={Vector3.Distance(transform.position, player.position):F1}m)");
+#endif
         }
         else
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log($"[Detour:{name}] SamplePosition FALLÓ — no hay NavMesh cerca de {target}");
+#endif
         }
     }
 
@@ -309,6 +354,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         if (rb != null)
         {
             rb.linearVelocity = knockbackVelocity;
+            UpdateManager.Instance?.Register(this as IFixedUpdateable);
         }
     }
 
@@ -316,6 +362,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     {
         isKnockedBack = false;
         knockbackVelocity = Vector3.zero;
+        if (useNavMesh) UpdateManager.Instance?.Unregister(this as IFixedUpdateable);
 
         if (useNavMesh && agent != null)
         {

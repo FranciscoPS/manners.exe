@@ -1,222 +1,122 @@
+using System.IO;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using System.Text;
+using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Monitor de rendimiento en runtime.
-/// Loguea FPS, objetos activos, wave actual y detecta drops severos.
-/// Solo activo en Editor y Development Builds — strip automático en Release.
-/// </summary>
 public class PerformanceMonitor : MonoBehaviour, IUpdateable
 {
     public static PerformanceMonitor Instance { get; private set; }
+    [SerializeField, Min(5f)] private float reportInterval = 15f;
+    [SerializeField] private bool enableReleaseLogging;
+    private double windowStart;
+    private int frames;
+    private float worstFrame;
+    private bool showOverlay;
+    private string deviceReport;
+    private string frameReport = "Collecting frame timings...";
+    private string saveMessage = "";
+    public bool IsActive => isActiveAndEnabled;
 
-    [Header("Intervalos de reporte")]
-    [Tooltip("Cada cuántos segundos se imprime el resumen periódico")]
-    [SerializeField] private float reportInterval = 5f;
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => Instance = null;
 
-    [Header("Umbrales de alerta")]
-    [Tooltip("FPS por debajo del cual se considera un drop grave")]
-    [SerializeField] private float fpsCriticalThreshold = 25f;
-    [Tooltip("FPS por debajo del cual se considera un drop leve")]
-    [SerializeField] private float fpsWarningThreshold = 40f;
-    [Tooltip("Objetos activos (enemies + orbs + coins) que se considera excesivo")]
-    [SerializeField] private int activeObjectsAlertThreshold = 150;
-
-    // ── Estado interno ────────────────────────────────────────────────────────
-    private float periodicTimer;
-    private float fpsAccum;
-    private int   fpsSamples;
-
-    // Para detectar drops puntuales (spike en un solo frame)
-    private float lastFrameTime;
-    private int   spikeCount;
-    private float sessionStart;
-    private int   lastLoggedWave = -1;
-
-    // Referencia al URP Asset para leer Render Scale
-    private UniversalRenderPipelineAsset urpAsset;
-
-    // IUpdateable
-    public bool IsActive => enabled && gameObject.activeInHierarchy;
-
-    // ─────────────────────────────────────────────────────────────────────────
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void EnsureExists()
+    {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        if (Instance == null)
+            new GameObject("[PerformanceMonitor]").AddComponent<PerformanceMonitor>();
+#endif
+    }
 
     private void Awake()
     {
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+        if (!enableReleaseLogging) { enabled = false; return; }
+#endif
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
-        urpAsset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
-        sessionStart = Time.realtimeSinceStartup;
+        deviceReport = $"manners.exe {Application.version} | Unity {Application.unityVersion}\n" +
+            $"GPU actually used: {SystemInfo.graphicsDeviceName}\n" +
+            $"API / driver: {SystemInfo.graphicsDeviceType} | {SystemInfo.graphicsDeviceVersion}\n" +
+            $"GPU memory reported: {SystemInfo.graphicsMemorySize} MB | RAM: {SystemInfo.systemMemorySize} MB\n" +
+            $"CPU: {SystemInfo.processorType} ({SystemInfo.processorCount} threads)\n" +
+            $"OS: {SystemInfo.operatingSystem} | Platform: {Application.platform}";
+        Debug.Log("[PERF DEVICE]\n" + deviceReport);
     }
 
     private void OnEnable()
     {
+        if (Instance != this) return;
+        windowStart = Time.realtimeSinceStartupAsDouble;
+        frames = 0;
+        worstFrame = 0;
         UpdateManager.Instance?.Register(this);
-        periodicTimer = reportInterval;
     }
 
-    private void OnDisable()
-    {
-        UpdateManager.Instance?.Unregister(this);
-    }
-
-    // ── IUpdateable ───────────────────────────────────────────────────────────
+    private void OnDisable() => UpdateManager.Instance?.Unregister(this);
+    private void OnDestroy() { if (Instance == this) Instance = null; }
 
     public void OnUpdate(float deltaTime)
     {
-        if (deltaTime <= 0f) return;
+        if (Keyboard.current != null && Keyboard.current.f8Key.wasPressedThisFrame)
+            showOverlay = !showOverlay;
 
-        // Acumular FPS
-        float fps = 1f / deltaTime;
-        fpsAccum  += fps;
-        fpsSamples++;
+        frames++;
+        worstFrame = Mathf.Max(worstFrame, Time.unscaledDeltaTime);
+        double elapsed = Time.realtimeSinceStartupAsDouble - windowStart;
+        if (elapsed < Mathf.Max(5f, reportInterval)) return;
 
-        // ── Detección de spike puntual ────────────────────────────────────────
-        if (fps < fpsCriticalThreshold)
-        {
-            spikeCount++;
-            // Solo logear cada spike (no inundar la consola: máximo 1 por segundo aprox)
-            if (Time.realtimeSinceStartup - lastFrameTime > 0.5f)
-            {
-                int wave       = GetCurrentWave();
-                int enemies    = CountActiveEnemies();
-            int collectibles = CountActiveOrbs() + CountActiveCoins();
-                Debug.LogWarning(
-                    $"[PERF] 🔴 SPIKE SEVERO | " +
-                    $"FPS: {fps:F1} | " +
-                    $"Wave: {wave} | " +
-                    $"Enemies: {enemies} | " +
-                    $"Collectibles: {collectibles} | " +
-                    $"RenderScale: {GetRenderScale():F2} | " +
-                    $"t={Time.realtimeSinceStartup - sessionStart:F1}s"
-                );
-                lastFrameTime = Time.realtimeSinceStartup;
-            }
-        }
-
-        // ── Reporte periódico ─────────────────────────────────────────────────
-        periodicTimer -= deltaTime;
-        if (periodicTimer <= 0f)
-        {
-            periodicTimer = reportInterval;
-            PrintPeriodicReport();
-        }
-
-        // ── Loguear transición de wave ────────────────────────────────────────
-        int currentWaveNow = GetCurrentWave();
-        if (currentWaveNow != lastLoggedWave)
-        {
-            lastLoggedWave = currentWaveNow;
-            float avgFps = fpsSamples > 0 ? fpsAccum / fpsSamples : 0f;
-            Debug.Log(
-                $"[PERF] 🌊 NUEVA WAVE → Wave {currentWaveNow} | " +
-                $"FPS promedio previo: {avgFps:F1} | " +
-                $"Enemies activos ahora: {CountActiveEnemies()} | " +
-                $"Spikes acumulados: {spikeCount} | " +
-                $"RenderScale: {GetRenderScale():F2}"
-            );
-            // Resetear acumuladores al entrar a nueva wave para medir cada wave por separado
-            fpsAccum   = 0f;
-            fpsSamples = 0;
-            spikeCount = 0;
-        }
+        var urp = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+        int quality = QualitySettings.GetQualityLevel();
+        frameReport = $"Scene: {SceneManager.GetActiveScene().name} | t={Time.realtimeSinceStartup:F0}s\n" +
+            $"FPS: {frames / elapsed:F1} | average frame: {elapsed * 1000 / frames:F1} ms | worst: {worstFrame * 1000:F1} ms\n" +
+            $"Output: {Screen.width} x {Screen.height} | scale: {(urp != null ? urp.renderScale : 1):F2} | quality: {QualitySettings.names[quality]}\n" +
+            $"Pipeline: {(urp != null ? urp.name : "none")} | renderer: {(urp != null ? urp.scriptableRenderer.GetType().Name : "none")}\n" +
+            $"Enemies: {EnemyHealth.ActiveEnemyCount} | orbs: {ActivePool(PoolManager.PoolType.ExperienceOrb)} | projectiles: {ActivePool(PoolManager.PoolType.Projectile)}\n" +
+            $"Unity allocated memory: {Profiler.GetTotalAllocatedMemoryLong() / 1048576} MB | managed: {System.GC.GetTotalMemory(false) / 1048576} MB\n" +
+            $"VSync: {QualitySettings.vSyncCount} | FPS cap: {Application.targetFrameRate} | focus: {Application.isFocused} | battery: {SystemInfo.batteryStatus}";
+        Debug.Log("[PERF FRAME]\n" + frameReport);
+        windowStart = Time.realtimeSinceStartupAsDouble;
+        frames = 0;
+        worstFrame = 0;
     }
 
-    // ── Reporte periódico ────────────────────────────────────────────────────
-
-    private void PrintPeriodicReport()
+    private static int ActivePool(PoolManager.PoolType type)
     {
-        float avgFps     = fpsSamples > 0 ? fpsAccum / fpsSamples : 0f;
-        int   enemies    = CountActiveEnemies();
-        int   orbs       = CountActiveOrbs();
-        int   coins      = CountActiveCoins();
-        int   projectiles = CountActiveProjectiles();
-        int   totalActive = enemies + orbs + coins + projectiles;
-        float renderScale = GetRenderScale();
-
-        string fpsTag = avgFps < fpsCriticalThreshold ? "🔴" :
-                        avgFps < fpsWarningThreshold  ? "🟡" : "🟢";
-
-        var sb = new StringBuilder(256);
-        sb.AppendLine($"[PERF] ── REPORTE t={Time.realtimeSinceStartup - sessionStart:F0}s ──────────────────────");
-        sb.AppendLine($"[PERF] {fpsTag} FPS promedio: {avgFps:F1}  (muestras: {fpsSamples})");
-        sb.AppendLine($"[PERF] Wave actual:     {GetCurrentWave()}");
-        sb.AppendLine($"[PERF] Enemies activos: {enemies}");
-        sb.AppendLine($"[PERF] Orbs activos:    {orbs}");
-        sb.AppendLine($"[PERF] Coins activos:   {coins}");
-        sb.AppendLine($"[PERF] Proyectiles:     {projectiles}");
-        sb.AppendLine($"[PERF] Total objetos:   {totalActive}{(totalActive > activeObjectsAlertThreshold ? " ⚠️ EXCESIVO" : "")}");
-        sb.AppendLine($"[PERF] Render Scale:    {renderScale:F2}{(renderScale < 0.99f ? " ⚠️ REDUCIDA — CAUSA DEL BORROSO" : "")}");
-        sb.AppendLine($"[PERF] Spikes (wave):   {spikeCount}");
-        sb.AppendLine($"[PERF] ──────────────────────────────────────────────────");
-
-        // Usar Warning si algo está mal, Log si todo está bien
-        if (avgFps < fpsWarningThreshold || totalActive > activeObjectsAlertThreshold || renderScale < 0.99f)
-            Debug.LogWarning(sb.ToString());
-        else
-            Debug.Log(sb.ToString());
-
-        // Resetear acumuladores del período
-        fpsAccum   = 0f;
-        fpsSamples = 0;
+        if (PoolManager.Instance != null && PoolManager.Instance.TryGetPoolStats(type, out int total, out int available))
+            return Mathf.Max(0, total - available);
+        return 0;
     }
 
-    // ── Helpers de conteo ────────────────────────────────────────────────────
-
-    private int CountActiveEnemies()
-    {
-        // Cuenta por tag para no depender de referencias
-        return GameObject.FindGameObjectsWithTag("Enemy").Length;
-    }
-
-    private int CountActiveOrbs()
-    {
-        // ExperienceOrb hereda de BaseCollectible — buscar por tipo
-        return FindObjectsByType<ExperienceOrb>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Length;
-    }
-
-    private int CountActiveCoins()
-    {
-        return FindObjectsByType<Collectible>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Length;
-    }
-
-    private int CountActiveProjectiles()
-    {
-        return FindObjectsByType<Projectile>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Length;
-    }
-
-    private int GetCurrentWave()
-    {
-        return EnemySpawnManager.Instance != null ? EnemySpawnManager.Instance.CurrentWaveNumber : 0;
-    }
-
-    private float GetRenderScale()
-    {
-        if (urpAsset != null)
-            return urpAsset.renderScale;
-        return 1f;
-    }
-
-    // ── API pública ──────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Llamar desde cualquier sistema cuando ocurre un evento relevante
-    /// (p.ej: explosión masiva, nivel subido, shop abierto).
-    /// </summary>
     public void LogEvent(string eventName)
     {
-        int wave  = GetCurrentWave();
-        string fpsStr = fpsSamples > 0 ? $"{fpsAccum / fpsSamples:F1}" : "N/A (inicio)";
-        Debug.Log(
-            $"[PERF] 📌 EVENTO: {eventName} | " +
-            $"Wave: {wave} | " +
-            $"FPS~: {fpsStr} | " +
-            $"Enemies: {CountActiveEnemies()} | " +
-            $"RenderScale: {GetRenderScale():F2}"
-        );
+        if (Debug.isDebugBuild) Debug.Log($"[PERF EVENT] {eventName} | enemies={EnemyHealth.ActiveEnemyCount}");
+    }
+
+    private void OnGUI()
+    {
+        if (!showOverlay) return;
+        GUILayout.BeginArea(new Rect(12, 12, Mathf.Min(Screen.width - 24, 860), Mathf.Min(Screen.height - 24, 520)), GUI.skin.box);
+        GUILayout.Label("Performance report — F8 to close");
+        GUILayout.Label(deviceReport + "\n" + frameReport);
+#if !UNITY_WEBGL || UNITY_EDITOR
+        if (GUILayout.Button("Save performance report"))
+        {
+            try
+            {
+                string path = Path.Combine(Application.persistentDataPath, "performance-report.txt");
+                File.WriteAllText(path, deviceReport + "\n" + frameReport);
+                saveMessage = path;
+            }
+            catch (System.Exception exception) { saveMessage = exception.Message; }
+        }
+#endif
+        GUILayout.Label(saveMessage);
+        GUILayout.EndArea();
     }
 }

@@ -21,6 +21,16 @@ public class EnemyHealth : MonoBehaviour
     private float maxHealth = 30f;
     private float currentHealth;
     private DamageTween damageTween;
+    private EnemyController controller;
+
+    public EnemyController Controller
+    {
+        get
+        {
+            if (controller == null) controller = GetComponent<EnemyController>();
+            return controller;
+        }
+    }
 
     private PoolManager.PoolType enemyPoolType = PoolManager.PoolType.BasicEnemy;
 

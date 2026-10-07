@@ -1,8 +1,17 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BuildingsScript : MonoBehaviour
 {
+    public static readonly List<BuildingsScript> ActiveBuildings = new List<BuildingsScript>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ClearStatics()
+    {
+        ActiveBuildings.Clear();
+    }
+
     [Header("Destruction Settings")]
     [SerializeField] private GameObject visual;
     [SerializeField] private Transform spawnPoint;
@@ -15,6 +24,8 @@ public class BuildingsScript : MonoBehaviour
     [Header("Destruction VFX")]
     [SerializeField] private GameObject destructionVFXPrefab;
     [SerializeField] private float vfxScale = 1f;
+    [Tooltip("Si está apagado, no se genera la nube de escombros (VFX) al destruirse. No afecta a los pedazos físicos, que se siguen rompiendo igual.")]
+    [SerializeField] private bool displayVfxExplosion = true;
 
     [Header("Destruction Feedback")]
     [SerializeField] private float shakeForce = 0.5f;
@@ -26,42 +37,106 @@ public class BuildingsScript : MonoBehaviour
     [SerializeField] private OrbConfiguration orbConfig;
 
     private bool isDestroying = false;
+    private BuildingDestroyedVisual destroyedVisual;
+    private Collider hitCollider;
+    private Vector3 lastImpactDirection;
+    private readonly List<Material> fadeMats = new List<Material>();
+
+    private void OnDestroy()
+    {
+        foreach (Material material in fadeMats)
+        {
+            if (material == null) continue;
+            if (Application.isPlaying) Destroy(material);
+            else DestroyImmediate(material);
+        }
+        fadeMats.Clear();
+    }
+
+    private void OnEnable()
+    {
+        ActiveBuildings.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        ActiveBuildings.Remove(this);
+    }
 
     private void Awake()
     {
-        if (visual != null) return;
+        destroyedVisual = GetComponent<BuildingDestroyedVisual>();
+        hitCollider = GetComponent<Collider>();
 
-        foreach (Transform child in transform)
+        if (visual == null)
         {
-            if (string.Equals(child.name, "visual", System.StringComparison.OrdinalIgnoreCase))
+            foreach (Transform child in transform)
             {
-                visual = child.gameObject;
-                return;
+                if (string.Equals(child.name, "visual", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    visual = child.gameObject;
+                    break;
+                }
+            }
+
+            if (visual == null)
+            {
+                foreach (Transform child in transform)
+                {
+                    if (child.GetComponentInChildren<Renderer>() != null)
+                    {
+                        visual = child.gameObject;
+                        break;
+                    }
+                }
             }
         }
-
-        foreach (Transform child in transform)
-        {
-            if (child.GetComponentInChildren<Renderer>() != null)
-            {
-                visual = child.gameObject;
-                return;
-            }
-        }
-
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !isDestroying)
+        if (other.CompareTag("Player"))
         {
-            isDestroying = true;
-
-            var fader = GetComponent<BuildingFader>();
-            if (fader != null) fader.SuspendForDestruction();
-
-            StartCoroutine(DestroySequence());
+            DestroyByHit(other.transform.position);
         }
+    }
+
+    public bool IsSegmentWithinHitRange(Vector3 segmentStart, Vector3 segmentEnd, float margin)
+    {
+        if (isDestroying || hitCollider == null) return false;
+
+        Vector3 buildingFlat = transform.position;
+        buildingFlat.y = segmentStart.y;
+
+        Vector3 closestOnSegment = ClosestPointOnSegment(segmentStart, segmentEnd, buildingFlat);
+        Vector3 closestOnCollider = hitCollider.ClosestPoint(closestOnSegment);
+        closestOnCollider.y = closestOnSegment.y;
+
+        return (closestOnCollider - closestOnSegment).sqrMagnitude <= margin * margin;
+    }
+
+    private static Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 p)
+    {
+        Vector3 ab = b - a;
+        float sqrLen = ab.sqrMagnitude;
+        if (sqrLen < 0.0001f) return a;
+
+        float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / sqrLen);
+        return a + ab * t;
+    }
+
+    public void DestroyByHit(Vector3 sourcePosition)
+    {
+        if (isDestroying) return;
+
+        isDestroying = true;
+
+        var fader = GetComponent<BuildingFader>();
+        if (fader != null) fader.SuspendForDestruction();
+
+        lastImpactDirection = (transform.position - sourcePosition).normalized;
+
+        StartCoroutine(DestroySequence());
     }
 
     private IEnumerator DestroySequence()
@@ -82,9 +157,19 @@ public class BuildingsScript : MonoBehaviour
             MusicManager.Instance.PlaySFXOneShot(SFXDatabase.Instance.buildingDestroySFX, SFXDatabase.Instance.buildingDestroyVolume);
         }
 
-        SpawnDestructionVFX();
+        if (displayVfxExplosion)
+        {
+            SpawnDestructionVFX();
+        }
 
-        StartCoroutine(FadeAndDestroy());
+        if (destroyedVisual != null && destroyedVisual.UseDestroyedVisual)
+        {
+            destroyedVisual.DestroyBuilding(lastImpactDirection);
+        }
+        else
+        {
+            StartCoroutine(FadeAndDestroy());
+        }
 
         yield return new WaitForSeconds(dropSpawnDelay);
 
@@ -150,19 +235,7 @@ public class BuildingsScript : MonoBehaviour
             yield break;
         }
 
-        var fadeMats = new System.Collections.Generic.List<Material>(renderers.Length * 2);
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            var origMats = renderers[i].materials;
-            var instMats = new Material[origMats.Length];
-            for (int j = 0; j < origMats.Length; j++)
-            {
-                instMats[j] = new Material(origMats[j]);
-                SetupTransparentMaterial(instMats[j]);
-                fadeMats.Add(instMats[j]);
-            }
-            renderers[i].materials = instMats;
-        }
+        CreateFadeMaterials(renderers);
 
         float fadeElapsed = 0f;
         while (fadeElapsed < fadeOutDuration)
@@ -203,7 +276,23 @@ public class BuildingsScript : MonoBehaviour
 
         for (int m = 0; m < fadeMats.Count; m++)
             SetMaterialAlpha(fadeMats[m], 0f);
+    }
 
+    private void CreateFadeMaterials(Renderer[] renderers)
+    {
+        foreach (var renderer in renderers)
+        {
+            var source = renderer.sharedMaterials;
+            var instances = new Material[source.Length];
+            for (int j = 0; j < source.Length; j++)
+            {
+                if (source[j] == null) continue;
+                instances[j] = new Material(source[j]);
+                SetupTransparentMaterial(instances[j]);
+                fadeMats.Add(instances[j]);
+            }
+            renderer.sharedMaterials = instances;
+        }
     }
 
     private void SetupTransparentMaterial(Material mat)

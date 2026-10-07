@@ -11,7 +11,7 @@ public class TutorialConfig : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<TutorialConfig>("TutorialConfig");
+                instance = Resources.Load<TutorialConfig>("TutorialConfig_Production");
             }
             return instance;
         }
@@ -27,9 +27,18 @@ public class TutorialConfig : ScriptableObject
     public bool TutorialEnabled    => tutorialEnabled;
     public bool ForceShowEveryRun  => forceShowEveryRun;
 
+    public void SetTutorialEnabled(bool value) => tutorialEnabled = value;
+    public void SetForceShowEveryRun(bool value) => forceShowEveryRun = value;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         instance = null;
+    }
+
+    public static void OverrideInstance(TutorialConfig config)
+    {
+        if (config != null)
+            instance = config;
     }
 }

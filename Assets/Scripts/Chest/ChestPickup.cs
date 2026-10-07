@@ -1,54 +1,85 @@
+using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
-/// <summary>
-/// Se a\u00f1ade al cofre instanciado. Detecta por distancia cuando el jugador se
-/// acerca; al recogerlo, abre la selecci\u00f3n del cofre y desaparece.
-/// </summary>
 [DisallowMultipleComponent]
 public class ChestPickup : MonoBehaviour, IUpdateable
 {
     [Tooltip("Radio horizontal (XZ) para recoger el cofre. El cofre tiene escala 2, así que conviene 3+.")]
     [SerializeField] private float pickupRadius = 3f;
 
-    [Header("Bob (salto visual)")]
-    [SerializeField] private float bobHeight = 0.6f;
-    [SerializeField] private float bobSpeed = 4.5f;
+    [Header("Salto (squash & stretch)")]
+    [SerializeField] private SquashStretchBounceSettings bounce = new SquashStretchBounceSettings
+    {
+        jumpHeight = 0.6f,
+        jumpDuration = 0.5f,
+        squashAmount = 0.25f,
+        stretchAmount = 0.2f,
+        anticipationDuration = 0.1f,
+        recoverDuration = 0.3f,
+        restBetweenJumps = 0.15f
+    };
 
     private Transform player;
     private bool opened = false;
+    private bool selectionOpen = false;
+    private bool lastWasInRange = false;
     private float nextCheckTime = 0f;
     private const float CheckInterval = 0.1f;
 
-    private Vector3 basePosition;
+    private Vector3 baseScale;
+    private float baseLocalY;
     private bool baseCaptured = false;
+    private Sequence bounceTween;
+
+    private ChestItemData chosenItem;
+    private bool hasOpenedOnce = false;
 
     public bool IsActive => !opened && gameObject.activeInHierarchy;
 
     private void OnEnable()
     {
         opened = false;
+        selectionOpen = false;
+        lastWasInRange = false;
+        hasOpenedOnce = false;
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Register(this);
+
+        List<ChestItemData> items = ChestItemProvider.GetRandomItems(1);
+        if (items != null && items.Count > 0)
+            chosenItem = items[0];
+        else
+            chosenItem = null;
+
+        Animator chestAnimator = GetComponentInChildren<Animator>();
+        if (chestAnimator != null)
+            chestAnimator.speed = 0f;
     }
 
     private void OnDisable()
     {
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Unregister(this);
+
+        StopBounce();
+        if (baseCaptured)
+            SquashStretchBounce.ResetPose(transform, baseScale, baseLocalY);
     }
 
     public void OnUpdate(float deltaTime)
     {
         if (opened) return;
 
-        // Rebote vertical para que el cofre destaque en el mapa.
         if (!baseCaptured)
         {
-            basePosition = transform.position;
+            baseScale = transform.localScale;
+            baseLocalY = transform.localPosition.y;
             baseCaptured = true;
         }
-        float bob = Mathf.Abs(Mathf.Sin(Time.time * bobSpeed)) * bobHeight;
-        transform.position = basePosition + Vector3.up * bob;
+
+        if (bounceTween == null && !selectionOpen)
+            bounceTween = SquashStretchBounce.PlayLoop(transform, bounce, baseScale, baseLocalY);
 
         if (player == null)
         {
@@ -57,34 +88,74 @@ public class ChestPickup : MonoBehaviour, IUpdateable
         }
 
         if (Time.time < nextCheckTime) return;
+        if (LevelUpManager.Instance != null && LevelUpManager.Instance.IsLevelUpActive()) return;
         nextCheckTime = Time.time + CheckInterval;
 
-        // Distancia solo en el plano horizontal: el salto vertical del cofre
-        // y la altura del jugador no deben afectar la recogida.
         float dx = transform.position.x - player.position.x;
         float dz = transform.position.z - player.position.z;
         float sqrDistance = dx * dx + dz * dz;
-        if (sqrDistance <= pickupRadius * pickupRadius)
+        bool isInRange = sqrDistance <= pickupRadius * pickupRadius;
+
+        if (isInRange && !lastWasInRange && !selectionOpen)
         {
             Open();
         }
+
+        lastWasInRange = isInRange;
     }
 
     private void Open()
     {
+        if (opened || selectionOpen) return;
+
+        selectionOpen = true;
+        StopBounce();
+        if (baseCaptured)
+            SquashStretchBounce.Settle(transform, baseScale, baseLocalY);
+
+        if (hasOpenedOnce)
+        {
+            ShowSelection();
+            return;
+        }
+
+        hasOpenedOnce = true;
+        ChestOpeningSequence.Play(chosenItem, gameObject, ShowSelection);
+    }
+
+    private void ShowSelection()
+    {
+        if (opened) return;
+
+        bool shown = LevelUpManager.Instance != null && LevelUpManager.Instance.ShowChestSelection(chosenItem);
+        if (shown) return;
+
+        selectionOpen = false;
+        lastWasInRange = false;
+    }
+
+    public void OnSelectionClosed()
+    {
+        selectionOpen = false;
+    }
+
+    public void OnCollected()
+    {
         if (opened) return;
         opened = true;
-
-        ChestSpawner.NotifyChestCollected();
-
-        if (LevelUpManager.Instance != null)
-        {
-            LevelUpManager.Instance.ShowChestSelection();
-        }
 
         if (UpdateManager.Instance != null)
             UpdateManager.Instance.Unregister(this);
 
+        StopBounce();
         Destroy(gameObject);
+    }
+
+    private void StopBounce()
+    {
+        if (bounceTween == null) return;
+
+        bounceTween.Kill();
+        bounceTween = null;
     }
 }

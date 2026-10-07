@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 public class EnemySpawnManager : MonoBehaviour, IUpdateable
 {
@@ -22,6 +21,18 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [Tooltip("Máximo de enemigos activos en escena a la vez. Impide los 10M de polígonos.")]
     [SerializeField] private int maxConcurrentEnemies = 40;
 
+    [Header("Early Game Ramp (arranque fácil)")]
+    [Tooltip("Suaviza SOLO el arranque: durante los primeros segundos los enemigos salen más lento y en lotes más pequeños, subiendo gradualmente hasta la dificultad normal. NO toca la curva después de la rampa (factor=1).")]
+    [SerializeField] private bool enableEarlyRamp = true;
+    [Tooltip("Segundo de partida en el que el arranque alcanza la dificultad NORMAL (factor=1). Ej 150 = 2:30: el primer minuto es muy fácil, sobre el min 2 ya se nota la subida y al 2:30 corre la curva normal.")]
+    [SerializeField] private float earlyRampSeconds = 150f;
+    [Range(0.05f, 1f)]
+    [Tooltip("Factor de dificultad en el segundo 0. Más bajo = arranque más fácil/lento. 0.2 = ~1/5 del ritmo normal al empezar.")]
+    [SerializeField] private float earlyRampStartFactor = 0.2f;
+    [Range(1f, 3f)]
+    [Tooltip("Qué tan 'marcada' es la curva del arranque. 1 = lineal. 2 = se queda fácil más tiempo y sube fuerte cerca del final de la rampa.")]
+    [SerializeField] private float earlyRampCurvePower = 2f;
+
     [Header("Final Rush (fin de partida)")]
     [Header("Final Rush - Ráfagas (spawn por tandas)")]
     [Tooltip("Tiempo (seg) entre ráfagas al INICIO. Grande = tandas espaciadas para no abrumar de golpe.")]
@@ -40,8 +51,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private float finalRushTierInterval = 30f;
     [Tooltip("Vida de los enemigos en el primer escalon (nivel 0). Empieza en la vida normal.")]
     [SerializeField] private float finalRushBaseHealth = 30f;
-    [Tooltip("Multiplicador EXPONENCIAL de vida por escalon: vida = base * mult^escalon. Ej 4 -> 30,120,480,1920...")]
-    [SerializeField] private float finalRushHealthTierMultiplier = 4f;
+    [Tooltip("Multiplicador EXPONENCIAL de vida por escalon: vida = base * mult^escalon. Ej 1.3 -> 200, 260, 338, 439... Con 4 nada muere a partir del tercer escalon y la horda solo crece.")]
+    [SerializeField] private float finalRushHealthTierMultiplier = 1.3f;
     [Tooltip("Velocidad de los enemigos en el primer escalon (nivel 0).")]
     [SerializeField] private float finalRushBaseSpeed = 6f;
     [Tooltip("Cuanta velocidad se suma por cada escalon.")]
@@ -52,6 +63,23 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private float finalRushBaseContactDamage = 12f;
     [Tooltip("Cuanto dano de contacto se suma por cada escalon (sube con el tiempo).")]
     [SerializeField] private float finalRushContactDamagePerTier = 18f;
+
+    [Header("Final Rush - Techo de enemigos")]
+    [Tooltip("Máximo de enemigos activos al EMPEZAR el overtime. El techo sube desde aquí hasta el máximo final. Nunca baja del Max Concurrent Enemies normal, para que las primeras ráfagas salgan aunque la partida termine con la escena llena.")]
+    [SerializeField] private int finalRushMaxConcurrentStart = 300;
+    [Tooltip("Máximo de enemigos activos al terminar la rampa del techo. Es el tamaño máximo de la horda en overtime; las ráfagas se recortan para no pasarlo.")]
+    [SerializeField] private int finalRushMaxConcurrentEnd = 2000;
+    [Tooltip("Segundos de overtime que tarda el techo en subir del inicial al final. 180 = la horda máxima se alcanza al minuto 3.")]
+    [SerializeField] private float finalRushCapRampSeconds = 180f;
+    [Tooltip("Cuántos enemigos de una ráfaga se spawnean por frame. Reparte las ráfagas grandes en varios frames para evitar tirones.")]
+    [SerializeField] private int finalRushSpawnsPerFrame = 24;
+
+    [Header("Final Rush - Resistencia a control")]
+    [Tooltip("Resistencia a control (stun/slow) que ganan los enemigos por cada escalon. 0.05 = +5% por escalon: al minuto (escalon 6) los stuns duran un 30% menos.")]
+    [SerializeField] private float finalRushControlResistancePerTier = 0.05f;
+    [Range(0f, 1f)]
+    [Tooltip("Resistencia máxima que pueden alcanzar. 0.85 = los stuns duran el 15% y los slows casi no se notan.")]
+    [SerializeField] private float finalRushMaxControlResistance = 0.85f;
 
     [Header("TEST")]
     [Tooltip("TEST: dispara la oleada final inmediatamente al iniciar la partida (quitar antes de publicar).")]
@@ -68,6 +96,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1;
+    public bool IsSpawnBlocked => spawnBlocked;
 
     public bool IsActive => this != null && enabled && gameObject.activeInHierarchy;
 
@@ -117,7 +146,6 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             LogDebug("No waves configured in Wave Queue!");
         }
 
-        // TEST: arranca la oleada final de inmediato para poder probarla sin esperar al final.
         if (testFinalRushFromStart)
         {
             HandleMatchTimeExpired();
@@ -135,7 +163,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             if (continuousSpawnTimer <= 0f)
             {
                 SpawnContinuousEnemies();
-                continuousSpawnTimer = continuousSpawnInterval;
+                continuousSpawnTimer = EarlyScaledInterval(continuousSpawnInterval);
             }
         }
     }
@@ -152,13 +180,15 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private IEnumerator FinalRushRoutine()
     {
-        // Config buffada reutilizable (se reasignan sus stats cada rafaga segun el escalon actual).
+
         EnemyConfiguration buffed = CreateFinalRushConfig();
         if (buffed == null)
         {
             LogDebug("[FINAL RUSH] No hay configuracion de enemigo base; abortando rush.");
             yield break;
         }
+
+        PoolManager.Instance?.EnsureCapacityOverFrames(buffed.enemyPoolType, CurrentFinalRushCap(0f));
 
         float startTime = Time.time;
         int lastTier = -1;
@@ -167,44 +197,65 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         {
             float elapsed = Time.time - startTime;
 
-            // Escalon actual: sube cada finalRushTierInterval segundos (cada 30s por defecto).
             int tier = Mathf.FloorToInt(elapsed / finalRushTierInterval);
 
-            // Vida EXPONENCIAL por escalon: empieza normal y crece muy rapido (base * mult^tier).
             buffed.maxHealth = finalRushBaseHealth * Mathf.Pow(finalRushHealthTierMultiplier, tier);
             buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedPerTier * tier);
-            // Dano de contacto: bajo al inicio y sube por escalon (no mata de golpe en los primeros segundos).
-            buffed.contactDamage = finalRushBaseContactDamage + finalRushContactDamagePerTier * tier;
 
-            // Rafaga: cantidad por spawn point crece con el escalon (muchos de golpe).
+            buffed.contactDamage = finalRushBaseContactDamage + finalRushContactDamagePerTier * tier;
+            buffed.controlResistance = Mathf.Min(finalRushMaxControlResistance, finalRushControlResistancePerTier * tier);
+
             int perSpawnPoint = finalRushBurstPerSpawnPoint + finalRushBurstGrowthPerTier * tier;
 
-            // Intervalo entre rafagas: empieza espaciado y se acorta con el escalon (mas frecuentes).
             float burstInterval = Mathf.Max(finalRushBurstIntervalMin,
                 finalRushBurstInterval - finalRushBurstIntervalReductionPerTier * tier);
+
+            int cap = CurrentFinalRushCap(elapsed);
 
             if (tier != lastTier)
             {
                 lastTier = tier;
                 PerformanceMonitor.Instance?.LogEvent(
                     $"[FINAL RUSH] Escalon {tier}: vida={buffed.maxHealth:F0} vel={buffed.moveSpeed:F1} " +
+                    $"res={buffed.controlResistance:P0} techo={cap} " +
                     $"x{perSpawnPoint}/punto cada {burstInterval:F1}s");
             }
 
-            // Rafaga: lanza muchos enemigos de golpe desde TODOS los spawn points.
-            for (int p = 0; p < allSpawnPoints.Count; p++)
-            {
-                allSpawnPoints[p].ForceSpawn(perSpawnPoint, buffed);
-            }
+            int burstSize = Mathf.Min(perSpawnPoint * allSpawnPoints.Count, cap - EnemyHealth.ActiveEnemyCount);
+            yield return StartCoroutine(SpawnBurstOverFrames(burstSize, buffed));
 
             yield return new WaitForSeconds(burstInterval);
         }
     }
 
-    /// <summary>
-    /// Crea en runtime una EnemyConfiguration clonada de una config base (para conservar
-    /// prefab/pool) cuyos stats se sobrescriben cada tick segun el escalon actual.
-    /// </summary>
+    private int CurrentFinalRushCap(float elapsed)
+    {
+        float progress = finalRushCapRampSeconds > 0f ? Mathf.Clamp01(elapsed / finalRushCapRampSeconds) : 1f;
+        int ramped = Mathf.RoundToInt(Mathf.Lerp(finalRushMaxConcurrentStart, finalRushMaxConcurrentEnd, progress));
+        return Mathf.Max(maxConcurrentEnemies, ramped);
+    }
+
+    private IEnumerator SpawnBurstOverFrames(int count, EnemyConfiguration config)
+    {
+        if (allSpawnPoints.Count == 0) yield break;
+
+        int perFrame = Mathf.Max(1, finalRushSpawnsPerFrame);
+        int pointIndex = 0;
+
+        while (count > 0)
+        {
+            int thisFrame = Mathf.Min(perFrame, count);
+            for (int i = 0; i < thisFrame; i++)
+            {
+                allSpawnPoints[pointIndex % allSpawnPoints.Count].ForceSpawn(1, config);
+                pointIndex++;
+            }
+
+            count -= thisFrame;
+            yield return null;
+        }
+    }
+
     private EnemyConfiguration CreateFinalRushConfig()
     {
         EnemyConfiguration baseConfig = null;
@@ -226,7 +277,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         clone.maxHealth = finalRushBaseHealth;
         clone.moveSpeed = finalRushBaseSpeed;
         clone.contactDamage = finalRushBaseContactDamage;
-        // Sin drops en la horda final: es el fin de la run, no queremos recompensar farmeo.
+
         clone.coinDropChance = 0f;
         clone.diamondDropChance = 0f;
         clone.minOrbs = 0;
@@ -323,6 +374,29 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         }
     }
 
+    private float EarlyDifficultyFactor()
+    {
+        if (!enableEarlyRamp || earlyRampSeconds <= 0f) return 1f;
+
+        GameTimeManager gtm = GameTimeManager.Instance;
+        float t = gtm != null ? gtm.GetGameTime() : 0f;
+        if (t >= earlyRampSeconds) return 1f;
+
+        float p = Mathf.Clamp01(t / earlyRampSeconds);
+        float eased = Mathf.Pow(p, Mathf.Max(1f, earlyRampCurvePower));
+        return Mathf.Lerp(Mathf.Clamp(earlyRampStartFactor, 0.05f, 1f), 1f, eased);
+    }
+
+    private float EarlyScaledInterval(float baseInterval)
+    {
+        return baseInterval / Mathf.Max(0.05f, EarlyDifficultyFactor());
+    }
+
+    private int EarlyScaledBatch(int baseBatch)
+    {
+        return Mathf.Max(1, Mathf.RoundToInt(baseBatch * EarlyDifficultyFactor()));
+    }
+
     private IEnumerator ExecuteWave(WaveData wave)
     {
         isSpawningWave = true;
@@ -345,13 +419,13 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 yield return new WaitForSeconds(0.5f);
 
             int remainingEnemies = totalEnemies - enemiesSpawned;
-            int enemiesToSpawnThisBatch = Mathf.Min(wave.enemiesPerBatch, remainingEnemies);
+            int enemiesToSpawnThisBatch = Mathf.Min(EarlyScaledBatch(wave.enemiesPerBatch), remainingEnemies);
 
             int actuallySpawned = SpawnBatch(enemiesToSpawnThisBatch, wave);
             enemiesSpawned += actuallySpawned;
 
             if (enemiesSpawned < totalEnemies)
-                yield return new WaitForSeconds(wave.spawnInterval);
+                yield return new WaitForSeconds(EarlyScaledInterval(wave.spawnInterval));
         }
 
         isSpawningWave = false;
@@ -403,22 +477,29 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private const float ScatterCheckInterval         = 4f;
     private const float ScatterClusterRadius         = 2.5f;
-    // Minimum cluster size to scatter off-screen enemies.
+
     private const int   ScatterThresholdOffScreen    = 10;
-    // Minimum cluster size to scatter even on-screen enemies (extreme pileup).
+
     private const int   ScatterThresholdOnScreen     = 20;
-    // Max enemies allowed to remain per cluster after scattering.
+
     private const int   ScatterMaxPerCluster         = 5;
-    // Enemies within this distance of the player are never scattered (active combat).
+
     private const float ScatterMinPlayerDist         = 8f;
 
     private IEnumerator ScatterClusteredEnemies()
     {
         Transform playerTransform = null;
+        var enemies = new List<EnemyHealth>(512);
+        var alreadyScattered = new HashSet<EnemyHealth>();
+        var cluster = new List<EnemyHealth>(64);
+        var candidates = new List<EnemyHealth>(64);
+        var safeSpawnPoints = new List<SpawnPoint>();
+        var grid = new EnemyProximityGrid();
+        var interval = new WaitForSeconds(ScatterCheckInterval);
 
         while (true)
         {
-            yield return new WaitForSeconds(ScatterCheckInterval);
+            yield return interval;
 
             if (playerTransform == null)
                 playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
@@ -428,44 +509,46 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             if (allSpawnPoints.Count == 0) continue;
 
             Camera cam = Camera.main;
-            var enemies = new List<EnemyHealth>(EnemyHealth.ActiveEnemies);
+            enemies.Clear();
+            enemies.AddRange(EnemyHealth.ActiveEnemies);
             int count = enemies.Count;
             if (count < ScatterThresholdOffScreen) continue;
 
-            var alreadyScattered = new HashSet<EnemyHealth>();
+            alreadyScattered.Clear();
+            grid.Build(enemies, ScatterClusterRadius);
             int totalScattered = 0;
 
             for (int i = 0; i < count; i++)
             {
-                if (enemies[i] == null || alreadyScattered.Contains(enemies[i])) continue;
-
-                Vector3 pos = enemies[i].transform.position;
-                var cluster = new List<EnemyHealth>();
-
-                for (int j = 0; j < count; j++)
+                // Bound each scan slice, including dense clusters with no eligible warps.
+                if (i > 0 && i % 16 == 0)
                 {
-                    if (i == j || enemies[j] == null || alreadyScattered.Contains(enemies[j])) continue;
-                    if (Vector3.Distance(pos, enemies[j].transform.position) <= ScatterClusterRadius)
-                        cluster.Add(enemies[j]);
+                    yield return null;
+                    if (isSpawningWave) break;
+                    grid.Build(enemies, ScatterClusterRadius);
                 }
+                var center = enemies[i];
+                if (center == null || !center.gameObject.activeInHierarchy || alreadyScattered.Contains(center)) continue;
 
-                // Not big enough to do anything with at all.
+                cluster.Clear();
+                grid.CollectWithin(center.transform.position, ScatterClusterRadius, cluster, true);
+                for (int j = cluster.Count - 1; j >= 0; j--)
+                {
+                    var member = cluster[j];
+                    if (member == center || member == null || !member.gameObject.activeInHierarchy || alreadyScattered.Contains(member))
+                        cluster.RemoveAt(j);
+                }
                 if (cluster.Count < ScatterThresholdOffScreen) continue;
 
                 bool extremePileup = cluster.Count >= ScatterThresholdOnScreen;
 
-                // Separate cluster members by eligibility:
-                //  - Off-screen + far from player  → always eligible (threshold 10).
-                //  - On-screen                     → only eligible on extreme pileup (threshold 20).
-                //  - Within ScatterMinPlayerDist   → never eligible (active combat).
-                var candidates = new List<EnemyHealth>();
+                candidates.Clear();
                 foreach (var e in cluster)
                 {
                     if (e == null) continue;
 
-                    // Never scatter enemies in direct melee range.
                     if (playerTransform != null &&
-                        Vector3.Distance(e.transform.position, playerTransform.position) < ScatterMinPlayerDist)
+                        (e.transform.position - playerTransform.position).sqrMagnitude < ScatterMinPlayerDist * ScatterMinPlayerDist)
                         continue;
 
                     bool onScreen = false;
@@ -476,29 +559,38 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                                    vp.y > -0.05f && vp.y < 1.05f;
                     }
 
-                    if (onScreen && !extremePileup) continue;  // On-screen: only touch when massive.
+                    if (onScreen && !extremePileup) continue;
 
                     candidates.Add(e);
                 }
 
-                // Scatter only the excess; seed enemy (enemies[i]) counts as 1 of the 5 kept.
                 int toScatter = Mathf.Max(0, candidates.Count - (ScatterMaxPerCluster - 1));
                 if (toScatter == 0) continue;
 
-                Debug.Log($"[Scatter] Cluster {cluster.Count} (extremo={extremePileup}) — candidatos {candidates.Count} — dispersando {toScatter}");
+                LogDebug($"[Scatter] Cluster {cluster.Count} (extremo={extremePileup}) — candidatos {candidates.Count} — dispersando {toScatter}");
 
-                // Pre-filter spawn points so enemies don't warp directly onto the player.
-                var safeSpawnPoints = playerTransform != null
-                    ? allSpawnPoints.FindAll(sp =>
-                        Vector3.Distance(sp.transform.position, playerTransform.position) >= ScatterMinPlayerDist)
-                    : allSpawnPoints;
-                if (safeSpawnPoints.Count == 0) safeSpawnPoints = allSpawnPoints;
-
+                safeSpawnPoints.Clear();
+                foreach (var point in allSpawnPoints)
+                {
+                    if (point != null && (playerTransform == null ||
+                        (point.transform.position - playerTransform.position).sqrMagnitude >= ScatterMinPlayerDist * ScatterMinPlayerDist))
+                        safeSpawnPoints.Add(point);
+                }
+                if (safeSpawnPoints.Count == 0) continue;
                 for (int k = 0; k < toScatter; k++)
                 {
-                    if (candidates[k] == null) continue;
+                    if (k > 0 && k % 16 == 0)
+                    {
+                        yield return null;
+                        if (isSpawningWave) break;
+                        // Both enemies and the player can move while this scan yields.
+                        grid.Build(enemies, ScatterClusterRadius);
+                    }
+                    if (candidates[k] == null || !candidates[k].gameObject.activeInHierarchy) continue;
                     SpawnPoint target = safeSpawnPoints[Random.Range(0, safeSpawnPoints.Count)];
-                    EnemyController ctrl = candidates[k].GetComponent<EnemyController>();
+                    if (target == null || (playerTransform != null &&
+                        (target.transform.position - playerTransform.position).sqrMagnitude < ScatterMinPlayerDist * ScatterMinPlayerDist)) continue;
+                    EnemyController ctrl = candidates[k].Controller;
                     if (ctrl != null)
                     {
                         target.WarnThenWarp(ctrl);
@@ -509,10 +601,12 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             }
 
             if (totalScattered > 0)
-                Debug.Log($"[Scatter] Dispersados: {totalScattered}");
+                LogDebug($"[Scatter] Dispersados: {totalScattered}");
         }
     }
 
+    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
     private void LogDebug(string message)
     {
 
@@ -534,6 +628,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         spawnBlocked = blocked;
     }
+
 
     public void SetWaveMultiplier(float multiplier)
     {

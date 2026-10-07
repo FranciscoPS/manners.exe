@@ -28,13 +28,33 @@ public class UpgradeDatabase : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<UpgradeDatabase>("UpgradeDatabase");
-                if (instance == null)
-                {
-                }
+                instance = Resources.Load<UpgradeDatabase>("UpgradeDatabase_Production");
             }
             return instance;
         }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        instance = null;
+    }
+
+    public static void OverrideInstance(UpgradeDatabase database)
+    {
+        if (database == null) return;
+        instance = database;
+    }
+
+    public UpgradeData GetUpgradeData(UpgradeType type)
+    {
+        for (int i = 0; i < allUpgrades.Count; i++)
+        {
+            if (allUpgrades[i] != null && allUpgrades[i].upgradeType == type)
+                return allUpgrades[i];
+        }
+
+        return null;
     }
 
     public List<UpgradeData> GetRandomUpgrades(Dictionary<UpgradeType, int> currentUpgradeLevels, int playerLevel)

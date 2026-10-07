@@ -13,12 +13,6 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         globalAttractUntil = -1f;
     }
 
-    /// <summary>
-    /// Fuerza a TODOS los pickups activos del mapa (orbes, monedas, diamantes)
-    /// a volar hacia el jugador durante <paramref name="duration"/> segundos.
-    /// Los pickups que aparezcan dentro de esa ventana también serán atraídos.
-    /// Usado por el ítem Imán Gigante.
-    /// </summary>
     public static void AttractAllToPlayer(float duration = 2f)
     {
         globalAttractUntil = Time.time + duration;
@@ -48,6 +42,10 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     [SerializeField] protected float updateInterval = 0.1f;
     [SerializeField] protected float distantCullDistance = 50f;
 
+    [Header("Visual Juice")]
+    [Tooltip("Velocidad de rotación (grados/seg) del pickup sobre su propio eje mientras está en el mundo.")]
+    [SerializeField] protected float spinSpeed = 140f;
+
     protected Transform player;
     protected bool isMovingToPlayer = false;
     protected float currentSpeed = 0f;
@@ -58,6 +56,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     protected bool isBlinking = false;
     protected Color originalColor;
     protected Material materialInstance;
+    private Material materialTemplate;
 
     protected float nextUpdateTime;
     protected float updateOffset;
@@ -84,12 +83,14 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         InitializeRenderer();
         SetupPhysics();
-        UpdateConfiguration(); // actualiza lifeTime desde GameBalanceConfig
+        UpdateConfiguration();
 
-        lifetimeTimer = lifeTime; // se setea DESPUÉS de UpdateConfiguration para usar el valor correcto
+        lifetimeTimer = lifeTime;
 
         updateOffset = Random.Range(0f, updateInterval);
         nextUpdateTime = Time.time + updateOffset;
+
+        transform.Rotate(Vector3.up, Random.Range(0f, 360f), Space.Self);
 
         if (!activeCollectibles.Contains(this))
             activeCollectibles.Add(this);
@@ -111,7 +112,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     {
         if (objectRenderer != null && materialInstance == null)
         {
-            materialInstance = objectRenderer.material;
+            EnsureMaterial(objectRenderer.sharedMaterial);
+            if (materialInstance == null) return;
 
             if (materialInstance.HasProperty("_RandomOffset"))
                 materialInstance.SetFloat("_RandomOffset", Random.Range(0f, 100f));
@@ -126,6 +128,31 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
                     originalColor = materialInstance.color;
             }
         }
+    }
+
+    protected void EnsureMaterial(Material template)
+    {
+        if (template == null || objectRenderer == null) return;
+        if (materialInstance != null && (template == materialTemplate || template == materialInstance)) return;
+
+        ReleaseMaterial();
+        materialTemplate = template;
+        materialInstance = new Material(template);
+        objectRenderer.sharedMaterial = materialInstance;
+    }
+
+    private void ReleaseMaterial()
+    {
+        if (materialInstance == null) return;
+        if (Application.isPlaying) Destroy(materialInstance);
+        else DestroyImmediate(materialInstance);
+        materialInstance = null;
+        materialTemplate = null;
+    }
+
+    protected virtual void OnDestroy()
+    {
+        ReleaseMaterial();
     }
 
     protected virtual void SetupPhysics()
@@ -148,12 +175,13 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if (collected) return;
+        if (collected || deltaTime <= 0f) return;
+
+        transform.Rotate(Vector3.up, spinSpeed * deltaTime, Space.Self);
 
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        // El lifetime y parpadeo corren siempre, con o sin jugador
         lifetimeTimer -= deltaTime;
 
         if (lifetimeTimer <= warningTime && !isBlinking)
@@ -170,9 +198,8 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
             return;
         }
 
-        if (player == null) return; // movimiento y atracción requieren jugador
+        if (player == null) return;
 
-        // Ventana global del Imán Gigante: atrae todo mientras esté activa.
         if (Time.time < globalAttractUntil)
             isMovingToPlayer = true;
 
@@ -284,7 +311,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         if (meshFilter != null && mesh != null)
         {
-            meshFilter.mesh = mesh;
+            meshFilter.sharedMesh = mesh;
         }
 
         if (objectRenderer == null)
@@ -292,18 +319,14 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
 
         if (objectRenderer != null)
         {
-            if (material != null)
-            {
-                materialInstance = new Material(material);
-                objectRenderer.material = materialInstance;
-            }
-            else if (materialInstance == null)
-            {
-                materialInstance = new Material(objectRenderer.sharedMaterial);
-                objectRenderer.material = materialInstance;
-            }
+            EnsureMaterial(material != null ? material : objectRenderer.sharedMaterial);
 
             originalColor = color;
+            if (materialInstance == null)
+            {
+                transform.localScale = Vector3.one * scale;
+                return;
+            }
             materialInstance.color = color;
 
             if (materialInstance.HasProperty("_BaseColor"))
@@ -333,7 +356,7 @@ public abstract class BaseCollectible : MonoBehaviour, IPoolable, IUpdateable
     public virtual void SetEmission(float emissionIntensity, float fresnelPower)
     {
         if (materialInstance == null && objectRenderer != null)
-            materialInstance = objectRenderer.material;
+            EnsureMaterial(objectRenderer.sharedMaterial);
 
         if (materialInstance != null)
         {

@@ -12,6 +12,13 @@ public class HealthBarUI : MonoBehaviour
     [SerializeField] private float blinkDuration = 0.1f;
     [SerializeField] private int blinkCount = 3;
     [SerializeField] private Color blinkColor = Color.red;
+    [Tooltip("El color de la barra sale del estilo y cambia con la vida: verde, naranja y rojo.")]
+    [SerializeField] private bool useStyleColors = false;
+
+    [Header("Golpe")]
+    [Tooltip("Sacudida de toda la barra (marco y relleno) al recibir daño, en unidades de canvas. 0 = sin sacudida.")]
+    [SerializeField] private float damageShake = 9f;
+    [SerializeField] private float damageShakeDuration = 0.28f;
 
     private Color originalColor;
     private PlayerHealth playerHealth;
@@ -35,15 +42,6 @@ public class HealthBarUI : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (healthBarFill != null)
-        {
-            RectTransform rt = healthBarFill.rectTransform;
-            rt.anchorMax = new Vector2(currentFillAmount, 1f);
-        }
-    }
-
     private void OnDestroy()
     {
         if (playerHealth != null)
@@ -61,6 +59,13 @@ public class HealthBarUI : MonoBehaviour
         {
             targetFillAmount = maxHealth > 0 ? currentHealth / maxHealth : 0;
             currentFillAmount = targetFillAmount;
+            healthBarFill.rectTransform.anchorMax = new Vector2(currentFillAmount, 1f);
+
+            if (useStyleColors && UIStyle.Instance != null)
+            {
+                originalColor = UIStyle.Instance.HealthColor(currentFillAmount);
+                if (blinkTween == null || !blinkTween.IsActive()) healthBarFill.color = originalColor;
+            }
         }
     }
 
@@ -68,8 +73,12 @@ public class HealthBarUI : MonoBehaviour
     {
         if (healthBarFill == null) return;
 
+        if (damageShake > 0f && transform is RectTransform barRect)
+            barRect.Shake(damageShake, damageShakeDuration);
+
         blinkTween?.Kill();
 
+        healthBarFill.color = originalColor;
         blinkTween = healthBarFill.DOColor(blinkColor, blinkDuration)
             .SetLoops(blinkCount * 2, LoopType.Yoyo)
             .SetEase(Ease.Linear)

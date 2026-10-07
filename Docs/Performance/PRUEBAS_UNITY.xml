@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="39" result="Passed" total="39" passed="39" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-11 02:32:17Z" end-time="2026-09-11 02:32:55Z" duration="37.6871343">
+  <test-suite type="TestSuite" id="1000" name="manners.exe" fullname="manners.exe" runstate="Runnable" testcasecount="39" result="Passed" start-time="2026-09-11 02:32:17Z" end-time="2026-09-11 02:32:55Z" duration="37.687134" total="39" passed="39" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1048" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Francisco/Documents/Unity Projects/manners.exe/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="39" result="Passed" start-time="2026-09-11 02:32:17Z" end-time="2026-09-11 02:32:55Z" duration="37.624271" total="39" passed="39" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="37924" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1001" name="GraphicsBudgetTests" fullname="GraphicsBudgetTests" classname="GraphicsBudgetTests" runstate="Runnable" testcasecount="26" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.036601" total="26" passed="26" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1029" name="FlipbooksShareAuthoredMaterialsAndReleaseOnlyTheirOverrides" fullname="GraphicsBudgetTests.FlipbooksShareAuthoredMaterialsAndReleaseOnlyTheirOverrides" methodname="FlipbooksShareAuthoredMaterialsAndReleaseOnlyTheirOverrides" classname="GraphicsBudgetTests" runstate="Runnable" seed="1170073558" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.012221" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1022" name="FullHdIsTheDefaultOutput" fullname="GraphicsBudgetTests.FullHdIsTheDefaultOutput" classname="GraphicsBudgetTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.004822" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1016" name="FullHdIsTheDefaultOutput(3024,1964,1920,1080)" fullname="GraphicsBudgetTests.FullHdIsTheDefaultOutput(3024,1964,1920,1080)" methodname="FullHdIsTheDefaultOutput" classname="GraphicsBudgetTests" runstate="Runnable" seed="1333906056" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.002952" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1017" name="FullHdIsTheDefaultOutput(3456,2234,1920,1080)" fullname="GraphicsBudgetTests.FullHdIsTheDefaultOutput(3456,2234,1920,1080)" methodname="FullHdIsTheDefaultOutput" classname="GraphicsBudgetTests" runstate="Runnable" seed="1070285904" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000075" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1018" name="FullHdIsTheDefaultOutput(3840,2160,1920,1080)" fullname="GraphicsBudgetTests.FullHdIsTheDefaultOutput(3840,2160,1920,1080)" methodname="FullHdIsTheDefaultOutput" classname="GraphicsBudgetTests" runstate="Runnable" seed="858432150" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000028" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1019" name="FullHdIsTheDefaultOutput(3440,1440,1920,1080)" fullname="GraphicsBudgetTests.FullHdIsTheDefaultOutput(3440,1440,1920,1080)" methodname="FullHdIsTheDefaultOutput" classname="GraphicsBudgetTests" runstate="Runnable" seed="949616972" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000027" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1020" name="FullHdIsTheDefaultOutput(1366,768,1365,768)" fullname="GraphicsBudgetTests.FullHdIsTheDefaultOutput(1366,768,1365,768)" methodname="FullHdIsTheDefaultOutput" classname="GraphicsBudgetTests" runstate="Runnable" seed="450982002" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000026" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1021" name="FullHdIsTheDefaultOutput(0,0,1920,1080)" fullname="GraphicsBudgetTests.FullHdIsTheDefaultOutput(0,0,1920,1080)" methodname="FullHdIsTheDefaultOutput" classname="GraphicsBudgetTests" runstate="Runnable" seed="1389447968" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000025" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1027" name="LargeGameViewsDoNotSilentlySupersample" fullname="GraphicsBudgetTests.LargeGameViewsDoNotSilentlySupersample" classname="GraphicsBudgetTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.001566" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1023" name="LargeGameViewsDoNotSilentlySupersample(1920,1080,1.0f)" fullname="GraphicsBudgetTests.LargeGameViewsDoNotSilentlySupersample(1920,1080,1.0f)" methodname="LargeGameViewsDoNotSilentlySupersample" classname="GraphicsBudgetTests" runstate="Runnable" seed="657343644" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000901" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1024" name="LargeGameViewsDoNotSilentlySupersample(3840,2160,0.5f)" fullname="GraphicsBudgetTests.LargeGameViewsDoNotSilentlySupersample(3840,2160,0.5f)" methodname="LargeGameViewsDoNotSilentlySupersample" classname="GraphicsBudgetTests" runstate="Runnable" seed="43308270" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000033" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1025" name="LargeGameViewsDoNotSilentlySupersample(7680,4320,0.25f)" fullname="GraphicsBudgetTests.LargeGameViewsDoNotSilentlySupersample(7680,4320,0.25f)" methodname="LargeGameViewsDoNotSilentlySupersample" classname="GraphicsBudgetTests" runstate="Runnable" seed="564444445" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000025" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1026" name="LargeGameViewsDoNotSilentlySupersample(1280,720,1.0f)" fullname="GraphicsBudgetTests.LargeGameViewsDoNotSilentlySupersample(1280,720,1.0f)" methodname="LargeGameViewsDoNotSilentlySupersample" classname="GraphicsBudgetTests" runstate="Runnable" seed="2012108262" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000028" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1030" name="OneBuildingSharesItsFadeMaterialAcrossMeshPieces" fullname="GraphicsBudgetTests.OneBuildingSharesItsFadeMaterialAcrossMeshPieces" methodname="OneBuildingSharesItsFadeMaterialAcrossMeshPieces" classname="GraphicsBudgetTests" runstate="Runnable" seed="338991728" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.005519" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1028" name="RetinaAspectFitsBothAxesAndNativeIsExplicit" fullname="GraphicsBudgetTests.RetinaAspectFitsBothAxesAndNativeIsExplicit" methodname="RetinaAspectFitsBothAxesAndNativeIsExplicit" classname="GraphicsBudgetTests" runstate="Runnable" seed="747744901" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.001515" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1015" name="VSyncNeverExceedsTheSelectedBudget" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.002208" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1002" name="VSyncNeverExceedsTheSelectedBudget(60,60,1)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(60,60,1)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="2039912690" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000605" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1003" name="VSyncNeverExceedsTheSelectedBudget(120,60,2)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(120,60,2)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1055717587" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000048" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1004" name="VSyncNeverExceedsTheSelectedBudget(144,60,3)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(144,60,3)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="562014935" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000033" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1005" name="VSyncNeverExceedsTheSelectedBudget(165,60,3)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(165,60,3)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1978853296" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000029" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1006" name="VSyncNeverExceedsTheSelectedBudget(240,60,4)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(240,60,4)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1766970857" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000028" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1007" name="VSyncNeverExceedsTheSelectedBudget(360,60,0)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(360,60,0)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1116581850" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000026" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1008" name="VSyncNeverExceedsTheSelectedBudget(59.94d,60,1)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(59.94d,60,1)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="210897594" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000028" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1009" name="VSyncNeverExceedsTheSelectedBudget(119.88d,60,2)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(119.88d,60,2)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="357263828" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000027" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1010" name="VSyncNeverExceedsTheSelectedBudget(120,30,4)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(120,30,4)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1299600377" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000026" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1011" name="VSyncNeverExceedsTheSelectedBudget(120,45,3)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(120,45,3)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1526588081" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000027" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1012" name="VSyncNeverExceedsTheSelectedBudget(0,60,0)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(0,60,0)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="653476647" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000025" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1013" name="VSyncNeverExceedsTheSelectedBudget(double.NaN,60,0)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(double.NaN,60,0)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1073721548" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000032" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1014" name="VSyncNeverExceedsTheSelectedBudget(double.PositiveInfinity,60,0)" fullname="GraphicsBudgetTests.VSyncNeverExceedsTheSelectedBudget(double.PositiveInfinity,60,0)" methodname="VSyncNeverExceedsTheSelectedBudget" classname="GraphicsBudgetTests" runstate="Runnable" seed="1297143874" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000027" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1031" name="PerformanceRegressionTests" fullname="PerformanceRegressionTests" classname="PerformanceRegressionTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-11 02:32:14Z" end-time="2026-09-11 02:32:14Z" duration="0.416785" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="ParameterizedMethod" id="1037" name="DeferredRegistrationKeepsMembershipConsistent" fullname="PerformanceRegressionTests.DeferredRegistrationKeepsMembershipConsistent" classname="PerformanceRegressionTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.004517" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1034" name="DeferredRegistrationKeepsMembershipConsistent(&quot;Update&quot;,&quot;updateables&quot;,&quot;updateableSet&quot;)" fullname="PerformanceRegressionTests.DeferredRegistrationKeepsMembershipConsistent(&quot;Update&quot;,&quot;updateables&quot;,&quot;updateableSet&quot;)" methodname="DeferredRegistrationKeepsMembershipConsistent" classname="PerformanceRegressionTests" runstate="Runnable" seed="124768076" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.002617" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1035" name="DeferredRegistrationKeepsMembershipConsistent(&quot;FixedUpdate&quot;,&quot;fixedUpdateables&quot;,&quot;fixedUpdateableSet&quot;)" fullname="PerformanceRegressionTests.DeferredRegistrationKeepsMembershipConsistent(&quot;FixedUpdate&quot;,&quot;fixedUpdateables&quot;,&quot;fixedUpdateableSet&quot;)" methodname="DeferredRegistrationKeepsMembershipConsistent" classname="PerformanceRegressionTests" runstate="Runnable" seed="794680945" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000762" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1036" name="DeferredRegistrationKeepsMembershipConsistent(&quot;LateUpdate&quot;,&quot;lateUpdateables&quot;,&quot;lateUpdateableSet&quot;)" fullname="PerformanceRegressionTests.DeferredRegistrationKeepsMembershipConsistent(&quot;LateUpdate&quot;,&quot;lateUpdateables&quot;,&quot;lateUpdateableSet&quot;)" methodname="DeferredRegistrationKeepsMembershipConsistent" classname="PerformanceRegressionTests" runstate="Runnable" seed="424521216" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:09Z" duration="0.000688" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1033" name="DestroyedBuildingReleasesOnlyItsFadeMaterials" fullname="PerformanceRegressionTests.DestroyedBuildingReleasesOnlyItsFadeMaterials" methodname="DestroyedBuildingReleasesOnlyItsFadeMaterials" classname="PerformanceRegressionTests" runstate="Runnable" seed="1048929426" result="Passed" start-time="2026-09-11 02:32:09Z" end-time="2026-09-11 02:32:12Z" duration="2.848231" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+          </properties>
+        </test-case>
+        <test-case id="1032" name="ReconfiguringPooledPickupReusesAndReleasesOwnedMaterials" fullname="PerformanceRegressionTests.ReconfiguringPooledPickupReusesAndReleasesOwnedMaterials" methodname="ReconfiguringPooledPickupReusesAndReleasesOwnedMaterials" classname="PerformanceRegressionTests" runstate="Runnable" seed="2081807684" result="Passed" start-time="2026-09-11 02:32:12Z" end-time="2026-09-11 02:32:14Z" duration="2.823662" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1038" name="PerformanceSceneSmokeTests" fullname="PerformanceSceneSmokeTests" classname="PerformanceSceneSmokeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-11 02:32:17Z" end-time="2026-09-11 02:32:54Z" duration="37.597053" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1039" name="BuildScenesKeepTheirGraphicsBudgetAndMinimapStopsInPause" fullname="PerformanceSceneSmokeTests.BuildScenesKeepTheirGraphicsBudgetAndMinimapStopsInPause" methodname="BuildScenesKeepTheirGraphicsBudgetAndMinimapStopsInPause" classname="PerformanceSceneSmokeTests" runstate="Runnable" seed="1477553819" result="Passed" start-time="2026-09-11 02:32:14Z" end-time="2026-09-11 02:32:54Z" duration="40.039738" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[[Leaderboard] FetchTop GET https://manners-b8c10-default-rtdb.firebaseio.com/leaderboard.json
+[Leaderboard] FetchTop respuesta cruda: [{"Coins":1986,"Gems":0,"Initials":"MAU","Kills":3171,"Level":24,"SurvivalTime":999.6996459960938},{"Coins":2013,"Gems":0,"Initials":"BAM","Kills":3157,"Level":24,"SurvivalTime":990.3482055664062},{"Coins":1950,"Gems":0,"Initials":"MAU","Kills":3193,"Level":24,"SurvivalTime":978.8378295898438},{"Coins":1973,"Gems":0,"Initials":"TJO","Kills":3152,"Level":24,"SurvivalTime":978.6608276367188},{"Coins":1876,"Gems":0,"Initials":"VTT","Kills":3166,"Level":24,"SurvivalTime":972.1954345703125}]
+[Leaderboard] FetchTop OK: 5 entradas.
+[PERF FRAME]
+Scene: MainMenu | t=17s
+FPS: 20.2 | average frame: 49.4 ms | worst: 2056.6 ms
+Output: 640 x 480 | scale: 1.00 | quality: PC
+Pipeline: PC_RPAsset (Runtime Graphics) | renderer: UniversalRenderer
+Enemies: 0 | orbs: 0 | projectiles: 0
+Unity allocated memory: 506 MB | managed: 763 MB
+VSync: 0 | FPS cap: 30 | focus: False | battery: Charging
+[PERF EVENT] Wave START: Primeros Pasos [vuelta 1, índice 1/10] | totalEnemies=70 | batchSize=3 | enemies=0
+[PERF FRAME]
+Scene: LEVEL 1 | t=32s
+FPS: 48.5 | average frame: 20.6 ms | worst: 1173.4 ms
+Output: 640 x 480 | scale: 1.00 | quality: PC
+Pipeline: PC_RPAsset (Runtime Graphics) | renderer: UniversalRenderer
+Enemies: 451 | orbs: 0 | projectiles: 0
+Unity allocated memory: 526 MB | managed: 826 MB
+VSync: 0 | FPS cap: 60 | focus: False | battery: Charging
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1040" name="WebBuildRegressionTests" fullname="WebBuildRegressionTests" classname="WebBuildRegressionTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-09-11 02:32:54Z" end-time="2026-09-11 02:32:55Z" duration="0.018376" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1047" name="AllEnemyVariantsHaveRenderersWithoutPrematureLodCulling" fullname="WebBuildRegressionTests.AllEnemyVariantsHaveRenderersWithoutPrematureLodCulling" methodname="AllEnemyVariantsHaveRenderersWithoutPrematureLodCulling" classname="WebBuildRegressionTests" runstate="Runnable" seed="1465743841" result="Passed" start-time="2026-09-11 02:32:54Z" end-time="2026-09-11 02:32:55Z" duration="0.010181" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1045" name="WebAutomaticTransitionWaitsForGameTimeAndLoopBoundary" fullname="WebBuildRegressionTests.WebAutomaticTransitionWaitsForGameTimeAndLoopBoundary" methodname="WebAutomaticTransitionWaitsForGameTimeAndLoopBoundary" classname="WebBuildRegressionTests" runstate="Runnable" seed="1004873451" result="Passed" start-time="2026-09-11 02:32:55Z" end-time="2026-09-11 02:32:55Z" duration="0.003979" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1044" name="WebOvertimeBridgeAndLoopReuseOneSource" fullname="WebBuildRegressionTests.WebOvertimeBridgeAndLoopReuseOneSource" methodname="WebOvertimeBridgeAndLoopReuseOneSource" classname="WebBuildRegressionTests" runstate="Runnable" seed="32720812" result="Passed" start-time="2026-09-11 02:32:55Z" end-time="2026-09-11 02:32:55Z" duration="0.000757" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1046" name="WebOvertimeWithoutBridgeUsesLastRegularLoopAsFallback" fullname="WebBuildRegressionTests.WebOvertimeWithoutBridgeUsesLastRegularLoopAsFallback" methodname="WebOvertimeWithoutBridgeUsesLastRegularLoopAsFallback" classname="WebBuildRegressionTests" runstate="Runnable" seed="1990099134" result="Passed" start-time="2026-09-11 02:32:55Z" end-time="2026-09-11 02:32:55Z" duration="0.000368" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1041" name="WebSequenceKeepsIntroThenLoopsAndBridgeOnOneSource" fullname="WebBuildRegressionTests.WebSequenceKeepsIntroThenLoopsAndBridgeOnOneSource" methodname="WebSequenceKeepsIntroThenLoopsAndBridgeOnOneSource" classname="WebBuildRegressionTests" runstate="Runnable" seed="1790438092" result="Passed" start-time="2026-09-11 02:32:55Z" end-time="2026-09-11 02:32:55Z" duration="0.000588" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1043" name="WebSequenceSupportsNoIntroAndNoBridge" fullname="WebBuildRegressionTests.WebSequenceSupportsNoIntroAndNoBridge" methodname="WebSequenceSupportsNoIntroAndNoBridge" classname="WebBuildRegressionTests" runstate="Runnable" seed="2101535503" result="Passed" start-time="2026-09-11 02:32:55Z" end-time="2026-09-11 02:32:55Z" duration="0.000385" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1042" name="WebSequenceWaitsDuringExplicitPause" fullname="WebBuildRegressionTests.WebSequenceWaitsDuringExplicitPause" methodname="WebSequenceWaitsDuringExplicitPause" classname="WebBuildRegressionTests" runstate="Runnable" seed="869041537" result="Passed" start-time="2026-09-11 02:32:55Z" end-time="2026-09-11 02:32:55Z" duration="0.000621" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Saving results to: C:/Users/Francisco/AppData/LocalLow/DefaultCompany/manners_exe\TestResults.xml
+]]></output>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

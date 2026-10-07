@@ -1,0 +1,158 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dc73cada9d443019213ccf82f9116bb, type: 3}
+  m_Name: ToonEnvironmentStyle_Production
+  m_EditorClassIdentifier: Assembly-CSharp::ToonEnvironmentStyle
+  shadeColor: {r: 0.55, g: 0.6, b: 0.78, a: 1}
+  shadeThreshold: 0.5
+  shadeSoftness: 0.02
+  lightColorInfluence: 0
+  outlineColor: {r: 0.05, g: 0.05, b: 0.08, a: 1}
+  outlineWidth: 2
+  outlineFadeStart: 50
+  outlineFadeEnd: 110
+  windowEmissionPalette:
+  - {r: 1.9, g: 1.7, b: 1.25, a: 1}
+  - {r: 1.1, g: 1.8, b: 2, a: 1}
+  - {r: 2, g: 1.2, b: 1.75, a: 1}
+  - {r: 1.95, g: 1.85, b: 1.1, a: 1}
+  windowTextureEmission: {r: 1.8, g: 1.8, b: 1.8, a: 1}
+  windowMaterialMarkers:
+  - -W
+  - Window
+  autoEmissionFolders:
+  - Assets/Materials/Map/Buildings
+  materialFolders:
+  - Assets/Materials/Map/Buildings
+  - Assets/Materials/Map/Props
+  scenesToScan:
+  - Assets/Scenes/MainMenu.unity
+  - Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity
+  - Assets/Scenes/Sandbox.unity
+  sceneModelFolders:
+  - Assets/3DModels/Map
+  additionalEnvironmentMaterials:
+  - {fileID: 2100000, guid: 7d6a3654865646d499cc9f6c05c25e7a, type: 2}
+  - {fileID: 2100000, guid: 4a239a329509c2547ba5b9401621ad47, type: 2}
+  - {fileID: 2100000, guid: c3ea74ae30f1ea4458d84be0e23b216b, type: 2}
+  - {fileID: 2100000, guid: 25509b92d9ab89a4ca682afc34062168, type: 2}
+  - {fileID: 2100000, guid: 5aa87d8efd3f0c0449d5591d48c46eb0, type: 2}
+  - {fileID: 2100000, guid: 416f765636151a042b49f83dece4caae, type: 2}
+  - {fileID: 2100000, guid: f3d4ad0c90a93e24da96cad6cefe8e58, type: 2}
+  - {fileID: 2100000, guid: e45cde6b980aee543b22ebfd42d79db3, type: 2}
+  - {fileID: 2100000, guid: f8a3bed22445b7a458bb1eb20f940767, type: 2}
+  - {fileID: 2100000, guid: 938376957ce1f054a8f8d11f201d781e, type: 2}
+  - {fileID: 2100000, guid: 8a6e6640bb4639b48a80ead86df8038c, type: 2}
+  terrainMaterial: {fileID: 2100000, guid: e4d2ff6cce0b96b40a1681f3103eb4d3, type: 2}
+  terrainShadeThreshold: 0.8
+  terrainInkWidth: 2
+  terrainPaletteBrightness: 1.3
+  groundShadowMaterial: {fileID: 2100000, guid: b36f4a1e39853624f901724d07fb930a, type: 2}
+  groundShadowColor: {r: 0.55, g: 0.6, b: 0.78, a: 1}
+  realtimeShadows: 0
+  groundHeight: 0
+  groundShadowMinHeight: 2
+  groundShadowPrefabFolders:
+  - Assets/Prefabs/Buildings
+  - Assets/Prefabs/Props
+  groundShadowCharacterPrefabs:
+  - {fileID: 8682602881796574523, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+  groundReceiverMaterials:
+  - {fileID: 2100000, guid: 5d219f31c20786944850e3ada6c5cf7b, type: 2}
+  characterPrefabFolders:
+  - Assets/Prefabs/Characters
+  characterShadeColor: {r: 0.46, g: 0.48, b: 0.68, a: 1}
+  characterOutlineWidth: 2.5
+  characterOutlines: 1
+  rimLightCharacterPrefabs:
+  - {fileID: 8682602881796574523, guid: 9490baf89f380224695577b6d903edf6, type: 3}
+  rimColor: {r: 0, g: 0.66, b: 0.95, a: 0.65}
+  rimThreshold: 0.8
+  rimSoftness: 0.03
+  postProcessingProfile: {fileID: 11400000, guid: 0f45eb45834ba364d9c92f1b14b74e28, type: 2}
+  antialiasing: 1
+  environmentMaterials:
+  - {fileID: 2100000, guid: a0e298235fab52c4ebae0d964bb87ddc, type: 2}
+  - {fileID: 2100000, guid: 7446f6849f5915044813fb7c1ffc6c91, type: 2}
+  - {fileID: 2100000, guid: cb58895a826ef74449c8a6dab4001bf5, type: 2}
+  - {fileID: 2100000, guid: 700cb5e54966db24ab4728d2fddaeb88, type: 2}
+  - {fileID: 2100000, guid: 003252bde5359e64ba2603043c6bf0f8, type: 2}
+  - {fileID: 2100000, guid: 38f98caf7298c2e4fb6b32a6f2e32649, type: 2}
+  - {fileID: 2100000, guid: 0a84eb9219f0bc6419964deb32213a11, type: 2}
+  - {fileID: 2100000, guid: 8c6620aa0cf7f7445b37399d2a1a4383, type: 2}
+  - {fileID: 2100000, guid: 4b392df6f5f87ca46afbb9e0ad25be5b, type: 2}
+  - {fileID: 2100000, guid: 2c81590f49fb7a44aa05693aaacdc11f, type: 2}
+  - {fileID: 2100000, guid: c6c872e53f041694ea709572c7de8c49, type: 2}
+  - {fileID: 2100000, guid: 5ee17c14e547de246ad285ca27d2c48c, type: 2}
+  - {fileID: 2100000, guid: f065675c039be0e4ab8106efc061fa24, type: 2}
+  - {fileID: 2100000, guid: ea847c69cbbd9884d96da15ab2f99f56, type: 2}
+  - {fileID: 2100000, guid: 14ed0ae47845e7c4bb856f21c2995049, type: 2}
+  - {fileID: 2100000, guid: 9d84fed387976be43a761d6108f28286, type: 2}
+  - {fileID: 2100000, guid: 872b33bce921054438f535346c470111, type: 2}
+  - {fileID: 2100000, guid: 780e4c93a88f3764d81e95b7a50c0930, type: 2}
+  - {fileID: 2100000, guid: 4607f151e1297fd4fb00dbc7af69e649, type: 2}
+  - {fileID: 2100000, guid: 40416356456674f4aaf3e98a16c6d827, type: 2}
+  - {fileID: 2100000, guid: 6b0b27f34b9e8834d8b8e4c2b3f67e43, type: 2}
+  - {fileID: 2100000, guid: 4c6775b6da06eca47b5ea80a31e89244, type: 2}
+  - {fileID: 2100000, guid: e8a4f32e23ecd574bb42118687ca8bef, type: 2}
+  - {fileID: 2100000, guid: 562b1cc46d7d4804e8105e787d6bc338, type: 2}
+  - {fileID: 2100000, guid: e7faf968606fbc541993c50b4b71bb0c, type: 2}
+  - {fileID: 2100000, guid: e2a61260d33870a41b01315060cbe306, type: 2}
+  - {fileID: 2100000, guid: c7a24927596333c47a68436fad55b4e4, type: 2}
+  - {fileID: 2100000, guid: 273825a4eadde87438841f733f834bb5, type: 2}
+  - {fileID: 2100000, guid: d74f11deaab2e24468e9a60c6323b86e, type: 2}
+  - {fileID: 2100000, guid: 8b7d16c94a1913c47bdeab60da7c5b0d, type: 2}
+  - {fileID: 2100000, guid: 3a06537046b55914289f8a978602d654, type: 2}
+  - {fileID: 2100000, guid: ae0eec10f625dd7498c37225a2923aa0, type: 2}
+  - {fileID: 2100000, guid: fe1fb2375f3d8b549abee03c5946f2b3, type: 2}
+  - {fileID: 2100000, guid: 2cda7af3748b7b94286b67869fb79c81, type: 2}
+  - {fileID: 2100000, guid: 5f4576556137b874aa836fa1635fdc03, type: 2}
+  - {fileID: 2100000, guid: 557abe4976e34a7449db6c6131668081, type: 2}
+  - {fileID: 2100000, guid: d6141a66feea9cf479e085141c24f2b4, type: 2}
+  - {fileID: 2100000, guid: 681e7e998a583a04c942a45dc9dfd5e2, type: 2}
+  - {fileID: 2100000, guid: 2f94617827d4d294e93d5d963a282d91, type: 2}
+  - {fileID: 2100000, guid: 3a48843e2bd845d4f884d25190192328, type: 2}
+  - {fileID: 2100000, guid: 25509b92d9ab89a4ca682afc34062168, type: 2}
+  - {fileID: 2100000, guid: 5aa87d8efd3f0c0449d5591d48c46eb0, type: 2}
+  - {fileID: 2100000, guid: 416f765636151a042b49f83dece4caae, type: 2}
+  - {fileID: 2100000, guid: f3d4ad0c90a93e24da96cad6cefe8e58, type: 2}
+  - {fileID: 2100000, guid: c3ea74ae30f1ea4458d84be0e23b216b, type: 2}
+  - {fileID: 2100000, guid: 938376957ce1f054a8f8d11f201d781e, type: 2}
+  - {fileID: 2100000, guid: 8a6e6640bb4639b48a80ead86df8038c, type: 2}
+  - {fileID: 2100000, guid: 7d6a3654865646d499cc9f6c05c25e7a, type: 2}
+  - {fileID: 2100000, guid: 4a239a329509c2547ba5b9401621ad47, type: 2}
+  - {fileID: 2100000, guid: e45cde6b980aee543b22ebfd42d79db3, type: 2}
+  - {fileID: 2100000, guid: f8a3bed22445b7a458bb1eb20f940767, type: 2}
+  - {fileID: 2100000, guid: 6ed19832602c24e32aee83e22a55a417, type: 2}
+  characterMaterials:
+  - {fileID: 2100000, guid: d5a7831738d1938449f71e814ca11527, type: 2}
+  - {fileID: 2100000, guid: 0ee2edc3080d0f643bdaaf1452b5a442, type: 2}
+  - {fileID: 2100000, guid: 4b0eb86f5a44a554d8969e54a3e5fb04, type: 2}
+  - {fileID: 2100000, guid: bcc53e195c0c6e344948ec8c0499f555, type: 2}
+  - {fileID: 2100000, guid: f6b9860f675efd345be2a8705902c9a9, type: 2}
+  - {fileID: 2100000, guid: 695cb16529f37f7498307a88f16068b5, type: 2}
+  - {fileID: 2100000, guid: c031af7bb2ee4d147967bcc9f4afb1e5, type: 2}
+  - {fileID: 2100000, guid: d39e51e5d8d023a4f9ac49b7e98bf763, type: 2}
+  - {fileID: 2100000, guid: 2c371996371764c4b9390c42deb54ee9, type: 2}
+  - {fileID: 2100000, guid: fd306e61a8113944a922013616b0c09e, type: 2}
+  - {fileID: 2100000, guid: 46accf8800c1a8846bfae1ea61a1e0a8, type: 2}
+  - {fileID: 2100000, guid: 377600a8fb69b294891a6c87390c0de2, type: 2}
+  - {fileID: 2100000, guid: 8fb02e9eb07e6744ebdcff49da33f2f7, type: 2}
+  - {fileID: 2100000, guid: 7bad0196b39ea4143957cea76ce670dd, type: 2}
+  groundShadowCasterMaterials:
+  - {fileID: 2100000, guid: 7bad0196b39ea4143957cea76ce670dd, type: 2}
+  excludedMaterials:
+  - {fileID: 2100000, guid: c40f4abf9322031499fc6b2a7540f70a, type: 2}
+  - {fileID: 2100000, guid: 622a6d71237dee644a2a790c3cd2e27d, type: 2}
+  - {fileID: 2100000, guid: 245ab054ab1be174b819d4dfb75dc3d8, type: 2}
+  prefabsWithEmbeddedMaterials:
+  - {fileID: 7102552512874905415, guid: a8051526cb6e52e4a8fcd4cdb63567dc, type: 3}

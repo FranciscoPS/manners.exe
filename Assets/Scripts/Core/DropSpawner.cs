@@ -1,10 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Procesa los drops pendientes de enemigos muertos de a pocos por frame,
-/// evitando el spike de CPU/memoria cuando muchos enemigos mueren al mismo tiempo.
-/// </summary>
 public class DropSpawner : MonoBehaviour
 {
     public static DropSpawner Instance { get; private set; }
