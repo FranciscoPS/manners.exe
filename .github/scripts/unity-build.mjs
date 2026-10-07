@@ -76,9 +76,10 @@ export function validateTarget(target, remote, config, projectScm) {
   if (!['', '.', './'].includes(settings.scm?.subdirectory || '')) problems.push('deja Project subfolder vacío; el proyecto está en la raíz del repositorio');
   const targetRepositories = repositoryIdentities(settings.scm);
   const repositories = targetRepositories.length ? targetRepositories : remote.connectionId ? [] : repositoryIdentities(projectScm);
-  if (!repositories.length) problems.push(remote.connectionId ? 'la API no expone el repositorio de esta conexión; comprueba Source Control del target' : 'Unity no expone un repositorio seleccionado; comprueba Source Control del proyecto y guarda con Save');
+  if (!repositories.length && !remote.connectionId) problems.push('Unity no expone un repositorio seleccionado; comprueba Source Control del proyecto y guarda con Save');
   else if (repositories.some(repository => repository !== config.repository.toLowerCase())) problems.push('conecta el repositorio correcto en Source Control');
   if (problems.length) throw new Error(`${target.key}: ${problems.join('; ')}.`);
+  return { repositoryVerified: repositories.length > 0 };
 }
 
 export function selectArchive(artifacts) {
@@ -132,6 +133,7 @@ export async function runBuilds(config, runtime = {}) {
   const root = `/orgs/${encodeURIComponent(config.orgId)}/projects/${encodeURIComponent(config.projectId)}/buildtargets`;
   const active = new Map();
   const results = [];
+  const warnings = [];
   let stopped = false;
   let failure;
 
@@ -187,14 +189,19 @@ export async function runBuilds(config, runtime = {}) {
       const remote = await request(`${root}/${encodeURIComponent(target.id)}`);
       if (!repositoryIdentities(remote.settings?.scm).length && !remote.connectionId) project ||= await request(root.replace(/\/buildtargets$/, ''));
       try {
-        validateTarget(target, remote, config, project?.settings?.scm);
-        logger(`${target.key}: configuración verificada, Unity ${config.unityVersion}.`);
+        const validation = validateTarget(target, remote, config, project?.settings?.scm);
+        if (!validation.repositoryVerified) {
+          const warning = `${target.key}: Unity no expone el repositorio de esta conexión en la API. La build real debe compilar el SHA ${config.commit}; se comprobará antes de descargar archivos.`;
+          warnings.push(warning);
+          logger(`Aviso: ${warning}`);
+          logger(`${target.key}: versión, plataforma y disparadores verificados, Unity ${config.unityVersion}.`);
+        } else logger(`${target.key}: configuración verificada, Unity ${config.unityVersion}.`);
       } catch (error) {
         validationErrors.push(error.message);
       }
     }
     if (validationErrors.length) throw new Error(validationErrors.join('\n'));
-    if (config.validateOnly) return { commit: config.commit, validated: config.targets.map(target => target.key), builds: [] };
+    if (config.validateOnly) return { commit: config.commit, validated: config.targets.map(target => target.key), builds: [], warnings };
     if (runtime.signal?.aborted) throw new Error('La ejecución fue cancelada.');
     await mkdir(config.outputDir, { recursive: true });
     let cursor = 0;
@@ -254,7 +261,7 @@ export async function runBuilds(config, runtime = {}) {
     }
     await Promise.allSettled(Array.from({ length: Math.min(2, config.targets.length) }, worker));
     if (failure) throw failure;
-    return { commit: config.commit, builds: results };
+    return { commit: config.commit, builds: results, warnings };
   } catch (error) {
     failure ||= error;
     throw error;
@@ -264,11 +271,13 @@ export async function runBuilds(config, runtime = {}) {
     runtime.signal?.removeEventListener('abort', onAbort);
     if (!config.validateOnly) {
       await mkdir(config.outputDir, { recursive: true });
-      await writeFile(resolve(config.outputDir, 'unity-build-results.json'), `${JSON.stringify({ commit: config.commit, unityVersion: config.unityVersion, ...(failure ? { error: failure.message } : {}), builds: results }, null, 2)}\n`);
+      await writeFile(resolve(config.outputDir, 'unity-build-results.json'), `${JSON.stringify({ commit: config.commit, unityVersion: config.unityVersion, warnings, ...(failure ? { error: failure.message } : {}), builds: results }, null, 2)}\n`);
     }
     if (config.summaryPath) {
       const rows = results.map(result => `| ${result.target} | ${result.build || '-'} | ${result.status} | ${result.archive || '-'} |`);
-      await appendFile(config.summaryPath, `\nUnity Build Automation · ${config.unityVersion}\n\nCommit: \`${config.commit}\`\n\n${config.validateOnly && !failure ? 'Configuración verificada sin solicitar builds.\n' : '| Plataforma | Build | Estado | Archivo |\n|---|---:|---|---|\n' + rows.join('\n') + '\n'}${failure ? '\nLa validación o la build falló; consulta el error del paso.\n' : ''}`);
+      const validationSummary = warnings.length ? 'Versión, plataforma y disparadores verificados sin solicitar builds.\n' : 'Configuración verificada sin solicitar builds.\n';
+      const warningSummary = warnings.length ? `\n${warnings.map(warning => `- ${warning}`).join('\n')}\n` : '';
+      await appendFile(config.summaryPath, `\nUnity Build Automation · ${config.unityVersion}\n\nCommit: \`${config.commit}\`\n\n${config.validateOnly && !failure ? validationSummary : '| Plataforma | Build | Estado | Archivo |\n|---|---:|---|---|\n' + rows.join('\n') + '\n'}${warningSummary}${failure ? '\nLa validación o la build falló; consulta el error del paso.\n' : ''}`);
     }
   }
 }

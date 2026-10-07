@@ -50,6 +50,13 @@ function remoteTarget(target, config) {
   };
 }
 
+function opaqueTarget(target, config) {
+  const remote = remoteTarget(target, config);
+  remote.connectionId = 'opaque-connection';
+  remote.settings.scm = { branch: 'master', oauth: { github: { token: 'synthetic-hidden-token' } } };
+  return remote;
+}
+
 function buildRecord(target, number, overrides = {}) {
   return { buildtargetid: target.id, build: number, platform: target.platforms[0], buildStatus: 'success', lastBuiltRevision: commit, unityVersion, ...overrides };
 }
@@ -294,24 +301,67 @@ test('conflicting explicit SCM and OAuth repository identities are rejected', as
   assert.throws(() => validateTarget(config.targets[0], remote, config), /repositorio correcto/);
 });
 
-test('an opaque connection cannot inherit project identity and gets a precise diagnostic', async t => {
+test('validation-only accepts opaque connections with a warning and makes no build or project requests', async t => {
   const config = await configuration(t, { validateOnly: true });
+  const logs = [];
   const api = fakeApi(config, async call => {
     const target = config.targets.find(item => call.path.endsWith(`/${item.id}`));
-    if (target) {
-      const remote = remoteTarget(target, config);
-      remote.connectionId = 'opaque-connection';
-      remote.settings.scm = { branch: 'master' };
-      return json(remote);
-    }
+    if (target) return json(opaqueTarget(target, config));
   });
-  await assert.rejects(runBuilds(config, api), error => /no expone el repositorio de esta conexión/.test(error.message) && !/repositorio correcto/.test(error.message));
+  const result = await runBuilds(config, { ...api, logger: message => logs.push(message) });
+  assert.deepEqual(result.validated, config.targets.map(target => target.key));
+  assert.deepEqual(result.builds, []);
+  assert.equal(result.warnings.length, config.targets.length);
   assert.equal(api.calls.length, config.targets.length);
   assert.ok(api.calls.every(call => call.method === 'GET' && call.path.includes('/buildtargets/')));
+  assert.ok(logs.join('\n').includes(commit));
+  for (const sensitive of ['synthetic-hidden-token', 'test-secret', Buffer.from('test-key:test-secret').toString('base64')]) assert.ok(!logs.join('\n').includes(sensitive));
+  assert.deepEqual(validateTarget(config.targets[0], opaqueTarget(config.targets[0], config), config, { url: `https://github.com/${config.repository}.git` }), { repositoryVerified: false });
+});
+
+test('an opaque connection builds the exact SHA and records its warning with the verified artifact', async t => {
+  const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+  config.summaryPath = join(config.outputDir, 'summary.md');
+  const api = fakeApi(config, async call => {
+    if (call.path.endsWith(`/${config.targets[0].id}`)) return json(opaqueTarget(config.targets[0], config));
+  });
+  const result = await runBuilds(config, api);
+  assert.equal(result.warnings.length, 1);
+  assert.equal(result.builds[0].revision, commit);
+  assert.equal(result.builds[0].status, 'success');
+  assert.equal(result.builds[0].sha256, sha256);
+  assert.deepEqual(await readFile(join(config.outputDir, result.builds[0].archive)), zip);
+  const report = JSON.parse(await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8'));
+  assert.deepEqual(report.warnings, result.warnings);
+  const summary = await readFile(config.summaryPath, 'utf8');
+  assert.ok(summary.includes(result.warnings[0]));
+  assert.ok(summary.includes(commit));
+  assert.equal(api.calls.filter(call => call.method === 'POST').length, 1);
+  assert.equal(api.calls.filter(call => call.path.endsWith('/artifacts')).length, 1);
+  assert.equal(api.calls.filter(call => call.path === `/v2/orgs/${config.orgId}/projects/${config.projectId}`).length, 0);
+});
+
+test('opaque connection warnings never bypass requested or built SHA mismatches', async t => {
+  for (const mismatch of ['requested', 'built']) {
+    const config = await configuration(t, {}, { BUILD_PLATFORMS: 'web' });
+    const api = fakeApi(config, async call => {
+      if (call.path.endsWith(`/${config.targets[0].id}`)) return json(opaqueTarget(config.targets[0], config));
+      if (mismatch === 'requested' && call.method === 'POST') return json([buildRecord(config.targets[0], 101, { requestedRevision: 'b'.repeat(40), buildStatus: 'queued' })], 202);
+      if (mismatch === 'built' && call.method === 'GET' && /\/builds\/101$/.test(call.path)) return json(buildRecord(config.targets[0], 101, { lastBuiltRevision: 'b'.repeat(40) }));
+    });
+    await assert.rejects(runBuilds(config, api), /commit/);
+    assert.equal(api.calls.filter(call => /\/artifacts|\/download\//.test(call.path)).length, 0);
+    assert.equal(api.calls.filter(call => new URL(call.url).hostname === 'storage.example').length, 0);
+    const report = JSON.parse(await readFile(join(config.outputDir, 'unity-build-results.json'), 'utf8'));
+    assert.equal(report.warnings.length, 1);
+  }
+});
+
+test('missing repository metadata without a connection remains a validation error', async t => {
+  const config = await configuration(t);
   const remote = remoteTarget(config.targets[0], config);
-  remote.connectionId = 'opaque-connection';
-  remote.settings.scm = {};
-  assert.throws(() => validateTarget(config.targets[0], remote, config, { url: `https://github.com/${config.repository}.git` }), /no expone el repositorio de esta conexión/);
+  remote.settings.scm = { branch: 'master' };
+  assert.throws(() => validateTarget(config.targets[0], remote, config), /repositorio seleccionado/);
 });
 
 test('accepts equivalent underscore Unity versions and inactive fallback patch settings', async t => {
