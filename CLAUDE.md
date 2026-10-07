@@ -32,7 +32,7 @@ Indicaciones permanentes del usuario; aplican a cada tarea:
 
 ## UI
 
-- Reutilizar el lenguaje visual existente (marcos, fuente pixel, "?", animaciones que ya existen) y cuidar el equilibrio del HUD; no agregar elementos al azar.
+- Reutilizar el lenguaje visual existente (kit `UIStyle_Production`: paleta del documento de arte, placas en paralelogramo, franjas, fuente Orbitron, cara de la I.A., "?", animaciones que ya existen) y cuidar el equilibrio del HUD; no agregar elementos al azar. Lo que el estilo escribe en escenas y prefabs se cambia en `UIStyleApplier` y se aplica con `Tools > Manners > UI`, no a mano en cada escena.
 - Los botones y cajas de texto tienen tamaño fijo: al cambiar un texto, comprobar que quepa (fuente, tamaño, auto-size).
 - La UI se diseña en escenas/prefabs con referencias serializadas; no crear su jerarquía visual en runtime ni reemplazar referencias por búsquedas de nombres. Guía: `Docs/UI_AUTHORING.md`; accesos: `Tools > Manners > UI > Editar`.
 - Inglés por defecto y español mediante `LocalizedText`/`LocalizedString` editables en Inspector. Comprobar ambos idiomas con las capturas y `UIAuthoringTests`. No cambiar `OverrideData.PersistentId`: identifica el progreso guardado, independientemente del idioma o del nombre del archivo.

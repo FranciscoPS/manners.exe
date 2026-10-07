@@ -4,7 +4,7 @@ La revisión actual de rendimiento y del merge está en [REVISION_M4_PRO.md](Doc
 
 Juego tipo *bullet-heaven* (estilo Vampire Survivors) hecho en **Unity 6 (URP)** con **WebGL** como plataforma objetivo y cámara en perspectiva inclinada.
 
-La UI actual es editable en escenas y prefabs y tiene **inglés/español**; el idioma inicial es inglés y se cambia en **Opciones** o **Pausa**. La guía [UI_AUTHORING.md](Docs/UI_AUTHORING.md) explica dónde editar textos, placas, spritesheets, daño flotante y tutorial desde Inspector. **Tools → Manners → UI → Editar** abre directamente los prefabs principales.
+La UI actual es editable en escenas y prefabs y tiene **inglés/español**; el idioma inicial es inglés y se cambia en **Opciones** o **Pausa**. Su identidad (paleta del documento de arte, placas en paralelogramo, franjas, fuente Orbitron y la cara de la I.A.) vive en el kit `UIStyle_Production` y se aplica con **Tools → Manners → UI**. La guía [UI_AUTHORING.md](Docs/UI_AUTHORING.md) explica dónde editar textos, placas, spritesheets, daño flotante y tutorial desde Inspector. **Tools → Manners → UI → Editar** abre directamente los prefabs principales y **Tools → Manners → UI → Corregir HUD** vuelve a dejar la barra de vida, los niveles del panel de sobrecargas y los números de daño como están definidos en el kit.
 
 Este documento resume, a grandes rasgos, **cómo está pensado el código**: los patrones de diseño, la arquitectura y las reglas que se siguen, para que cualquiera que entre al proyecto entienda rápido la forma de trabajar. (El código no lleva comentarios; la intención se documenta aquí y con nombres claros.)
 
@@ -34,6 +34,8 @@ Un punto estático con eventos C# (`OnMatchTimeExpired`, `OnChestSpawned`, `OnSh
 
 ### 6. UI e idiomas
 `GameLocalization` guarda el idioma y publica cambios. `LocalizedText` actualiza etiquetas fijas; `LocalizedString` contiene formatos dinámicos editables. Los controladores activan o instancian prefabs ya diseñados. Los avisos persistentes salen del registro `RuntimeUIPrefabs_Production`; sus objetos visuales no se crean por código. Las animaciones continuas se registran en `UpdateManager` y las transiciones usan DOTween/coroutines. El daño reutiliza un pool; el estallido del cofre reutiliza su ParticleSystem.
+
+El estilo es un ScriptableObject (`UIStyle`, en `Assets/Configurations/Production/Resources/UI/`) con la paleta, las formas, los sprites generados, los materiales de placa y los tiempos de movimiento. Los componentes leen de ahí los colores que cambian en juego (vida, acentos, cara de la I.A.) y `UIStyleApplier` (Editor) escribe el resto en escenas y prefabs. El HUD de partida se compone de la barra de experiencia, la barra de vida con la cara de la I.A. y su lectura `HP actual/máxima` (`HealthBarUI`, que late en rojo con vida baja), el cronómetro, las monedas, el panel de sobrecargas (`OverrideHudPanel`, con el nivel de cada mejora requerida) y los números flotantes (`FloatingTextManager`, daño en rojo semitransparente). Las tarjetas de mejora se eligen manteniendo pulsado (`HoldToSelectButton`): el relleno a franjas avanza con tiempo real, también con el juego en pausa.
 
 ## Reglas y convenciones
 - **Tiempo de juego vs. tiempo real:** la lógica de partida usa `GameTimeManager.GetGameTime()` (escalado por `timeScale`, se congela en pausa/tutorial/level-up), no el reloj real, para que todo quede sincronizado.

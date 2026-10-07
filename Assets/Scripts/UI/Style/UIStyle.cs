@@ -77,6 +77,8 @@ public sealed class UIStyle : ScriptableObject
     public Color anomaly = new Color32(0x6F, 0x37, 0x78, 0xFF);
     [Tooltip("Vida (verde): la barra de salud cuando está alta.")]
     public Color good = new Color32(0x6F, 0xD6, 0xA0, 0xFF);
+    [Tooltip("Números de daño sobre los enemigos: rojo vivo con algo de transparencia para que, cuando son muchos, no tapen la acción.")]
+    public Color damageNumber = new Color32(0xFF, 0x5A, 0x45, 0xC4);
     [Tooltip("Luz (#F8FAFD): texto principal.")]
     public Color paper = new Color32(0xF8, 0xFA, 0xFD, 0xFF);
     [Tooltip("Luz de borde (#A1B8BF): texto secundario y filo luminoso de los paneles.")]

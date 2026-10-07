@@ -531,31 +531,7 @@ public static partial class UIStyleApplier
             }
         }
 
-        Transform overlay = DirectChild(card, "FillOverlay");
-        if (overlay != null)
-        {
-            Image overlayImage = overlay.GetComponent<Image>();
-            if (overlayImage != null)
-            {
-                Color fillColor = style.cyan;
-                fillColor.a = 0.5f;
-                style.ApplySprite(overlayImage, style.fill, fillColor, 0f, Vector2.zero, style.plateStripesBold);
-                Touch(overlayImage);
-            }
-        }
-
-        HoldToSelectButton hold = button.GetComponent<HoldToSelectButton>();
-        if (hold != null)
-        {
-            var serialized = new SerializedObject(hold);
-            Color premium = Lilac;
-            premium.a = 0.6f;
-            serialized.FindProperty("premiumFillColor").colorValue = premium;
-            SerializedProperty inset = serialized.FindProperty("fillInset");
-            if (inset != null) inset.vector2Value = new Vector2(13f, 13f);
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            Touch(hold);
-        }
+        StyleHoldFill(card);
 
         foreach (Transform child in card)
         {
@@ -563,6 +539,39 @@ public static partial class UIStyleApplier
             if (picture == null || picture.sprite == null) continue;
             string pictureKey = SpriteKey(picture);
             if (pictureKey == "CityPic" || pictureKey == "DeserrtPic") AddFrame(picture.rectTransform);
+        }
+    }
+
+    private static void StyleHoldFill(Transform card)
+    {
+        Transform overlay = DirectChild(card, "FillOverlay");
+        if (overlay != null)
+        {
+            Image overlayImage = overlay.GetComponent<Image>();
+            if (overlayImage != null)
+            {
+                Color fillColor = style.cyan;
+                fillColor.a = 0.78f;
+                style.ApplySprite(overlayImage, style.fill, fillColor, 0f, Vector2.zero, style.plateStripesBold);
+                Touch(overlayImage);
+            }
+        }
+
+        HoldToSelectButton hold = card.GetComponent<HoldToSelectButton>();
+        if (hold != null)
+        {
+            var serialized = new SerializedObject(hold);
+            Color normal = style.cyan;
+            normal.a = 0.78f;
+            Color premium = Lilac;
+            premium.a = 0.78f;
+            SerializedProperty normalProperty = serialized.FindProperty("normalFillColor");
+            if (normalProperty != null) normalProperty.colorValue = normal;
+            serialized.FindProperty("premiumFillColor").colorValue = premium;
+            SerializedProperty inset = serialized.FindProperty("fillInset");
+            if (inset != null) inset.vector2Value = new Vector2(13f, 13f);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            Touch(hold);
         }
     }
 

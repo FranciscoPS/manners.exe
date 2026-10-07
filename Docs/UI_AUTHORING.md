@@ -24,8 +24,11 @@ En la cinemática, el tamaño y posición del cofre se ajustan en la **RawImage*
 | Selector de idioma | `Assets/Prefabs/UI/Settings/LanguageSelector.prefab` |
 | Aviso e iconos de sobrecarga | `Assets/Prefabs/UI/Overrides/` |
 | HUD de sobrecargas y su rótulo | `Assets/Prefabs/UI/OverrideHudPanel.prefab → Title` |
+| Niveles de cada mejora en el HUD de sobrecargas | `OverrideHudPanel.prefab → EmptySquare1/2 → LevelText` (texto `Lv. {0}/{1}` / `Nv. {0}/{1}` en `OverrideHintRowUI`) |
+| Barra de vida, cara de la I.A. y lectura `HP`/`VIDA` | `LEVEL 1.unity → Canvas/HealthBarContainer` (`StyleFrame`, `HealthBarBackground/HealthBarFill`, `StyleValue`, `StyleFace`); formato y latido de vida baja en `HealthBarUI`; gestos en `MannersFaceUI` |
+| Relleno al mantener pulsada una tarjeta | `LEVEL 1.unity → Canvas/LevelUpPanel → … → UpgradeButton1-3 → FillOverlay`; duración y color premium en `HoldToSelectButton` |
 | Tooltip | `Assets/Prefabs/UI/Overlays/HoverTooltip.prefab` |
-| Daño y cantidades flotantes | `Assets/Prefabs/UI/FloatingText.prefab`; colores y pool en `FloatingTextManager` de la escena |
+| Daño y cantidades flotantes | `Assets/Prefabs/UI/FloatingText.prefab`; colores y pool en `FloatingTextManager` de la escena; el rojo semitransparente del daño sale de `UIStyle → Damage Number` al aplicar el estilo |
 | Foil, rayos y partículas de cofre | `Assets/Prefabs/UI/Effects/`; materiales en `Assets/Materials/UI/Authored/` |
 | Menú principal | `MainMenu.unity → Canvas` |
 | HUD, pausa, tarjetas, tienda y Game Over | `LEVEL 1.unity → Canvas` |
@@ -43,7 +46,7 @@ Para usar un spritesheet propio, impórtalo como **Sprite (2D and UI)**, configu
 
 El primer inicio usa inglés. El selector está en **Opciones** y en **Pausa**, junto a los controles existentes. La elección se guarda en `PlayerPrefs` con la clave `GameLanguage` y permanece al cambiar de escena o reiniciar el juego.
 
-Los textos fijos usan **LocalizedText** junto al TMP. Los textos que incluyen números o cambian de modo tienen pares **English/Spanish** en su controlador: `LevelUpManager`, `UpgradeButton`, `GameOverUI`, `GraphicsSettingsMenu`, `AudioSettingsMenu`, `CurrencyUI`, `ExperienceUI`, `PlayerStatsHUD` y `ChestOpeningSequence`. Los nombres y descripciones de mejoras, objetos de cofre y sobrecargas se editan en sus assets. El tutorial tiene sus pasos y botones en el componente `TutorialManager`; ya no carga un JSON separado.
+Los textos fijos usan **LocalizedText** junto al TMP. Los textos que incluyen números o cambian de modo tienen pares **English/Spanish** en su controlador: `LevelUpManager`, `UpgradeButton`, `GameOverUI`, `GraphicsSettingsMenu`, `AudioSettingsMenu`, `CurrencyUI`, `ExperienceUI`, `PlayerStatsHUD`, `HealthBarUI` (lectura `HP {0}/{1}` / `VIDA {0}/{1}`), `OverrideHintRowUI` (niveles `Lv.`/`Nv.`) y `ChestOpeningSequence`. Los nombres y descripciones de mejoras, objetos de cofre y sobrecargas se editan en sus assets. El tutorial tiene sus pasos y botones en el componente `TutorialManager`; ya no carga un JSON separado.
 
 Cambiar idioma actualiza el contenido mediante eventos. No reinicia un paso del tutorial, no repite descubrimientos ni vuelve a consultar la clasificación por cambiar los textos. `OverrideData.PersistentId` mantiene la identidad de los desbloqueos separada del idioma y del nombre del archivo.
 
@@ -72,6 +75,17 @@ Al crear un panel nuevo, conserva su fondo de pantalla completa y coloca dentro 
 
 La estructura compartida de UI se edita en prefabs; no hace falta duplicarla entre Production y Sandbox. Los parámetros de partida y de cinemática que ya pertenecían a configuraciones de balance mantienen sus copias independientes.
 
+## Corregir el HUD de partida
+
+**Tools → Manners → UI → Corregir HUD: vida, niveles de sobrecargas y daño** aplica solo la parte del estilo que toca el HUD, sin reescribir el resto de la interfaz ni deshacer ajustes manuales de otras pantallas. En `OverrideHudPanel.prefab` y en las escenas `LEVEL 1` y `Sandbox` deja:
+
+- La barra de vida a escala 1, de 520×66 unidades, anclada arriba a la izquierda con su borde en 112 y centrada en −112; marco con filo rojo (`danger`), relleno verde→naranja→rojo según la vida (`UIStyle.HealthColor`), lectura `HP actual/máxima` centrada (`StyleValue`) y la cara de la I.A. de 104 unidades montada sobre el extremo izquierdo (`StyleFace`). Con menos del 30 % de vida el relleno late hacia el rojo de alerta (`HealthBarUI → Vida baja`).
+- El panel de sobrecargas activo y, si está bajo la barra de vida, 12 unidades por debajo de la cara (se mueve su `AnchoredPosition.y`). Sus textos `LevelText` quedan en 28×16 unidades, auto-size 9–12, sin elipsis, para que `Lv. 1/3` siempre se vea bajo cada mejora requerida.
+- `FloatingTextManager → Damage Color` igual a `UIStyle → Damage Number` (rojo de alerta con alfa 0.77); experiencia en cian, monedas en oro y diamantes en lila.
+- El relleno de mantener pulsado de cada tarjeta con alfa 0.78 (cian normal, lila en especiales).
+
+La herramienta pide guardar la escena abierta, escribe `Logs/ui-hud-report.txt` y vuelve a abrir la escena en la que estabas. Los valores de tamaño y posición están en `UIStyleApplierScreens` (constantes `HealthBar*`); los colores, en `UIStyle_Production`. **Aplicar todo el estilo** (paso 0 o 2) incluye estos mismos ajustes.
+
 ## Comprobar cambios
 
 1. **Tools → Manners → UI → Validar componentes e idiomas** revisa referencias, scripts ausentes, traducciones, destinos del tutorial y recursos de las cuatro escenas soportadas.
@@ -84,7 +98,23 @@ La auditoría utiliza cajas de texto y puede señalar la marca diagonal de «Pr�
 
 Para añadir otra pantalla, crea su jerarquía en escena o prefab, asigna referencias en Inspector, añade `LocalizedText` a cada texto fijo y usa `LocalizedString` serializado para formatos dinámicos. Reutiliza el estilo actual, el bus de eventos y `UpdateManager` para animaciones continuas. No añadas generadores visuales ni controles duplicados con valores que ya existan en TMP, Image o RectTransform.
 
-## Verificación de esta entrega
+## Verificación de la corrección del HUD (6 de octubre de 2026, noche)
+
+Comprobado en una copia del proyecto con Unity en modo batch (la herramienta **Corregir HUD** y una prueba de Play Mode en `LEVEL 1` que sube una mejora, baja la vida, abre la subida de nivel y mantiene pulsada una tarjeta normal):
+
+| Comprobación | Resultado |
+| --- | --- |
+| Compilación tras los cambios | Sin errores de C# |
+| Relleno de mantener pulsado en tarjeta normal | Visible: cian con alfa 0.78 y 0.40 s de avance a los 0.45 s de pulsar; antes el color era (0, 0, 0, 0) porque `SetPremiumStyle` corría antes de `Awake` en la tarjeta inactiva |
+| Niveles del HUD de sobrecargas | `Nv. 0/3` → `Nv. 1/3` tras una mejora, 28 vértices dibujados; antes el texto tenía elipsis y 11 pt fijos en una caja de 12 unidades y no se dibujaba |
+| Barra de vida | 520×66 unidades a escala 1, cara de 104, lectura `VIDA 250/250` y `VIDA 55/250` con latido rojo al 22 % de vida |
+| Panel de sobrecargas | Reactivado y bajado 29 unidades, 12 por debajo de la cara |
+| Números de daño | (1, 0.35, 0.27, 0.77): rojo de alerta semitransparente |
+| Auditoría de solapes | 0 avisos en las cuatro capturas (HUD, vida baja, sobrecargas y tarjetas) |
+
+Las capturas quedaron en `Logs/UIReview/hud-2026-10-06-*.png`.
+
+## Verificación de la entrega anterior
 
 Resultados del 6 de octubre de 2026, manteniendo la UI actual:
 

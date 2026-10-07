@@ -15,7 +15,9 @@ public class HoldToSelectButton : MonoBehaviour, IUpdateable, IPointerDownHandle
     [SerializeField] private float holdSFXPitchStart = 1.0f;
     [SerializeField] private float holdSFXPitchEnd = 1.3f;
 
-    [Header("Premium Style")]
+    [Header("Colores del relleno")]
+    [Tooltip("Color del relleno al mantener pulsada una mejora normal. Se usa aunque la tarjeta se configure antes de activarse.")]
+    [SerializeField] private Color normalFillColor = new Color(0.098f, 0.659f, 0.902f, 0.78f);
     [Tooltip("Color del relleno para mejoras especiales/premium: más brillante para no perderse contra el fondo arcoiris.")]
     [SerializeField] private Color premiumFillColor = new Color(1f, 0.95f, 0.6f, 0.9f);
     [Tooltip("Velocidad del brillo pulsante del relleno en mejoras especiales.")]
@@ -25,7 +27,6 @@ public class HoldToSelectButton : MonoBehaviour, IUpdateable, IPointerDownHandle
     private float holdTimer = 0f;
     private Button button;
     private int currentSFXPlayCount = 0;
-    private Color normalFillColor;
     private bool isPremiumStyle;
 
     public System.Action OnHoldComplete;
@@ -36,8 +37,8 @@ public class HoldToSelectButton : MonoBehaviour, IUpdateable, IPointerDownHandle
 
         if (fillOverlayImage != null)
         {
-            normalFillColor = fillOverlayImage.color;
             fillOverlayImage.raycastTarget = false;
+            fillOverlayImage.color = isPremiumStyle ? premiumFillColor : normalFillColor;
             SetFill(0f);
 
             fillOverlayImage.gameObject.SetActive(false);

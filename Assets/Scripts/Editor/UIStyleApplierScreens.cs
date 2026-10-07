@@ -20,6 +20,14 @@ public static partial class UIStyleApplier
     private const float OverrideHudScale = 1.1f;
     private const float OverrideHudTop = 171f;
     private const float OverrideHudLeft = 280f;
+    private const float ReferenceWidth = 1920f;
+    private const float HealthBarWidth = 520f;
+    private const float HealthBarHeight = 66f;
+    private const float HealthBarLeft = 112f;
+    private const float HealthBarTop = 112f;
+    private const float HealthFaceSize = 104f;
+    private const float HealthFaceOffset = -42f;
+    private const float HealthGap = 12f;
     private static readonly string[] OverlayPanels = { "LevelUpPanel", "PausePanel", "GameOverPanel", "AudioPanel", "InitialsEntryUI" };
 
     private static Color Lilac => Color.Lerp(style.anomaly, style.paper, 0.5f);
@@ -53,7 +61,11 @@ public static partial class UIStyleApplier
         if (exp != null) StyleExpBar((RectTransform)exp);
 
         Transform health = DirectChild(root, "HealthBarContainer");
-        if (health != null) StyleHealthBar((RectTransform)health);
+        if (health != null)
+        {
+            StyleHealthBar((RectTransform)health);
+            KeepOverridePanelBelowHealth(root, (RectTransform)health);
+        }
 
         Transform currency = DirectChild(root, "CurrencyPanel");
         if (currency != null) StyleCurrency((RectTransform)currency);
@@ -210,7 +222,13 @@ public static partial class UIStyleApplier
 
     private static void StyleHealthBar(RectTransform container)
     {
-        container.sizeDelta = new Vector2(container.sizeDelta.x, 38f);
+        container.localScale = Vector3.one;
+        container.sizeDelta = new Vector2(HealthBarWidth, HealthBarHeight);
+        if (container.anchorMin == new Vector2(0f, 1f) && container.anchorMax == container.anchorMin)
+        {
+            container.pivot = new Vector2(0.5f, 0.5f);
+            container.anchoredPosition = new Vector2(HealthBarLeft + HealthBarWidth * 0.5f, -HealthBarTop);
+        }
         Touch(container);
 
         RectTransform frame = GetOrCreateChild(container, StylePrefix + "Frame", 0);
@@ -218,11 +236,28 @@ public static partial class UIStyleApplier
         Image frameImage = GetOrAdd<Image>(frame.gameObject);
         frameImage.raycastTarget = false;
         BarFrame(frameImage);
+        UIStyle.SetLip(frameImage, style.danger);
 
         Transform background = DirectChild(container, "HealthBarBackground");
         if (background != null) BarFill(background, "HealthBarFill", style.good);
 
-        MannersFaceUI face = BuildFace(container, new Vector2(0f, 0.5f), new Vector2(-30f, 0f), 54f, false);
+        RectTransform value = GetOrCreateChild(container, StylePrefix + "Value", -1);
+        Stretch(value, 26f, 4f, -26f, -4f);
+        TMP_Text valueText = GetOrAdd<TextMeshProUGUI>(value.gameObject);
+        if (string.IsNullOrEmpty(valueText.text)) valueText.text = "HP 250/250";
+        valueText.raycastTarget = false;
+        Apply(valueText, UITextRole.Label, style.paper, false);
+        valueText.enableAutoSizing = true;
+        valueText.fontSizeMax = 32f;
+        valueText.fontSizeMin = 16f;
+        valueText.alignment = TextAlignmentOptions.Center;
+        valueText.textWrappingMode = TextWrappingModes.NoWrap;
+        valueText.overflowMode = TextOverflowModes.Overflow;
+        valueText.margin = Vector4.zero;
+        Touch(value);
+        Finish(valueText);
+
+        MannersFaceUI face = BuildFace(container, new Vector2(0f, 0.5f), new Vector2(HealthFaceOffset, 0f), HealthFaceSize, false);
         face.transform.SetAsLastSibling();
 
         HealthBarUI healthUI = container.GetComponent<HealthBarUI>();
@@ -231,8 +266,50 @@ public static partial class UIStyleApplier
             var serialized = new SerializedObject(healthUI);
             serialized.FindProperty("blinkColor").colorValue = style.paper;
             SetBool(serialized, "useStyleColors", true);
+            SetReference(serialized, "valueText", valueText);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             Touch(healthUI);
+        }
+    }
+
+    private static void KeepOverridePanelBelowHealth(Transform root, RectTransform container)
+    {
+        if (container.anchorMin != new Vector2(0f, 1f) || container.anchorMax != container.anchorMin) return;
+
+        float scale = container.localScale.x;
+        float barLeft = container.anchoredPosition.x - container.sizeDelta.x * scale * container.pivot.x;
+        float barRight = barLeft + container.sizeDelta.x * scale;
+        float barCenterY = container.anchoredPosition.y + container.sizeDelta.y * scale * (0.5f - container.pivot.y);
+        float left = barLeft + (HealthFaceOffset - HealthFaceSize * 0.5f) * scale;
+        float bottom = barCenterY - Mathf.Max(container.sizeDelta.y, HealthFaceSize) * scale * 0.5f;
+
+        foreach (OverrideHudPanel hud in root.GetComponentsInChildren<OverrideHudPanel>(true))
+        {
+            RectTransform panel = (RectTransform)hud.transform;
+            if (panel.parent != container.parent) continue;
+            if (panel.anchorMin.y < 0.99f || panel.pivot.y < 0.99f) continue;
+
+            float anchorX = panel.anchorMin.x > 0.99f ? ReferenceWidth : panel.anchorMin.x < 0.01f ? 0f : -1f;
+            if (anchorX < 0f) continue;
+
+            float panelWidth = panel.sizeDelta.x * panel.localScale.x;
+            float panelLeft = anchorX + panel.anchoredPosition.x - panelWidth * panel.pivot.x;
+            if (panelLeft + panelWidth <= left || panelLeft >= barRight) continue;
+
+            float top = panel.anchoredPosition.y;
+            Transform tab = DirectChild(panel, StylePrefix + "Tab");
+            if (tab != null)
+            {
+                RectTransform tabRect = (RectTransform)tab;
+                top += (tabRect.anchoredPosition.y + tabRect.sizeDelta.y * (1f - tabRect.pivot.y)) * panel.localScale.y;
+            }
+
+            float limit = bottom - HealthGap;
+            if (top <= limit) continue;
+
+            panel.anchoredPosition += new Vector2(0f, limit - top);
+            Touch(panel);
+            report?.AppendLine($"HUD: el panel de sobrecargas baja {top - limit:F0} unidades para dejar {HealthGap:F0} entre la barra de vida y su pestaña.");
         }
     }
 
@@ -695,6 +772,8 @@ public static partial class UIStyleApplier
                 Finish(sign);
             }
 
+            StyleOverrideLevelTexts(panel);
+
             if (!PrefabUtility.IsPartOfPrefabInstance(panel.gameObject)) continue;
             if (panel.anchorMin.y < 0.99f || panel.pivot.y < 0.99f || panel.anchorMin.x < 0.99f || panel.pivot.x > 0.01f) continue;
 
@@ -721,21 +800,33 @@ public static partial class UIStyleApplier
         }
     }
 
-    private static void StyleSceneComponents(Scene scene)
+    private static int StyleDamageNumbers(Scene scene)
     {
+        int count = 0;
         foreach (GameObject root in scene.GetRootGameObjects())
         {
             foreach (FloatingTextManager manager in root.GetComponentsInChildren<FloatingTextManager>(true))
             {
                 var serialized = new SerializedObject(manager);
-                serialized.FindProperty("damageColor").colorValue = style.paper;
+                serialized.FindProperty("damageColor").colorValue = style.damageNumber;
                 serialized.FindProperty("expColor").colorValue = style.cyan;
                 serialized.FindProperty("coinColor").colorValue = style.yellow;
                 serialized.FindProperty("diamondColor").colorValue = Lilac;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 Touch(manager);
+                count++;
             }
+        }
 
+        return count;
+    }
+
+    private static void StyleSceneComponents(Scene scene)
+    {
+        StyleDamageNumbers(scene);
+
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
             foreach (TutorialManager tutorial in root.GetComponentsInChildren<TutorialManager>(true))
             {
                 var serialized = new SerializedObject(tutorial);
@@ -759,6 +850,40 @@ public static partial class UIStyleApplier
                 Touch(glitch);
             }
         }
+    }
+
+    private static void StyleOverrideLevelTexts(Transform panel)
+    {
+        foreach (OverrideHintRowUI row in panel.GetComponentsInChildren<OverrideHintRowUI>(true))
+        {
+            var serializedRow = new SerializedObject(row);
+            StyleHudLevelText(serializedRow.FindProperty("levelTextA").objectReferenceValue as TMP_Text);
+            StyleHudLevelText(serializedRow.FindProperty("levelTextB").objectReferenceValue as TMP_Text);
+        }
+    }
+
+    private static void StyleHudLevelText(TMP_Text level)
+    {
+        if (level == null) return;
+
+        RectTransform rect = level.rectTransform;
+        rect.anchorMin = new Vector2(0f, 0f);
+        rect.anchorMax = new Vector2(1f, 0f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = new Vector2(0f, -1f);
+        rect.sizeDelta = new Vector2(28f, 16f);
+        Touch(rect);
+
+        Apply(level, UITextRole.Body, style.paper, false);
+        level.enableAutoSizing = true;
+        level.fontSizeMax = 12f;
+        level.fontSizeMin = 9f;
+        level.alignment = TextAlignmentOptions.Center;
+        level.textWrappingMode = TextWrappingModes.NoWrap;
+        level.overflowMode = TextOverflowModes.Overflow;
+        level.margin = Vector4.zero;
+        textCount++;
+        Finish(level);
     }
 
     private static void SetReference(SerializedObject serialized, string property, UnityEngine.Object value)
