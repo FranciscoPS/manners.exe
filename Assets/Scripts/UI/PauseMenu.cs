@@ -23,7 +23,11 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     void Start()
     {
-        if (optionsMenu != null) optionsMenu.Closed += OnOptionsClosed;
+        if (optionsMenu != null)
+        {
+            optionsMenu.Closed += OnOptionsClosed;
+            optionsMenu.AudioClosed += OnAudioClosed;
+        }
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
@@ -38,7 +42,11 @@ public class PauseMenu : MonoBehaviour, IUpdateable
     private void OnDestroy()
     {
         AudioSettingsMenu.AudioSettingsChanged -= OnAudioSettingsChanged;
-        if (optionsMenu != null) optionsMenu.Closed -= OnOptionsClosed;
+        if (optionsMenu != null)
+        {
+            optionsMenu.Closed -= OnOptionsClosed;
+            optionsMenu.AudioClosed -= OnAudioClosed;
+        }
     }
 
     private void OnAudioSettingsChanged()
@@ -227,6 +235,16 @@ public class PauseMenu : MonoBehaviour, IUpdateable
             pausePanel.SetActive(true);
 
         Time.timeScale = 0f;
+    }
+
+    private void OnAudioClosed()
+    {
+        if (!isPaused) return;
+
+        if (MusicManager.Instance != null && reducedVolumeApplied)
+            MusicManager.Instance.ReduceVolume();
+
+        audioSettingsChangedWhilePaused = false;
     }
 
     private void ResetPlayerEnemyLayerCollision()
