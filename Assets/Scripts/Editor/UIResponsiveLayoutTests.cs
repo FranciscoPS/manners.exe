@@ -18,6 +18,8 @@ public class UIResponsiveLayoutTests
         new Vector2Int(1920, 1080),
         new Vector2Int(3440, 1440),
         new Vector2Int(3840, 1080),
+        new Vector2Int(3840, 1600),
+        new Vector2Int(5120, 2160),
         new Vector2Int(1600, 1200),
         new Vector2Int(1920, 1200)
     };
@@ -79,6 +81,8 @@ public class UIResponsiveLayoutTests
         using (var viewport = new LayoutViewport(scene))
         {
             var referenceMargins = new Vector2[targets.Length];
+            var fromRight = new bool[targets.Length];
+            var fromTop = new bool[targets.Length];
             for (int size = 0; size < Resolutions.Length; size++)
             {
                 Vector2Int resolution = Resolutions[size];
@@ -90,8 +94,17 @@ public class UIResponsiveLayoutTests
                     Rect bounds = ScreenBounds(target, viewport.Camera);
                     AssertInsideViewport(bounds, resolution, location);
                     float scale = target.GetComponentInParent<Canvas>().rootCanvas.scaleFactor;
-                    float edge = i == 1 ? resolution.x - bounds.xMax : bounds.xMin;
-                    var margin = new Vector2(edge, resolution.y - bounds.yMax) / scale;
+                    if (size == 0)
+                    {
+                        RectTransform anchorRoot = target;
+                        Transform rootCanvas = target.GetComponentInParent<Canvas>().rootCanvas.transform;
+                        while (anchorRoot.parent != rootCanvas && anchorRoot.parent is RectTransform parent) anchorRoot = parent;
+                        fromRight[i] = anchorRoot.anchorMin.x > .5f;
+                        fromTop[i] = anchorRoot.anchorMin.y > .5f;
+                    }
+                    float edgeX = fromRight[i] ? resolution.x - bounds.xMax : bounds.xMin;
+                    float edgeY = fromTop[i] ? resolution.y - bounds.yMax : bounds.yMin;
+                    var margin = new Vector2(edgeX, edgeY) / scale;
                     if (size == 0) referenceMargins[i] = margin;
                     else
                     {
@@ -113,8 +126,7 @@ public class UIResponsiveLayoutTests
     {
         Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
         Transform canvas = scene.GetRootGameObjects().First(root => root.name == "Canvas").transform;
-        bool options = path == UIAuthoringTools.Scenes[0];
-        Transform panel = UIEditorHierarchy.Find(canvas, options ? "OptionsPanel" : "PausePanel");
+        Transform panel = UIEditorHierarchy.Find(canvas, "OptionsMenu/OptionsPanel");
         Assert.IsNotNull(panel, path + ": falta la pantalla con selector de idioma.");
         LanguageSelector selector = panel.GetComponentInChildren<LanguageSelector>(true);
         Assert.IsNotNull(selector, path + ": falta el selector de idioma.");
@@ -140,11 +152,7 @@ public class UIResponsiveLayoutTests
                 Assert.That(bounds.yMin, Is.GreaterThanOrEqualTo(parentBounds.yMin - 2f), location + ": sale del área de contenido por abajo.");
                 Assert.That(bounds.yMax, Is.LessThanOrEqualTo(parentBounds.yMax + 2f), location + ": sale del área de contenido por arriba.");
                 float scale = selector.GetComponentInParent<Canvas>().rootCanvas.scaleFactor;
-                if (size == 0)
-                {
-                    if (!options) relativeCenter = new Vector2((bounds.center.x - parentBounds.xMin) / parentBounds.width, (bounds.center.y - parentBounds.yMin) / parentBounds.height);
-                    referenceSize = options ? new Vector2(560f, 112f) : bounds.size / scale;
-                }
+                if (size == 0) referenceSize = new Vector2(560f, 112f);
                 var expectedCenter = parentBounds.min + Vector2.Scale(parentBounds.size, relativeCenter);
                 Assert.That(bounds.center.x, Is.EqualTo(expectedCenter.x).Within(2f), location + ": cambió la posición horizontal del selector.");
                 Assert.That(bounds.center.y, Is.EqualTo(expectedCenter.y).Within(2f), location + ": cambió la posición vertical del selector.");

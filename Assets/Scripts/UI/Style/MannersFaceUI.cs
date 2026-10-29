@@ -29,13 +29,39 @@ public class MannersFaceUI : MonoBehaviour
     [Tooltip("Por debajo de esta proporción de vida la cara pasa a peligro de forma permanente.")]
     [Range(0f, 1f)] [SerializeField] private float lowHealth = 0.3f;
 
+    [Header("Golpe")]
+    [Tooltip("Escala máxima de los ojos al recibir daño. 1 = sin exageración.")]
+    [SerializeField] private float hurtScale = 1.55f;
+    [Tooltip("Giro de los ojos al recibir daño, en grados.")]
+    [SerializeField] private float hurtRotation = -14f;
+    [Tooltip("Duración del golpe de escala y giro de los ojos.")]
+    [SerializeField] private float hurtPunchDuration = 0.42f;
+    [Tooltip("Tiempo que la cara mantiene el gesto de dolor con los ojos en rojo.")]
+    [SerializeField] private float hurtHold = 0.7f;
+    [Tooltip("Sacudida de toda la cara al recibir daño, en unidades de canvas. 0 = sin sacudida.")]
+    [SerializeField] private float hurtShake = 12f;
+    [SerializeField] private float hurtShakeDuration = 0.35f;
+    [Tooltip("La pantalla de la cara parpadea en rojo de alerta al recibir daño.")]
+    [SerializeField] private bool hurtScreenFlash = true;
+    [SerializeField] private float hurtFlashDuration = 0.08f;
+    [SerializeField] private int hurtFlashCount = 2;
+
     private PlayerHealth playerHealth;
+    private Image screen;
+    private Color screenColor;
+    private Tween screenTween;
     private Mood baseMood = Mood.Calm;
     private Mood shownMood = Mood.Calm;
     private bool overtime;
     private bool lowOnHealth;
     private Coroutine idleRoutine;
     private Coroutine reactionRoutine;
+
+    private void Awake()
+    {
+        screen = GetComponent<Image>();
+        if (screen != null) screenColor = screen.color;
+    }
 
     private void OnEnable()
     {
@@ -80,10 +106,14 @@ public class MannersFaceUI : MonoBehaviour
             eyes.rectTransform.localScale = Vector3.one;
             eyes.rectTransform.anchoredPosition = Vector2.zero;
         }
+
+        ResetHurtVisuals();
     }
 
     private void OnDestroy()
     {
+        screenTween?.Kill();
+
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged -= HandleHealthChanged;
@@ -111,7 +141,7 @@ public class MannersFaceUI : MonoBehaviour
 
     private void HandleDamage()
     {
-        if (baseMood != Mood.Dead) React(Mood.Hurt, 0.5f);
+        if (baseMood != Mood.Dead) React(Mood.Hurt, hurtHold);
     }
 
     private void HandleLevelUp(int level)
@@ -146,10 +176,40 @@ public class MannersFaceUI : MonoBehaviour
     private IEnumerator Reaction(Mood mood, float duration)
     {
         Show(mood);
-        if (eyes != null) eyes.rectTransform.Punch();
+        if (mood == Mood.Hurt) PlayHurt();
+        else if (eyes != null) eyes.rectTransform.Punch();
         yield return new WaitForSecondsRealtime(duration);
         reactionRoutine = null;
         Show(baseMood);
+    }
+
+    private void PlayHurt()
+    {
+        if (eyes != null) eyes.rectTransform.Punch(hurtScale, hurtRotation, hurtPunchDuration);
+        if (hurtShake > 0f && transform is RectTransform face) face.Shake(hurtShake, hurtShakeDuration);
+        if (!hurtScreenFlash || screen == null) return;
+
+        UIStyle style = UIStyle.Instance;
+        Color flash = style != null ? style.alert : Color.red;
+        screenTween?.Kill();
+        screen.color = screenColor;
+        screenTween = screen.DOColor(flash, hurtFlashDuration)
+            .SetLoops(hurtFlashCount * 2, LoopType.Yoyo)
+            .SetEase(Ease.Linear)
+            .SetUpdate(true)
+            .OnComplete(() =>
+            {
+                if (screen != null) screen.color = screenColor;
+                screenTween = null;
+            });
+    }
+
+    private void ResetHurtVisuals()
+    {
+        screenTween?.Kill();
+        screenTween = null;
+        if (screen != null) screen.color = screenColor;
+        if (transform is RectTransform face) face.DOKill();
     }
 
     private IEnumerator Idle()
@@ -214,7 +274,7 @@ public class MannersFaceUI : MonoBehaviour
                 break;
             case Mood.Hurt:
                 eyes.sprite = style.faceHurt;
-                eyes.color = Color.Lerp(style.primary, style.paper, 0.25f);
+                eyes.color = style.alert;
                 break;
             case Mood.Angry:
                 eyes.sprite = style.faceAngry;

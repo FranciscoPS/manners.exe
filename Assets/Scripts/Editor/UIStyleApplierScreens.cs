@@ -21,12 +21,12 @@ public static partial class UIStyleApplier
     private const float OverrideHudTop = 171f;
     private const float OverrideHudLeft = 280f;
     private const float ReferenceWidth = 1920f;
-    private const float HealthBarWidth = 520f;
-    private const float HealthBarHeight = 66f;
-    private const float HealthBarLeft = 112f;
+    private const float HealthBarWidth = 432f;
+    private const float HealthBarHeight = 56f;
+    private const float HealthBarLeft = 206f;
     private const float HealthBarTop = 112f;
     private const float HealthFaceSize = 104f;
-    private const float HealthFaceOffset = -42f;
+    private const float HealthFaceOffset = -58f;
     private const float HealthGap = 12f;
     private static readonly string[] OverlayPanels = { "LevelUpPanel", "PausePanel", "GameOverPanel", "AudioPanel", "InitialsEntryUI" };
 
@@ -232,6 +232,7 @@ public static partial class UIStyleApplier
         Touch(container);
 
         RectTransform frame = GetOrCreateChild(container, StylePrefix + "Frame", 0);
+        frame.localScale = Vector3.one;
         Stretch(frame, 0f, 0f, 0f, 0f);
         Image frameImage = GetOrAdd<Image>(frame.gameObject);
         frameImage.raycastTarget = false;
@@ -239,23 +240,18 @@ public static partial class UIStyleApplier
         UIStyle.SetLip(frameImage, style.danger);
 
         Transform background = DirectChild(container, "HealthBarBackground");
-        if (background != null) BarFill(background, "HealthBarFill", style.good);
+        if (background != null)
+        {
+            background.localScale = Vector3.one;
+            BarFill(background, "HealthBarFill", style.good);
+        }
 
-        RectTransform value = GetOrCreateChild(container, StylePrefix + "Value", -1);
-        Stretch(value, 26f, 4f, -26f, -4f);
-        TMP_Text valueText = GetOrAdd<TextMeshProUGUI>(value.gameObject);
-        if (string.IsNullOrEmpty(valueText.text)) valueText.text = "HP 250/250";
-        valueText.raycastTarget = false;
-        Apply(valueText, UITextRole.Label, style.paper, false);
-        valueText.enableAutoSizing = true;
-        valueText.fontSizeMax = 32f;
-        valueText.fontSizeMin = 16f;
-        valueText.alignment = TextAlignmentOptions.Center;
-        valueText.textWrappingMode = TextWrappingModes.NoWrap;
-        valueText.overflowMode = TextOverflowModes.Overflow;
-        valueText.margin = Vector4.zero;
-        Touch(value);
-        Finish(valueText);
+        Transform value = DirectChild(container, StylePrefix + "Value");
+        if (value != null)
+        {
+            UnityEngine.Object.DestroyImmediate(value.gameObject);
+            report.AppendLine("HUD: la lectura numérica de la barra de vida se retira; la barra queda sola junto a la cara.");
+        }
 
         MannersFaceUI face = BuildFace(container, new Vector2(0f, 0.5f), new Vector2(HealthFaceOffset, 0f), HealthFaceSize, false);
         face.transform.SetAsLastSibling();
@@ -264,9 +260,9 @@ public static partial class UIStyleApplier
         if (healthUI != null)
         {
             var serialized = new SerializedObject(healthUI);
-            serialized.FindProperty("blinkColor").colorValue = style.paper;
+            serialized.FindProperty("blinkColor").colorValue = style.alert;
             SetBool(serialized, "useStyleColors", true);
-            SetReference(serialized, "valueText", valueText);
+            SetReference(serialized, "frameImage", frameImage);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             Touch(healthUI);
         }

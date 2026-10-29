@@ -6,43 +6,27 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 {
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
-    [SerializeField] private GameObject helpPanel;
-    [SerializeField] private GameObject audioPanel;
     [SerializeField] private GameObject gameOverPanel;
-
-    [Header("Help Sub-Panels")]
-    [SerializeField] private GameObject movimientoHelpPanel;
-    [SerializeField] private GameObject experienciaHelpPanel;
-    [SerializeField] private GameObject enemigosHelpPanel;
-    [SerializeField] private GameObject mejorasHelpPanel;
+    [Tooltip("Menú de opciones compartido con el menú principal (prefab OptionsMenu). Desde la pausa se abre completo o directamente en las sobrecargas.")]
+    [SerializeField] private OptionsMenu optionsMenu;
 
     [Header("Opciones de escena")]
     [Tooltip("Índice de la escena del menú principal en Build Settings (por defecto 0)")]
     [SerializeField] private int mainMenuSceneIndex = 0;
 
     private bool isPaused = false;
-    private GameObject currentHelpSubPanel;
     private LevelUpManager levelUpManager;
     private PlayerHealth playerHealth;
-    [SerializeField] private GraphicsSettingsMenu graphicsSettings;
 
     private bool reducedVolumeApplied = false;
     private bool audioSettingsChangedWhilePaused = false;
 
     void Start()
     {
-        if (graphicsSettings != null) graphicsSettings.Closed += OnGraphicsReturnButtonPressed;
+        if (optionsMenu != null) optionsMenu.Closed += OnOptionsClosed;
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
-
-        if (helpPanel != null)
-            helpPanel.SetActive(false);
-
-        if (audioPanel != null)
-            audioPanel.SetActive(false);
-
-        DeactivateAllHelpSubPanels();
 
         levelUpManager = FindFirstObjectByType<LevelUpManager>();
 
@@ -54,12 +38,11 @@ public class PauseMenu : MonoBehaviour, IUpdateable
     private void OnDestroy()
     {
         AudioSettingsMenu.AudioSettingsChanged -= OnAudioSettingsChanged;
-        if (graphicsSettings != null) graphicsSettings.Closed -= OnGraphicsReturnButtonPressed;
+        if (optionsMenu != null) optionsMenu.Closed -= OnOptionsClosed;
     }
 
     private void OnAudioSettingsChanged()
     {
-
         audioSettingsChangedWhilePaused = true;
     }
 
@@ -69,12 +52,11 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if ((graphicsSettings != null && graphicsSettings.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame)
+        if ((optionsMenu != null && optionsMenu.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame || OptionsMenu.ConsumedBackThisFrame)
             return;
 
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-
             if (levelUpManager != null && levelUpManager.IsLevelUpActive())
             {
                 return;
@@ -166,7 +148,6 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     public void OnReturnToMainMenuButtonPressed()
     {
-
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.ResetSessionCurrency();
@@ -196,125 +177,51 @@ public class PauseMenu : MonoBehaviour, IUpdateable
         SceneManager.LoadScene(mainMenuSceneIndex, LoadSceneMode.Single);
     }
 
-    public void OnHelpButtonPressed()
+    public void OnOptionsButtonPressed()
     {
-        isPaused = true;
-        Time.timeScale = 0f;
+        if (!OpenOptions()) return;
+        optionsMenu.Open();
+    }
 
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        if (helpPanel != null)
-            helpPanel.SetActive(true);
-
-        DeactivateAllHelpSubPanels();
-        currentHelpSubPanel = null;
+    public void OnOverridesButtonPressed()
+    {
+        if (!OpenOptions()) return;
+        optionsMenu.OpenOverrides();
     }
 
     public void OnGraphicsButtonPressed()
     {
-        if (graphicsSettings == null) return;
-        isPaused = true;
-        Time.timeScale = 0f;
-        if (pausePanel != null) pausePanel.SetActive(false);
-        if (helpPanel != null) helpPanel.SetActive(false);
-        if (audioPanel != null) audioPanel.SetActive(false);
-        DeactivateAllHelpSubPanels();
-        currentHelpSubPanel = null;
-        graphicsSettings.gameObject.SetActive(true);
-    }
-
-    private void OnGraphicsReturnButtonPressed()
-    {
-        if (pausePanel != null) pausePanel.SetActive(true);
-        isPaused = true;
-        Time.timeScale = 0f;
+        if (!OpenOptions()) return;
+        optionsMenu.ShowGraphics();
     }
 
     public void OnAudioButtonPressed()
     {
+        if (!OpenOptions()) return;
+        optionsMenu.ShowAudio();
+    }
+
+    private bool OpenOptions()
+    {
+        if (optionsMenu == null) return false;
+
         isPaused = true;
         Time.timeScale = 0f;
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
 
-        if (audioPanel != null)
-            audioPanel.SetActive(true);
-
-        DeactivateAllHelpSubPanels();
-        currentHelpSubPanel = null;
+        return true;
     }
 
-    public void OnHelpReturnButtonPressed()
+    private void OnOptionsClosed()
     {
-        if (helpPanel != null)
-            helpPanel.SetActive(false);
-
-        DeactivateAllHelpSubPanels();
-        currentHelpSubPanel = null;
+        if (!isPaused) return;
 
         if (pausePanel != null)
             pausePanel.SetActive(true);
 
-        isPaused = true;
         Time.timeScale = 0f;
-    }
-
-    public void OnAudioReturnButtonPressed()
-    {
-        if (audioPanel != null)
-            audioPanel.SetActive(false);
-
-        if (pausePanel != null)
-            pausePanel.SetActive(true);
-
-        isPaused = true;
-        Time.timeScale = 0f;
-    }
-
-    public void OnMovimientoHelpButtonPressed()
-    {
-        ShowHelpSubPanel(movimientoHelpPanel);
-    }
-
-    public void OnExperienciaHelpButtonPressed()
-    {
-        ShowHelpSubPanel(experienciaHelpPanel);
-    }
-
-    public void OnEnemigosHelpButtonPressed()
-    {
-        ShowHelpSubPanel(enemigosHelpPanel);
-    }
-
-    public void OnMejorasHelpButtonPressed()
-    {
-        ShowHelpSubPanel(mejorasHelpPanel);
-    }
-
-    private void ShowHelpSubPanel(GameObject subPanel)
-    {
-        if (subPanel == null) return;
-
-        if (currentHelpSubPanel == subPanel) return;
-
-        if (currentHelpSubPanel != null)
-        {
-            currentHelpSubPanel.SetActive(false);
-            currentHelpSubPanel = null;
-        }
-
-        subPanel.SetActive(true);
-        currentHelpSubPanel = subPanel;
-    }
-
-    private void DeactivateAllHelpSubPanels()
-    {
-        if (movimientoHelpPanel != null) movimientoHelpPanel.SetActive(false);
-        if (experienciaHelpPanel != null) experienciaHelpPanel.SetActive(false);
-        if (enemigosHelpPanel != null) enemigosHelpPanel.SetActive(false);
-        if (mejorasHelpPanel != null) mejorasHelpPanel.SetActive(false);
     }
 
     private void ResetPlayerEnemyLayerCollision()
@@ -327,15 +234,11 @@ public class PauseMenu : MonoBehaviour, IUpdateable
             Physics.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         }
     }
+
     private void CloseAllPauseUI()
     {
-        if (graphicsSettings != null) graphicsSettings.gameObject.SetActive(false);
+        if (optionsMenu != null && optionsMenu.IsOpen) optionsMenu.Close();
 
         if (pausePanel != null) pausePanel.SetActive(false);
-        if (helpPanel != null) helpPanel.SetActive(false);
-        if (audioPanel != null) audioPanel.SetActive(false);
-
-        DeactivateAllHelpSubPanels();
-        currentHelpSubPanel = null;
     }
 }
