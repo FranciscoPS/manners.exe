@@ -10,7 +10,7 @@ public class OvertimeAlert : MonoBehaviour
 
     [Header("Duración")]
     [Tooltip("Cuánto dura todo el aviso (texto, parpadeo y audio) en segundos.")]
-    [SerializeField] private float alertDuration = 5f;
+    [SerializeField] private float alertDuration = 2.5f;
 
     [Header("Texto")]
     [Tooltip("Veces por segundo que pulsa el texto (grande/pequeño).")]
