@@ -218,6 +218,11 @@ public class PauseMenu : MonoBehaviour, IUpdateable
     {
         if (!isPaused) return;
 
+        if (MusicManager.Instance != null && reducedVolumeApplied)
+            MusicManager.Instance.ReduceVolume();
+
+        audioSettingsChangedWhilePaused = false;
+
         if (pausePanel != null)
             pausePanel.SetActive(true);
 
