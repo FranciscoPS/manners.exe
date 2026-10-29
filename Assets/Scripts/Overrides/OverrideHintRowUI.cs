@@ -12,8 +12,11 @@ public enum OverrideResultDisplayMode
 
 public class OverrideHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    private const string UndiscoveredTooltipTitle = "??? Sobrecarga oculta";
-    private const string UndiscoveredTooltipBody = "Sube al nivel requerido las dos mejoras de esta fila para revelar qué hace.";
+    [Header("Textos editables por idioma")]
+    [SerializeField] private LocalizedString levelProgress = new LocalizedString("Lv. {0}/{1}", "Nv. {0}/{1}");
+
+    [SerializeField] private LocalizedString undiscoveredTitle = new LocalizedString("??? Hidden override", "??? Sobrecarga oculta");
+    [SerializeField] private LocalizedString undiscoveredBody = new LocalizedString("Level up both upgrades in this row to reveal its effect.", "Sube al nivel requerido las dos mejoras de esta fila para revelar qué hace.");
 
     [Header("Sobrecarga representada por esta fila")]
     [SerializeField, FormerlySerializedAs("synergy")] private OverrideData overrideData;
@@ -54,11 +57,13 @@ public class OverrideHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
     private void OnEnable()
     {
+        GameLocalization.LanguageChanged += Refresh;
         Refresh();
     }
 
     private void OnDisable()
     {
+        GameLocalization.LanguageChanged -= Refresh;
         if (resultVisuals != null)
             resultVisuals.SetPremium(false);
 
@@ -76,7 +81,7 @@ public class OverrideHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
         if (isUnlocked)
             HoverTooltipUI.Show(canvas, data.overrideName, data.description);
         else
-            HoverTooltipUI.Show(canvas, UndiscoveredTooltipTitle, UndiscoveredTooltipBody);
+            HoverTooltipUI.Show(canvas, undiscoveredTitle.Value, undiscoveredBody.Value);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -145,7 +150,7 @@ public class OverrideHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
         for (int i = 0; i < database.allOverrides.Count; i++)
         {
             OverrideData candidate = database.allOverrides[i];
-            if (candidate != null && candidate.overrideName == overrideData.overrideName)
+            if (candidate != null && candidate.PersistentId == overrideData.PersistentId)
                 return candidate;
         }
 
@@ -176,7 +181,7 @@ public class OverrideHintRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
         if (levelText != null)
         {
             levelText.gameObject.SetActive(reveal);
-            levelText.text = reveal ? $"Nv. {Mathf.Min(reachedLevel, requiredLevel)}/{requiredLevel}" : "";
+            levelText.text = reveal ? levelProgress.Format(Mathf.Min(reachedLevel, requiredLevel), requiredLevel) : "";
         }
 
         return reveal;

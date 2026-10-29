@@ -13,7 +13,7 @@ public class OverrideDatabase : ScriptableObject
         get
         {
             if (instance == null)
-                instance = Resources.Load<OverrideDatabase>("OverrideDatabase");
+                instance = Resources.Load<OverrideDatabase>("OverrideDatabase_Production");
             return instance;
         }
     }

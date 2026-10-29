@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class GlitchTextUI : MonoBehaviour
+public class GlitchTextUI : MonoBehaviour, IUpdateable
 {
     private enum Phase { Idle, Burst }
 
@@ -46,6 +46,13 @@ public class GlitchTextUI : MonoBehaviour
     [SerializeField] private Color flickerColorA = new Color(0f, 1f, 1f, 1f);
     [SerializeField] private Color flickerColorB = new Color(1f, 0f, 1f, 1f);
 
+    [Header("Placa de fondo")]
+    [Tooltip("Placa inclinada que acompaña al texto: su inclinación tiembla durante cada ráfaga. Vacío = se busca la placa del botón o de la cinta de título.")]
+    [SerializeField] private UISkew companion;
+    [Tooltip("Cuánto varía la inclinación de la placa en cada frame de la ráfaga.")]
+    [SerializeField] private float companionSkewJitter = 0.09f;
+
+    private LocalizedText localizedText;
     private Phase phase;
     private float phaseTimer;
     private float stepTimer;
@@ -56,6 +63,7 @@ public class GlitchTextUI : MonoBehaviour
     private Vector2 baseAnchoredPosition;
     private Color baseColor;
     private bool captured;
+    private float companionBaseSkew;
 
     private void OnEnable()
     {
@@ -63,6 +71,9 @@ public class GlitchTextUI : MonoBehaviour
             target = GetComponent<TextMeshProUGUI>();
 
         if (target == null) return;
+        localizedText = target.GetComponent<LocalizedText>();
+        if (localizedText != null) { localizedText.Applied += RefreshLocalized; localizedText.Apply(); }
+        UpdateManager.Instance?.Register(this);
 
         Capture();
         phase = Phase.Idle;
@@ -71,7 +82,19 @@ public class GlitchTextUI : MonoBehaviour
 
     private void OnDisable()
     {
+        if (localizedText != null) localizedText.Applied -= RefreshLocalized;
+        UpdateManager.Instance?.Unregister(this);
         Restore();
+    }
+
+    private void RefreshLocalized()
+    {
+        string content = target.text;
+        Restore();
+        target.text = content;
+        Capture();
+        phase = Phase.Idle;
+        phaseTimer = Random.Range(idleMin, idleMax);
     }
 
     public void SetText(string text)
@@ -87,7 +110,9 @@ public class GlitchTextUI : MonoBehaviour
         phaseTimer = Random.Range(idleMin, idleMax);
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+
+    public void OnUpdate(float deltaTime)
     {
         if (!captured) return;
 
@@ -116,6 +141,16 @@ public class GlitchTextUI : MonoBehaviour
         baseAnchoredPosition = target.rectTransform.anchoredPosition;
         baseColor = target.color;
         captured = true;
+
+        if (companion == null)
+        {
+            companion = target.GetComponentInParent<UISkew>();
+            if (companion == null && target.transform.parent != null)
+                companion = target.transform.parent.GetComponentInChildren<UISkew>();
+        }
+
+        if (companion != null)
+            companionBaseSkew = companion.Amount;
     }
 
     private void Restore()
@@ -125,6 +160,9 @@ public class GlitchTextUI : MonoBehaviour
         target.text = originalText;
         target.rectTransform.anchoredPosition = baseAnchoredPosition;
         target.color = baseColor;
+
+        if (companion != null)
+            companion.Amount = companionBaseSkew;
     }
 
     private void StartBurst()
@@ -151,6 +189,9 @@ public class GlitchTextUI : MonoBehaviour
             float roll = Random.value;
             target.color = roll < 0.33f ? flickerColorA : roll < 0.66f ? flickerColorB : baseColor;
         }
+
+        if (companion != null)
+            companion.Amount = companionBaseSkew + Random.Range(-companionSkewJitter, companionSkewJitter);
     }
 
     private void EndBurst()

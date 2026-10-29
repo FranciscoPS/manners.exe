@@ -9,10 +9,13 @@ public class ChestShowcase : MonoBehaviour
     private const string FallbackPrefabName = "ChestForAnimation";
     private const int MinTextureSize = 64;
     private const int MaxTextureSize = 2048;
-    private static readonly Vector3 RigWorldPosition = new Vector3(0f, -5000f, 0f);
 
-    private RawImage view;
-    private Camera showcaseCamera;
+    [SerializeField] private RawImage view;
+    [SerializeField] private Camera showcaseCamera;
+    [Header("Encuadre y calidad")]
+    [SerializeField] private float framePadding = 1.4f;
+    [SerializeField] private float focusHeight = .6f;
+    [SerializeField, Range(.25f, 2f)] private float renderScale = 1f;
     private RenderTexture renderTexture;
     private GameObject chestInstance;
     private Animator chestAnimator;
@@ -25,18 +28,6 @@ public class ChestShowcase : MonoBehaviour
     public float ClipLength => clipLength;
     public float BurstTime { get; private set; }
 
-    public static ChestShowcase Create(Transform parent, RawImage view)
-    {
-        GameObject go = new GameObject("ChestShowcaseRig");
-        go.transform.SetParent(parent, false);
-        go.transform.position = RigWorldPosition;
-
-        ChestShowcase showcase = go.AddComponent<ChestShowcase>();
-        showcase.view = view;
-        view.enabled = false;
-        return showcase;
-    }
-
     public bool TryBegin(ChestOpeningConfig config)
     {
         if (!config.showcaseEnabled || !EnsureChest(config)) return false;
@@ -45,8 +36,8 @@ public class ChestShowcase : MonoBehaviour
 
         chestInstance.SetActive(true);
         Seek(0f, 0f);
-        SetupView(config);
-        FrameCamera(config);
+        SetupView();
+        FrameCamera();
 
         showcaseCamera.enabled = true;
         view.color = Color.white;
@@ -128,7 +119,6 @@ public class ChestShowcase : MonoBehaviour
         ConfigureRenderers(chestInstance, layer);
         ConfigureAnimator(config);
         restBounds = CollectBounds(chestInstance);
-        CreateCamera(layer);
 
         chestInstance.SetActive(false);
         return true;
@@ -197,46 +187,14 @@ public class ChestShowcase : MonoBehaviour
         return bounds;
     }
 
-    private void CreateCamera(int layer)
-    {
-        GameObject cameraObject = new GameObject("ChestShowcaseCamera");
-        cameraObject.transform.SetParent(transform, false);
-
-        showcaseCamera = cameraObject.AddComponent<Camera>();
-        showcaseCamera.enabled = false;
-        showcaseCamera.clearFlags = CameraClearFlags.SolidColor;
-        showcaseCamera.backgroundColor = Color.clear;
-        showcaseCamera.cullingMask = layer >= 0 ? 1 << layer : ~0;
-        showcaseCamera.nearClipPlane = 0.1f;
-        showcaseCamera.farClipPlane = 200f;
-        showcaseCamera.depth = -50f;
-        showcaseCamera.allowHDR = false;
-        showcaseCamera.allowMSAA = false;
-        showcaseCamera.useOcclusionCulling = false;
-
-        UniversalAdditionalCameraData cameraData = showcaseCamera.GetUniversalAdditionalCameraData();
-        cameraData.renderType = CameraRenderType.Base;
-        cameraData.renderPostProcessing = false;
-        cameraData.renderShadows = false;
-        cameraData.requiresColorOption = CameraOverrideOption.Off;
-        cameraData.requiresDepthOption = CameraOverrideOption.Off;
-        cameraData.antialiasing = AntialiasingMode.None;
-        cameraData.volumeLayerMask = 0;
-        cameraData.stopNaN = false;
-        cameraData.dithering = false;
-        cameraData.allowXRRendering = false;
-    }
-
-    private void SetupView(ChestOpeningConfig config)
+    private void SetupView()
     {
         RectTransform viewRect = view.rectTransform;
-        viewRect.sizeDelta = config.showcaseViewSize;
-        viewRect.anchoredPosition = config.showcaseViewOffset;
 
         float canvasScale = view.canvas != null ? view.canvas.scaleFactor : 1f;
-        float pixelScale = canvasScale * Mathf.Max(0.1f, config.showcaseRenderScale);
-        int width = ToTextureSize(config.showcaseViewSize.x * pixelScale);
-        int height = ToTextureSize(config.showcaseViewSize.y * pixelScale);
+        float pixelScale = canvasScale * Mathf.Max(0.1f, renderScale);
+        int width = ToTextureSize(viewRect.rect.width * pixelScale);
+        int height = ToTextureSize(viewRect.rect.height * pixelScale);
 
         renderTexture = RenderTexture.GetTemporary(width, height, 16, RenderTextureFormat.ARGB32);
         renderTexture.filterMode = FilterMode.Bilinear;
@@ -249,13 +207,13 @@ public class ChestShowcase : MonoBehaviour
         return Mathf.Clamp(Mathf.RoundToInt(pixels), MinTextureSize, MaxTextureSize);
     }
 
-    private void FrameCamera(ChestOpeningConfig config)
+    private void FrameCamera()
     {
-        float fieldOfView = Mathf.Clamp(config.showcaseFieldOfView, 5f, 120f);
+        float fieldOfView = Mathf.Clamp(showcaseCamera.fieldOfView, 5f, 120f);
         float radius = Mathf.Max(0.01f, restBounds.extents.magnitude);
-        float distance = radius * Mathf.Max(0.2f, config.showcaseFramePadding) / Mathf.Sin(fieldOfView * 0.5f * Mathf.Deg2Rad);
-        Vector3 focus = restBounds.center + Vector3.up * (restBounds.size.y * config.showcaseFocusHeight);
-        Quaternion rotation = Quaternion.Euler(config.showcaseCameraPitch, config.showcaseCameraYaw, 0f);
+        float distance = radius * Mathf.Max(0.2f, framePadding) / Mathf.Sin(fieldOfView * 0.5f * Mathf.Deg2Rad);
+        Vector3 focus = restBounds.center + Vector3.up * (restBounds.size.y * focusHeight);
+        Quaternion rotation = showcaseCamera.transform.rotation;
 
         showcaseCamera.fieldOfView = fieldOfView;
         showcaseCamera.transform.SetPositionAndRotation(focus - rotation * Vector3.forward * distance, rotation);

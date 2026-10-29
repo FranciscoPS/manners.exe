@@ -4,13 +4,11 @@ using UnityEngine;
 public static class ChestItemProvider
 {
     private static List<ChestItemData> cachedItems;
-    private static List<ChestItemData> defaultItems;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         cachedItems = null;
-        defaultItems = null;
     }
 
     public static List<ChestItemData> GetAvailableItems()
@@ -26,10 +24,7 @@ public static class ChestItemProvider
             cachedItems.AddRange(loaded);
         }
 
-        if (cachedItems.Count == 0)
-        {
-            cachedItems.AddRange(GetDefaultItems());
-        }
+        if (cachedItems.Count == 0) Debug.LogError("Faltan los ChestItemData en Production/Resources/ChestItems.");
 
         return cachedItems;
     }
@@ -88,37 +83,4 @@ public static class ChestItemProvider
         }
     }
 
-    private static List<ChestItemData> GetDefaultItems()
-    {
-        if (defaultItems != null)
-            return defaultItems;
-
-        defaultItems = new List<ChestItemData>
-        {
-            MakeItem("ImanGigante", "Imán Gigante",
-                "Atrae hacia ti todos los orbes, monedas y objetos del mapa.",
-                ChestItemEffect.GiantMagnet, new Color(0.4f, 0.8f, 1f)),
-
-            MakeItem("CuracionTotal", "Curación Total",
-                "Restaura toda tu vida al máximo.",
-                ChestItemEffect.FullHeal, new Color(0.4f, 1f, 0.5f)),
-
-            MakeItem("Aniquilacion", "Aniquilación",
-                "Destruye a todos los enemigos en pantalla de golpe.",
-                ChestItemEffect.KillAllEnemies, new Color(1f, 0.4f, 0.4f)),
-        };
-
-        return defaultItems;
-    }
-
-    private static ChestItemData MakeItem(string assetName, string itemName, string description, ChestItemEffect effect, Color accentColor)
-    {
-        ChestItemData item = ScriptableObject.CreateInstance<ChestItemData>();
-        item.name = assetName;
-        item.itemName = itemName;
-        item.description = description;
-        item.effect = effect;
-        item.accentColor = accentColor;
-        return item;
-    }
 }

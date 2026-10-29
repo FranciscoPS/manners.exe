@@ -2,10 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
+public class HoldToSelectButton : MonoBehaviour, IUpdateable, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
     [Header("References")]
     [SerializeField] private Image fillOverlayImage;
+    [Tooltip("Margen del relleno respecto al borde de la tarjeta, para que no tape el contorno.")]
+    [SerializeField] private Vector2 fillInset = Vector2.zero;
 
     [Header("Hold Settings")]
     [SerializeField] private float holdDuration = 0.5f;
@@ -13,7 +15,9 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
     [SerializeField] private float holdSFXPitchStart = 1.0f;
     [SerializeField] private float holdSFXPitchEnd = 1.3f;
 
-    [Header("Premium Style")]
+    [Header("Colores del relleno")]
+    [Tooltip("Color del relleno al mantener pulsada una mejora normal. Se usa aunque la tarjeta se configure antes de activarse.")]
+    [SerializeField] private Color normalFillColor = new Color(0.098f, 0.659f, 0.902f, 0.78f);
     [Tooltip("Color del relleno para mejoras especiales/premium: más brillante para no perderse contra el fondo arcoiris.")]
     [SerializeField] private Color premiumFillColor = new Color(1f, 0.95f, 0.6f, 0.9f);
     [Tooltip("Velocidad del brillo pulsante del relleno en mejoras especiales.")]
@@ -23,7 +27,6 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
     private float holdTimer = 0f;
     private Button button;
     private int currentSFXPlayCount = 0;
-    private Color normalFillColor;
     private bool isPremiumStyle;
 
     public System.Action OnHoldComplete;
@@ -34,16 +37,24 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
 
         if (fillOverlayImage != null)
         {
-            normalFillColor = fillOverlayImage.color;
-
-            RectTransform rt = fillOverlayImage.rectTransform;
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(0f, 1f);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
+            fillOverlayImage.raycastTarget = false;
+            fillOverlayImage.color = isPremiumStyle ? premiumFillColor : normalFillColor;
+            SetFill(0f);
 
             fillOverlayImage.gameObject.SetActive(false);
         }
+    }
+
+    private void SetFill(float progress)
+    {
+        RectTransform rt = fillOverlayImage.rectTransform;
+        RectTransform parent = rt.parent as RectTransform;
+        float width = parent != null ? Mathf.Max(0f, parent.rect.width - fillInset.x * 2f) : 0f;
+
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(0f, 1f);
+        rt.offsetMin = new Vector2(fillInset.x, fillInset.y);
+        rt.offsetMax = new Vector2(fillInset.x + width * progress, -fillInset.y);
     }
 
     public void SetPremiumStyle(bool premium)
@@ -56,7 +67,10 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         }
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+    private void OnEnable() => UpdateManager.Instance?.Register(this);
+    private void OnDisable() { UpdateManager.Instance?.Unregister(this); ResetHold(); }
+    public void OnUpdate(float deltaTime)
     {
         if (isHolding && button != null && button.interactable)
         {
@@ -65,8 +79,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
             if (fillOverlayImage != null)
             {
                 float fillProgress = Mathf.Clamp01(holdTimer / holdDuration);
-                RectTransform rt = fillOverlayImage.rectTransform;
-                rt.anchorMax = new Vector2(fillProgress, 1f);
+                SetFill(fillProgress);
 
                 if (isPremiumStyle)
                 {
@@ -114,8 +127,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         {
             fillOverlayImage.gameObject.SetActive(true);
             fillOverlayImage.transform.SetAsLastSibling();
-            RectTransform rt = fillOverlayImage.rectTransform;
-            rt.anchorMax = new Vector2(0f, 1f);
+            SetFill(0f);
             fillOverlayImage.color = isPremiumStyle ? premiumFillColor : normalFillColor;
         }
 
@@ -146,8 +158,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         if (fillOverlayImage != null)
         {
             fillOverlayImage.gameObject.SetActive(false);
-            RectTransform rt = fillOverlayImage.rectTransform;
-            rt.anchorMax = new Vector2(0f, 1f);
+            SetFill(0f);
         }
     }
 
@@ -163,8 +174,7 @@ public class HoldToSelectButton : MonoBehaviour, IPointerDownHandler, IPointerUp
         if (fillOverlayImage != null)
         {
             fillOverlayImage.gameObject.SetActive(false);
-            RectTransform rt = fillOverlayImage.rectTransform;
-            rt.anchorMax = new Vector2(0f, 1f);
+            SetFill(0f);
         }
     }
 

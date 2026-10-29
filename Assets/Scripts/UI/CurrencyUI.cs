@@ -4,6 +4,9 @@ using TMPro;
 
 public class CurrencyUI : MonoBehaviour
 {
+    [Header("Textos editables por idioma")]
+    [SerializeField] private LocalizedString gemLabel = new LocalizedString("Gems: {0}", "Gemas: {0}");
+
     [Header("Coin UI")]
     [SerializeField] private TextMeshProUGUI coinText;
 
@@ -15,9 +18,17 @@ public class CurrencyUI : MonoBehaviour
     [SerializeField] private float punchScale = 1.2f;
     [Tooltip("Duración total del rebote del texto al cambiar de valor.")]
     [SerializeField] private float punchDuration = 0.3f;
+    [Tooltip("Activo: la placa entera (fondo, icono y número) da el golpe. Desactivado: solo rebota el texto.")]
+    [SerializeField] private bool punchWholePanel = true;
 
     private bool coinInitialized;
     private bool diamondInitialized;
+    private RectTransform panelRect;
+
+    private void Awake()
+    {
+        panelRect = transform as RectTransform;
+    }
 
     private void Start()
     {
@@ -44,10 +55,10 @@ public class CurrencyUI : MonoBehaviour
     {
         if (coinText == null) return;
 
-        coinText.text = $"Monedas: {amount}";
+        coinText.text = amount.ToString();
 
         if (coinInitialized)
-            coinText.rectTransform.PunchScale(punchScale, punchDuration);
+            PlayPunch(coinText.rectTransform);
 
         coinInitialized = true;
     }
@@ -56,11 +67,25 @@ public class CurrencyUI : MonoBehaviour
     {
         if (diamondText == null) return;
 
-        diamondText.text = $"Gemas: {amount}";
+        diamondText.text = gemLabel.Format(amount);
 
         if (diamondInitialized)
-            diamondText.rectTransform.PunchScale(punchScale, punchDuration);
+            PlayPunch(diamondText.rectTransform);
 
         diamondInitialized = true;
+    }
+
+    private void PlayPunch(RectTransform textRect)
+    {
+        if (punchWholePanel && panelRect != null)
+            panelRect.Punch();
+        else
+            textRect.PunchScale(punchScale, punchDuration);
+    }
+    private void OnEnable() => GameLocalization.LanguageChanged += RefreshLanguage;
+    private void OnDisable() => GameLocalization.LanguageChanged -= RefreshLanguage;
+    private void RefreshLanguage()
+    {
+        if (CurrencyManager.Instance != null) UpdateDiamondDisplay(CurrencyManager.Instance.CurrentDiamonds);
     }
 }

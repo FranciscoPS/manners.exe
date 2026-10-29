@@ -51,7 +51,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WarningMarquee
   label: {fileID: 6502914543495923502}
-  message: WARNING
+  messageEnglish: WARNING
+  messageSpanish: ADVERTENCIA
   separator: '  //  '
   repetitions: 10
   scrollSpeed: 90
@@ -106,7 +107,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WarningMarquee
   label: {fileID: 8681951241035654385}
-  message: WARNING
+  messageEnglish: WARNING
+  messageSpanish: ADVERTENCIA
   separator: '  //  '
   repetitions: 10
   scrollSpeed: -90
@@ -595,6 +597,8 @@ MonoBehaviour:
   marquees:
   - {fileID: 3740022074828502925}
   - {fileID: 5790320183562518456}
+  panelSortingOrder: 1
+  stripesSortingOrder: 2
 --- !u!1 &5781713684546644331
 GameObject:
   m_ObjectHideFlags: 0

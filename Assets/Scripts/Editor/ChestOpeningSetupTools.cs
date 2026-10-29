@@ -3,7 +3,7 @@ using UnityEngine;
 
 public static class ChestOpeningSetupTools
 {
-    private const string ConfigPath = "Assets/Resources/ChestOpeningConfig.asset";
+    private const string ConfigPath = "Assets/Configurations/Production/Resources/ChestOpeningConfig_Production.asset";
 
     [MenuItem("Tools/Manners/VFX/Crear configuración de apertura de cofre", false, 30)]
     public static void CreateChestOpeningConfig()
@@ -12,6 +12,7 @@ public static class ChestOpeningSetupTools
 
         if (config == null)
         {
+            EditorAssetUtility.EnsureFolder(GameAssetPaths.ProductionResources);
             config = ScriptableObject.CreateInstance<ChestOpeningConfig>();
             AssetDatabase.CreateAsset(config, ConfigPath);
             AssetDatabase.SaveAssets();
@@ -21,6 +22,6 @@ public static class ChestOpeningSetupTools
         Selection.activeObject = config;
         EditorGUIUtility.PingObject(config);
 
-        Debug.Log($"[ChestOpeningSetup] Configuración lista en {ConfigPath}. Ajusta tiempos, colores, sacudidas de cámara y SFX desde el Inspector.");
+        Debug.Log($"[ChestOpeningSetup] Configuración lista en {ConfigPath}. Ajusta tiempos, sacudidas de cámara y SFX desde el Inspector.");
     }
 }

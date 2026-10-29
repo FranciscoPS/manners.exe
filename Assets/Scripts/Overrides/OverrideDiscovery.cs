@@ -37,7 +37,7 @@ public static class OverrideDiscovery
     public static bool IsOverrideUnlocked(OverrideData overrideData)
     {
         MigrateLegacyProgress();
-        return overrideData != null && PlayerPrefs.GetInt(OverrideKeyPrefix + overrideData.name, 0) == 1;
+        return overrideData != null && PlayerPrefs.GetInt(OverrideKeyPrefix + overrideData.PersistentId, 0) == 1;
     }
 
     public static void RecordUpgradeLevel(UpgradeType type, int level)
@@ -58,7 +58,7 @@ public static class OverrideDiscovery
 
         newOverridesThisRun++;
 
-        PlayerPrefs.SetInt(OverrideKeyPrefix + overrideData.name, 1);
+        PlayerPrefs.SetInt(OverrideKeyPrefix + overrideData.PersistentId, 1);
         PlayerPrefs.Save();
     }
 
@@ -67,7 +67,7 @@ public static class OverrideDiscovery
         if (overrideData == null) return;
 
         MigrateLegacyProgress();
-        PlayerPrefs.DeleteKey(OverrideKeyPrefix + overrideData.name);
+        PlayerPrefs.DeleteKey(OverrideKeyPrefix + overrideData.PersistentId);
         PlayerPrefs.Save();
     }
 
@@ -83,7 +83,7 @@ public static class OverrideDiscovery
             for (int i = 0; i < database.allOverrides.Count; i++)
             {
                 if (database.allOverrides[i] != null)
-                    PlayerPrefs.DeleteKey(OverrideKeyPrefix + database.allOverrides[i].name);
+                    PlayerPrefs.DeleteKey(OverrideKeyPrefix + database.allOverrides[i].PersistentId);
             }
         }
 
@@ -114,13 +114,13 @@ public static class OverrideDiscovery
             for (int i = 0; i < database.allOverrides.Count; i++)
             {
                 OverrideData overrideData = database.allOverrides[i];
-                if (overrideData == null || !overrideData.name.StartsWith(OverrideAssetPrefix)) continue;
+                if (overrideData == null || !overrideData.PersistentId.StartsWith(OverrideAssetPrefix)) continue;
 
-                string legacyKey = LegacyOverrideKeyPrefix + overrideData.name.Substring(OverrideAssetPrefix.Length);
+                string legacyKey = LegacyOverrideKeyPrefix + overrideData.PersistentId.Substring(OverrideAssetPrefix.Length);
                 if (!PlayerPrefs.HasKey(legacyKey)) continue;
 
                 if (PlayerPrefs.GetInt(legacyKey, 0) == 1)
-                    PlayerPrefs.SetInt(OverrideKeyPrefix + overrideData.name, 1);
+                    PlayerPrefs.SetInt(OverrideKeyPrefix + overrideData.PersistentId, 1);
                 PlayerPrefs.DeleteKey(legacyKey);
                 migrated = true;
             }

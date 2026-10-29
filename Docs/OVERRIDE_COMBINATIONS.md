@@ -27,7 +27,7 @@ La resistencia al control del enemigo sigue determinando si realmente queda cong
 
 ## Ajustes
 
-Los assets normales (`Assets/Configurations/Overrides/`) y sus copias de sandbox (`Assets/Configurations/SANDBOX CONFIGURATIONS FOR TESTING/Overrides/`) incluyen los valores iniciales. En `LaserBeamConfig`: `maxExtraBeams`, `minBeamSeparationAngle`, `empDamageMultiplier`. En `EmpPulseConfig`: `maxExtraPulses`, `repeatDelay`, `cryoFreezeDurationMultiplier`, `laserDamageMultiplier`. En `CryoFieldConfig`: `maxExtraPulses`, `repeatDelay`, `laserDamageMultiplier`.
+Los assets normales (`Assets/Configurations/Production/Overrides/`, sufijo `_Production`) y sus copias de sandbox (`Assets/Configurations/Sandbox/Overrides/`, sufijo `_Sandbox`) incluyen los valores iniciales. En `LaserBeamConfig`: `maxExtraBeams`, `minBeamSeparationAngle`, `empDamageMultiplier`. En `EmpPulseConfig`: `maxExtraPulses`, `repeatDelay`, `cryoFreezeDurationMultiplier`, `laserDamageMultiplier`. En `CryoFieldConfig`: `maxExtraPulses`, `repeatDelay`, `laserDamageMultiplier`.
 
 Subir `maxExtraBeams` o `maxExtraPulses` por encima de 2 hace que el nivel de Multi disparo sí cuente: con 8, el nivel 1 da 4 emisiones (las mismas que balas), el nivel 2 da 7 y del nivel 3 en adelante 9. EMP y campo reinician su intervalo normal al terminar la secuencia de ecos. Los anillos naranjas indican explosiones y los anillos fríos indican ticks criogénicos extra; el EMP muestra una onda visual por onda con efecto real.
 

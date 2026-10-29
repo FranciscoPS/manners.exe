@@ -6,6 +6,7 @@ Shader "UI/PokemonHolo"
         _Color ("Tint", Color) = (1,1,1,1)
         _Angle ("Diagonal Angle (rad)", Float) = 0.785398
         _Frequency ("Rainbow Repeats Across Card", Float) = 1
+        _Span ("Canvas Units Per Repeat", Float) = 420
         _Offset ("Scroll Offset", Float) = 0
         _Saturation ("Saturation", Float) = 0.9
         _Intensity ("Sheen Intensity", Float) = 0.55
@@ -70,9 +71,11 @@ Shader "UI/PokemonHolo"
                 float4 worldPosition : TEXCOORD1;
             };
 
+            sampler2D _MainTex;
             fixed4 _Color;
             float _Angle;
             float _Frequency;
+            float _Span;
             float _Offset;
             float _Saturation;
             float _Intensity;
@@ -98,10 +101,11 @@ Shader "UI/PokemonHolo"
 
             fixed4 frag(v2f IN) : SV_Target
             {
-                float2 uv = IN.texcoord;
+                float2 uv = IN.worldPosition.xy / max(_Span, 1.0);
                 float diag = uv.x * cos(_Angle) + uv.y * sin(_Angle);
                 float diagRange = abs(cos(_Angle)) + abs(sin(_Angle));
                 float diagNorm = diag / max(diagRange, 1e-4);
+                float shape = tex2D(_MainTex, IN.texcoord).a * IN.color.a;
 
                 float phase = diagNorm * _Frequency + _Offset;
                 float hue = frac(phase);
@@ -109,14 +113,16 @@ Shader "UI/PokemonHolo"
 
                 float band = lerp(_MinBrightness, 1.0, pow(abs(sin(phase * 3.14159)), 2.0));
 
-                float3 color = rainbow * band * _Intensity;
-                float alpha = band * _Intensity * IN.color.a;
+                float3 color = rainbow * band * _Intensity * shape;
+                float alpha = band * _Intensity * shape;
 
                 fixed4 outColor;
                 outColor.rgb = color;
                 outColor.a = alpha;
 
-                outColor.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
+                float clipping = UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
+                outColor.rgb *= clipping;
+                outColor.a *= clipping;
 
                 return outColor;
             }

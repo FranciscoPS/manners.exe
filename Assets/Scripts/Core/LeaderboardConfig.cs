@@ -10,7 +10,7 @@ public class LeaderboardConfig : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<LeaderboardConfig>("LeaderboardConfig");
+                instance = Resources.Load<LeaderboardConfig>("LeaderboardConfig_Production");
             }
             return instance;
         }

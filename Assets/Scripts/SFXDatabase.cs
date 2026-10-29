@@ -55,7 +55,7 @@ public class SFXDatabase : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<SFXDatabase>("SFXDatabase");
+                instance = Resources.Load<SFXDatabase>("SFXDatabase_Production");
             }
             return instance;
         }

@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
-public class OverrideActivationHUD : MonoBehaviour
+public class OverrideActivationHUD : MonoBehaviour, IUpdateable
 {
     private const float BannerIconSize = 96f;
 
@@ -16,27 +16,10 @@ public class OverrideActivationHUD : MonoBehaviour
 
     public static bool Exists => instance != null;
 
-    [Header("Tipografía")]
-    [Tooltip("Nombre (o inicio del nombre) del TMP_FontAsset del juego a usar. Se busca entre las fuentes ya cargadas por la escena.")]
-    [SerializeField] private string preferredFontName = "CyberpunkCraftpixPixel";
-    [SerializeField] private float titleFontSize = 50f;
-    [SerializeField] private float nameFontSize = 40f;
-    [Tooltip("Grosor del contorno oscuro para que el texto se lea sobre el juego sin cuadro de fondo.")]
-    [SerializeField] private float outlineWidth = 0.22f;
-    [SerializeField] private Color outlineColor = new Color(0.02f, 0.02f, 0.08f, 1f);
-
-    [Header("Posición (debajo de la barra de XP y el timer)")]
-    [Tooltip("Distancia desde el borde superior a la tira de iconos activos, en px de referencia 1920x1080.")]
-    [SerializeField] private float stripTopOffset = 196f;
-    [Tooltip("Distancia desde el borde superior al centro del aviso.")]
-    [SerializeField] private float bannerTopOffset = 300f;
-
-    [Header("Tira de sobrecargas activas")]
     [SerializeField] private float cellSize = 54f;
-    [SerializeField] private float cellSpacing = 10f;
 
     [Header("Ritmo del aviso")]
-    [SerializeField] private string activatedMessage = "SOBRECARGA ACTIVADA";
+    [SerializeField] private LocalizedString activatedMessage = new LocalizedString("OVERRIDE ACTIVATED", "SOBRECARGA ACTIVADA");
     [Tooltip("Pausa antes de que aparezca el primer texto.")]
     [SerializeField] private float leadIn = 0.3f;
     [Tooltip("Duración de la entrada (pequeño → grande) de cada texto.")]
@@ -53,23 +36,24 @@ public class OverrideActivationHUD : MonoBehaviour
     [Tooltip("Cuánto se mantiene el icono en el centro antes de volar a la tira.")]
     [SerializeField] private float iconHold = 0.7f;
     [SerializeField] private float iconFlight = 0.65f;
-    [SerializeField] private Color titleColor = new Color(1f, 0.95f, 0.6f, 1f);
-    [SerializeField] private Color cellBackdropColor = new Color(0.04f, 0.05f, 0.14f, 0.8f);
 
-    private Canvas canvas;
-    private CanvasGroup canvasGroup;
-    private RectTransform strip;
-    private RectTransform banner;
-    private RectTransform bannerIconRect;
-    private Image bannerIcon;
-    private TextMeshProUGUI bannerFallback;
-    private TextMeshProUGUI titleText;
-    private CanvasGroup titleGroup;
-    private GlitchTextUI titleGlitch;
-    private TextMeshProUGUI nameText;
-    private CanvasGroup nameGroup;
-    private GlitchTextUI nameGlitch;
-    private TMP_FontAsset resolvedFont;
+    [SerializeField] private Canvas canvas;
+    [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private RectTransform strip;
+    [SerializeField] private RectTransform banner;
+    [SerializeField] private RectTransform bannerIconRect;
+    [SerializeField] private Image bannerIcon;
+    [SerializeField] private TextMeshProUGUI bannerFallback;
+    [SerializeField] private TextMeshProUGUI titleText;
+    [SerializeField] private CanvasGroup titleGroup;
+    [SerializeField] private GlitchTextUI titleGlitch;
+    [SerializeField] private Image titlePlate;
+    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private CanvasGroup nameGroup;
+    [SerializeField] private GlitchTextUI nameGlitch;
+    [SerializeField] private Image namePlate;
+    [SerializeField] private RectTransform iconGhost;
+    [SerializeField] private RectTransform cellPrefab;
 
     private readonly Dictionary<OverrideData, RectTransform> cells = new Dictionary<OverrideData, RectTransform>();
     private readonly HashSet<OverrideData> announced = new HashSet<OverrideData>();
@@ -94,9 +78,7 @@ public class OverrideActivationHUD : MonoBehaviour
     {
         if (isQuitting || instance != null) return;
 
-        GameObject go = new GameObject("OverrideActivationHUD");
-        instance = go.AddComponent<OverrideActivationHUD>();
-        DontDestroyOnLoad(go);
+        instance = RuntimeUIPrefabs.Spawn(p => p.overrideActivationHUD);
     }
 
     private void Awake()
@@ -109,12 +91,12 @@ public class OverrideActivationHUD : MonoBehaviour
 
         instance = this;
         DontDestroyOnLoad(gameObject);
-        BuildUI();
-        ApplyFont();
+
     }
 
     private void OnEnable()
     {
+        UpdateManager.Instance?.Register(this);
         SceneManager.sceneLoaded += OnSceneLoaded;
         OverrideManager.EnsureExists();
 
@@ -127,6 +109,7 @@ public class OverrideActivationHUD : MonoBehaviour
 
     private void OnDisable()
     {
+        UpdateManager.Instance?.Unregister(this);
         SceneManager.sceneLoaded -= OnSceneLoaded;
 
         if (OverrideManager.Instance != null)
@@ -147,7 +130,9 @@ public class OverrideActivationHUD : MonoBehaviour
             instance = null;
     }
 
-    private void Update()
+    public bool IsActive => isActiveAndEnabled;
+
+    public void OnUpdate(float deltaTime)
     {
         if (canvasGroup == null) return;
 
@@ -161,7 +146,7 @@ public class OverrideActivationHUD : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         ClearAll();
-        ApplyFont();
+
     }
 
     private void OnOverrideActivated(OverrideData overrideData)
@@ -207,102 +192,6 @@ public class OverrideActivationHUD : MonoBehaviour
             banner.gameObject.SetActive(false);
     }
 
-    private void ApplyFont()
-    {
-        if (resolvedFont == null)
-        {
-            resolvedFont = Resources.FindObjectsOfTypeAll<TMP_FontAsset>()
-                .FirstOrDefault(f => f != null && f.name.StartsWith(preferredFontName));
-        }
-
-        if (resolvedFont == null) return;
-
-        StyleGameText(titleText);
-        StyleGameText(nameText);
-        StyleGameText(bannerFallback);
-
-        foreach (RectTransform cell in cells.Values)
-        {
-            if (cell == null) continue;
-            TextMeshProUGUI fallback = cell.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (fallback != null) StyleGameText(fallback);
-        }
-    }
-
-    private void StyleGameText(TextMeshProUGUI tmp)
-    {
-        if (tmp == null || resolvedFont == null) return;
-
-        tmp.font = resolvedFont;
-        tmp.outlineWidth = outlineWidth;
-        tmp.outlineColor = outlineColor;
-    }
-
-    private void BuildUI()
-    {
-        GameObject canvasObj = new GameObject("OverrideActivationCanvas");
-        canvasObj.transform.SetParent(transform, false);
-
-        canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 150;
-
-        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
-
-        canvasGroup = canvasObj.AddComponent<CanvasGroup>();
-        canvasGroup.blocksRaycasts = false;
-        canvasGroup.interactable = false;
-
-        strip = CreateRect("ActiveOverridesStrip", canvasObj.transform, new Vector2(0.5f, 1f), new Vector2(0f, -stripTopOffset), new Vector2(0f, cellSize));
-        HorizontalLayoutGroup layout = strip.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = cellSpacing;
-        layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.childControlWidth = false;
-        layout.childControlHeight = false;
-        layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = false;
-
-        ContentSizeFitter fitter = strip.gameObject.AddComponent<ContentSizeFitter>();
-        fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        BuildBanner(canvasObj.transform);
-    }
-
-    private void BuildBanner(Transform parent)
-    {
-        banner = CreateRect("ActivationBanner", parent, new Vector2(0.5f, 1f), new Vector2(0f, -bannerTopOffset), new Vector2(1200f, 140f));
-        banner.pivot = new Vector2(0.5f, 0.5f);
-
-        bannerIconRect = CreateRect("Icon", banner, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(96f, 96f));
-        bannerIcon = bannerIconRect.gameObject.AddComponent<Image>();
-        bannerIcon.preserveAspect = true;
-        bannerIcon.raycastTarget = false;
-
-        bannerFallback = CreateText("IconFallback", bannerIconRect, 64f, FontStyles.Bold, titleColor);
-        Stretch(bannerFallback.rectTransform);
-        bannerFallback.text = "?";
-
-        titleText = CreateText("Title", banner, titleFontSize, FontStyles.Bold, titleColor);
-        Stretch(titleText.rectTransform);
-        titleGroup = titleText.gameObject.AddComponent<CanvasGroup>();
-        titleGlitch = titleText.gameObject.AddComponent<GlitchTextUI>();
-
-        nameText = CreateText("Name", banner, nameFontSize, FontStyles.Bold, Color.white);
-        Stretch(nameText.rectTransform);
-        nameGroup = nameText.gameObject.AddComponent<CanvasGroup>();
-        nameGlitch = nameText.gameObject.AddComponent<GlitchTextUI>();
-
-        bannerIconRect.gameObject.SetActive(false);
-        titleText.gameObject.SetActive(false);
-        nameText.gameObject.SetActive(false);
-        banner.gameObject.SetActive(false);
-    }
-
     private IEnumerator PlayAnnouncement(OverrideData overrideData)
     {
         current = overrideData;
@@ -311,10 +200,10 @@ public class OverrideActivationHUD : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(leadIn);
 
-        yield return PlayTextPhase(titleText, titleGroup, titleGlitch, activatedMessage, titleHold);
+        yield return PlayTextPhase(titleText, titleGroup, titleGlitch, titlePlate, activatedMessage.Value, titleHold);
         yield return new WaitForSecondsRealtime(phaseGap);
 
-        yield return PlayTextPhase(nameText, nameGroup, nameGlitch, overrideData.overrideName, nameHold);
+        yield return PlayTextPhase(nameText, nameGroup, nameGlitch, namePlate, overrideData.overrideName, nameHold);
         yield return new WaitForSecondsRealtime(phaseGap);
 
         ApplyIcon(bannerIcon, bannerFallback, overrideData.icon);
@@ -359,7 +248,7 @@ public class OverrideActivationHUD : MonoBehaviour
         flight.Join(ghost.DOScale(iconSize / slotSize, iconFlight));
         yield return flight.WaitForCompletion();
 
-        Destroy(ghost.gameObject);
+        ghost.gameObject.SetActive(false);
         banner.gameObject.SetActive(false);
 
         panel.Land(overrideData);
@@ -382,7 +271,7 @@ public class OverrideActivationHUD : MonoBehaviour
         flight.Join(ghost.DOScale(1f, iconFlight));
         yield return flight.WaitForCompletion();
 
-        Destroy(ghost.gameObject);
+        ghost.gameObject.SetActive(false);
         banner.gameObject.SetActive(false);
 
         Sequence landing = DOTween.Sequence().SetUpdate(true);
@@ -400,15 +289,12 @@ public class OverrideActivationHUD : MonoBehaviour
 
     private RectTransform CreateGhost(Sprite sprite, float size)
     {
-        RectTransform ghost = CreateRect("IconGhost", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
-
-        Image ghostImage = ghost.gameObject.AddComponent<Image>();
-        ghostImage.preserveAspect = true;
-        ghostImage.raycastTarget = false;
-        ghostImage.sprite = sprite;
-        ghostImage.enabled = sprite != null;
-
-        return ghost;
+        if (iconGhost == null) return null;
+        Image image = iconGhost.GetComponent<Image>();
+        image.sprite = sprite;
+        image.enabled = sprite != null;
+        iconGhost.gameObject.SetActive(true);
+        return iconGhost;
     }
 
     private Vector3 ToOverlayPosition(RectTransform target)
@@ -423,13 +309,13 @@ public class OverrideActivationHUD : MonoBehaviour
         return world;
     }
 
-    private IEnumerator PlayTextPhase(TextMeshProUGUI text, CanvasGroup group, GlitchTextUI glitch, string content, float hold)
+    private IEnumerator PlayTextPhase(TextMeshProUGUI text, CanvasGroup group, GlitchTextUI glitch, Image plate, string content, float hold)
     {
-        RectTransform rect = text.rectTransform;
+        RectTransform rect = (RectTransform)group.transform;
 
         group.alpha = 0f;
         rect.localScale = Vector3.one * 0.15f;
-        text.gameObject.SetActive(true);
+        group.gameObject.SetActive(true);
         glitch.SetText(content);
 
         Sequence enter = DOTween.Sequence().SetUpdate(true);
@@ -445,36 +331,16 @@ public class OverrideActivationHUD : MonoBehaviour
         exit.Join(group.DOFade(0f, textOut * 0.85f));
         yield return exit.WaitForCompletion();
 
-        text.gameObject.SetActive(false);
+        group.gameObject.SetActive(false);
         rect.localScale = Vector3.one;
     }
 
     private RectTransform CreateCell(OverrideData overrideData)
     {
-        if (cells.TryGetValue(overrideData, out RectTransform existing) && existing != null)
-            return existing;
-
-        RectTransform cell = CreateRect(overrideData.name, strip, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(cellSize, cellSize));
-
-        Image backdrop = cell.gameObject.AddComponent<Image>();
-        backdrop.color = cellBackdropColor;
-        backdrop.raycastTarget = false;
-
-        RectTransform iconRect = CreateRect("Icon", cell, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(cellSize - 12f, cellSize - 12f));
-        Image icon = iconRect.gameObject.AddComponent<Image>();
-        icon.preserveAspect = true;
-        icon.raycastTarget = false;
-
-        TextMeshProUGUI fallback = CreateText("IconFallback", iconRect, 30f, FontStyles.Bold, titleColor);
-        Stretch(fallback.rectTransform);
-        fallback.text = "?";
-        StyleGameText(fallback);
-
-        ApplyIcon(icon, fallback, overrideData.icon);
-
-        PremiumUpgradeVisuals visuals = cell.gameObject.AddComponent<PremiumUpgradeVisuals>();
-        visuals.SetPulseEnabled(false);
-
+        if (cells.TryGetValue(overrideData, out RectTransform existing) && existing != null) return existing;
+        if (cellPrefab == null) return null;
+        RectTransform cell = Instantiate(cellPrefab, strip, false);
+        cell.GetComponent<OverrideStripCellUI>().SetIcon(overrideData.icon);
         cells[overrideData] = cell;
         return cell;
     }
@@ -486,43 +352,4 @@ public class OverrideActivationHUD : MonoBehaviour
         fallback.gameObject.SetActive(sprite == null);
     }
 
-    private static RectTransform CreateRect(string name, Transform parent, Vector2 anchor, Vector2 position, Vector2 size)
-    {
-        GameObject go = new GameObject(name, typeof(RectTransform));
-        go.transform.SetParent(parent, false);
-
-        RectTransform rt = (RectTransform)go.transform;
-        rt.anchorMin = anchor;
-        rt.anchorMax = anchor;
-        rt.pivot = new Vector2(0.5f, anchor.y >= 1f ? 1f : 0.5f);
-        rt.anchoredPosition = position;
-        rt.sizeDelta = size;
-
-        return rt;
-    }
-
-    private static TextMeshProUGUI CreateText(string name, Transform parent, float size, FontStyles style, Color color)
-    {
-        GameObject go = new GameObject(name, typeof(RectTransform));
-        go.transform.SetParent(parent, false);
-
-        TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.fontSize = size;
-        tmp.fontStyle = style;
-        tmp.color = color;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.textWrappingMode = TextWrappingModes.NoWrap;
-        tmp.overflowMode = TextOverflowModes.Overflow;
-        tmp.raycastTarget = false;
-
-        return tmp;
-    }
-
-    private static void Stretch(RectTransform rt)
-    {
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-    }
 }

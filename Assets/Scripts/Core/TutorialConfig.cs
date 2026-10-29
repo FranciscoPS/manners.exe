@@ -11,7 +11,7 @@ public class TutorialConfig : ScriptableObject
         {
             if (instance == null)
             {
-                instance = Resources.Load<TutorialConfig>("TutorialConfig");
+                instance = Resources.Load<TutorialConfig>("TutorialConfig_Production");
             }
             return instance;
         }

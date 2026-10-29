@@ -8,8 +8,8 @@ using UnityEngine.UI;
 
 public static class SandboxSetupTools
 {
-    private const string SourceScenePath = "Assets/Scenes/CityTest.unity";
-    internal const string SandboxFolder = "Assets/Configurations/SANDBOX CONFIGURATIONS FOR TESTING";
+    private const string SourceScenePath = "Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity";
+    internal const string SandboxFolder = "Assets/Configurations/Sandbox";
     internal const string UpgradesFolder = SandboxFolder + "/Upgrades";
     internal const string EnemiesFolder = SandboxFolder + "/Enemies";
     internal const string WavesFolder = SandboxFolder + "/Waves";
@@ -23,8 +23,8 @@ public static class SandboxSetupTools
 
     private static readonly string[] SourceEnemyConfigs =
     {
-        "Assets/Configurations/Enemies Configurations/BasicEnemy.asset",
-        "Assets/Configurations/Enemies Configurations/FastEnemy.asset"
+        "Assets/Configurations/Production/Enemies/BasicEnemy_Production.asset",
+        "Assets/Configurations/Production/Enemies/FastEnemy_Production.asset"
     };
 
     [MenuItem("Tools/Manners/Sandbox/1. Crear assets del sandbox", false, 10)]
@@ -188,7 +188,7 @@ public static class SandboxSetupTools
                 continue;
             }
 
-            string targetPath = $"{EnemiesFolder}/{Path.GetFileName(SourceEnemyConfigs[i])}";
+            string targetPath = $"{EnemiesFolder}/{GameAssetPaths.SandboxFileName(SourceEnemyConfigs[i])}";
             EnemyConfiguration copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(targetPath);
 
             if (copy == null && AssetDatabase.CopyAsset(SourceEnemyConfigs[i], targetPath))
@@ -203,7 +203,7 @@ public static class SandboxSetupTools
 
     private static void CopyWaves(Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap)
     {
-        string[] guids = AssetDatabase.FindAssets("t:WaveData", new[] { "Assets/Configurations/Waves Configurations" });
+        string[] guids = AssetDatabase.FindAssets("t:WaveData", new[] { "Assets/Configurations/Production/Waves" });
         List<string> sourcePaths = new List<string>();
 
         for (int i = 0; i < guids.Length; i++)
@@ -218,7 +218,7 @@ public static class SandboxSetupTools
         int created = 0;
         for (int i = 0; i < sourcePaths.Count; i++)
         {
-            string targetPath = $"{WavesFolder}/{Path.GetFileName(sourcePaths[i])}";
+            string targetPath = $"{WavesFolder}/{GameAssetPaths.SandboxFileName(sourcePaths[i])}";
             WaveData copy = AssetDatabase.LoadAssetAtPath<WaveData>(targetPath);
 
             if (copy == null && AssetDatabase.CopyAsset(sourcePaths[i], targetPath))
@@ -251,7 +251,7 @@ public static class SandboxSetupTools
         GameBalanceConfig existing = AssetDatabase.LoadAssetAtPath<GameBalanceConfig>(BalancePath);
         if (existing != null) return existing;
 
-        if (!AssetDatabase.CopyAsset("Assets/Resources/GameBalanceConfig.asset", BalancePath))
+        if (!AssetDatabase.CopyAsset("Assets/Configurations/Production/Resources/GameBalanceConfig_Production.asset", BalancePath))
         {
             Debug.LogWarning("[SandboxSetup] No se pudo duplicar GameBalanceConfig.");
             return null;
@@ -266,13 +266,13 @@ public static class SandboxSetupTools
         ChestOpeningConfig existing = AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>(ChestOpeningConfigPath);
         if (existing != null) return existing;
 
-        if (!AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>("Assets/Resources/ChestOpeningConfig.asset"))
+        if (!AssetDatabase.LoadAssetAtPath<ChestOpeningConfig>("Assets/Configurations/Production/Resources/ChestOpeningConfig_Production.asset"))
         {
-            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Resources/ChestOpeningConfig.asset. Ejecuta primero 'Tools > Manners > VFX > Crear configuración de apertura de cofre' y luego este paso de nuevo si quieres tunear la cinemática por separado en el sandbox.");
+            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Configurations/Production/Resources/ChestOpeningConfig_Production.asset. Ejecuta primero 'Tools > Manners > VFX > Crear configuración de apertura de cofre' y luego este paso de nuevo si quieres tunear la cinemática por separado en el sandbox.");
             return null;
         }
 
-        if (!AssetDatabase.CopyAsset("Assets/Resources/ChestOpeningConfig.asset", ChestOpeningConfigPath))
+        if (!AssetDatabase.CopyAsset("Assets/Configurations/Production/Resources/ChestOpeningConfig_Production.asset", ChestOpeningConfigPath))
         {
             Debug.LogWarning("[SandboxSetup] No se pudo duplicar ChestOpeningConfig.");
             return null;
@@ -308,16 +308,15 @@ public static class SandboxSetupTools
     private static UpgradeDatabase CopyUpgradeDatabase()
     {
         UpgradeDatabase existing = AssetDatabase.LoadAssetAtPath<UpgradeDatabase>(UpgradeDatabasePath);
-        if (existing != null) return existing;
 
-        UpgradeDatabase source = AssetDatabase.LoadAssetAtPath<UpgradeDatabase>("Assets/Resources/UpgradeDatabase.asset");
+        UpgradeDatabase source = AssetDatabase.LoadAssetAtPath<UpgradeDatabase>("Assets/Configurations/Production/Resources/UpgradeDatabase_Production.asset");
         if (source == null)
         {
-            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Resources/UpgradeDatabase.asset.");
+            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Configurations/Production/Resources/UpgradeDatabase_Production.asset.");
             return null;
         }
 
-        if (!AssetDatabase.CopyAsset("Assets/Resources/UpgradeDatabase.asset", UpgradeDatabasePath))
+        if (existing == null && !AssetDatabase.CopyAsset("Assets/Configurations/Production/Resources/UpgradeDatabase_Production.asset", UpgradeDatabasePath))
         {
             Debug.LogWarning("[SandboxSetup] No se pudo duplicar UpgradeDatabase.");
             return null;
@@ -332,7 +331,7 @@ public static class SandboxSetupTools
             if (upgrade == null) continue;
 
             string sourcePath = AssetDatabase.GetAssetPath(upgrade);
-            string targetPath = $"{UpgradesFolder}/{Path.GetFileName(sourcePath)}";
+            string targetPath = $"{UpgradesFolder}/{GameAssetPaths.SandboxFileName(sourcePath)}";
 
             UpgradeData upgradeCopy = AssetDatabase.LoadAssetAtPath<UpgradeData>(targetPath);
             if (upgradeCopy == null && AssetDatabase.CopyAsset(sourcePath, targetPath))
@@ -350,10 +349,10 @@ public static class SandboxSetupTools
 
     private static OverrideDatabase CopyOverrideDatabase()
     {
-        OverrideDatabase source = AssetDatabase.LoadAssetAtPath<OverrideDatabase>("Assets/Resources/OverrideDatabase.asset");
+        OverrideDatabase source = AssetDatabase.LoadAssetAtPath<OverrideDatabase>("Assets/Configurations/Production/Resources/OverrideDatabase_Production.asset");
         if (source == null)
         {
-            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Resources/OverrideDatabase.asset. Ejecuta primero 'Tools > Manners > Overrides > Crear sistema de sobrecargas'.");
+            Debug.LogWarning("[SandboxSetup] No se encontró Assets/Configurations/Production/Resources/OverrideDatabase_Production.asset. Ejecuta primero 'Tools > Manners > Overrides > Crear sistema de sobrecargas'.");
             return null;
         }
 
@@ -362,7 +361,7 @@ public static class SandboxSetupTools
         OverrideDatabase copy = AssetDatabase.LoadAssetAtPath<OverrideDatabase>(OverrideDatabasePath);
         if (copy == null)
         {
-            if (!AssetDatabase.CopyAsset("Assets/Resources/OverrideDatabase.asset", OverrideDatabasePath))
+            if (!AssetDatabase.CopyAsset("Assets/Configurations/Production/Resources/OverrideDatabase_Production.asset", OverrideDatabasePath))
             {
                 Debug.LogWarning("[SandboxSetup] No se pudo duplicar OverrideDatabase.");
                 return null;
@@ -379,7 +378,7 @@ public static class SandboxSetupTools
             if (overrideData == null) continue;
 
             string sourcePath = AssetDatabase.GetAssetPath(overrideData);
-            string targetPath = $"{OverridesFolder}/{Path.GetFileName(sourcePath)}";
+            string targetPath = $"{OverridesFolder}/{GameAssetPaths.SandboxFileName(sourcePath)}";
 
             OverrideData overrideCopy = AssetDatabase.LoadAssetAtPath<OverrideData>(targetPath);
             if (overrideCopy == null && AssetDatabase.CopyAsset(sourcePath, targetPath))
@@ -388,7 +387,7 @@ public static class SandboxSetupTools
             if (overrideCopy != null && overrideData.effectConfig != null)
             {
                 string configSourcePath = AssetDatabase.GetAssetPath(overrideData.effectConfig);
-                string configTargetPath = $"{OverridesFolder}/{Path.GetFileName(configSourcePath)}";
+                string configTargetPath = $"{OverridesFolder}/{GameAssetPaths.SandboxFileName(configSourcePath)}";
 
                 OverrideEffectConfig configCopy = AssetDatabase.LoadAssetAtPath<OverrideEffectConfig>(configTargetPath);
                 if (configCopy == null && AssetDatabase.CopyAsset(configSourcePath, configTargetPath))
@@ -418,7 +417,7 @@ public static class SandboxSetupTools
         for (int i = 0; i < SourceEnemyConfigs.Length; i++)
         {
             EnemyConfiguration source = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(SourceEnemyConfigs[i]);
-            EnemyConfiguration copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>($"{EnemiesFolder}/{Path.GetFileName(SourceEnemyConfigs[i])}");
+            EnemyConfiguration copy = AssetDatabase.LoadAssetAtPath<EnemyConfiguration>($"{EnemiesFolder}/{GameAssetPaths.SandboxFileName(SourceEnemyConfigs[i])}");
             if (source != null && copy != null) map[source] = copy;
         }
 
@@ -429,14 +428,14 @@ public static class SandboxSetupTools
     {
         Dictionary<WaveData, WaveData> map = new Dictionary<WaveData, WaveData>();
 
-        string[] guids = AssetDatabase.FindAssets("t:WaveData", new[] { "Assets/Configurations/Waves Configurations" });
+        string[] guids = AssetDatabase.FindAssets("t:WaveData", new[] { "Assets/Configurations/Production/Waves" });
         for (int i = 0; i < guids.Length; i++)
         {
             string path = AssetDatabase.GUIDToAssetPath(guids[i]);
             if (path.Contains("/Map2Waves/")) continue;
 
             WaveData source = AssetDatabase.LoadAssetAtPath<WaveData>(path);
-            WaveData copy = AssetDatabase.LoadAssetAtPath<WaveData>($"{WavesFolder}/{Path.GetFileName(path)}");
+            WaveData copy = AssetDatabase.LoadAssetAtPath<WaveData>($"{WavesFolder}/{GameAssetPaths.SandboxFileName(path)}");
             if (source != null && copy != null) map[source] = copy;
         }
 

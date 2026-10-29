@@ -188,7 +188,7 @@ public class OverrideHudPanel : MonoBehaviour
             OverrideData candidate = row.OverrideData;
             if (candidate == null) continue;
 
-            if (candidate == overrideData || candidate.overrideName == overrideData.overrideName)
+            if (candidate == overrideData || candidate.PersistentId == overrideData.PersistentId)
                 return row;
         }
 

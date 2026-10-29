@@ -7,6 +7,13 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 {
     [Header("UI")]
     [SerializeField] private GameObject panelRoot;
+    [Header("Texto del panel por idioma")]
+    [SerializeField] private LocalizedString liveHeader = new LocalizedString("FPS: {0:F0} | Time scale: x{1:F2}\nTime left: {2}\nPlayer: {3:F0}/{4:F0} HP | Level {5}\nWallet: {6} coins | {7} gems\nDamage: {8:F1} | Fire interval: {9:F3}s\nRange: {10:F1} | Magnet: {11:F1}", "FPS: {0:F0} | Escala de tiempo: x{1:F2}\nTiempo restante: {2}\nJugador: {3:F0}/{4:F0} HP | Nivel {5}\nMonedero: {6} monedas | {7} gemas\nDaño: {8:F1} | Intervalo de disparo: {9:F3}s\nAlcance: {10:F1} | Imán: {11:F1}");
+    [SerializeField] private LocalizedString liveFooter = new LocalizedString("Wave {0} | Active enemies: {1}\nSpawn blocked: {2}", "Oleada {0} | Enemigos activos: {1}\nSpawn bloqueado: {2}");
+    [SerializeField] private LocalizedString overridesTitle = new LocalizedString("OVERRIDES", "SOBRECARGAS");
+    [SerializeField] private LocalizedString overridesDisabled = new LocalizedString("OVERRIDES (disabled)", "SOBRECARGAS (desactivadas)");
+    [SerializeField] private LocalizedString activeLabel = new LocalizedString("• ACTIVE", "• ACTIVA");
+    [SerializeField] private LocalizedString levelLabel = new LocalizedString("Lv {0}", "Nv {0}");
 
     [Header("Refresco")]
     [SerializeField] private float livePanelRefreshInterval = 0.25f;
@@ -24,6 +31,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
     private static readonly Color ColorSectionTitle = new Color(0.5f, 0.75f, 1f);
     private static readonly Color ColorLabelDim = new Color(0.65f, 0.65f, 0.65f);
 
+    [System.Serializable]
     private class UpgradeRow
     {
         public UpgradeType type;
@@ -31,6 +39,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         public TextMeshProUGUI value;
     }
 
+    [System.Serializable]
     private class OverrideRow
     {
         public OverrideData overrideData;
@@ -38,11 +47,11 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         public TextMeshProUGUI value;
     }
 
-    private TextMeshProUGUI headerText;
-    private TextMeshProUGUI footerText;
-    private TextMeshProUGUI overridesSectionTitle;
-    private readonly List<UpgradeRow> upgradeRows = new List<UpgradeRow>();
-    private readonly List<OverrideRow> overrideRows = new List<OverrideRow>();
+    [SerializeField] private TextMeshProUGUI headerText;
+    [SerializeField] private TextMeshProUGUI footerText;
+    [SerializeField] private TextMeshProUGUI overridesSectionTitle;
+    [SerializeField] private List<UpgradeRow> upgradeRows = new List<UpgradeRow>();
+    [SerializeField] private List<OverrideRow> overrideRows = new List<OverrideRow>();
 
     private PlayerHealth cachedPlayerHealth;
     private PlayerExperience cachedPlayerExperience;
@@ -57,13 +66,12 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
     {
         consoleTimer = consoleReportInterval;
 
-        if (panelRoot != null)
-            BuildLayout(panelRoot.transform);
     }
 
     private void OnEnable()
     {
         UpdateManager.Instance?.Register(this);
+        GameLocalization.LanguageChanged += RefreshPanel;
 
         if (logLevelUps) GameEvents.OnLevelUp += HandleLevelUp;
         if (logChests) GameEvents.OnChestSpawned += HandleChestSpawned;
@@ -82,6 +90,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
     private void OnDisable()
     {
         UpdateManager.Instance?.Unregister(this);
+        GameLocalization.LanguageChanged -= RefreshPanel;
 
         GameEvents.OnLevelUp -= HandleLevelUp;
         GameEvents.OnChestSpawned -= HandleChestSpawned;
@@ -99,6 +108,7 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
+        deltaTime = Time.unscaledDeltaTime;
         if (deltaTime > 0f)
         {
             float instantFps = 1f / deltaTime;
@@ -141,57 +151,20 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         cachedPlayerExperience = playerObject.GetComponent<PlayerExperience>();
     }
 
-    private void BuildLayout(Transform parent)
-    {
-        VerticalLayoutGroup rootLayout = GetOrAdd<VerticalLayoutGroup>(parent.gameObject);
-        rootLayout.padding = new RectOffset(14, 14, 12, 12);
-        rootLayout.spacing = 4f;
-        rootLayout.childForceExpandHeight = false;
-        rootLayout.childForceExpandWidth = true;
-        rootLayout.childControlHeight = true;
-        rootLayout.childControlWidth = true;
-
-        ContentSizeFitter fitter = GetOrAdd<ContentSizeFitter>(parent.gameObject);
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        headerText = CreateText(parent, "Header", 16f, FontStyles.Normal, Color.white);
-
-        CreateSectionTitle(parent, "MEJORAS");
-        UpgradeType[] types = (UpgradeType[])System.Enum.GetValues(typeof(UpgradeType));
-        for (int i = 0; i < types.Length; i++)
-        {
-            (TextMeshProUGUI label, TextMeshProUGUI value) = CreateRow(parent, FormatUpgradeName(types[i]));
-            upgradeRows.Add(new UpgradeRow { type = types[i], label = label, value = value });
-        }
-
-        overridesSectionTitle = CreateSectionTitle(parent, "SOBRECARGAS");
-        List<OverrideData> overrides = OverrideDatabase.Instance != null ? OverrideDatabase.Instance.allOverrides : null;
-        if (overrides != null)
-        {
-            for (int i = 0; i < overrides.Count; i++)
-            {
-                if (overrides[i] == null) continue;
-
-                (TextMeshProUGUI label, TextMeshProUGUI value) = CreateRow(parent, overrides[i].overrideName);
-                overrideRows.Add(new OverrideRow { overrideData = overrides[i], label = label, value = value });
-            }
-        }
-
-        CreateSectionTitle(parent, "PARTIDA");
-        footerText = CreateText(parent, "Footer", 14f, FontStyles.Normal, new Color(0.85f, 0.85f, 0.85f));
-    }
-
     private void RefreshPanel()
     {
-        if (headerText != null) headerText.text = SandboxReportBuilder.BuildHeader(smoothedFps, cachedPlayerHealth, cachedPlayerExperience);
-        if (footerText != null) footerText.text = SandboxReportBuilder.BuildFooter();
+        PlayerStatsManager liveStats = PlayerStatsManager.Instance;
+        CurrencyManager wallet = CurrencyManager.Instance;
+        if (headerText != null) headerText.text = liveHeader.Format(smoothedFps, Time.timeScale, GameTimeManager.Instance != null ? GameTimeManager.Instance.GetFormattedCountdown() : "--:--", cachedPlayerHealth != null ? cachedPlayerHealth.CurrentHealth : 0, cachedPlayerHealth != null ? cachedPlayerHealth.MaxHealth : 0, cachedPlayerExperience != null ? cachedPlayerExperience.GetCurrentLevel() : 0, wallet != null ? wallet.CurrentCoins : 0, wallet != null ? wallet.CurrentDiamonds : 0, liveStats != null ? liveStats.GetModifiedDamage() : 0, liveStats != null ? liveStats.GetModifiedAttackCooldown() : 0, liveStats != null ? liveStats.GetModifiedAttackRange() : 0, liveStats != null ? liveStats.GetModifiedMagnetRange() : 0);
+        EnemySpawnManager spawner = EnemySpawnManager.Instance;
+        if (footerText != null) footerText.text = liveFooter.Format(spawner != null ? spawner.CurrentWaveNumber : 0, EnemyHealth.ActiveEnemyCount, spawner != null && spawner.IsSpawnBlocked);
 
         OverrideManager overrideManager = OverrideManager.Instance;
 
         if (overridesSectionTitle != null)
         {
             bool enabled = overrideManager == null || overrideManager.OverridesEnabled;
-            overridesSectionTitle.text = enabled ? "SOBRECARGAS" : "SOBRECARGAS (desactivadas)";
+            overridesSectionTitle.text = enabled ? overridesTitle.Value : overridesDisabled.Value;
             overridesSectionTitle.color = enabled ? ColorSectionTitle : ColorInactive;
         }
 
@@ -199,9 +172,11 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         for (int i = 0; i < upgradeRows.Count; i++)
         {
             UpgradeRow row = upgradeRows[i];
+            UpgradeData data = FindUpgrade(row.type);
+            row.label.text = data != null ? data.upgradeName : row.type.ToString();
             int level = stats != null ? stats.GetUpgradeLevel(row.type) : 0;
 
-            row.value.text = level > 0 ? $"Nv {level}" : "—";
+            row.value.text = level > 0 ? levelLabel.Format(level) : "—";
             row.value.color = level > 0 ? ColorActive : ColorInactive;
             row.label.color = level > 0 ? Color.white : ColorLabelDim;
         }
@@ -210,11 +185,13 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         {
             OverrideRow row = overrideRows[i];
             OverrideData overrideData = row.overrideData;
+            if (overrideData == null) continue;
+            row.label.text = overrideData.overrideName;
             bool active = overrideManager != null && overrideManager.IsOverrideActive(overrideData);
 
             if (active)
             {
-                row.value.text = "• ACTIVA";
+                row.value.text = activeLabel.Value;
                 row.value.color = ColorActive;
                 row.label.color = Color.white;
             }
@@ -294,66 +271,4 @@ public class SandboxDebugMonitor : MonoBehaviour, IUpdateable
         return component != null ? component : target.AddComponent<T>();
     }
 
-    private TextMeshProUGUI CreateText(Transform parent, string name, float size, FontStyles style, Color color)
-    {
-        GameObject obj = new GameObject(name);
-        obj.transform.SetParent(parent, false);
-
-        TextMeshProUGUI text = obj.AddComponent<TextMeshProUGUI>();
-        text.fontSize = size;
-        text.fontStyle = style;
-        text.color = color;
-        text.textWrappingMode = TextWrappingModes.Normal;
-        text.alignment = TextAlignmentOptions.TopLeft;
-
-        LayoutElement element = obj.AddComponent<LayoutElement>();
-        element.flexibleWidth = 1f;
-
-        return text;
-    }
-
-    private TextMeshProUGUI CreateSectionTitle(Transform parent, string text)
-    {
-        TextMeshProUGUI title = CreateText(parent, "Section_" + text, 14f, FontStyles.Bold, ColorSectionTitle);
-        title.text = text;
-        title.margin = new Vector4(0f, 8f, 0f, 2f);
-        return title;
-    }
-
-    private (TextMeshProUGUI, TextMeshProUGUI) CreateRow(Transform parent, string labelText)
-    {
-        GameObject row = new GameObject("Row_" + labelText);
-        row.transform.SetParent(parent, false);
-
-        HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
-        layout.childForceExpandWidth = false;
-        layout.childControlWidth = true;
-        layout.spacing = 8f;
-
-        LayoutElement rowElement = row.AddComponent<LayoutElement>();
-        rowElement.preferredHeight = 20f;
-
-        GameObject labelObj = new GameObject("Label");
-        labelObj.transform.SetParent(row.transform, false);
-        TextMeshProUGUI label = labelObj.AddComponent<TextMeshProUGUI>();
-        label.text = labelText;
-        label.fontSize = 14f;
-        label.color = ColorLabelDim;
-        label.alignment = TextAlignmentOptions.MidlineLeft;
-        LayoutElement labelElement = labelObj.AddComponent<LayoutElement>();
-        labelElement.preferredWidth = 220f;
-
-        GameObject valueObj = new GameObject("Value");
-        valueObj.transform.SetParent(row.transform, false);
-        TextMeshProUGUI value = valueObj.AddComponent<TextMeshProUGUI>();
-        value.fontSize = 14f;
-        value.fontStyle = FontStyles.Bold;
-        value.color = Color.white;
-        value.alignment = TextAlignmentOptions.MidlineLeft;
-        value.textWrappingMode = TextWrappingModes.NoWrap;
-        LayoutElement valueElement = valueObj.AddComponent<LayoutElement>();
-        valueElement.flexibleWidth = 1f;
-
-        return (label, value);
-    }
 }
