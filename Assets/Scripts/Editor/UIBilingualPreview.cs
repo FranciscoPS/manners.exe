@@ -14,23 +14,26 @@ using Object = UnityEngine.Object;
 public static class UIBilingualPreview
 {
     private const BindingFlags Fields = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+    private const string Options = "OptionsMenu/";
     private static readonly string[] MenuPanels =
     {
-        "MainMenuPanel", "OptionsPanel", "AudioPanel", "ControlesPanel", "MapSelectionPanel", "SobrecargasMenuPanel",
-        "GraphicsSettingsPanel", "UpgradesPanel", "TiendaPanel", "CreditosPanel", "AyudaPanel", "PersonalizacionPanel"
+        "MainMenuPanel", Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", "MapSelectionPanel", Options + "SobrecargasMenuPanel",
+        Options + "GraphicsSettingsPanel", "UpgradesPanel", "TiendaPanel", "CreditosPanel", Options + "AyudaPanel", "PersonalizacionPanel"
     };
     private static readonly string[] GamePanels =
     {
-        "HUD", "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "Tutorial", "AudioPanel", "AyudaPanel", "GraphicsSettingsPanel"
+        "HUD", "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "Tutorial",
+        Options + "OptionsPanel", Options + "AudioPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "SobrecargasMenuPanel"
     };
     private static readonly string[] ModalPanels =
     {
-        "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "GraphicsSettingsPanel", "AudioPanel", "AyudaPanel"
+        "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI",
+        Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "SobrecargasMenuPanel"
     };
     private static readonly Vector2Int[] Resolutions =
     {
-        new Vector2Int(1920, 1080), new Vector2Int(1280, 720), new Vector2Int(2560, 1080),
-        new Vector2Int(1600, 1200), new Vector2Int(1920, 1200), new Vector2Int(3440, 1440), new Vector2Int(3840, 1080)
+        new Vector2Int(1920, 1080), new Vector2Int(1280, 720), new Vector2Int(2560, 1080), new Vector2Int(1600, 1200),
+        new Vector2Int(1920, 1200), new Vector2Int(3440, 1440), new Vector2Int(3840, 1080), new Vector2Int(3840, 1600), new Vector2Int(5120, 2160)
     };
 
     [MenuItem("Tools/Manners/UI/Capturar inglés y español", false, 231)]
@@ -75,8 +78,11 @@ public static class UIBilingualPreview
         Transform canvas = scene.GetRootGameObjects().First(r => r.name == "Canvas").transform;
         if (path == UIAuthoringTools.Scenes[0])
         {
-            foreach (Transform child in canvas) child.gameObject.SetActive(child.name == panel || child.name == "StyleMenuBacking" || child.name == "StyleMenuDecoration");
-            if (panel == "SobrecargasMenuPanel") SetActive(UIEditorHierarchy.Find(canvas, panel + "/OverrideHintsPanel"), true);
+            string rootName = panel.Split('/')[0];
+            foreach (Transform child in canvas) child.gameObject.SetActive(child.name == rootName || child.name == "StyleMenuBacking" || child.name == "StyleMenuDecoration");
+            Transform optionsRoot = canvas.Find(Options.TrimEnd('/'));
+            if (optionsRoot != null) foreach (Transform child in optionsRoot) child.gameObject.SetActive(panel == Options + child.name);
+            if (panel.EndsWith("SobrecargasMenuPanel")) SetActive(UIEditorHierarchy.Find(canvas, panel + "/OverrideHintsPanel"), true);
             if (panel == "UpgradesPanel")
             {
                 SetActive(UIEditorHierarchy.Find(canvas, panel + "/NormalPanel"), true);
@@ -99,7 +105,8 @@ public static class UIBilingualPreview
                 GameObject tutorialPanel = Get<GameObject>(tutorial, "tutorialPanel"); tutorialPanel.SetActive(panel == "Tutorial");
             }
         }
-        if (panel == "AyudaPanel")
+        if (panel.EndsWith("OptionsPanel")) SetActive(UIEditorHierarchy.Find(canvas, panel + "/LanguageSelector"), true);
+        if (panel.EndsWith("AyudaPanel"))
             foreach (string name in new[] { "MovimientoPanel", "ExperienciaPanel", "EnemigosPanel", "MejorasPanel" })
                 SetActive(UIEditorHierarchy.Find(canvas, panel + "/" + name), name == "MovimientoPanel");
         foreach (GameObject root in scene.GetRootGameObjects())
@@ -125,7 +132,7 @@ public static class UIBilingualPreview
                 SetActive(Get<TMP_Text>(level, "cooldownWarningText").transform, false);
             }
         }
-        if (panel == "GraphicsSettingsPanel")
+        if (panel.EndsWith("GraphicsSettingsPanel"))
         {
             GraphicsSettingsMenu menu = canvas.GetComponentsInChildren<GraphicsSettingsMenu>(true).First();
             SerializedProperty rows = new SerializedObject(menu).FindProperty("rows");
@@ -161,7 +168,7 @@ public static class UIBilingualPreview
         string surface = path == UIAuthoringTools.Scenes[0] ? "Menu" : "Game";
         foreach (Vector2Int size in Resolutions)
         {
-            string tag = language + "-" + size.x + "x" + size.y + "-" + surface + "-" + panel;
+            string tag = language + "-" + size.x + "x" + size.y + "-" + surface + "-" + panel.Replace('/', '-');
             UIStylePreview.Capture(scene, "Logs/UIReview/" + tag + ".png", size.x, size.y, report, tag);
         }
         File.WriteAllText("Logs/UIReview/layout.txt", report.ToString());

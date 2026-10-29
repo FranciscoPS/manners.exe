@@ -99,7 +99,7 @@ public class PerformanceSceneSmokeTests
                     var point = Object.FindFirstObjectByType<SpawnPoint>();
                     Assert.IsNotNull(point);
                     var configuration = Object.Instantiate(AssetDatabase.LoadAssetAtPath<EnemyConfiguration>(
-                        AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets("t:EnemyConfiguration")[0])));
+                        "Assets/Configurations/Production/Enemies/BasicEnemy_Production.asset"));
                     configuration.maxHealth = 1000000;
                     try
                     {

@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 using DG.Tweening;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -12,17 +11,14 @@ public class MainMenuUIManager : MonoBehaviour
     [Header("Main Screens")]
     [SerializeField] private GameObject mainPanel;
     [SerializeField] private GameObject mapSelection;
-    [SerializeField] private GameObject optionsPanel;
     [SerializeField] private GameObject upgradesPanel;
     [SerializeField] private GameObject tiendaPanel;
     [SerializeField] private GameObject personalizacionPanel;
     [SerializeField] private GameObject creditosPanel;
-    [SerializeField, FormerlySerializedAs("sinergiasMenuPanel")] private GameObject sobrecargasMenuPanel;
 
-    [Header("Options Subscreens")]
-    [SerializeField] private GameObject helpPanel;
-    [SerializeField] private GameObject audioPanel;
-    [SerializeField] private GameObject controlesPanel;
+    [Header("Opciones compartidas")]
+    [Tooltip("Menú de opciones compartido con la pausa (prefab OptionsMenu): audio, controles, gráficos, idioma, ayuda y sobrecargas.")]
+    [SerializeField] private OptionsMenu optionsMenu;
 
     [Header("Upgrades Subscreens")]
     [SerializeField] private GameObject habilidadesnNormalesPanel;
@@ -34,13 +30,6 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("Personalizacion Subscreens")]
     [SerializeField] private GameObject skinsPanel;
-
-    [Header("Help Subscreens")]
-    [SerializeField] private GameObject movimientoPanel;
-    [SerializeField] private GameObject experienciaPanel;
-    [SerializeField] private GameObject enemigosPanel;
-    [SerializeField] private GameObject mejorasPanel;
-    [SerializeField, FormerlySerializedAs("sinergiasPanel")] private GameObject sobrecargasPanel;
 
     [Header("Normal SubScreens")]
     [SerializeField] private GameObject rpPanel;
@@ -60,15 +49,13 @@ public class MainMenuUIManager : MonoBehaviour
     private Dictionary<MenuScreen, GameObject> screenDictionary;
 
     private GameObject currentScreen;
-    private GameObject currentOptionsSubPanel;
-    private GameObject currentHelpSubPanel;
     private GameObject currentUpgradesSubPanel;
     private GameObject currentTiendaSubPanel;
     private GameObject currentPersonalizacionSubPanel;
+    private bool closingOptions;
 
     [SerializeField] private GameObject fadeOverlay;
     [SerializeField] private CanvasGroup fadeCanvasGroup;
-    [SerializeField] private GraphicsSettingsMenu graphicsSettings;
 
     private void Awake()
     {
@@ -77,17 +64,11 @@ public class MainMenuUIManager : MonoBehaviour
         screenDictionary = new Dictionary<MenuScreen, GameObject>
         {
             { MenuScreen.Main, mainPanel },
-            { MenuScreen.Options, optionsPanel },
             { MenuScreen.Upgrades, upgradesPanel },
             { MenuScreen.Tienda, tiendaPanel },
             { MenuScreen.Personalizacion, personalizacionPanel },
             { MenuScreen.Creditos, creditosPanel },
-            { MenuScreen.Sobrecargas, sobrecargasMenuPanel },
             { MenuScreen.mapSelection, mapSelection },
-
-            { MenuScreen.Help, helpPanel },
-            { MenuScreen.Audio, audioPanel },
-            { MenuScreen.Controles, controlesPanel },
 
             { MenuScreen.UpgradesHabilidadesNormales, habilidadesnNormalesPanel },
             { MenuScreen.UpgradesHabilidadesPremium,  habilidadesPremiumPanel },
@@ -96,12 +77,6 @@ public class MainMenuUIManager : MonoBehaviour
             { MenuScreen.TiendaMonedas, gemasPanel },
 
             { MenuScreen.PersonalizacionSkins, skinsPanel },
-
-            { MenuScreen.HelpMovimiento, movimientoPanel },
-            { MenuScreen.HelpExperiencia, experienciaPanel },
-            { MenuScreen.HelpEnemigos, enemigosPanel },
-            { MenuScreen.HelpMejoras, mejorasPanel },
-            { MenuScreen.HelpSobrecargas, sobrecargasPanel },
         };
 
         foreach (var screen in screenDictionary.Values)
@@ -112,8 +87,6 @@ public class MainMenuUIManager : MonoBehaviour
 
         DeactivateAllUpgradeSubpanels();
 
-        currentHelpSubPanel = null;
-        currentOptionsSubPanel = null;
         currentUpgradesSubPanel = null;
         currentTiendaSubPanel = null;
         currentPersonalizacionSubPanel = null;
@@ -123,27 +96,27 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void Start()
     {
-        if (graphicsSettings != null) graphicsSettings.Closed += BackToOptions;
-        if (graphicsSettings != null)
-            screenDictionary[MenuScreen.Graphics] = graphicsSettings.gameObject;
-
+        if (optionsMenu != null) optionsMenu.Closed += OnOptionsClosed;
     }
 
-    private bool IsOptionsSubscreen(MenuScreen screen)
+    private void OnDestroy()
     {
-        return screen == MenuScreen.Help
+        if (optionsMenu != null) optionsMenu.Closed -= OnOptionsClosed;
+    }
+
+    private static bool IsOptionsScreen(MenuScreen screen)
+    {
+        return screen == MenuScreen.Options
+            || screen == MenuScreen.Help
             || screen == MenuScreen.Audio
             || screen == MenuScreen.Controles
-            || screen == MenuScreen.Graphics;
-    }
-
-    private bool IsHelpSubscreen(MenuScreen screen)
-    {
-        return screen == MenuScreen.HelpMovimiento
+            || screen == MenuScreen.Graphics
+            || screen == MenuScreen.Sobrecargas
+            || screen == MenuScreen.HelpSobrecargas
+            || screen == MenuScreen.HelpMovimiento
             || screen == MenuScreen.HelpExperiencia
             || screen == MenuScreen.HelpEnemigos
-            || screen == MenuScreen.HelpMejoras
-            || screen == MenuScreen.HelpSobrecargas;
+            || screen == MenuScreen.HelpMejoras;
     }
 
     private bool IsUpgradesSubscreen(MenuScreen screen)
@@ -206,55 +179,9 @@ public class MainMenuUIManager : MonoBehaviour
                 return;
         }
 
-        if (IsHelpSubscreen(screen))
+        if (IsOptionsScreen(screen))
         {
-            if (!screenDictionary.TryGetValue(screen, out GameObject helpSub) || helpSub == null)
-                return;
-
-            if (optionsPanel != null && optionsPanel.activeSelf)
-                optionsPanel.SetActive(false);
-
-            if (currentScreen != null && currentScreen != helpPanel)
-                currentScreen.SetActive(false);
-
-            if (helpPanel != null && !helpPanel.activeSelf)
-                helpPanel.SetActive(true);
-
-            currentScreen = helpPanel;
-            currentOptionsSubPanel = helpPanel;
-
-            if (currentHelpSubPanel != null && currentHelpSubPanel != helpSub)
-                currentHelpSubPanel.SetActive(false);
-
-            helpSub.SetActive(true);
-            currentHelpSubPanel = helpSub;
-            return;
-        }
-
-        if (IsOptionsSubscreen(screen))
-        {
-            if (!screenDictionary.TryGetValue(screen, out GameObject subPanel) || subPanel == null)
-                return;
-
-            if (optionsPanel != null && optionsPanel.activeSelf)
-                optionsPanel.SetActive(false);
-
-            if (currentScreen != null && currentScreen != subPanel)
-                currentScreen.SetActive(false);
-
-            subPanel.SetActive(true);
-            currentScreen = subPanel;
-            currentOptionsSubPanel = subPanel;
-
-            if (screen == MenuScreen.Help)
-            {
-                if (currentHelpSubPanel != null)
-                {
-                    currentHelpSubPanel.SetActive(false);
-                    currentHelpSubPanel = null;
-                }
-            }
-
+            ShowOptions(screen);
             return;
         }
 
@@ -319,8 +246,6 @@ public class MainMenuUIManager : MonoBehaviour
 
             }
 
-            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
-            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
             if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel.SetActive(false); currentPersonalizacionSubPanel = null; }
 
@@ -346,8 +271,6 @@ public class MainMenuUIManager : MonoBehaviour
             tiendaSub.SetActive(true);
             currentTiendaSubPanel = tiendaSub;
 
-            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
-            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
             if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel.SetActive(false); currentPersonalizacionSubPanel = null; }
 
@@ -373,32 +296,13 @@ public class MainMenuUIManager : MonoBehaviour
             persSub.SetActive(true);
             currentPersonalizacionSubPanel = persSub;
 
-            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
-            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
             if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
             if (currentTiendaSubPanel != null) { currentTiendaSubPanel.SetActive(false); currentTiendaSubPanel = null; }
 
             return;
         }
 
-        if (screen == MenuScreen.Options)
-        {
-            if (currentScreen != null)
-                currentScreen.SetActive(false);
-
-            if (currentOptionsSubPanel != null) { currentOptionsSubPanel.SetActive(false); currentOptionsSubPanel = null; }
-            if (currentHelpSubPanel != null) { currentHelpSubPanel.SetActive(false); currentHelpSubPanel = null; }
-            if (currentUpgradesSubPanel != null) { currentUpgradesSubPanel.SetActive(false); currentUpgradesSubPanel = null; }
-            if (currentTiendaSubPanel != null) { currentTiendaSubPanel?.SetActive(false); currentTiendaSubPanel = null; }
-            if (currentPersonalizacionSubPanel != null) { currentPersonalizacionSubPanel?.SetActive(false); currentPersonalizacionSubPanel = null; }
-
-            if (optionsPanel != null)
-            {
-                optionsPanel.SetActive(true);
-                currentScreen = optionsPanel;
-            }
-            return;
-        }
+        CloseOptions();
 
         foreach (var panel in screenDictionary.Values)
         {
@@ -412,11 +316,72 @@ public class MainMenuUIManager : MonoBehaviour
             currentScreen = screenToShow;
         }
 
-        currentOptionsSubPanel = null;
-        currentHelpSubPanel = null;
         currentUpgradesSubPanel = null;
         currentTiendaSubPanel = null;
         currentPersonalizacionSubPanel = null;
+    }
+
+    private void ShowOptions(MenuScreen screen)
+    {
+        if (optionsMenu == null) return;
+
+        if (currentScreen != null)
+            currentScreen.SetActive(false);
+
+        currentScreen = null;
+        currentUpgradesSubPanel = null;
+        currentTiendaSubPanel = null;
+        currentPersonalizacionSubPanel = null;
+
+        switch (screen)
+        {
+            case MenuScreen.Audio:
+                optionsMenu.ShowAudio();
+                break;
+            case MenuScreen.Controles:
+                optionsMenu.ShowControls();
+                break;
+            case MenuScreen.Graphics:
+                optionsMenu.ShowGraphics();
+                break;
+            case MenuScreen.Help:
+                optionsMenu.ShowHelp();
+                break;
+            case MenuScreen.HelpMovimiento:
+                optionsMenu.ShowHelpSection(0);
+                break;
+            case MenuScreen.HelpExperiencia:
+                optionsMenu.ShowHelpSection(1);
+                break;
+            case MenuScreen.HelpEnemigos:
+                optionsMenu.ShowHelpSection(2);
+                break;
+            case MenuScreen.HelpMejoras:
+                optionsMenu.ShowHelpSection(3);
+                break;
+            case MenuScreen.Sobrecargas:
+            case MenuScreen.HelpSobrecargas:
+                optionsMenu.OpenOverrides();
+                break;
+            default:
+                optionsMenu.Open();
+                break;
+        }
+    }
+
+    private void CloseOptions()
+    {
+        if (optionsMenu == null || !optionsMenu.IsOpen) return;
+
+        closingOptions = true;
+        optionsMenu.Close();
+        closingOptions = false;
+    }
+
+    private void OnOptionsClosed()
+    {
+        if (closingOptions) return;
+        ShowScreen(MenuScreen.Main);
     }
 
     public void OnGraphicsButtonPressed() => ShowScreen(MenuScreen.Graphics);

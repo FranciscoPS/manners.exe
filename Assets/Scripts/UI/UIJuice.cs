@@ -32,7 +32,11 @@ public static class UIJuice
         float scale = style != null ? style.punchScale : 1.16f;
         float rotation = style != null ? style.punchRotation : 4f;
         float duration = style != null ? style.punchDuration : 0.32f;
+        return rectTransform.Punch(scale, rotation, duration);
+    }
 
+    public static Tween Punch(this RectTransform rectTransform, float scale, float rotation, float duration)
+    {
         rectTransform.DOKill();
         rectTransform.localScale = Vector3.one;
         rectTransform.localRotation = Quaternion.identity;

@@ -29,8 +29,9 @@ public static class UIAuthoringTools
         { "RadiantAuraVFX", new[] { "primaryRay", "secondaryRay" } },
         { "GraphicsSettingsMenu", new[] { "entryButton", "applyButton", "resetButton", "backButton", "keepButton", "revertButton", "controls", "confirmationText", "statusText", "syncHint" } },
         { "LanguageSelector", new[] { "previousButton", "nextButton", "valueLabel" } },
-        { "MainMenuUIManager", new[] { "graphicsSettings", "fadeOverlay", "fadeCanvasGroup" } },
-        { "PauseMenu", new[] { "graphicsSettings" } },
+        { "MainMenuUIManager", new[] { "optionsMenu", "fadeOverlay", "fadeCanvasGroup" } },
+        { "PauseMenu", new[] { "optionsMenu" } },
+        { "OptionsMenu", new[] { "hub", "audioScreen", "controlsScreen", "helpScreen", "overridesScreen", "graphics", "languagePanel" } },
         { "GameOverUI", new[] { "gameOverCanvasGroup", "fadeOverlay", "fadeCanvasGroup" } },
         { "TutorialManager", new[] { "typingSource", "messageText", "nextButton" } },
         { "ExperienceUI", new[] { "barRect", "expBarFill", "levelText", "expText" } }
@@ -52,6 +53,8 @@ public static class UIAuthoringTools
     private static void ContentFrame() => Open("Assets/Prefabs/UI/Layout/ContentFrame.prefab");
     [MenuItem("Tools/Manners/UI/Editar/HUD de sobrecargas", false, 207)]
     private static void OverrideHud() => Open("Assets/Prefabs/UI/OverrideHudPanel.prefab");
+    [MenuItem("Tools/Manners/UI/Editar/Menú de opciones compartido", false, 208)]
+    private static void OptionsMenuPrefab() => Open(UIStyleApplier.OptionsMenuPrefabPath);
     [MenuItem("Tools/Manners/Configuraciones/Producción", false, 220)]
     private static void Production() => Select(GameAssetPaths.Production);
     [MenuItem("Tools/Manners/Configuraciones/Sandbox", false, 221)]

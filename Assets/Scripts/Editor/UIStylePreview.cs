@@ -34,12 +34,12 @@ public static class UIStylePreview
     private static readonly Shot[] Shots =
     {
         new Shot(MainMenu, "menu-principal"),
-        new Shot(MainMenu, "menu-opciones", "-Canvas/MainMenuPanel", "+Canvas/OptionsPanel"),
+        new Shot(MainMenu, "menu-opciones", "-Canvas/MainMenuPanel", "+Canvas/OptionsMenu/OptionsPanel", "+Canvas/OptionsMenu/OptionsPanel/LanguageSelector"),
         new Shot(MainMenu, "menu-mejoras", "-Canvas/MainMenuPanel", "+Canvas/UpgradesPanel", "+Canvas/UpgradesPanel/NormalPanel", "+Canvas/UpgradesPanel/NormalPanel/RPPanel"),
         new Shot(MainMenu, "menu-tienda", "-Canvas/MainMenuPanel", "+Canvas/TiendaPanel", "+Canvas/TiendaPanel/Skins"),
-        new Shot(MainMenu, "menu-sobrecargas", "-Canvas/MainMenuPanel", "+Canvas/SobrecargasMenuPanel", "+Canvas/SobrecargasMenuPanel/OverrideHintsPanel"),
-        new Shot(MainMenu, "menu-audio", "-Canvas/MainMenuPanel", "+Canvas/AudioPanel"),
-        new Shot(MainMenu, "menu-controles", "-Canvas/MainMenuPanel", "+Canvas/ControlesPanel"),
+        new Shot(MainMenu, "menu-sobrecargas", "-Canvas/MainMenuPanel", "+Canvas/OptionsMenu/SobrecargasMenuPanel", "+Canvas/OptionsMenu/SobrecargasMenuPanel/OverrideHintsPanel"),
+        new Shot(MainMenu, "menu-audio", "-Canvas/MainMenuPanel", "+Canvas/OptionsMenu/AudioPanel"),
+        new Shot(MainMenu, "menu-controles", "-Canvas/MainMenuPanel", "+Canvas/OptionsMenu/ControlesPanel"),
         new Shot(MainMenu, "menu-mapas", "-Canvas/MainMenuPanel", "+Canvas/MapSelectionPanel"),
         new Shot(Level1, "nivel-hud"),
         new Shot(Level1, "nivel-mejoras", "+Canvas/LevelUpPanel"),

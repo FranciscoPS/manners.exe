@@ -26,6 +26,7 @@ public static partial class UIStyleApplier
         "Assets/Prefabs/UI/OverrideHintsPanel.prefab",
         "Assets/Prefabs/UI/InitialsEntryUI.prefab",
         "Assets/Prefabs/UI/FloatingText.prefab",
+        "Assets/Prefabs/UI/Settings/OptionsMenu.prefab",
     };
 
     private const string StylePrefix = "Style";
@@ -288,7 +289,7 @@ public static partial class UIStyleApplier
 
         string name = image.gameObject.name;
         Transform parent = image.transform.parent;
-        bool underCanvas = parent != null && parent.GetComponent<Canvas>() != null;
+        bool underCanvas = parent != null && (parent.GetComponent<Canvas>() != null || parent.GetComponent<OptionsMenu>() != null);
         return underCanvas || name == "Background";
     }
 
@@ -1014,7 +1015,7 @@ public static partial class UIStyleApplier
 
     private static void AddScreenIntros(Transform root)
     {
-        if (root.GetComponent<Canvas>() == null)
+        if (root.GetComponent<Canvas>() == null && root.GetComponent<OptionsMenu>() == null)
         {
             if (root.GetComponent<InitialsEntryUI>() != null) EnsureIntro(root.gameObject);
             return;
@@ -1022,6 +1023,12 @@ public static partial class UIStyleApplier
 
         foreach (Transform child in root)
         {
+            if (child.GetComponent<OptionsMenu>() != null)
+            {
+                AddScreenIntros(child);
+                continue;
+            }
+
             Image image = child.GetComponent<Image>();
             if (image == null || !IsFullStretch((RectTransform)child)) continue;
             if (image.material != style.scrimStripes) continue;
