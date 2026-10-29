@@ -24,6 +24,8 @@ public static class GameEvents
 
     public static event Action OnShopAutoClosed;
 
+    public static event Action OnShopClosed;
+
     public static event Action<string> OnTutorialStepShown;
 
     public static event Action OnTutorialCompleted;
@@ -45,6 +47,7 @@ public static class GameEvents
     public static void TriggerShopLocationChanged(int newShopIndex) => OnShopLocationChanged?.Invoke(newShopIndex);
     public static void TriggerShopOpened() => OnShopOpened?.Invoke();
     public static void TriggerShopAutoClosed() => OnShopAutoClosed?.Invoke();
+    public static void TriggerShopClosed() => OnShopClosed?.Invoke();
 
     public static void TriggerTutorialStepShown(string stepId) => OnTutorialStepShown?.Invoke(stepId);
     public static void TriggerTutorialCompleted() => OnTutorialCompleted?.Invoke();
@@ -60,6 +63,7 @@ public static class GameEvents
         OnShopLocationChanged = null;
         OnShopOpened = null;
         OnShopAutoClosed = null;
+        OnShopClosed = null;
         OnGameTimeUpdated = null;
         OnMatchTimeExpired = null;
         OnTutorialStepShown = null;

@@ -76,6 +76,12 @@ public static partial class UIStyleApplier
         style = targetStyle;
         report = targetReport;
 
+        if (style.faceShop == null)
+        {
+            UIStyleSpriteBuilder.BuildFaceShop(style, report);
+            AssetDatabase.SaveAssets();
+        }
+
         EnsureOptionsMenuPrefab();
         AdjustOptionsMenuAsset();
 
@@ -339,6 +345,10 @@ public static partial class UIStyleApplier
                 StyleHealthBar((RectTransform)health);
                 KeepOverridePanelBelowHealth(canvas, (RectTransform)health);
             }
+
+            Transform timerPlate = canvas.Find(StylePrefix + "TimerPlate");
+            Transform timer = timerPlate != null ? timerPlate.Find("Timer") : canvas.Find("Timer");
+            if (timer != null) StyleTimer((RectTransform)timer);
 
             Transform shop = canvas.Find("ShopText");
             if (shop != null)

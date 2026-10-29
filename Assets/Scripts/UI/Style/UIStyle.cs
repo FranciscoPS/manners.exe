@@ -147,6 +147,8 @@ public sealed class UIStyle : ScriptableObject
     public Sprite faceHurt;
     public Sprite faceAngry;
     public Sprite faceDead;
+    [Tooltip("Ojos con signos de dólar mientras la tienda está abierta.")]
+    public Sprite faceShop;
     [Tooltip("Segundos mínimos entre un gesto de la cara y el siguiente (parpadeo o mirada de reojo).")]
     public float faceBlinkMin = 0.5f;
     [Tooltip("Segundos máximos entre gestos de la cara.")]

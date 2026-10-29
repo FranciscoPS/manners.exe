@@ -570,9 +570,10 @@ public class LevelUpManager : MonoBehaviour, IUpdateable
         }
         SyncInstructionPlate();
 
-        if (currentMode == UpgradeMode.Shop && connectedShop != null)
+        if (currentMode == UpgradeMode.Shop)
         {
-            connectedShop.OnShopClosed();
+            if (connectedShop != null) connectedShop.OnShopClosed();
+            GameEvents.TriggerShopClosed();
         }
     }
 
