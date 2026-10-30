@@ -23,6 +23,7 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     private bool overridesOpenedDirectly;
 
     public event Action Closed;
+    public event Action AudioClosed;
 
     public bool IsOpen => currentScreen != null;
     public bool IsActive => isActiveAndEnabled;
@@ -114,6 +115,9 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     {
         if (currentScreen == null) return;
 
+        if (currentScreen == audioScreen)
+            AudioClosed?.Invoke();
+
         Hide(currentScreen);
         currentScreen = null;
         overridesOpenedDirectly = false;
@@ -124,6 +128,9 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     private void Show(GameObject screen)
     {
         if (screen == null) return;
+
+        if (currentScreen == audioScreen && currentScreen != screen)
+            AudioClosed?.Invoke();
 
         if (currentScreen != null && currentScreen != screen) Hide(currentScreen);
         if (screen != hub) Hide(languagePanel);
