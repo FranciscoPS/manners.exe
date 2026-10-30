@@ -149,6 +149,13 @@ public static partial class UIStyleApplier
         text.fontSizeMin = 26f;
         text.margin = new Vector4(70f, 0f, 24f, 0f);
         text.alignment = TextAlignmentOptions.Center;
+        LocalizedText placeholder = timer.GetComponent<LocalizedText>();
+        if (placeholder != null)
+        {
+            UnityEngine.Object.DestroyImmediate(placeholder);
+            report.AppendLine("HUD: el cronómetro deja de llevar LocalizedText; al reactivarse muestra el tiempo real y no la etiqueta.");
+        }
+        if (string.IsNullOrEmpty(text.text) || text.text == "Timer" || text.text == "Tiempo") text.text = "05:00";
         Finish(text);
 
         GameTimeUI timeUI = timer.GetComponent<GameTimeUI>();
@@ -159,6 +166,8 @@ public static partial class UIStyleApplier
             serialized.FindProperty("overtimeColor").colorValue = style.paper;
             SetReference(serialized, "plate", plateImage);
             SetColor(serialized, "overtimePlateColor", style.danger);
+            SetReference(serialized, "glyph", iconImage);
+            SetColor(serialized, "overtimeGlyphColor", style.alert);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             Touch(timeUI);
         }

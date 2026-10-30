@@ -76,6 +76,12 @@ public static partial class UIStyleApplier
         style = targetStyle;
         report = targetReport;
 
+        if (style.faceShop == null)
+        {
+            UIStyleSpriteBuilder.BuildFaceShop(style, report);
+            AssetDatabase.SaveAssets();
+        }
+
         EnsureOptionsMenuPrefab();
         AdjustOptionsMenuAsset();
 
@@ -297,10 +303,17 @@ public static partial class UIStyleApplier
             menuRoot = instance.transform;
             menuRoot.SetParent(canvas, false);
             Stretch((RectTransform)menuRoot, 0f, 0f, 0f, 0f);
-            Transform anchor = canvas.Find("InitialsEntryUI") ?? canvas.Find("PausePanel");
-            menuRoot.SetSiblingIndex(anchor != null ? anchor.GetSiblingIndex() + 1 : canvas.childCount - 1);
+            Transform anchor = menuScene ? canvas.Find("OptionsPanel") : canvas.Find("InitialsEntryUI") ?? canvas.Find("PausePanel");
+            int index = anchor == null ? canvas.childCount - 1 : menuScene ? anchor.GetSiblingIndex() : anchor.GetSiblingIndex() + 1;
+            menuRoot.SetSiblingIndex(index);
             createdCount++;
             report.AppendLine($"MENÚS {path}: instancia del menú de opciones compartido añadida al Canvas.");
+        }
+
+        if (menuScene && menuRoot != null)
+        {
+            foreach (string name in OptionsScreens)
+                Remove(canvas.Find(name), $"{path}: el panel suelto '{name}' se retira; ya vive dentro del menú de opciones compartido.");
         }
 
         OptionsMenu menu = menuRoot != null ? menuRoot.GetComponent<OptionsMenu>() : null;
@@ -339,6 +352,10 @@ public static partial class UIStyleApplier
                 StyleHealthBar((RectTransform)health);
                 KeepOverridePanelBelowHealth(canvas, (RectTransform)health);
             }
+
+            Transform timerPlate = canvas.Find(StylePrefix + "TimerPlate");
+            Transform timer = timerPlate != null ? timerPlate.Find("Timer") : canvas.Find("Timer");
+            if (timer != null) StyleTimer((RectTransform)timer);
 
             Transform shop = canvas.Find("ShopText");
             if (shop != null)

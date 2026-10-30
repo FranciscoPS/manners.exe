@@ -12,7 +12,8 @@ public class MannersFaceUI : MonoBehaviour
         Hurt,
         Angry,
         Dead,
-        Glitch
+        Glitch,
+        Shop
     }
 
     [Tooltip("Imagen de los ojos: cambia de sprite y de color según el estado.")]
@@ -46,6 +47,25 @@ public class MannersFaceUI : MonoBehaviour
     [SerializeField] private float hurtFlashDuration = 0.08f;
     [SerializeField] private int hurtFlashCount = 2;
 
+    [Header("Subida de nivel")]
+    [Tooltip("Escala máxima de toda la cara al subir de nivel; vuelve con rebote a su tamaño.")]
+    [SerializeField] private float happyScale = 1.6f;
+    [Tooltip("Giro de toda la cara durante el rebote de subida de nivel, en grados.")]
+    [SerializeField] private float happyRotation = 8f;
+    [Tooltip("Duración del rebote de la cara al subir de nivel.")]
+    [SerializeField] private float happyBounceDuration = 0.6f;
+    [Tooltip("Tiempo que la cara mantiene el gesto feliz con los ojos amarillos.")]
+    [SerializeField] private float happyHold = 1.4f;
+    [Tooltip("La pantalla de la cara parpadea en el verde del estilo al subir de nivel.")]
+    [SerializeField] private bool happyScreenFlash = true;
+    [SerializeField] private float happyFlashDuration = 0.12f;
+    [SerializeField] private int happyFlashCount = 2;
+
+    [Header("Tienda")]
+    [Tooltip("Mientras la tienda está abierta los ojos son signos de dólar. Al abrirla, toda la cara da un rebote con esta escala.")]
+    [SerializeField] private float shopScale = 1.3f;
+    [SerializeField] private float shopBounceDuration = 0.4f;
+
     private PlayerHealth playerHealth;
     private Image screen;
     private Color screenColor;
@@ -54,6 +74,7 @@ public class MannersFaceUI : MonoBehaviour
     private Mood shownMood = Mood.Calm;
     private bool overtime;
     private bool lowOnHealth;
+    private bool shopping;
     private Coroutine idleRoutine;
     private Coroutine reactionRoutine;
 
@@ -71,6 +92,8 @@ public class MannersFaceUI : MonoBehaviour
         if (!reactToGame) return;
 
         GameEvents.OnMatchTimeExpired += HandleOvertime;
+        GameEvents.OnShopOpened += HandleShopOpened;
+        GameEvents.OnShopClosed += HandleShopClosed;
     }
 
     private void Start()
@@ -94,6 +117,8 @@ public class MannersFaceUI : MonoBehaviour
     private void OnDisable()
     {
         GameEvents.OnMatchTimeExpired -= HandleOvertime;
+        GameEvents.OnShopOpened -= HandleShopOpened;
+        GameEvents.OnShopClosed -= HandleShopClosed;
 
         if (idleRoutine != null) StopCoroutine(idleRoutine);
         if (reactionRoutine != null) StopCoroutine(reactionRoutine);
@@ -136,7 +161,14 @@ public class MannersFaceUI : MonoBehaviour
         }
 
         lowOnHealth = max > 0f && current / max <= lowHealth;
-        SetBase(lowOnHealth || overtime ? Mood.Angry : Mood.Calm);
+        SetBase(ResolveBase());
+    }
+
+    private Mood ResolveBase()
+    {
+        if (baseMood == Mood.Dead) return Mood.Dead;
+        if (shopping) return Mood.Shop;
+        return lowOnHealth || overtime ? Mood.Angry : Mood.Calm;
     }
 
     private void HandleDamage()
@@ -146,7 +178,29 @@ public class MannersFaceUI : MonoBehaviour
 
     private void HandleLevelUp(int level)
     {
-        if (baseMood != Mood.Dead) React(Mood.Happy, 1.4f);
+        if (baseMood != Mood.Dead) React(Mood.Happy, happyHold);
+    }
+
+    private void HandleShopOpened()
+    {
+        shopping = true;
+        if (baseMood == Mood.Dead) return;
+
+        if (reactionRoutine != null)
+        {
+            StopCoroutine(reactionRoutine);
+            reactionRoutine = null;
+        }
+
+        SetBase(Mood.Shop);
+        Bounce(shopScale, 0f, shopBounceDuration);
+        if (eyes != null) eyes.rectTransform.Punch();
+    }
+
+    private void HandleShopClosed()
+    {
+        shopping = false;
+        if (baseMood != Mood.Dead) SetBase(ResolveBase());
     }
 
     private void HandleOverride(OverrideData overrideData)
@@ -157,7 +211,7 @@ public class MannersFaceUI : MonoBehaviour
     private void HandleOvertime()
     {
         overtime = true;
-        if (baseMood != Mood.Dead) SetBase(Mood.Angry);
+        if (baseMood != Mood.Dead) SetBase(ResolveBase());
     }
 
     private void SetBase(Mood mood)
@@ -177,6 +231,7 @@ public class MannersFaceUI : MonoBehaviour
     {
         Show(mood);
         if (mood == Mood.Hurt) PlayHurt();
+        else if (mood == Mood.Happy) PlayHappy();
         else if (eyes != null) eyes.rectTransform.Punch();
         yield return new WaitForSecondsRealtime(duration);
         reactionRoutine = null;
@@ -187,14 +242,31 @@ public class MannersFaceUI : MonoBehaviour
     {
         if (eyes != null) eyes.rectTransform.Punch(hurtScale, hurtRotation, hurtPunchDuration);
         if (hurtShake > 0f && transform is RectTransform face) face.Shake(hurtShake, hurtShakeDuration);
-        if (!hurtScreenFlash || screen == null) return;
-
         UIStyle style = UIStyle.Instance;
-        Color flash = style != null ? style.alert : Color.red;
+        Flash(style != null ? style.alert : Color.red, hurtFlashDuration, hurtFlashCount, hurtScreenFlash);
+    }
+
+    private void PlayHappy()
+    {
+        Bounce(happyScale, happyRotation, happyBounceDuration);
+        if (eyes != null) eyes.rectTransform.Punch();
+        UIStyle style = UIStyle.Instance;
+        Flash(style != null ? style.good : Color.green, happyFlashDuration, happyFlashCount, happyScreenFlash);
+    }
+
+    private void Bounce(float scale, float rotation, float duration)
+    {
+        if (transform is RectTransform face) face.Punch(scale, rotation, duration);
+    }
+
+    private void Flash(Color color, float duration, int count, bool allowed)
+    {
+        if (!allowed || screen == null) return;
+
         screenTween?.Kill();
         screen.color = screenColor;
-        screenTween = screen.DOColor(flash, hurtFlashDuration)
-            .SetLoops(hurtFlashCount * 2, LoopType.Yoyo)
+        screenTween = screen.DOColor(color, duration)
+            .SetLoops(count * 2, LoopType.Yoyo)
             .SetEase(Ease.Linear)
             .SetUpdate(true)
             .OnComplete(() =>
@@ -223,7 +295,7 @@ public class MannersFaceUI : MonoBehaviour
             yield return new WaitForSecondsRealtime(wait);
             nextSlip -= wait;
 
-            if (eyes == null || reactionRoutine != null || shownMood == Mood.Dead) continue;
+            if (eyes == null || reactionRoutine != null || shownMood == Mood.Dead || shownMood == Mood.Shop) continue;
 
             if (maskSlips && nextSlip <= 0f)
             {
@@ -287,6 +359,10 @@ public class MannersFaceUI : MonoBehaviour
             case Mood.Glitch:
                 eyes.sprite = style.faceAngry;
                 eyes.color = Color.Lerp(style.anomaly, style.paper, 0.45f);
+                break;
+            case Mood.Shop:
+                eyes.sprite = style.faceShop != null ? style.faceShop : style.faceHappy;
+                eyes.color = style.yellow;
                 break;
             default:
                 eyes.sprite = style.faceCalm;

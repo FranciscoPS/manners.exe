@@ -101,8 +101,7 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
         {
             lastSecond = currentSecond;
 
-            string formattedTime = matchTimeExpired ? GetFormattedOvertime() : GetFormattedCountdown();
-            GameEvents.TriggerGameTimeUpdated(formattedTime);
+            GameEvents.TriggerGameTimeUpdated(GetDisplayTime());
         }
 
         if (!matchTimeExpired && GetRemainingTime() <= 0f)
@@ -226,4 +225,11 @@ public class GameTimeManager : MonoBehaviour, IUpdateable
     }
 
     public bool IsGameActive => isGameActive;
+
+    public bool IsOvertime => matchTimeExpired;
+
+    public string GetDisplayTime()
+    {
+        return matchTimeExpired ? GetFormattedOvertime() : GetFormattedCountdown();
+    }
 }

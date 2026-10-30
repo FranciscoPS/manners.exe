@@ -109,9 +109,18 @@ public static class UIStyleSpriteBuilder
         style.faceHurt = Save("face_hurt", BuildFace(2), Vector4.zero);
         style.faceAngry = Save("face_angry", BuildFace(3), Vector4.zero);
         style.faceDead = Save("face_dead", BuildFace(4), Vector4.zero);
+        style.faceShop = Save("face_shop", BuildFace(5), Vector4.zero);
 
         EditorUtility.SetDirty(style);
-        report.AppendLine($"SPRITES: 24 sprites del estilo generados en {Folder}.");
+        report.AppendLine($"SPRITES: 25 sprites del estilo generados en {Folder}.");
+    }
+
+    public static void BuildFaceShop(UIStyle style, StringBuilder report)
+    {
+        EditorAssetUtility.EnsureFolder(Folder);
+        style.faceShop = Save("face_shop", BuildFace(5), Vector4.zero);
+        EditorUtility.SetDirty(style);
+        report.AppendLine($"SPRITES: cara de tienda con ojos de dólar generada en {Folder}/face_shop.png.");
     }
 
     private static Sprite Save(string name, Texture2D texture, Vector4 borderUnits)
@@ -480,6 +489,11 @@ public static class UIStyleSpriteBuilder
                         new Vector2(cx + 9f * inward, eye - 9f), new Vector2(cx - 10f * inward, eye - 9f)
                     };
                     painter.Paint((x, y) => Polygon(wedge, x, y) - 1f, Color.white);
+                    break;
+                case 5:
+                    painter.Paint((x, y) => Mathf.Max(Mathf.Abs(Circle(x, y, cx, eye + 5f, 6f)) - 2f, Mathf.Min(x - cx, (eye + 5f) - y)), Color.white);
+                    painter.Paint((x, y) => Mathf.Max(Mathf.Abs(Circle(x, y, cx, eye - 5f, 6f)) - 2f, Mathf.Min(cx - x, y - (eye - 5f))), Color.white);
+                    painter.Paint((x, y) => Segment(x, y, cx, eye - 13f, cx, eye + 13f, 1.9f), Color.white);
                     break;
                 default:
                     painter.Paint((x, y) => Segment(x, y, cx - 7f, eye + 7f, cx + 7f, eye - 7f, 3f), Color.white);

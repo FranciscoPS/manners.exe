@@ -97,6 +97,8 @@ public static class UIAuthoringTools
         }
         foreach (string resource in new[] { "UI/UIStyle_Production", "UI/RuntimeUIPrefabs_Production", "UpgradeDatabase_Production", "ShopUpgradeDatabase_Production", "OverrideDatabase_Production", "TutorialConfig_Production", "ChestOpeningConfig_Production" })
             if (Resources.Load(resource) == null) errors.Add("Resources ausente: " + resource);
+        UIStyle style = Resources.Load<UIStyle>("UI/UIStyle_Production");
+        if (style != null && style.faceShop == null) errors.Add("UIStyle: falta la cara de tienda (faceShop); ejecuta Tools > Manners > UI > 5.");
         RuntimeUIPrefabs registry = Resources.Load<RuntimeUIPrefabs>("UI/RuntimeUIPrefabs_Production");
         if (registry != null && (registry.chestAnnouncement == null || registry.overtimeAlert == null || registry.chestOpeningSequence == null || registry.overrideActivationHUD == null || registry.hoverTooltip == null)) errors.Add("Registro de prefabs incompleto.");
         report.AppendLine($"{Scenes.Length} escenas; {components} componentes; {labels} etiquetas bilingües; {errors.Count} errores.");

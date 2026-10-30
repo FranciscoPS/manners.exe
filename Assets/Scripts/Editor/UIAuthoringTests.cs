@@ -100,6 +100,8 @@ public class UIAuthoringTests
             Assert.IsTrue(Get<GameObject>(gameOptions, "overridesScreen").activeInHierarchy);
             gameOptions.Back(); yield return null; Assert.IsTrue(pausePanel.activeSelf); Assert.AreEqual(0, Time.timeScale);
             pause.Resume(); Assert.AreEqual(1, Time.timeScale);
+            GameTimeUI timerUI = Object.FindFirstObjectByType<GameTimeUI>(); Assert.IsNotNull(timerUI, "LEVEL 1 necesita el cronómetro del HUD.");
+            TMP_Text timerText = timerUI.GetComponent<TMP_Text>(); Assert.IsTrue(timerText.text.Contains(":"), "Al volver de la pausa el cronómetro debe mostrar el tiempo, no la etiqueta: " + timerText.text);
             ChestAnnouncement.Show(); yield return null;
             ChestAnnouncement chest = Object.FindFirstObjectByType<ChestAnnouncement>(); Assert.IsNotNull(chest);
             TMP_Text chestText = Get<TMP_Text>(chest, "text"); chestText.ForceMeshUpdate(); Assert.IsFalse(chestText.isTextOverflowing);
