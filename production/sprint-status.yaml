@@ -1,0 +1,84 @@
+# atlassian-mirror
+# source: jira
+# id: 110
+# kind: sprint
+# title: MAN Sprint 7
+# url: https://blackdoorstudios.atlassian.net/jira/software/projects/MAN/boards/34
+# remote_version: 2026-11-21T15:53:06.030-0600
+# pulled_at: 2026-11-21T23:12:56Z
+# body_sha1: 520696cc062fdad0a66814c0b8d6252f6efccc5a
+# /atlassian-mirror
+# Generado desde Jira por /atlassian-setup; /atlassian-sync pull lo vuelve a generar.
+# Sprint 7 todavía no empezó en Jira (estado: futuro). Sin objetivo en Jira.
+# Prioridad: la de Jira (todas Medium -> should-have). estimate_days: MAN estima en story points, no en días.
+#
+# Status value mapping (yaml ↔ story file Status field):
+#   backlog        ↔  Not Started
+#   ready-for-dev  ↔  Ready
+#   in-progress    ↔  In Progress
+#   review         ↔  In Review
+#   done           ↔  Complete
+#   blocked        ↔  Blocked
+
+sprint: 7
+goal: ""
+start: "2026-11-23"
+end: "2026-12-03"
+generated: "2026-11-21"
+updated: "2026-11-21"
+
+stories:
+  - id: "MAN-136"
+    name: "Antes de comenzar el juego que indique que esta es una versión reducida y una demo"
+    file: "production/epics/sin-epica/story-136-antes-de-comenzar-el-juego-que.md"
+    priority: should-have
+    status: ready-for-dev
+    owner: "Francisco Peralta"
+    estimate_days: 0
+    blocker: ""
+    completed: ""
+  - id: "MAN-149"
+    name: "Implementar sonido de sinergia, rayo laser, cada que se dispare."
+    file: "production/epics/sin-epica/story-149-implementar-sonido-de-sinergia-rayo-laser.md"
+    priority: should-have
+    status: ready-for-dev
+    owner: "Francisco Peralta"
+    estimate_days: 0
+    blocker: ""
+    completed: ""
+  - id: "MAN-150"
+    name: "Implementar sonido de sinergia, pulso electromagnético, cada que se dispare."
+    file: "production/epics/sin-epica/story-150-implementar-sonido-de-sinergia-pulso-electromagnetico.md"
+    priority: should-have
+    status: ready-for-dev
+    owner: "Francisco Peralta"
+    estimate_days: 0
+    blocker: ""
+    completed: ""
+  - id: "MAN-151"
+    name: "Implementar sonido de sinergia, área criogénica, cuando se active."
+    file: "production/epics/sin-epica/story-151-implementar-sonido-de-sinergia-area-criogenica.md"
+    priority: should-have
+    status: ready-for-dev
+    owner: "Francisco Peralta"
+    estimate_days: 0
+    blocker: ""
+    completed: ""
+  - id: "MAN-152"
+    name: "Implementar sonido de sinergia, área criogénica, cada que afecte a un enemigo."
+    file: "production/epics/sin-epica/story-152-implementar-sonido-de-sinergia-area-criogenica.md"
+    priority: should-have
+    status: ready-for-dev
+    owner: "Francisco Peralta"
+    estimate_days: 0
+    blocker: ""
+    completed: ""
+  - id: "MAN-138"
+    name: "Reemplazar monedas y elementos por engranajes o algo con más sentido"
+    file: "production/epics/sin-epica/story-138-reemplazar-monedas-y-elementos-por-engranajes.md"
+    priority: should-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0
+    blocker: ""
+    completed: ""

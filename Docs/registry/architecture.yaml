@@ -1,0 +1,269 @@
+# Architecture Decision Registry
+#
+# PURPOSE: Single source of truth for key architectural stances that all ADRs
+# must agree on. Skills check this before writing new ADRs to detect conflicts
+# at authoring time — before stories are created against contradictory decisions.
+#
+# RULES:
+#   - Register a stance when it constrains how OTHER systems must be built.
+#     An internal implementation detail that affects only one ADR does not need
+#     to be registered.
+#   - Never delete entries — set status: "superseded_by: ADR-NNNN" instead,
+#     quoted: unquoted, the second colon makes the file invalid YAML.
+#   - When a stance changes: update the entry, set revised: to today's date,
+#     add a comment with the old value, and run /architecture-review to check
+#     what ADRs are now invalidated.
+#   - adr: is the authoritative source. All other ADRs that depend on this
+#     stance list themselves in referenced_by.
+#
+# WRITTEN BY: /architecture-decision (Phase 5 — after ADR is approved)
+# READ BY:    /architecture-decision (Step 2 — before authoring begins)
+#             /architecture-review (Phase 4 — cross-ADR conflict baseline)
+#             /create-stories (to embed architectural constraints in stories)
+#             /dev-story (to check implementation against accepted stances)
+#
+# SEARCH PATTERNS (for skills using Grep):
+#   All state owners:       Grep pattern="^  - state:" path="docs/registry/architecture.yaml"
+#   Who owns player_health: Grep pattern="state: player_health"
+#   All signal contracts:   Grep pattern="pattern: signal"
+#   Budget for combat:      Grep pattern="system: combat"
+#   All forbidden patterns: Grep pattern="^  - pattern:" (forbidden_patterns section)
+#   Superseded entries:     Grep pattern="superseded_by: ADR-"
+#
+# LAYOUT: the one shape .claude/scripts/registry.sh reads. Each section is a
+#   key at column 0 holding a block list, or [] while it is empty. Each entry
+#   starts with its section's name key ("- state:", "- contract:", "- system:"
+#   or "- target_fps:" for the frame budget, "- purpose:", "- pattern:"), the
+#   dash at column 2 (or 0, the same for every entry of a section); its fields
+#   sit two columns past the dash. Quote a value that holds ": ", such as
+#   "superseded_by: ADR-NNNN". A line in any other shape is reported as
+#   unsupported layout, with its number.
+
+version: 1
+last_updated: 2026-11-21
+
+# ─── STATE OWNERSHIP ─────────────────────────────────────────────────────────
+# Who is the authoritative owner of each piece of shared game state.
+# Conflicts: two ADRs claiming to own the same state = data race / authority bug.
+#
+# Register state when it is READ or WRITTEN by more than one system.
+# Internal-only state (never accessed by another system) does not need to be registered.
+#
+# Required fields: state, owner_system, adr, interface, referenced_by[], added
+# interface: how other systems access this state (read-only property, method call,
+#   signal, shared resource, etc.) — this is the contract other ADRs depend on.
+
+state_ownership:
+  - state: balance_configuration
+    status: active
+    owner_system: configuracion-de-balance
+    adr: docs/architecture/adr-0002-configuracion-por-scriptableobject.md
+    interface: "ScriptableObjects de solo lectura en ejecución; los globales por T.Instance (GameBalanceConfig, UpgradeDatabase, OverrideDatabase y los demás de Resources), el resto por referencias serializadas"
+    write_access: "solo el editor (Inspector y Tools > Manners > Sandbox > 4); en ejecución solo se modifican copias hechas con Instantiate"
+    referenced_by:
+      - docs/architecture/adr-0002-configuracion-por-scriptableobject.md
+      - docs/architecture/adr-0003-object-pooling.md
+    added: 2026-11-21
+    revised: ""
+
+# Example:
+#
+# state_ownership:
+#   - state: player_health
+#     status: active           # active | "superseded_by: ADR-NNNN"
+#     owner_system: health-system
+#     adr: docs/architecture/adr-0001-health-system.md
+#     interface: "HealthComponent.current_health (read-only float, range 0–max_health)"
+#     write_access: health-system-only   # only owner can write; others read
+#     referenced_by:
+#       - docs/architecture/adr-0001-health-system.md
+#       - docs/architecture/adr-0003-combat-system.md   # reads to apply damage
+#       - docs/architecture/adr-0007-ui-system.md       # reads to display HUD
+#     added: 2026-03-26
+#     revised: ""
+
+
+# ─── INTERFACE CONTRACTS ──────────────────────────────────────────────────────
+# How systems are required to communicate with each other.
+# Conflicts: one ADR expects signal, another expects direct call = integration bug.
+#
+# Register a contract when the communication pattern between two systems is
+# explicitly decided in an ADR and other systems must follow the same pattern.
+#
+# pattern options: signal | direct_call | event_bus | shared_resource | rpc | none
+
+interfaces: []
+
+# Example:
+#
+# interfaces:
+#   - contract: damage_delivery
+#     status: active
+#     pattern: signal          # how the producer notifies consumers
+#     producer: combat-system
+#     consumers:
+#       - health-system        # receives damage_dealt signal, applies to health
+#       - ui-system            # receives damage_dealt signal, shows damage number
+#       - audio-system         # receives damage_dealt signal, plays SFX
+#     adr: docs/architecture/adr-0003-combat-system.md
+#     signal_signature: "damage_dealt(amount: float, target: Node, is_crit: bool)"
+#     referenced_by:
+#       - docs/architecture/adr-0003-combat-system.md
+#       - docs/architecture/adr-0001-health-system.md
+#     added: 2026-03-26
+#     revised: ""
+
+
+# ─── PERFORMANCE BUDGETS ──────────────────────────────────────────────────────
+# Frame time allocations per system, against a defined total frame budget.
+# Conflicts: allocations that sum to more than the total budget = unshippable.
+#
+# Register a budget when an ADR explicitly claims a frame time allocation.
+# The registry lets /architecture-review verify the total doesn't exceed the target.
+
+performance_budgets: []
+
+# Example:
+#
+# performance_budgets:
+#   - target_fps: 60
+#     total_frame_budget_ms: 16.6
+#     platform: PC             # PC | Console | Mobile | All
+#     adr: docs/architecture/adr-0000-performance-targets.md
+#     added: 2026-03-26
+#     revised: ""
+#
+#   - system: combat
+#     status: active
+#     budget_ms: 2.0
+#     adr: docs/architecture/adr-0003-combat-system.md
+#     notes: "Includes physics queries, hitbox evaluation, and damage calculation"
+#     referenced_by:
+#       - docs/architecture/adr-0003-combat-system.md
+#     added: 2026-03-26
+#     revised: ""
+
+
+# ─── API DECISIONS ───────────────────────────────────────────────────────────
+# Which engine APIs are chosen for which purpose across the project.
+# Conflicts: two ADRs using different APIs for the same purpose = inconsistent
+# implementation that breaks when one system expects the other's API.
+#
+# Register an API decision when the choice is non-obvious and other ADRs might
+# make a different choice for the same purpose without knowing this was decided.
+
+api_decisions:
+  - purpose: per_frame_update
+    status: active
+    api: "UpdateManager.Instance.Register y Unregister con IUpdateable, IFixedUpdateable o ILateUpdateable"
+    not: "Update(), FixedUpdate() o LateUpdate() propios en cada MonoBehaviour"
+    adr: docs/architecture/adr-0001-bucle-de-actualizacion-centralizado.md
+    reason: "Una llamada del motor por fase en lugar de una por objeto, con cientos de objetos en WebGL; siete clases que no crecen con la horda quedan como excepción tolerada"
+    referenced_by:
+      - docs/architecture/adr-0001-bucle-de-actualizacion-centralizado.md
+      - docs/architecture/adr-0003-object-pooling.md
+    added: 2026-11-21
+    revised: ""
+  - purpose: global_config_loading
+    status: active
+    api: "T.Instance con carga perezosa de <Nombre>_Production desde Resources, ResetStatics y OverrideInstance para el sandbox"
+    not: "Addressables; Resources.Load fuera de la Instance del global"
+    adr: docs/architecture/adr-0002-configuracion-por-scriptableobject.md
+    reason: "Acceso síncrono, también en Awake, a pocos globales pequeños; el proyecto no usa Addressables (CLAUDE.md, Technology Stack)"
+    referenced_by:
+      - docs/architecture/adr-0002-configuracion-por-scriptableobject.md
+    added: 2026-11-21
+    revised: ""
+  - purpose: runtime_object_spawning
+    status: active
+    api: "SpawnFactory.Instance.Create* y DestroyObject sobre los pools de PoolManager, con IPoolable.OnSpawn y OnDespawn"
+    not: "Instantiate y Destroy durante la partida; UnityEngine.Pool.ObjectPool"
+    adr: docs/architecture/adr-0003-object-pooling.md
+    reason: "Sin asignaciones ni tirones al aparecer y desaparecer cientos de objetos por minuto en WebGL"
+    referenced_by:
+      - docs/architecture/adr-0003-object-pooling.md
+    added: 2026-11-21
+    revised: ""
+
+# Example:
+#
+# api_decisions:
+#   - purpose: physics_raycast
+#     status: active
+#     api: PhysicsServer3D.space_get_direct_state()
+#     not: RayCast3D node     # explicitly banned for this purpose
+#     adr: docs/architecture/adr-0002-physics-architecture.md
+#     reason: "Direct server calls avoid per-frame node overhead; 3× faster in profiling"
+#     referenced_by:
+#       - docs/architecture/adr-0002-physics-architecture.md
+#       - docs/architecture/adr-0003-combat-system.md
+#     added: 2026-03-26
+#     revised: ""
+
+
+# ─── FORBIDDEN PATTERNS ──────────────────────────────────────────────────────
+# Architecture anti-patterns explicitly banned by accepted ADRs.
+# When writing a new ADR, check this list — if the proposed approach matches
+# a forbidden pattern, it must be reworked before the ADR can be Accepted.
+#
+# Register a pattern when an ADR explicitly bans it AND other ADRs might
+# unknowingly use it (i.e., it's a tempting but wrong approach for this project).
+
+forbidden_patterns:
+  - pattern: per_object_unity_update
+    status: active
+    description: "Una clase que se ejecuta cada frame no declara Update(), FixedUpdate() ni LateUpdate(); implementa IUpdateable, IFixedUpdateable o ILateUpdateable y se registra en UpdateManager. Excepciones toleradas: las siete clases de ADR-0001 que no crecen con la horda"
+    why: "Evita una llamada del motor por objeto y por frame con cientos de objetos en WebGL"
+    adr: docs/architecture/adr-0001-bucle-de-actualizacion-centralizado.md
+    added: 2026-11-21
+  - pattern: allocation_in_update_callbacks
+    status: active
+    description: "OnUpdate, OnFixedUpdate y OnLateUpdate no asignan memoria administrada (LINQ, new de tipos por referencia, concatenación de strings, lambdas que capturan variables)"
+    why: "Cada asignación por frame se multiplica por cientos de objetos y alimenta la recolección de basura en WebGL"
+    adr: docs/architecture/adr-0001-bucle-de-actualizacion-centralizado.md
+    added: 2026-11-21
+  - pattern: hardcoded_balance_values
+    status: active
+    description: "Los valores de balance y su visual no se fijan en C#; viven en ScriptableObjects de Assets/Configurations/Production (_Production) con su copia en Assets/Configurations/Sandbox (_Sandbox)"
+    why: "El balance se ajusta en el Inspector y se prueba en el sandbox sin tocar código ni los niveles que funcionan"
+    adr: docs/architecture/adr-0002-configuracion-por-scriptableobject.md
+    added: 2026-11-21
+  - pattern: manual_config_copy_between_sandbox_and_production
+    status: active
+    description: "Los valores no pasan entre sandbox y producción borrando, duplicando o pegando assets a mano; solo con Tools > Manners > Sandbox > 4"
+    why: "Copiar assets a mano cambia los GUID y rompe las referencias"
+    adr: docs/architecture/adr-0002-configuracion-por-scriptableobject.md
+    added: 2026-11-21
+  - pattern: runtime_write_to_config_asset
+    status: active
+    description: "El código de ejecución no escribe en un ScriptableObject compartido; clona el asset con Instantiate y modifica la copia, como EnemySpawnManager en la oleada final"
+    why: "El asset es la configuración de producción o del sandbox; modificarlo en ejecución mezcla el estado de la partida con la configuración"
+    adr: docs/architecture/adr-0002-configuracion-por-scriptableobject.md
+    added: 2026-11-21
+  - pattern: gameplay_instantiate_destroy
+    status: active
+    description: "Un objeto que aparece y desaparece muchas veces por partida no se crea con Instantiate ni se elimina con Destroy; sale de un pool de PoolManager a través de SpawnFactory"
+    why: "Crear y destruir en mitad de la partida produce tirones y basura en WebGL"
+    adr: docs/architecture/adr-0003-object-pooling.md
+    added: 2026-11-21
+
+# Example:
+#
+# forbidden_patterns:
+#   - pattern: autoload_singleton_coupling
+#     status: active
+#     description: "Systems must not directly reference Autoload singletons by name.
+#       Use dependency injection or signals instead."
+#     why: "Tight coupling to Autoloads makes systems untestable in isolation and
+#       creates hidden dependencies that break when Autoload load order changes."
+#     adr: docs/architecture/adr-0001-health-system.md
+#     added: 2026-03-26
+#
+#   - pattern: direct_cross_system_state_write
+#     status: active
+#     description: "A system must never write to state owned by another system.
+#       Use signals or method calls on the owner instead."
+#     why: "Direct state writes create race conditions and break the state
+#       ownership model. The owning system must be the sole writer."
+#     adr: docs/architecture/adr-0000-architecture-principles.md
+#     added: 2026-03-26

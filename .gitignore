@@ -101,3 +101,16 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Claude Code Game Studios: configuración personal y estado efímero de las sesiones
+.claude/settings.local.json
+CLAUDE.local.md
+project.local.yaml
+/production/session-logs/
+/production/session-state/
+/.scratch/
+.claude/agent-memory/
+.claude/worktrees/
+/[Dd]ocs/consistency-failures.md
+/test-results/
+/reports/

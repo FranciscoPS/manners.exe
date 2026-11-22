@@ -1,0 +1,7 @@
+# Claude Code Game Studios: los hooks y scripts de .claude/ se ejecutan con Git Bash
+# y se rompen con finales de línea CRLF (core.autocrlf=true los convertiría al hacer checkout).
+*.sh text eol=lf
+*.awk text eol=lf
+*.tsv text eol=lf
+.worktreeinclude text eol=lf
+.claude/**/*.md text eol=lf

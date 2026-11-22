@@ -1,0 +1,86 @@
+# CCGS project configuration — single source of truth for project settings.
+# Schema: grep the `## <key>` section of .claude/docs/effects-map.md —
+# it is ~31k tokens whole, ~900 per section. Do not open it entire.
+#
+# manners.exe: los valores de motor, plataformas, rendimiento y comandos salen del
+# repositorio (ProjectSettings/ProjectVersion.txt, Packages/manifest.json, README,
+# Docs/Performance, .github/unity-build-targets.json). project.stage, project.goal,
+# cadence y el resto de platform los escribe /atlassian-setup con lo que hay en Jira
+# y Confluence. Los seis ajustes que deriva modes.rigor no se escriben aquí.
+
+schema_version: 1
+
+framework:
+  version: 1.3.0
+  last_upgraded: 2026-11-21
+
+project:
+  stage: Production
+  name: "manners.exe"
+  genre: "Bullet heaven"
+  kind: game
+
+modes:
+  rigor: standard
+  automation: guided
+  automation_always_ask:
+    - scope_changes
+    - file_deletions
+    - schema_changes
+    - external_calls
+
+testing:
+  framework: unity-test-framework
+
+platform:
+  multiplayer: false
+  online: true
+  targets: [PC, Web]
+  primary_input: "Keyboard/Mouse"
+  cert_tier: itch
+
+engine:
+  name: "Unity"
+  version: "6000.3.5f2"
+  language: "C#"
+  rendering: "URP"
+  physics: "PhysX"
+  path: "C:/Program Files/Unity/Hub/Editor/6000.3.5f2/Editor/Unity.exe"
+  test_root: "Assets/Scripts/Editor"
+
+specialists:
+  code: "unity-specialist"
+  shader: "unity-shader-specialist"
+  ui: "unity-ui-specialist"
+  additional: ["unity-dots-specialist", "unity-addressables-specialist"]
+
+naming:
+  classes: PascalCase
+  variables: camelCase
+  constants: PascalCase        # comprobado en Assets/Scripts: MaxSlots, CheckInterval; quedan SCREAMING_SNAKE heredados (MUSIC_VOLUME_KEY)
+  signals: on_event_name       # eventos de GameEvents en PascalCase On<Evento>: OnMatchTimeExpired, OnChestSpawned
+  files: PascalCase
+  scenes: PascalCase
+
+performance:
+  target_framerate: 60
+  frame_budget_ms: 16.67
+  draw_call_limit: null
+  memory_ceiling_mb: null
+  enforce: warn
+
+commands:
+  # Unity bloquea el proyecto mientras el editor lo tiene abierto: con el editor abierto
+  # estos comandos batch fallan. Cerrarlo antes de /smoke-check o /dev-story.
+  # Las builds oficiales (Windows, Mac y Web) salen de Unity Build Automation con el
+  # workflow "Build Windows, Mac and Web"; build y run son la build local de verificación.
+  # Forma simple con la ruta de Windows porque test-run.sh y project-coherence.sh solo leen
+  # valores de una línea. En macOS el editor está en
+  # /Applications/Unity/Hub/Editor/6000.3.5f2/Unity.app/Contents/MacOS/Unity.
+  build: '"C:/Program Files/Unity/Hub/Editor/6000.3.5f2/Editor/Unity.exe" -batchmode -quit -projectPath . -buildWindows64Player Builds/Win64/manners.exe -logFile Logs/build-win64.log'
+  test: '"C:/Program Files/Unity/Hub/Editor/6000.3.5f2/Editor/Unity.exe" -batchmode -runTests -projectPath . -testPlatform EditMode -testResults test-results/editmode.xml'
+  run: "Builds/Win64/manners.exe -screen-width 1280 -screen-height 720 -screen-fullscreen 0"
+  smoke: '"C:/Program Files/Unity/Hub/Editor/6000.3.5f2/Editor/Unity.exe" -batchmode -quit -projectPath . -logFile -'
+
+cadence:
+  sprint_length: 1w

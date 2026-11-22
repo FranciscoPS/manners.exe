@@ -11,7 +11,7 @@ Indicaciones permanentes del usuario; aplican a cada tarea:
 - Antes de implementar, entender el contexto general del juego: patrones de diseño, optimización, cómo está estructurado y cómo funcionan los sistemas que toca el cambio. Nada de "hacer por hacer": integraciones limpias que encajen con la arquitectura existente, sin agregados sueltos.
 - Todo lo que haya que hacer a mano en Unity (Inspector, escenas, prefabs, menús de `Tools`, configuraciones) se entrega al final como instrucciones claras, paso a paso.
 - No escribir comentarios en el código C#. Los `[Tooltip]` y `[Header]` en español sí se usan: el balance se ajusta desde el Inspector.
-- No crear ni actualizar documentación (README, `Docs/`, el manual publicado como Artifact) salvo que el usuario lo pida explícitamente en la conversación.
+- La documentación del proyecto (`README.md`, `Docs/UI_AUTHORING.md`, `Docs/OVERRIDE_COMBINATIONS.md`, `Docs/Performance/`, el manual publicado como Artifact y las páginas de Confluence) solo se actualiza con `/actualizar-docs`, que lanza el usuario: Claude no puede lanzarlo. Nunca se actualiza en automático: ni al terminar otra tarea, ni desde otro comando, hook o agente, aunque parezca útil o el usuario diga «continúa». Si un cambio la deja desactualizada, se avisa en una línea al final y se sugiere `/actualizar-docs`. Los comandos del framework (`/design-system`, `/architecture-decision`, `/adopt`, `/map-systems`…) siguen escribiendo sus propios documentos (GDD, ADR, índice de sistemas, plan de adopción) cuando el usuario los lanza, y los devlogs se escriben cuando el usuario los pide.
 - Antes de construir un sistema desde cero, revisar las ramas locales (`git branch -a`): suele haber trabajo previo relacionado.
 
 ## Escenas y pruebas
@@ -41,3 +41,89 @@ Indicaciones permanentes del usuario; aplican a cada tarea:
 
 - Renombrar o mover scripts y assets siempre junto con su `.meta`. Al renombrar un campo serializado, añadir `[FormerlySerializedAs("nombreAnterior")]`.
 - Evitar editar escenas y prefabs como texto con Unity abierto: Unity puede sobrescribir el cambio al guardar.
+
+## Jira y Confluence
+
+- Fuente de verdad: Jira (proyecto `MAN`, tablero 34) para épicas, historias, sprints y bugs; Confluence (carpeta `manners.exe`) para la documentación. La conexión es el servidor MCP `atlassian` de `.mcp.json`: cada persona entra con su cuenta (OAuth, `/mcp`) y trabaja con sus propios permisos. Identificadores y mapeos: `production/atlassian.yaml`.
+- Lo que leen los skills del framework en `design/`, `docs/architecture/`, `production/epics/`, `production/sprints/`, `production/milestones/`, `production/qa/bugs/` y `production/sprint-status.yaml` es un espejo: cada archivo sincronizado empieza con un bloque `<!-- atlassian-mirror ... -->` que dice de dónde viene. Se trae con `/atlassian-sync pull`, y lo escrito en local se publica solo cuando lo pide el usuario: las páginas de Confluence con `/actualizar-docs` (o con `/atlassian-sync push` si lo escribe él) y las historias de Jira con `/atlassian-sync push`; la regla `.claude/rules/atlassian-mirror.md` se carga al tocar esos archivos. La primera vez, `/atlassian-setup`.
+- Escribir en Jira o Confluence es publicar para todo el equipo: mostrar el cambio y pedir confirmación antes de cada tanda de escrituras; nunca borrar ni reemplazar contenido escrito por personas sin una confirmación explícita.
+- Ramas, commits y PR llevan la clave de la historia de Jira (`MAN-123`).
+
+## Claude Code Game Studios
+
+Este proyecto usa [Claude Code Game Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) 1.3.0 (licencia MIT en `.claude/LICENSE`): agentes en `.claude/agents/`, skills en `.claude/skills/`, hooks en `.claude/settings.json`, reglas por ruta en `.claude/rules/` y la configuración en `project.yaml`. Las secciones anteriores de este archivo y el README prevalecen sobre las reglas genéricas del framework; lo que se adaptó a manners.exe está en `.claude/docs/manners-adaptations.md`.
+
+> **Primera sesión con el framework:** `/atlassian-setup` trae Jira y Confluence y completa la configuración; después `/adopt` y `/next-step`.
+
+## Technology Stack
+
+- **Engine**: Unity 6000.3.5f2 (6.3 LTS), URP 17.3
+- **Language**: C#
+- **Version Control**: Git + GitHub, ramas de trabajo con PR a `develop`
+- **Build System**: Unity Build Pipeline; las builds oficiales de Windows, Mac y Web salen de Unity Build Automation (workflow `Build Windows, Mac and Web`)
+- **Asset Pipeline**: importación de Unity, ScriptableObjects en `Assets/Configurations/` y `Resources/` para los globales (sin Addressables)
+
+## Project Structure
+
+@.claude/docs/directory-structure.md
+
+## Engine Version Reference
+
+<!-- ENGINE-REFERENCE-IMPORT: the line under this comment is engine-specific,
+     and there is none until an engine is set. /setup-engine, the grow's record
+     step and /project-settings (engine.name) write
+     @docs/engine-reference/<engine>/VERSION.md here for the chosen engine. Skills
+     that need the pinned version read that file on demand either way. -->
+@docs/engine-reference/unity/VERSION.md
+
+## Technical Preferences
+
+`project.yaml` at the repo root is the primary config store — engine, specialists,
+naming, platform, performance, modes. Skills resolve it via `resolve_config`
+(see `.claude/docs/config-resolution.md`).
+
+`.claude/docs/technical-preferences.md` is the **legacy fallback**, read on demand
+when a key is absent from `project.yaml`. It also holds this project's forbidden
+patterns and allowed libraries, which `project.yaml` has no key for.
+
+## Coordination Rules
+
+@.claude/docs/coordination-rules.md
+
+## Collaboration Protocol
+
+**User-driven collaboration, not autonomous execution.**
+Every task follows: **Question -> Options -> Decision -> Draft -> Approval**, at the
+depth `modes.automation` sets. This project uses `guided`: major decisions are asked,
+minor ones are stated and carried out (`.claude/docs/automation-modes.md`).
+
+- Agents ask "May I write this to [filepath]?" before creating a new file; updates
+  to existing files proceed after a short summary in `guided` mode
+  (exempt: `active.md` appends, agent memory, a subagent's new file at the path
+  its orchestrating skill named; see `.claude/rules/agent-memory.md`)
+- Agents MUST show drafts or summaries before requesting approval
+- Multi-file changes require explicit approval for the full changeset
+- No commits without user instruction
+- A skipped or dismissed question is not an answer: act on nothing, re-ask in
+  plain text and wait
+- Started outside this file's folder? Warn first: hooks, deny rules and the
+  ask-first mode load only when Claude Code starts here
+
+See `docs/COLLABORATIVE-DESIGN-PRINCIPLE.md` for full protocol and examples.
+
+## Coding Standards
+
+@.claude/docs/coding-standards.md
+
+## Context Management
+
+Read `.claude/docs/context-management.md` on demand — it is a reference, not
+session context. Two of its conventions are load-bearing and cited by name
+elsewhere in the repo, so they are restated here rather than lost:
+
+- **`production/session-state/active.md` is the session checkpoint.** The file is
+  the memory, not the conversation. Read it first after any compaction, crash, or
+  `/clear`.
+- **Helpers in `.claude/scripts/` emit observations, never verdicts.** A script
+  that scores or judges will eventually contradict a mode or override it cannot
+  see. (Cited by `artifact-check.sh` and `adr-dep-graph.sh`.)

@@ -1,0 +1,90 @@
+# Integración de manners.exe con Jira y Confluence (Claude Code Game Studios).
+#
+# Fuente de verdad: Jira para épicas, historias, sprints y bugs; Confluence para la
+# documentación. Los archivos locales que leen los skills del framework son espejos
+# con un bloque `atlassian-mirror` al principio (ver .claude/scripts/atlassian-mirror.sh
+# y .claude/docs/atlassian-mapping.md).
+#
+# Lo escriben /atlassian-setup (descubrimiento) y /atlassian-sync (páginas nuevas),
+# siempre después de mostrar el cambio. Sin secretos: cada persona entra con su cuenta
+# en el servidor MCP "atlassian" de .mcp.json (OAuth con /mcp).
+
+schema_version: 1
+
+site:
+  url: "https://blackdoorstudios.atlassian.net"
+  cloud_id: "31a87ea2-9c7f-4184-b53d-75dd8851337e"
+
+jira:
+  project_key: "MAN"
+  board_id: 34                  # tablero simple (team-managed): Por hacer · En curso · En revisión · Listo
+  board_url: "https://blackdoorstudios.atlassian.net/jira/software/projects/MAN/boards/34/backlog"
+  issue_types:                  # nombre en Jira -> epic | story | bug | subtask
+    "Epic": epic
+    "Tarea": story
+    "Historia": story
+    "Función": story
+    "Error": bug
+    "Subtask": subtask
+  status_map:                   # estado de Jira -> Not Started | Ready | In Progress | In Review | Complete | Blocked
+    "Por hacer": Not Started
+    "En curso": In Progress
+    "En revisión": In Review
+    "Listo": Complete
+  todo_in_sprint: Ready         # "Por hacer" dentro del sprint activo, o del siguiente si no hay activo
+  flagged_is: Blocked           # MAN no tiene estado de bloqueo: Flagged (customfield_10021) marca Blocked
+  transitions:                  # estado del framework -> transición (todas las transiciones están abiertas)
+    Not Started: { id: "11", to: "Por hacer" }
+    Ready: { id: "11", to: "Por hacer" }
+    In Progress: { id: "21", to: "En curso" }
+    In Review: { id: "31", to: "En revisión" }
+    Complete: { id: "41", to: "Listo" }
+  fields:
+    story_points: customfield_10016
+    sprint: customfield_10020
+    rank: customfield_10019
+    flagged: customfield_10021
+    start_date: customfield_10015
+    parent: parent
+  priority_map:                 # prioridad de Jira -> prioridad de sprint-status.yaml
+    "Highest": must-have
+    "High": must-have
+    "Medium": should-have
+    "Low": nice-to-have
+    "Lowest": nice-to-have
+  type_labels: {}               # MAN no usa etiquetas ni componentes: el Type lo fija /story-readiness
+  no_epic_slug: "sin-epica"     # carpeta de production/epics/ para historias sin épica
+  mirror_scope: open            # open: épicas + issues abiertos (lo cerrado queda listado en cada EPIC.md); all: todo
+
+confluence:
+  space_key: "~701213bd1c0c92aa748079c0e5c6d387aa64b"
+  root_folder_id: "524289"
+  root_title: "manners.exe"
+  root_url: "https://blackdoorstudios.atlassian.net/wiki/spaces/~701213bd1c0c92aa748079c0e5c6d387aa64b/folder/524289/manners.exe"
+  space_id: "196610"
+  new_pages_parent_id: ""       # vacío = root_folder_id
+  pages:                        # type: page | live_doc · rich: contenido que no se convierte a Markdown
+    - { id: "425985", title: "Introducción y Descripción General", path: "design/gdd/game-concept.md", type: page, origin: confluence, rich: false }
+    - { id: "5701639", title: "Sistemas", path: "design/gdd/systems-overview.md", type: live_doc, origin: confluence, rich: true }
+    - { id: "5865473", title: "Mecánicas", path: "design/gdd/core-mechanics.md", type: page, origin: confluence, rich: false }
+    - { id: "5734402", title: "Overrides", path: "design/gdd/overrides.md", type: page, origin: confluence, rich: false }
+    - { id: "5767338", title: "Cofres", path: "design/gdd/chests.md", type: page, origin: confluence, rich: false }
+    - { id: "105250818", title: "Progresión", path: "design/gdd/progression.md", type: live_doc, origin: confluence, rich: true }
+    - { id: "112721921", title: "Tutorial", path: "design/gdd/tutorial.md", type: live_doc, origin: confluence, rich: true }
+    - { id: "10846209", title: "Sistema de Balance", path: "design/gdd/balance-system.md", type: page, origin: confluence, rich: true }
+    - { id: "9437186", title: "Guía de conceptualización", path: "design/art/concept-guide.md", type: page, origin: confluence, rich: false }
+    - { id: "7438338", title: "Videos de referencia", path: "design/art/reference-videos.md", type: page, origin: confluence, rich: false }
+    - { id: "16089090", title: "Concept de la ciudad", path: "design/art/city-concept.md", type: page, origin: confluence, rich: false }
+    - { id: "49807361", title: "Concept de los edificios", path: "design/art/buildings-concept.md", type: page, origin: confluence, rich: true }
+    - { id: "5636098", title: "Música", path: "design/audio/sound-bible.md", type: page, origin: confluence, rich: false }
+    - { id: "5242884", title: "Preguntas necesarias para la narrativa", path: "design/narrative/lore/premise.md", type: live_doc, origin: confluence, rich: false }
+    - { id: "14516225", title: "Información del mundo", path: "design/narrative/lore/world.md", type: page, origin: confluence, rich: false }
+    - { id: "27623425", title: "Propuestas de UI", path: "design/ux/ui-proposals.md", type: page, origin: confluence, rich: false }
+    - { id: "14581771", title: "Proto-Persona", path: "design/marketing/proto-persona.md", type: page, origin: confluence, rich: true }
+    - { id: "103448577", title: "Lista para aparentar", path: "design/marketing/presentation-checklist.md", type: live_doc, origin: confluence, rich: true }
+    - { id: "132448258", title: "Systems Index: manners.exe", path: "design/gdd/systems-index.md", type: page, origin: local, rich: false }
+  ignore:
+    - { id: "622593", title: "Enlaces Importantes", reason: "solo enlaces: el repositorio y el GDD principal, que está en Google Docs fuera de Confluence" }
+
+setup:
+  completed: "2026-11-21"       # fecha de la última /atlassian-setup completa
