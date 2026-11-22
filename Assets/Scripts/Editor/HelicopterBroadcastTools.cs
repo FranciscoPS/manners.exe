@@ -15,6 +15,11 @@ public static class HelicopterBroadcastTools
     internal const string CameraConfigPath = GameAssetPaths.Sandbox + "/HelicopterCameraConfig_Sandbox.asset";
     internal const string LensProfilePath = GameAssetPaths.Sandbox + "/HelicopterLens_Sandbox.asset";
     internal const string NewsConfigPath = GameAssetPaths.Sandbox + "/NewsBroadcastConfig_Sandbox.asset";
+    internal const string ProductionFolder = GameAssetPaths.Production + "/Broadcast";
+    internal const string ProductionCameraConfigPath = ProductionFolder + "/HelicopterCameraConfig_Production.asset";
+    internal const string ProductionLensProfilePath = ProductionFolder + "/HelicopterLens_Production.asset";
+    internal const string ProductionNewsConfigPath = ProductionFolder + "/NewsBroadcastConfig_Production.asset";
+    internal const string ProductionScenePath = "Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity";
     internal const string OverlayFolder = "Assets/Prefabs/UI/Overlays";
     internal const string OverlayPrefabPath = OverlayFolder + "/NewsBroadcastOverlay.prefab";
     private const string LensObjectName = "HelicopterLens";
@@ -478,10 +483,78 @@ public static class HelicopterBroadcastTools
         }
     }
 
+    public static bool EnsureProductionAssets()
+    {
+        if (!CopyToProduction(LensProfilePath, ProductionLensProfilePath)) return false;
+        if (!CopyToProduction(CameraConfigPath, ProductionCameraConfigPath)) return false;
+        if (!CopyToProduction(NewsConfigPath, ProductionNewsConfigPath)) return false;
+
+        HelicopterCameraConfig camera = AssetDatabase.LoadAssetAtPath<HelicopterCameraConfig>(ProductionCameraConfigPath);
+        VolumeProfile lens = AssetDatabase.LoadAssetAtPath<VolumeProfile>(ProductionLensProfilePath);
+        if (camera.lensProfile != lens)
+        {
+            camera.lensProfile = lens;
+            EditorUtility.SetDirty(camera);
+            AssetDatabase.SaveAssets();
+        }
+        return true;
+    }
+
+    public static bool PromoteToProduction()
+    {
+        if (!EnsureProductionAssets()) return false;
+
+        Scene sandbox = EditorSceneManager.OpenScene(SandboxSetupTools.ScenePath, OpenSceneMode.Single);
+        CinemachinePositionComposer sandboxComposer = FindPlayerComposer();
+        float cameraDistance = sandboxComposer != null ? sandboxComposer.CameraDistance : -1f;
+
+        Scene level = EditorSceneManager.OpenScene(ProductionScenePath, OpenSceneMode.Single);
+        if (!Install(level)) return false;
+
+        CinemachinePositionComposer composer = FindPlayerComposer();
+        if (composer != null && cameraDistance > 0f && !Mathf.Approximately(composer.CameraDistance, cameraDistance))
+        {
+            composer.CameraDistance = cameraDistance;
+            EditorUtility.SetDirty(composer);
+        }
+        EditorSceneManager.SaveScene(level);
+        Debug.Log("[Helicóptero] " + sandbox.path + " → " + level.path + ": cámara de helicóptero, lente y rótulo con los assets de " + ProductionFolder + ".");
+        return true;
+    }
+
+    private static bool CopyToProduction(string sandboxPath, string productionPath)
+    {
+        if (AssetDatabase.LoadMainAssetAtPath(productionPath) != null) return true;
+        if (AssetDatabase.LoadMainAssetAtPath(sandboxPath) == null)
+        {
+            Debug.LogError("[Helicóptero] Falta " + sandboxPath + "; no se puede crear " + productionPath + ".");
+            return false;
+        }
+
+        EditorAssetUtility.EnsureFolder(ProductionFolder);
+        if (!AssetDatabase.CopyAsset(sandboxPath, productionPath))
+        {
+            Debug.LogError("[Helicóptero] No se pudo copiar " + sandboxPath + " a " + productionPath + ".");
+            return false;
+        }
+
+        Object copy = AssetDatabase.LoadMainAssetAtPath(productionPath);
+        copy.name = System.IO.Path.GetFileNameWithoutExtension(productionPath);
+        EditorUtility.SetDirty(copy);
+        AssetDatabase.SaveAssets();
+        return true;
+    }
+
     public static bool Install(Scene scene)
     {
-        HelicopterCameraConfig cameraConfig = AssetDatabase.LoadAssetAtPath<HelicopterCameraConfig>(CameraConfigPath);
-        NewsBroadcastConfig newsConfig = AssetDatabase.LoadAssetAtPath<NewsBroadcastConfig>(NewsConfigPath);
+        bool production = scene.path == ProductionScenePath;
+        return Install(scene,
+            AssetDatabase.LoadAssetAtPath<HelicopterCameraConfig>(production ? ProductionCameraConfigPath : CameraConfigPath),
+            AssetDatabase.LoadAssetAtPath<NewsBroadcastConfig>(production ? ProductionNewsConfigPath : NewsConfigPath));
+    }
+
+    public static bool Install(Scene scene, HelicopterCameraConfig cameraConfig, NewsBroadcastConfig newsConfig)
+    {
         GameObject overlayPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(OverlayPrefabPath);
         if (cameraConfig == null || newsConfig == null || overlayPrefab == null)
         {

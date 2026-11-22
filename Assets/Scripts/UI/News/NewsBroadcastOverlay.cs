@@ -224,6 +224,8 @@ public sealed class NewsBroadcastOverlay : MonoBehaviour, IUpdateable
 
     private float GetReveal() => reveal;
 
+    private void OnRectTransformDimensionsChange() => SetReveal(reveal);
+
     private void SetReveal(float value)
     {
         reveal = Mathf.Clamp01(value);

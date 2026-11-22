@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dec618fe19159f428a52827902b63a8, type: 3}
+  m_Name: HelicopterCameraConfig_Production
+  m_EditorClassIdentifier: Assembly-CSharp::HelicopterCameraConfig
+  pitch: 52
+  heading: 0
+  fieldOfView: 36
+  framedHeight: 23
+  deadZone: {x: 0.05, y: 0.05}
+  followDamping: 1
+  hardLimits: {x: 0.5, y: 0.5}
+  recenterDelay: 0.8
+  idleSpeed: 0.5
+  recenterBlend: 0.6
+  cameraMotion: 1
+  orbitAmplitude: 10
+  orbitPeriod: 22
+  pitchAmplitude: 2
+  pitchPeriod: 9
+  altitudeAmplitude: 0.03
+  altitudePeriod: 13
+  driftAmplitude: 0.5
+  driftFrequency: 0.3
+  chestSpawned:
+    strength: 0.06
+    attack: 0.3
+    hold: 0.6
+    release: 1.6
+  overrideActivated:
+    strength: 0.14
+    attack: 0.25
+    hold: 1
+    release: 2
+  lowHealth:
+    strength: 0.1
+    attack: 0.4
+    hold: 1.2
+    release: 2.2
+  lowHealthThreshold: 0.3
+  zoomSmoothing: 10
+  crowdStart: 60
+  crowdFull: 220
+  crowdWiden: 0.15
+  crowdResponse: 2.5
+  lensProfile: {fileID: 11400000, guid: 4fbcc9334754cab4bbf553c8c9fdca69, type: 2}
+  lensWeight: 1
+  lensPriority: 10
+  depthOfFieldStart: 1.25
+  depthOfFieldEnd: 2.5
+  minDistanceScale: 0.8
+  maxDistanceScale: 1.3
+  slowFollowScale: 1.6
+  fastFollowScale: 0.5

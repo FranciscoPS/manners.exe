@@ -1,6 +1,11 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 public class HelicopterBroadcastTests
 {
@@ -367,6 +372,33 @@ public class HelicopterBroadcastTests
             Object.DestroyImmediate(news);
             Object.DestroyImmediate(defaults);
         }
+    }
+
+    [UnityTest]
+    public IEnumerator HiddenHeadlineStaysHiddenWhenTheScreenChangesSize()
+    {
+        yield return new EnterPlayMode();
+        var canvasObject = new GameObject("HeadlineResizeCanvas", typeof(RectTransform), typeof(Canvas));
+        try
+        {
+            canvasObject.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            var canvasRect = (RectTransform)canvasObject.transform;
+            canvasRect.sizeDelta = new Vector2(1920f, 1080f);
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(HelicopterBroadcastTools.OverlayPrefabPath);
+            GameObject overlay = Object.Instantiate(prefab, canvasObject.transform, false);
+            yield return null;
+            RectMask2D mask = overlay.GetComponentsInChildren<RectMask2D>(true).First(candidate => candidate.name == "HeadlineMask");
+
+            canvasRect.sizeDelta = new Vector2(3440f, 1440f);
+            yield return null;
+
+            Assert.AreEqual(mask.rectTransform.rect.width, mask.padding.z, 0.5f, "Sin titular, la placa debe seguir oculta después de cambiar la resolución.");
+        }
+        finally
+        {
+            Object.Destroy(canvasObject);
+        }
+        yield return new ExitPlayMode();
     }
 
     [Test]

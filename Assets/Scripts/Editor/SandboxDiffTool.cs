@@ -4,6 +4,7 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 public static class SandboxDiffTool
@@ -299,6 +300,36 @@ public static class SandboxDiffTool
 
         foreach (KeyValuePair<WaveData, WaveData> pair in SandboxSetupTools.LoadWaveMap())
             AddPair(result, $"WaveData/{pair.Key.name}", pair.Key, pair.Value);
+
+        AddPair(result, "HelicopterCameraConfig",
+            Load<HelicopterCameraConfig>(HelicopterBroadcastTools.ProductionCameraConfigPath),
+            Load<HelicopterCameraConfig>(HelicopterBroadcastTools.CameraConfigPath));
+
+        AddPair(result, "NewsBroadcastConfig",
+            Load<NewsBroadcastConfig>(HelicopterBroadcastTools.ProductionNewsConfigPath),
+            Load<NewsBroadcastConfig>(HelicopterBroadcastTools.NewsConfigPath));
+
+        AddProfilePairs(result, "HelicopterLens",
+            Load<VolumeProfile>(HelicopterBroadcastTools.ProductionLensProfilePath),
+            Load<VolumeProfile>(HelicopterBroadcastTools.LensProfilePath));
+    }
+
+    private static void AddProfilePairs(DiffResult result, string label, VolumeProfile production, VolumeProfile sandbox)
+    {
+        if (production == null || sandbox == null)
+        {
+            Debug.LogWarning($"[SandboxSync] Falta la contraparte de {label}.");
+            return;
+        }
+
+        result.productionToSandbox[production] = sandbox;
+        result.sandboxToProduction[sandbox] = production;
+        foreach (VolumeComponent component in production.components)
+        {
+            if (component == null) continue;
+            VolumeComponent counterpart = sandbox.components.Find(other => other != null && other.GetType() == component.GetType());
+            AddPair(result, $"{label}/{component.GetType().Name}", component, counterpart);
+        }
     }
 
     private static void AddPair(DiffResult result, string label, Object production, Object sandbox)
