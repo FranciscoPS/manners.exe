@@ -6,12 +6,19 @@ public class EnemyHealth : MonoBehaviour
 
     public static int ActiveEnemyCount { get; private set; }
     public static readonly List<EnemyHealth> ActiveEnemies = new List<EnemyHealth>();
+    public static float DamageTakenScale { get; private set; } = 1f;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ClearStatics()
     {
         ActiveEnemyCount = 0;
         ActiveEnemies.Clear();
+        DamageTakenScale = 1f;
+    }
+
+    public static void SetDamageTakenScale(float scale)
+    {
+        DamageTakenScale = float.IsNaN(scale) ? 1f : Mathf.Clamp01(scale);
     }
 
     [Header("Death VFX")]
@@ -101,6 +108,9 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (DamageTakenScale <= 0f) return;
+        damage *= DamageTakenScale;
+
         if (damageTween != null)
         {
             damageTween.TweenFx();

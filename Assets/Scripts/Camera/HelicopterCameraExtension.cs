@@ -222,7 +222,7 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
         }
 
         if (!Mathf.Approximately(lensVolume.priority, config.lensPriority)) lensVolume.priority = config.lensPriority;
-        float weight = config.lensProfile != null && accessibility.tvFilter ? config.lensWeight : 0f;
+        float weight = config.lensProfile != null ? config.lensWeight : 0f;
         if (!Mathf.Approximately(lensVolume.weight, weight)) lensVolume.weight = weight;
 
         if (lensDepth != null && composer != null)

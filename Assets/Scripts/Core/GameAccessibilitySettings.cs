@@ -29,8 +29,6 @@ public static class GameAccessibilitySettings
         [Range(0, FollowSpeedSteps - 1)] public int followSpeed = NormalFollowSpeed;
         [Tooltip("Posición del slider de distancia: 0 = lo más cerca, 0.5 = encuadre normal, 1 = lo más lejos. El rango real está en HelicopterCameraConfig.")]
         [Range(0f, 1f)] public float cameraDistance = DefaultCameraDistance;
-        [Tooltip("Filtro de TV: grano, viñeta y bordes de color.")]
-        public bool tvFilter = true;
 
         public SettingsData Clone() => (SettingsData)MemberwiseClone();
     }
@@ -120,7 +118,7 @@ public static class GameAccessibilitySettings
     public static bool SameSettings(SettingsData a, SettingsData b)
     {
         if (a == null || b == null) return a == b;
-        return SameMotion(a, b) && Mathf.Approximately(a.cameraDistance, b.cameraDistance) && a.tvFilter == b.tvFilter;
+        return SameMotion(a, b) && Mathf.Approximately(a.cameraDistance, b.cameraDistance);
     }
 
     private static SettingsData Load()

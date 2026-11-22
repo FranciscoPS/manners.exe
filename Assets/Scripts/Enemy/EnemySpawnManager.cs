@@ -64,10 +64,19 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [Tooltip("Cuanto dano de contacto se suma por cada escalon (sube con el tiempo).")]
     [SerializeField] private float finalRushContactDamagePerTier = 18f;
 
+    [Header("Final Rush - Blindaje (overtime corto)")]
+    [Tooltip("Segundos de overtime en los que los enemigos quedan casi invencibles. Hasta aquí el daño que reciben baja de forma continua del 100 % al valor de abajo. Afecta a todos los enemigos en escena, también a los que ya estaban.")]
+    [SerializeField] private float finalRushNearInvincibleSeconds = 40f;
+    [Range(0f, 1f)]
+    [Tooltip("Fracción del daño que todavía reciben los enemigos en ese segundo. 0.05 = 5 %: casi no se pueden matar.")]
+    [SerializeField] private float finalRushNearInvincibleDamage = 0.05f;
+    [Tooltip("Segundos de overtime desde los que los enemigos ya no reciben daño (indestructibles). Entre el segundo anterior y este, el daño baja del valor de arriba a 0. 0 = nunca son indestructibles.")]
+    [SerializeField] private float finalRushIndestructibleSeconds = 60f;
+
     [Header("Final Rush - Techo de enemigos")]
-    [Tooltip("Máximo de enemigos activos al EMPEZAR el overtime. El techo sube desde aquí hasta el máximo final. Nunca baja del Max Concurrent Enemies normal, para que las primeras ráfagas salgan aunque la partida termine con la escena llena.")]
+    [Tooltip("Máximo de enemigos activos al EMPEZAR el overtime. El techo sube desde aquí hasta el máximo final, sin bajar del Max Concurrent Enemies normal salvo que el máximo final sea menor.")]
     [SerializeField] private int finalRushMaxConcurrentStart = 300;
-    [Tooltip("Máximo de enemigos activos al terminar la rampa del techo. Es el tamaño máximo de la horda en overtime; las ráfagas se recortan para no pasarlo.")]
+    [Tooltip("Techo duro de enemigos activos en overtime: nunca se pasa, aunque la partida normal permita más. Medido para que el frame se mantenga en unos 5 ms; las ráfagas se recortan para no pasarlo.")]
     [SerializeField] private int finalRushMaxConcurrentEnd = 2000;
     [Tooltip("Segundos de overtime que tarda el techo en subir del inicial al final. 180 = la horda máxima se alcanza al minuto 3.")]
     [SerializeField] private float finalRushCapRampSeconds = 180f;
@@ -93,6 +102,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private bool spawnBlocked = false;
     private bool suppressContinuousSpawn = false;
     private bool finalRushActive = false;
+    private float finalRushStartTime;
 
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1;
@@ -120,7 +130,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private void OnDestroy()
     {
-
+        if (Instance == this) EnemyHealth.SetDamageTakenScale(1f);
         GameEvents.OnMatchTimeExpired -= HandleMatchTimeExpired;
 
         if (UpdateManager.Instance != null)
@@ -131,6 +141,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private void Start()
     {
+        EnemyHealth.SetDamageTakenScale(1f);
         DetectSpawnPoints();
         continuousSpawnTimer = continuousSpawnInterval;
         StartCoroutine(ScatterClusteredEnemies());
@@ -154,6 +165,10 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
+        if (finalRushActive)
+            EnemyHealth.SetDamageTakenScale(FinalRushMath.DamageTakenScale(Time.time - finalRushStartTime,
+                finalRushNearInvincibleSeconds, finalRushNearInvincibleDamage, finalRushIndestructibleSeconds));
+
         if (spawnBlocked) return;
 
         if (enableContinuousSpawn && !isSpawningWave && !suppressContinuousSpawn && !finalRushActive)
@@ -172,6 +187,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     {
         if (finalRushActive) return;
         finalRushActive = true;
+        finalRushStartTime = Time.time;
         suppressContinuousSpawn = true;
         LogDebug("Tiempo de partida agotado: iniciando oleada final imposible.");
         PerformanceMonitor.Instance?.LogEvent("[FINAL RUSH] Tiempo agotado: oleada final imposible iniciada.");
@@ -190,16 +206,15 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
         PoolManager.Instance?.EnsureCapacityOverFrames(buffed.enemyPoolType, CurrentFinalRushCap(0f));
 
-        float startTime = Time.time;
         int lastTier = -1;
 
         while (true)
         {
-            float elapsed = Time.time - startTime;
+            float elapsed = Time.time - finalRushStartTime;
 
             int tier = Mathf.FloorToInt(elapsed / finalRushTierInterval);
 
-            buffed.maxHealth = finalRushBaseHealth * Mathf.Pow(finalRushHealthTierMultiplier, tier);
+            buffed.maxHealth = FinalRushMath.Health(finalRushBaseHealth, finalRushHealthTierMultiplier, tier);
             buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedPerTier * tier);
 
             buffed.contactDamage = finalRushBaseContactDamage + finalRushContactDamagePerTier * tier;
@@ -217,7 +232,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
                 lastTier = tier;
                 PerformanceMonitor.Instance?.LogEvent(
                     $"[FINAL RUSH] Escalon {tier}: vida={buffed.maxHealth:F0} vel={buffed.moveSpeed:F1} " +
-                    $"res={buffed.controlResistance:P0} techo={cap} " +
+                    $"res={buffed.controlResistance:P0} techo={cap} daño recibido={EnemyHealth.DamageTakenScale:P0} " +
                     $"x{perSpawnPoint}/punto cada {burstInterval:F1}s");
             }
 
@@ -230,9 +245,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private int CurrentFinalRushCap(float elapsed)
     {
-        float progress = finalRushCapRampSeconds > 0f ? Mathf.Clamp01(elapsed / finalRushCapRampSeconds) : 1f;
-        int ramped = Mathf.RoundToInt(Mathf.Lerp(finalRushMaxConcurrentStart, finalRushMaxConcurrentEnd, progress));
-        return Mathf.Max(maxConcurrentEnemies, ramped);
+        return FinalRushMath.Cap(elapsed, finalRushMaxConcurrentStart, finalRushMaxConcurrentEnd, finalRushCapRampSeconds, maxConcurrentEnemies);
     }
 
     private IEnumerator SpawnBurstOverFrames(int count, EnemyConfiguration config)

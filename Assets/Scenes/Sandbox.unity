@@ -47224,9 +47224,12 @@ MonoBehaviour:
   finalRushMaxSpeed: 22
   finalRushBaseContactDamage: 12
   finalRushContactDamagePerTier: 18
+  finalRushNearInvincibleSeconds: 40
+  finalRushNearInvincibleDamage: 0.05
+  finalRushIndestructibleSeconds: 60
   finalRushMaxConcurrentStart: 300
-  finalRushMaxConcurrentEnd: 2000
-  finalRushCapRampSeconds: 180
+  finalRushMaxConcurrentEnd: 420
+  finalRushCapRampSeconds: 40
   finalRushSpawnsPerFrame: 24
   finalRushControlResistancePerTier: 0.05
   finalRushMaxControlResistance: 0.85

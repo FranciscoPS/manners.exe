@@ -30,7 +30,7 @@ public class AccessibilitySettingsTests
         GameAccessibilitySettings.CameraPreset preset = GameAccessibilitySettings.PresetOf(settings);
 
         Assert.AreEqual(GameAccessibilitySettings.CameraPreset.Helicopter, preset);
-        Assert.IsTrue(settings.cameraPans && settings.cameraSway && settings.autoZoom && settings.impactShake && settings.deadZone && settings.tvFilter);
+        Assert.IsTrue(settings.cameraPans && settings.cameraSway && settings.autoZoom && settings.impactShake && settings.deadZone);
         Assert.IsFalse(settings.lockOnRobot);
         Assert.AreEqual(GameAccessibilitySettings.NormalFollowSpeed, settings.followSpeed);
         Assert.AreEqual(GameAccessibilitySettings.DefaultCameraDistance, settings.cameraDistance);
@@ -40,14 +40,13 @@ public class AccessibilitySettingsTests
     [Test]
     public void FixedPresetTurnsEveryMovementOffAndLocksTheCameraOnTheRobot()
     {
-        var settings = new GameAccessibilitySettings.SettingsData { cameraDistance = 0.2f, tvFilter = false };
+        var settings = new GameAccessibilitySettings.SettingsData { cameraDistance = 0.2f };
 
         GameAccessibilitySettings.SettingsData fixedCamera = GameAccessibilitySettings.WithPreset(settings, GameAccessibilitySettings.CameraPreset.Fixed);
 
         Assert.IsFalse(fixedCamera.cameraPans || fixedCamera.cameraSway || fixedCamera.autoZoom || fixedCamera.impactShake || fixedCamera.deadZone);
         Assert.IsTrue(fixedCamera.lockOnRobot);
         Assert.AreEqual(0.2f, fixedCamera.cameraDistance);
-        Assert.IsFalse(fixedCamera.tvFilter);
         Assert.AreEqual(GameAccessibilitySettings.CameraPreset.Fixed, GameAccessibilitySettings.PresetOf(fixedCamera));
     }
 
@@ -84,16 +83,13 @@ public class AccessibilitySettingsTests
     {
         var saved = new GameAccessibilitySettings.SettingsData();
         GameAccessibilitySettings.SettingsData moved = saved.Clone();
-        GameAccessibilitySettings.SettingsData noFilter = saved.Clone();
         GameAccessibilitySettings.SettingsData locked = saved.Clone();
 
         moved.cameraDistance = 0.4f;
-        noFilter.tvFilter = false;
         locked.lockOnRobot = true;
 
         Assert.IsTrue(GameAccessibilitySettings.SameSettings(saved, saved.Clone()));
         Assert.IsFalse(GameAccessibilitySettings.SameSettings(saved, moved));
-        Assert.IsFalse(GameAccessibilitySettings.SameSettings(saved, noFilter));
         Assert.IsFalse(GameAccessibilitySettings.SameSettings(saved, locked));
     }
 
@@ -101,7 +97,7 @@ public class AccessibilitySettingsTests
     public void ResetRestoresTheDefaultsFromThePlayerSettingsAsset()
     {
         PlayerSettingsDefaults asset = PlayerSettingsDefaults.Instance;
-        GameAccessibilitySettings.Apply(new GameAccessibilitySettings.SettingsData { cameraPans = false, cameraDistance = 0.1f, tvFilter = false });
+        GameAccessibilitySettings.Apply(new GameAccessibilitySettings.SettingsData { cameraPans = false, cameraDistance = 0.1f });
 
         GameAccessibilitySettings.ResetToDefaults();
         GameAccessibilitySettings.SettingsData restored = GameAccessibilitySettings.Current;

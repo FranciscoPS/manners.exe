@@ -46,6 +46,21 @@ public class GraphicsBudgetTests
     }
 
     [Test]
+    public void PresetsStartAtTheDefaultResolutionWithNativeAsFallback()
+    {
+        GameGraphicsSettings.SettingsData balanced = GameGraphicsSettings.CreatePreset(GameGraphicsSettings.GraphicsPreset.Balanced);
+        GameGraphicsSettings.SettingsData eco = GameGraphicsSettings.CreatePreset(GameGraphicsSettings.GraphicsPreset.Eco);
+        GameGraphicsSettings.SettingsData broken = GameGraphicsSettings.Sanitize(new GameGraphicsSettings.SettingsData { resolutionHeight = 777 });
+
+        Assert.IsNotNull(PlayerSettingsDefaults.Instance, "Falta " + PlayerSettingsDefaults.ResourceName + " en Resources.");
+        Assert.AreEqual(PlayerSettingsDefaults.Instance.resolutionHeight, GameGraphicsSettings.DefaultResolutionHeight);
+        Assert.AreEqual(GameGraphicsSettings.DefaultResolutionHeight, balanced.resolutionHeight);
+        Assert.AreEqual(GameGraphicsSettings.DefaultResolutionHeight, eco.resolutionHeight);
+        Assert.AreEqual(GameGraphicsSettings.DefaultResolutionHeight, broken.resolutionHeight);
+        Assert.AreEqual(GameGraphicsSettings.NativeResolution, new GameGraphicsSettings.SettingsData().resolutionHeight);
+    }
+
+    [Test]
     public void RetinaAspectFitsBothAxesAndNativeIsExplicit()
     {
         float scale = GameGraphicsSettings.CalculateRenderScale(3024, 1964, 1080, 1);

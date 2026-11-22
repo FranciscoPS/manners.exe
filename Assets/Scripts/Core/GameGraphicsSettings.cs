@@ -21,7 +21,7 @@ public static class GameGraphicsSettings
         public bool ambientOcclusion;
         public bool postProcessing = true;
         public bool outlines = true;
-        public int resolutionHeight = 1080;
+        public int resolutionHeight = NativeResolution;
         public bool fullScreen = true;
         public SettingsData Clone() => (SettingsData)MemberwiseClone();
     }
@@ -34,7 +34,8 @@ public static class GameGraphicsSettings
         public bool usesMainRenderer;
     }
 
-    private const string PrefsKey = "GraphicsSettings.v1";
+    public const int NativeResolution = 0;
+    private const string PrefsKey = "GraphicsSettings.v2";
     private const float ConfirmationDuration = 15f;
     private static readonly int[] FrameRates = { 30, 45, 60, 90, 120 };
     private static readonly int[] ResolutionHeights = { 0, 720, 900, 1080, 1440, 2160 };
@@ -74,9 +75,19 @@ public static class GameGraphicsSettings
         current = null;
     }
 
+    public static int DefaultResolutionHeight
+    {
+        get
+        {
+            PlayerSettingsDefaults defaults = PlayerSettingsDefaults.Instance;
+            int height = defaults != null ? defaults.resolutionHeight : NativeResolution;
+            return Array.IndexOf(ResolutionHeights, height) >= 0 ? height : NativeResolution;
+        }
+    }
+
     public static SettingsData CreatePreset(GraphicsPreset preset)
     {
-        var settings = new SettingsData { preset = preset };
+        var settings = new SettingsData { preset = preset, resolutionHeight = DefaultResolutionHeight };
         if (preset == GraphicsPreset.Eco)
         {
             settings.frameRate = 30;
@@ -98,7 +109,7 @@ public static class GameGraphicsSettings
         if (float.IsNaN(result.renderScale) || float.IsInfinity(result.renderScale)) result.renderScale = 1f;
         result.renderScale = Mathf.Clamp(result.renderScale, 0.5f, 1f);
         result.textureMipmapLimit = Mathf.Clamp(result.textureMipmapLimit, 0, 2);
-        if (Array.IndexOf(ResolutionHeights, result.resolutionHeight) < 0) result.resolutionHeight = 1080;
+        if (Array.IndexOf(ResolutionHeights, result.resolutionHeight) < 0) result.resolutionHeight = DefaultResolutionHeight;
         return result;
     }
 

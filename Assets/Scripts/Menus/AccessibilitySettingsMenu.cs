@@ -17,8 +17,7 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
     public const int DeadZoneRow = 6;
     public const int FollowSpeedRow = 7;
     public const int DistanceRow = 8;
-    public const int TvFilterRow = 9;
-    public const int RowCount = 10;
+    public const int RowCount = 9;
 
     [Serializable]
     private sealed class SettingRow
@@ -98,7 +97,6 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         Bind(DeadZoneRow, () => OnOff(draft.deadZone), step => draft.deadZone = !draft.deadZone, Unlocked);
         Bind(FollowSpeedRow, ReadFollowSpeed, step => draft.followSpeed = Mathf.Clamp(draft.followSpeed + step, 0, GameAccessibilitySettings.FollowSpeedSteps - 1), Unlocked);
         BindSlider(DistanceRow, ReadDistance, () => draft.cameraDistance, value => draft.cameraDistance = value);
-        Bind(TvFilterRow, () => OnOff(draft.tvFilter), step => draft.tvFilter = !draft.tvFilter);
         if (applyButton != null) applyButton.onClick.AddListener(ApplySettings);
         if (resetButton != null) resetButton.onClick.AddListener(ResetSettings);
         if (backButton != null) backButton.onClick.AddListener(Close);

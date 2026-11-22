@@ -43,7 +43,7 @@ public static partial class UIStyleApplier
     private static readonly string[] AccessibilityRowNames =
     {
         "Perfil de cámara", "Paneos de cámara", "Movimiento de cámara", "Zooms automáticos", "Sacudidas por impactos",
-        "Fijar cámara al robot", "Zona muerta", "Velocidad de seguimiento", "Distancia de cámara", "Filtro de TV",
+        "Fijar cámara al robot", "Zona muerta", "Velocidad de seguimiento", "Distancia de cámara",
     };
 
     private static readonly string[,] AccessibilityLabels =
@@ -57,7 +57,6 @@ public static partial class UIStyleApplier
         { "Dead zone", "Zona muerta" },
         { "Follow speed", "Velocidad de seguimiento" },
         { "Camera distance", "Distancia de cámara" },
-        { "TV filter", "Filtro de TV" },
     };
 
     private static readonly string[,] AccessibilityHints =
@@ -71,7 +70,6 @@ public static partial class UIStyleApplier
         { "The robot can move a little before the camera starts to follow it.", "El robot puede moverse un poco antes de que la cámara lo siga." },
         { "How quickly the camera catches up with the robot.", "Qué tan rápido alcanza la cámara al robot." },
         { "How close or far the camera is from the robot. Zooms scale with it.", "Qué tan cerca o lejos está la cámara del robot. Los zooms se ajustan a esa distancia." },
-        { "Grain, vignette and color fringes of the news camera.", "Grano, viñeta y bordes de color de la cámara de noticias." },
     };
     private static readonly string[] HelpSectionNames = { "MovimientoPanel", "ExperienciaPanel", "EnemigosPanel", "MejorasPanel" };
 

@@ -155,7 +155,7 @@ public static class PerformanceValidation
             renderScale = float.NaN, textureMipmapLimit = 100, resolutionHeight = -5
         };
         var safe = GameGraphicsSettings.Sanitize(invalid);
-        Require(report, "Corrupt saved settings recover", safe.preset == GameGraphicsSettings.GraphicsPreset.Balanced && safe.frameRate == 60 && safe.renderScale == 1f && safe.textureMipmapLimit == 2 && safe.resolutionHeight == 1080,
+        Require(report, "Corrupt saved settings recover", safe.preset == GameGraphicsSettings.GraphicsPreset.Balanced && safe.frameRate == 60 && safe.renderScale == 1f && safe.textureMipmapLimit == 2 && safe.resolutionHeight == GameGraphicsSettings.DefaultResolutionHeight,
             "Unknown enums, unsupported frame rates, NaN, invalid mip limits and resolutions recover.");
         Require(report, "Sanitize does not mutate its caller", float.IsNaN(invalid.renderScale) && invalid.textureMipmapLimit == 100,
             "Draft settings stay separate from sanitized state.");

@@ -147,8 +147,8 @@ public static class UIBilingualPreview
             SerializedProperty rows = new SerializedObject(menu).FindProperty("rows");
             string distance = Mathf.RoundToInt(GameAccessibilitySettings.DefaultCameraDistance * 100f) + "%";
             string[] values = language == GameLanguage.Spanish
-                ? new[] { "Helicóptero", "Activado", "Activado", "Activado", "Activado", "Desactivado", "Activado", "Normal", distance, "Activado" }
-                : new[] { "Helicopter", "On", "On", "On", "On", "Off", "On", "Normal", distance, "On" };
+                ? new[] { "Helicóptero", "Activado", "Activado", "Activado", "Activado", "Desactivado", "Activado", "Normal", distance }
+                : new[] { "Helicopter", "On", "On", "On", "On", "Off", "On", "Normal", distance };
             for (int i = 0; i < rows.arraySize && i < values.Length; i++) ((TMP_Text)rows.GetArrayElementAtIndex(i).FindPropertyRelative("value").objectReferenceValue).text = values[i];
             Slider distanceSlider = rows.GetArrayElementAtIndex(AccessibilitySettingsMenu.DistanceRow).FindPropertyRelative("slider").objectReferenceValue as Slider;
             if (distanceSlider != null) distanceSlider.SetValueWithoutNotify(GameAccessibilitySettings.DefaultCameraDistance);
