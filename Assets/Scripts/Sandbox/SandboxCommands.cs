@@ -297,4 +297,12 @@ public static class SandboxCommands
         SandboxLog.Command($"Reiniciando sandbox ('{active.name}')...");
         SceneManager.LoadScene(active.name);
     }
+
+    public static void ToggleBroadcastMode()
+    {
+        BroadcastMode.Toggle();
+        SandboxLog.Command(BroadcastMode.Enabled
+            ? "Modo noticiero: cámara de helicóptero, lente y rótulo activos."
+            : "Modo noticiero apagado: cámara de siempre.");
+    }
 }

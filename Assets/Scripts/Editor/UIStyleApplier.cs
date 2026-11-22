@@ -160,6 +160,7 @@ public static partial class UIStyleApplier
         StyleTutorial(root);
         StyleMainMenu(root);
         StyleOverridePanels(root);
+        KeepTopHudBelowExpBar(root);
         StyleInitials(root);
         AddScreenIntros(root);
     }

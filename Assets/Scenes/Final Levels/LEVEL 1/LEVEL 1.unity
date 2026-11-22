@@ -1649,7 +1649,7 @@ RectTransform:
   m_GameObject: {fileID: 55818865}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 982485809}
@@ -1659,7 +1659,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 422, y: -112}
+  m_AnchoredPosition: {x: 360.8, y: -129.6}
   m_SizeDelta: {x: 432, y: 56}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &55818868
@@ -18849,7 +18849,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -125}
+  m_AnchoredPosition: {x: 0, y: -132}
   m_SizeDelta: {x: 340, y: 88}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &659451894
@@ -28648,7 +28648,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -99.83986, y: -106.240005}
+  m_AnchoredPosition: {x: -99.83986, y: -131.485}
   m_SizeDelta: {x: 300, y: 86.97}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &1019051303
@@ -30950,7 +30950,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -118}
+  m_AnchoredPosition: {x: 0, y: -144}
   m_SizeDelta: {x: 350, y: 74}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1117787474
@@ -62630,7 +62630,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 40}
+  m_SizeDelta: {x: 0, y: 53}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1746836747
 MonoBehaviour:
@@ -62679,10 +62679,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 34
+  m_fontSizeBase: 34
   m_fontWeight: 400
-  m_enableAutoSizing: 1
+  m_enableAutoSizing: 0
   m_fontSizeMin: 14.400001
   m_fontSizeMax: 24
   m_fontStyle: 16
@@ -66796,7 +66796,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -118}
+  m_AnchoredPosition: {x: 0, y: -144}
   m_SizeDelta: {x: 480, y: 112}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1945067636
@@ -69761,7 +69761,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1547439757717632364, guid: e2e13877671304964becaf900928621d, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -189.21199
+      value: -200.18199
       objectReference: {fileID: 0}
     - target: {fileID: 1547439757717632364, guid: e2e13877671304964becaf900928621d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -73143,8 +73143,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -30}
-  m_SizeDelta: {x: -200, y: 46}
+  m_AnchoredPosition: {x: 0, y: -41.5}
+  m_SizeDelta: {x: -200, y: 69}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2136865213
 MonoBehaviour:
@@ -73159,7 +73159,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.07058824, g: 0.08235294, b: 0.18039216, a: 1}
+  m_Color: {r: 0.21568628, g: 0.26666668, b: 0.43137255, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -73196,8 +73196,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
-  m_EffectColor: {r: 0.21568628, g: 0.26666668, b: 0.43137255, a: 1}
-  m_EffectDistance: {x: 3.3500001, y: -3.3500001}
+  m_EffectColor: {r: 0.09803922, g: 0.65882355, b: 0.9019608, a: 1}
+  m_EffectDistance: {x: 5, y: -5}
   m_UseGraphicAlpha: 1
 --- !u!114 &2136865216
 MonoBehaviour:

@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efda8aad4181c324a984a9e0946a42bf, type: 3}
+  m_Name: NewsBroadcastConfig_Sandbox
+  m_EditorClassIdentifier: Assembly-CSharp::NewsBroadcastConfig
+  channelName: BD NEWS
+  liveLabel:
+    english: LIVE
+    spanish: EN VIVO
+  clockStartMinutes: 478
+  livePulseSpeed: 0.8
+  livePulseMinAlpha: 0.55
+  headlineDuration: 6
+  headlineCooldown: 12
+  firstHeadlineDelay: 2
+  wipeDuration: 0.35
+  levelUpEvery: 3
+  lowHealthThreshold: 0.3
+  tickerSpeed: 110
+  tickerSeparator: '   -   '
+  tickerItems:
+  - english: Etiquette classes sold out across the city
+    spanish: Clases de etiqueta agotadas en toda la ciudad
+  - english: Local man says "please" to his toaster, survives
+    spanish: Hombre dice "por favor" a su tostadora y sobrevive
+  - english: 'Traffic: avoid downtown, there is a giant robot'
+    spanish: "Tr\xE1nsito: evite el centro, hay un robot gigante"
+  - english: 'Weather: sunny, with a chance of falling buildings'
+    spanish: 'Clima: soleado, con probabilidad de edificios cayendo'
+  - english: 'Poll: 7 in 10 residents now thank their vending machines'
+    spanish: "Encuesta: 7 de cada 10 ya dan las gracias a las m\xE1quinas expendedoras"
+  - english: Insurers add "robot" to the list of natural disasters
+    spanish: Aseguradoras agregan "robot" a la lista de desastres naturales
+  matchStart:
+    priority: 0
+    headlines:
+    - headline:
+        english: GIANT ROBOT LOOSE DOWNTOWN
+        spanish: ROBOT GIGANTE SUELTO EN EL CENTRO
+      subline:
+        english: Military says the situation is "under control"
+        spanish: "El ej\xE9rcito asegura tenerlo \"bajo control\""
+    - headline:
+        english: 'CITY ON ALERT: THE A.I. IS ANGRY'
+        spanish: "ALERTA: LA I.A. EST\xC1 ENOJADA"
+      subline:
+        english: Experts blame years without a single "thank you"
+        spanish: "Expertos culpan a a\xF1os sin un solo \"gracias\""
+    - headline:
+        english: ROBOT REFUSES TO EXPLAIN ITSELF
+        spanish: EL ROBOT NO DA EXPLICACIONES
+      subline:
+        english: Witnesses say it asked for a "please" first
+        spanish: "Testigos dicen que primero pidi\xF3 un \"por favor\""
+  levelUp:
+    priority: 0
+    headlines:
+    - headline:
+        english: ROBOT GETS STRONGER, AGAIN
+        spanish: "EL ROBOT SE HACE M\xC1S FUERTE"
+      subline:
+        english: Military budget redirected to apology cards
+        spanish: El presupuesto militar se va en tarjetas de disculpa
+    - headline:
+        english: 'EXPERTS: "IT IS LEARNING"'
+        spanish: "EXPERTOS: \"EST\xC1 APRENDIENDO\""
+      subline:
+        english: Mostly how to knock down buildings, they add
+        spanish: Sobre todo a derribar edificios, aclaran
+    - headline:
+        english: ANALYSTS CONFIRM AN UPGRADE
+        spanish: ANALISTAS CONFIRMAN UNA MEJORA
+      subline:
+        english: '"We should have said please," admits a general'
+        spanish: '"Debimos decir por favor", admite un general'
+  chestSpawned:
+    priority: 1
+    headlines:
+    - headline:
+        english: MYSTERY CRATE SPOTTED
+        spanish: AVISTAN UNA CAJA MISTERIOSA
+      subline:
+        english: Authorities ask the robot not to open it. Politely.
+        spanish: "Las autoridades piden al robot no abrirla. Con educaci\xF3n."
+    - headline:
+        english: SUPPLY DROP GOES TO THE WRONG SIDE
+        spanish: SUMINISTROS AL BANDO EQUIVOCADO
+      subline:
+        english: Pilot says nobody thanked him either
+        spanish: "El piloto dice que a \xE9l tampoco le dieron las gracias"
+  shopVisited:
+    priority: 1
+    headlines:
+    - headline:
+        english: ROBOT GOES SHOPPING
+        spanish: EL ROBOT SE VA DE COMPRAS
+      subline:
+        english: Cashier forgets to say "thank you"; city holds its breath
+        spanish: Cajero olvida dar las gracias; la ciudad contiene el aliento
+    - headline:
+        english: LOCAL STORE BREAKS SALES RECORD
+        spanish: "TIENDA LOCAL ROMPE R\xC9CORD DE VENTAS"
+      subline:
+        english: 'Owner: "It said please. Best customer ever."'
+        spanish: "Due\xF1o: \"Dijo por favor. El mejor cliente.\""
+  overrideActivated:
+    priority: 2
+    headlines:
+    - headline:
+        english: NEW ROBOT POWER BAFFLES EXPERTS
+        spanish: NUEVO PODER DEL ROBOT DESCONCIERTA
+      subline:
+        english: Scientists "have no idea how it did that"
+        spanish: "Cient\xEDficos \"no tienen idea de c\xF3mo lo hizo\""
+    - headline:
+        english: ROBOT OVERLOAD DETECTED
+        spanish: DETECTAN UNA SOBRECARGA EN EL ROBOT
+      subline:
+        english: Military advises staying indoors and being polite
+        spanish: "El ej\xE9rcito recomienda quedarse en casa y ser amable"
+  lowHealth:
+    priority: 3
+    headlines:
+    - headline:
+        english: MILITARY CLAIMS VICTORY
+        spanish: "EL EJ\xC9RCITO CANTA VICTORIA"
+      subline:
+        english: For the fourth time this week
+        spanish: Por cuarta vez esta semana
+    - headline:
+        english: ROBOT DAMAGED, SAY OFFICIALS
+        spanish: "EL ROBOT EST\xC1 DA\xD1ADO, DICEN"
+      subline:
+        english: Officials also asked us not to say it on air
+        spanish: "Tambi\xE9n nos pidieron no decirlo al aire"
+  overtime:
+    priority: 3
+    headlines:
+    - headline:
+        english: 'COVERAGE EXTENDED: IT IS STILL HERE'
+        spanish: "COBERTURA EXTENDIDA: SIGUE AQU\xCD"
+      subline:
+        english: We interrupt our cooking show. Again.
+        spanish: Interrumpimos el programa de cocina. Otra vez.

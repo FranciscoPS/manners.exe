@@ -21,13 +21,23 @@ public static partial class UIStyleApplier
     private const float OverrideHudTop = 171f;
     private const float OverrideHudLeft = 280f;
     private const float ReferenceWidth = 1920f;
+    private const float HudSideMargin = 100f;
+    private const float HudGap = 12f;
+    private const float ExpBarTop = 7f;
+    private const float ExpBarHeight = 69f;
+    private const float ExpBarBottom = ExpBarTop + ExpBarHeight;
+    private const float ExpBarInset = 8f;
+    private const float ExpLevelFontSize = 34f;
+    private const float HealthBarScale = 0.8f;
     private const float HealthBarWidth = 432f;
     private const float HealthBarHeight = 56f;
-    private const float HealthBarLeft = 206f;
-    private const float HealthBarTop = 112f;
     private const float HealthFaceSize = 104f;
     private const float HealthFaceOffset = -58f;
-    private const float HealthGap = 12f;
+    private const float HealthBarLeft = HudSideMargin + (HealthFaceSize * 0.5f - HealthFaceOffset) * HealthBarScale;
+    private const float HealthBarTop = ExpBarBottom + HudGap + HealthFaceSize * HealthBarScale * 0.5f;
+    private const float HealthGap = HudGap;
+    private const float LevelUpTitleHeight = 112f;
+    private const float LevelUpTitleY = -(ExpBarBottom + HudGap + LevelUpTitleHeight * 0.5f);
     private static readonly string[] OverlayPanels = { "LevelUpPanel", "PausePanel", "GameOverPanel", "AudioPanel", "InitialsEntryUI" };
 
     private static Color Lilac => Color.Lerp(style.anomaly, style.paper, 0.5f);
@@ -209,10 +219,19 @@ public static partial class UIStyleApplier
 
     private static void StyleExpBar(RectTransform panel)
     {
-        Image frame = panel.GetComponent<Image>();
-        panel.sizeDelta = new Vector2(panel.sizeDelta.x, 46f);
-        if (frame != null) BarFrame(frame);
+        panel.localScale = Vector3.one;
+        panel.sizeDelta = new Vector2(panel.sizeDelta.x, ExpBarHeight);
+        if (panel.anchorMin.y > 0.99f && panel.anchorMax.y > 0.99f)
+            panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, -ExpBarTop - ExpBarHeight * (1f - panel.pivot.y));
         Touch(panel);
+
+        Image frame = panel.GetComponent<Image>();
+        if (frame != null)
+        {
+            style.ApplySprite(frame, style.capsule, style.secondary, 0f, style.shadowOffset, null);
+            UIStyle.SetLip(frame, style.cyan);
+            Touch(frame);
+        }
 
         Transform background = DirectChild(panel, "ExpBarBackground");
         if (background != null) BarFill(background, "ExpBarFill", style.cyan);
@@ -220,10 +239,14 @@ public static partial class UIStyleApplier
         Transform level = DirectChild(panel, "LevelText");
         if (level != null)
         {
+            RectTransform levelRect = (RectTransform)level;
+            levelRect.sizeDelta = new Vector2(levelRect.sizeDelta.x, ExpBarHeight - ExpBarInset * 2f);
+            Touch(levelRect);
+
             TMP_Text levelText = level.GetComponent<TMP_Text>();
             Apply(levelText, UITextRole.Label, style.paper, false);
             levelText.enableAutoSizing = false;
-            levelText.fontSize = 24f;
+            levelText.fontSize = ExpLevelFontSize;
             levelText.margin = Vector4.zero;
             Finish(levelText);
         }
@@ -231,12 +254,12 @@ public static partial class UIStyleApplier
 
     private static void StyleHealthBar(RectTransform container)
     {
-        container.localScale = Vector3.one;
+        container.localScale = new Vector3(HealthBarScale, HealthBarScale, 1f);
         container.sizeDelta = new Vector2(HealthBarWidth, HealthBarHeight);
         if (container.anchorMin == new Vector2(0f, 1f) && container.anchorMax == container.anchorMin)
         {
             container.pivot = new Vector2(0.5f, 0.5f);
-            container.anchoredPosition = new Vector2(HealthBarLeft + HealthBarWidth * 0.5f, -HealthBarTop);
+            container.anchoredPosition = new Vector2(HealthBarLeft + HealthBarWidth * HealthBarScale * 0.5f, -HealthBarTop);
         }
         Touch(container);
 
@@ -316,6 +339,87 @@ public static partial class UIStyleApplier
             Touch(panel);
             report?.AppendLine($"HUD: el panel de sobrecargas baja {top - limit:F0} unidades para dejar {HealthGap:F0} entre la barra de vida y su pestaña.");
         }
+    }
+
+    private static void KeepTopHudBelowExpBar(Transform root)
+    {
+        if (DirectChild(root, "ExpBarPanel") == null) return;
+
+        float belowBar = -(ExpBarBottom + HudGap);
+        Transform timerPlate = DirectChild(root, StylePrefix + "TimerPlate");
+        if (timerPlate != null) PlaceBelow((RectTransform)timerPlate, belowBar, "El cronómetro", "la barra de experiencia");
+
+        Transform currency = DirectChild(root, "CurrencyPanel");
+        if (currency == null) return;
+
+        RectTransform currencyRect = (RectTransform)currency;
+        PlaceBelow(currencyRect, belowBar, "El panel de monedas", "la barra de experiencia");
+        if (!HorizontalSpan(currencyRect, out float currencyLeft, out float currencyRight)) return;
+
+        float belowCurrency = BottomEdge(currencyRect) - HudGap;
+        foreach (OverrideHudPanel hud in root.GetComponentsInChildren<OverrideHudPanel>(true))
+        {
+            RectTransform panel = (RectTransform)hud.transform;
+            if (panel.parent != currency.parent) continue;
+            if (!HorizontalSpan(panel, out float panelLeft, out float panelRight)) continue;
+            if (panelRight <= currencyLeft || panelLeft >= currencyRight) continue;
+            PlaceBelow(panel, belowCurrency, "El panel de sobrecargas", "las monedas");
+        }
+    }
+
+    private static void PlaceLevelUpTitle(Transform root)
+    {
+        Transform panel = DirectChild(root, "LevelUpPanel");
+        if (panel == null) return;
+
+        foreach (string name in new[] { StylePrefix + "TitleBurst", "LevelUpText" })
+        {
+            Transform part = DirectChild(panel, name);
+            if (part == null) continue;
+
+            RectTransform rect = (RectTransform)part;
+            if (rect.anchorMin.y < 0.99f || Mathf.Approximately(rect.anchoredPosition.y, LevelUpTitleY)) continue;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, LevelUpTitleY);
+            Touch(rect);
+        }
+    }
+
+    private static void PlaceBelow(RectTransform rect, float targetTop, string label, string reference)
+    {
+        if (rect.anchorMin.y < 0.99f || rect.anchorMax.y < 0.99f) return;
+
+        float top = TopEdge(rect);
+        if (Mathf.Abs(top - targetTop) < 0.01f) return;
+
+        rect.anchoredPosition += new Vector2(0f, targetTop - top);
+        Touch(rect);
+        report?.AppendLine($"HUD: {label} {(top > targetTop ? "baja" : "sube")} {Mathf.Abs(top - targetTop):F0} unidades para quedar a {HudGap:F0} bajo {reference}.");
+    }
+
+    private static float TopEdge(RectTransform rect)
+    {
+        float scale = rect.localScale.y;
+        float top = rect.anchoredPosition.y + rect.sizeDelta.y * scale * (1f - rect.pivot.y);
+        Transform tab = DirectChild(rect, StylePrefix + "Tab");
+        if (tab is RectTransform tabRect && tabRect.anchorMin.y > 0.99f)
+            top = Mathf.Max(top, top + (tabRect.anchoredPosition.y + tabRect.sizeDelta.y * (1f - tabRect.pivot.y)) * scale);
+        return top;
+    }
+
+    private static float BottomEdge(RectTransform rect)
+    {
+        return rect.anchoredPosition.y - rect.sizeDelta.y * rect.localScale.y * rect.pivot.y;
+    }
+
+    private static bool HorizontalSpan(RectTransform rect, out float left, out float right)
+    {
+        left = right = 0f;
+        if (!Mathf.Approximately(rect.anchorMin.x, rect.anchorMax.x)) return false;
+
+        float width = rect.sizeDelta.x * rect.localScale.x;
+        left = rect.anchorMin.x * ReferenceWidth + rect.anchoredPosition.x - width * rect.pivot.x;
+        right = left + width;
+        return true;
     }
 
     private static MannersFaceUI BuildFace(Transform parent, Vector2 anchor, Vector2 position, float size, bool menuMode)
@@ -456,8 +560,8 @@ public static partial class UIStyleApplier
             RectTransform burst = GetOrCreateSibling(titleRect, StylePrefix + "TitleBurst");
             burst.anchorMin = burst.anchorMax = new Vector2(0.5f, 1f);
             burst.pivot = new Vector2(0.5f, 0.5f);
-            burst.anchoredPosition = new Vector2(0f, -118f);
-            burst.sizeDelta = new Vector2(480f, 112f);
+            burst.anchoredPosition = new Vector2(0f, LevelUpTitleY);
+            burst.sizeDelta = new Vector2(480f, LevelUpTitleHeight);
             banner = GetOrAdd<Image>(burst.gameObject);
             banner.raycastTarget = false;
             style.ApplySprite(banner, style.burst, style.primary, 0f, style.panelShadowOffset, null);
@@ -466,7 +570,7 @@ public static partial class UIStyleApplier
 
             titleRect.anchorMin = titleRect.anchorMax = new Vector2(0.5f, 1f);
             titleRect.pivot = new Vector2(0.5f, 0.5f);
-            titleRect.anchoredPosition = new Vector2(0f, -118f);
+            titleRect.anchoredPosition = new Vector2(0f, LevelUpTitleY);
             titleRect.sizeDelta = new Vector2(350f, 74f);
             title.margin = Vector4.zero;
             Apply(title, UITextRole.Title, style.paper, true);
