@@ -109,4 +109,14 @@ public sealed class HelicopterCameraConfig : ScriptableObject
     [Min(0.1f)] public float depthOfFieldStart = 1.25f;
     [Tooltip("Fin del desenfoque de fondo, en múltiplos de la distancia de la cámara al robot. El estilo toon equivale a 2.5.")]
     [Min(0.2f)] public float depthOfFieldEnd = 2.5f;
+
+    [Header("Rangos de Opciones > Accesibilidad")]
+    [Tooltip("Distancia más cercana que el jugador puede elegir, como fracción del encuadre normal (0.8 = 20 % más cerca). Los acercamientos del camarógrafo se calculan sobre la distancia elegida.")]
+    [Range(0.5f, 1f)] public float minDistanceScale = 0.8f;
+    [Tooltip("Distancia más lejana que el jugador puede elegir, como fracción del encuadre normal (1.3 = 30 % más lejos).")]
+    [Range(1f, 2f)] public float maxDistanceScale = 1.3f;
+    [Tooltip("Multiplicador del retraso de seguimiento con la velocidad Lenta.")]
+    [Range(1f, 3f)] public float slowFollowScale = 1.6f;
+    [Tooltip("Multiplicador del retraso de seguimiento con la velocidad Rápida.")]
+    [Range(0.1f, 1f)] public float fastFollowScale = 0.5f;
 }

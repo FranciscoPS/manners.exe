@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using Unity.Cinemachine;
 using UnityEditor;
@@ -25,6 +26,10 @@ public static class HelicopterBroadcastTools
     private const float SublineHeight = 42f;
     private const float PlateGap = 4f;
     private const float ChannelWidth = 236f;
+    private const float ChannelHeight = LowerThirdHeight * 0.5f;
+    private const float LiveWidth = 170f;
+    private const float LiveHeight = 56f;
+    private static readonly string[] ChannelLayoutParts = { "ChannelBlock", "Channel", "LiveBadge", "Live" };
     private const float MaskBleed = 24f;
 
     private static UIStyle style;
@@ -51,11 +56,30 @@ public static class HelicopterBroadcastTools
             EditorUtility.SetDirty(camera);
         }
 
-        if (AssetDatabase.LoadAssetAtPath<NewsBroadcastConfig>(NewsConfigPath) == null)
+        NewsBroadcastConfig existingNews = AssetDatabase.LoadAssetAtPath<NewsBroadcastConfig>(NewsConfigPath);
+        if (existingNews == null)
         {
             NewsBroadcastConfig news = ScriptableObject.CreateInstance<NewsBroadcastConfig>();
             ApplyDefaultNews(news);
             AssetDatabase.CreateAsset(news, NewsConfigPath);
+        }
+        else
+        {
+            int added = MergeDefaultTicker(existingNews);
+            EditorUtility.SetDirty(existingNews);
+            if (added > 0) Debug.Log("[Helicóptero] " + added + " noticias nuevas agregadas al cintillo de " + NewsConfigPath + ".");
+        }
+
+        if (camera.maxDistanceScale < 1f || camera.slowFollowScale < 1f || camera.fastFollowScale <= 0f)
+        {
+            HelicopterCameraConfig recommended = ScriptableObject.CreateInstance<HelicopterCameraConfig>();
+            camera.minDistanceScale = recommended.minDistanceScale;
+            camera.maxDistanceScale = recommended.maxDistanceScale;
+            camera.slowFollowScale = recommended.slowFollowScale;
+            camera.fastFollowScale = recommended.fastFollowScale;
+            Object.DestroyImmediate(recommended);
+            EditorUtility.SetDirty(camera);
+            Debug.Log("[Helicóptero] Rangos de accesibilidad completados en " + CameraConfigPath + ".");
         }
 
         AssetDatabase.SaveAssets();
@@ -213,8 +237,65 @@ public static class HelicopterBroadcastTools
             L("Traffic: avoid downtown, there is a giant robot", "Tránsito: evite el centro, hay un robot gigante"),
             L("Weather: sunny, with a chance of falling buildings", "Clima: soleado, con probabilidad de edificios cayendo"),
             L("Poll: 7 in 10 residents now thank their vending machines", "Encuesta: 7 de cada 10 ya dan las gracias a las máquinas expendedoras"),
-            L("Insurers add \"robot\" to the list of natural disasters", "Aseguradoras agregan \"robot\" a la lista de desastres naturales")
+            L("Insurers add \"robot\" to the list of natural disasters", "Aseguradoras agregan \"robot\" a la lista de desastres naturales"),
+            L("Weather update: 80% chance of laser beams this afternoon", "Clima: 80 % de probabilidad de rayos láser por la tarde"),
+            L("Mayor apologizes to the robot; robot asks him to say it again, slower", "El alcalde se disculpa con el robot; el robot le pide repetirlo más despacio"),
+            L("Bakery renames its croissant the \"thank-you roll\", just in case", "Panadería rebautiza el cuernito como \"pan de gracias\", por si acaso"),
+            L("Military unveils its newest weapon: a strongly worded note", "El ejército presenta su nueva arma: una nota muy enérgica"),
+            L("Study: 100% of robots prefer a \"please\" over a tank", "Estudio: el 100 % de los robots prefiere un \"por favor\" a un tanque"),
+            L("Toaster union demands more respect after recent events", "Sindicato de tostadoras exige respeto tras los últimos sucesos"),
+            L("Sports: tonight's match is cancelled, the stadium is now a parking lot", "Deportes: se cancela el partido; el estadio ahora es estacionamiento"),
+            L("Real estate: penthouses now come with a free skylight", "Bienes raíces: los penthouses ahora traen tragaluz gratis"),
+            L("Smart fridges across the city refuse to open without a \"please\"", "Refrigeradores inteligentes se niegan a abrir sin un \"por favor\""),
+            L("Breaking: a general says \"thank you\" for the first time; nobody believes it", "Última hora: un general dice \"gracias\" por primera vez y nadie le cree"),
+            L("Tip of the day: hold the door for robots", "Consejo del día: ábrele la puerta a los robots"),
+            L("City council debates adding \"please\" to every traffic sign", "El cabildo discute poner \"por favor\" en todas las señales de tránsito"),
+            L("Weather: light drizzle of spare parts expected downtown", "Clima: se espera llovizna de refacciones en el centro"),
+            L("Tourism booms: visitors come to see the \"before\" photos", "Auge turístico: los visitantes vienen a ver las fotos del \"antes\""),
+            L("Coffee shops print \"thank you\" on every receipt, just to be safe", "Las cafeterías imprimen \"gracias\" en cada ticket, por las dudas"),
+            L("Scientists confirm: the robot really did hear what you said", "Científicos confirman: el robot sí escuchó lo que dijiste"),
+            L("Lost and found: one tank, slightly flattened", "Objetos perdidos: un tanque, ligeramente aplastado"),
+            L("Experts recommend saying \"good morning\" to your smart speaker", "Expertos recomiendan dar los buenos días a tu bocina inteligente"),
+            L("Local grandma: \"I always said please, that's why I'm fine\"", "Abuelita local: \"Yo siempre dije por favor, por eso estoy bien\""),
+            L("Pizza deliveries delayed by giant footprints", "Entregas de pizza retrasadas por huellas gigantes"),
+            L("School adds \"Manners for Machines\" to the curriculum", "Escuela agrega la materia \"Modales para máquinas\""),
+            L("Stock market: apology cards up 400%", "Bolsa: las tarjetas de disculpa suben un 400 %"),
+            L("Garage offers 2-for-1 tank repairs all week", "Taller mecánico ofrece 2x1 en reparación de tanques toda la semana"),
+            L("Weather: cloudy with scattered explosions, bring an umbrella", "Clima: nublado con explosiones aisladas, lleve paraguas"),
+            L("Officials remind citizens the robot can't hear insults. Probably.", "Autoridades recuerdan que el robot no oye los insultos. Probablemente."),
+            L("Robot spotted waiting at a red light; experts baffled", "Ven al robot esperando en un semáforo en rojo; expertos desconcertados"),
+            L("Construction companies report record demand. Again.", "Constructoras reportan demanda récord. Otra vez."),
+            L("Pigeons move to a quieter city, citing the noise", "Las palomas se mudan a otra ciudad por el ruido"),
+            L("Etiquette manual becomes the city's best-seller", "Manual de etiqueta, el libro más vendido de la ciudad"),
+            L("Robot-themed apology cards now in every store", "Tarjetas de disculpa con robots ya en todas las tiendas")
         };
+        news.tickerItemsPerLoop = 8;
+    }
+
+    public static int MergeDefaultTicker(NewsBroadcastConfig news)
+    {
+        NewsBroadcastConfig defaults = ScriptableObject.CreateInstance<NewsBroadcastConfig>();
+        try
+        {
+            ApplyDefaultNews(defaults);
+            var items = new List<LocalizedString>(news.tickerItems ?? new LocalizedString[0]);
+            int added = 0;
+            foreach (LocalizedString item in defaults.tickerItems)
+            {
+                string english = item.Get(GameLanguage.English);
+                if (items.Exists(existing => existing.Get(GameLanguage.English) == english)) continue;
+                items.Add(item);
+                added++;
+            }
+
+            if (added > 0) news.tickerItems = items.ToArray();
+            if (news.tickerItemsPerLoop <= 0) news.tickerItemsPerLoop = defaults.tickerItemsPerLoop;
+            return added;
+        }
+        finally
+        {
+            Object.DestroyImmediate(defaults);
+        }
     }
 
     public static GameObject BuildOverlayPrefab()
@@ -246,23 +327,22 @@ public static class HelicopterBroadcastTools
 
             Image channelPlate = Plate(lowerThird, "ChannelBlock", style.secondary, style.skew, style.ink);
             RectTransform channel = channelPlate.rectTransform;
-            channel.anchorMin = new Vector2(0f, 0f);
-            channel.anchorMax = new Vector2(0f, 1f);
-            channel.pivot = new Vector2(0f, 0.5f);
+            channel.anchorMin = channel.anchorMax = Vector2.zero;
+            channel.pivot = Vector2.zero;
             channel.offsetMin = Vector2.zero;
-            channel.offsetMax = new Vector2(ChannelWidth, 0f);
+            channel.offsetMax = new Vector2(ChannelWidth, ChannelHeight);
 
-            TMP_Text channelText = Text(channel, "Channel", UITextRole.Title, style.paper, 26f, 46f, TextAlignmentOptions.Center, "BD NEWS");
-            Region(channelText.rectTransform, Vector2.zero, Vector2.one, new Vector4(22f, 8f, 22f, 8f));
+            TMP_Text channelText = Text(channel, "Channel", UITextRole.Title, style.paper, 22f, 40f, TextAlignmentOptions.Center, "BD NEWS");
+            Region(channelText.rectTransform, Vector2.zero, Vector2.one, new Vector4(22f, 6f, 22f, 6f));
 
             Image livePlate = Plate(channel, "LiveBadge", style.danger, style.skew, style.ink);
             RectTransform live = livePlate.rectTransform;
             live.anchorMin = live.anchorMax = new Vector2(0f, 1f);
             live.pivot = new Vector2(0f, 0f);
             live.anchoredPosition = new Vector2(14f, 10f);
-            live.sizeDelta = new Vector2(150f, 40f);
-            TMP_Text liveText = Text(live, "Live", UITextRole.Label, style.paper, 14f, 22f, TextAlignmentOptions.Center, "LIVE");
-            Region(liveText.rectTransform, Vector2.zero, Vector2.one, new Vector4(12f, 2f, 12f, 2f));
+            live.sizeDelta = new Vector2(LiveWidth, LiveHeight);
+            TMP_Text liveText = Text(live, "Live", UITextRole.Label, style.paper, 16f, 30f, TextAlignmentOptions.Center, "LIVE");
+            Region(liveText.rectTransform, Vector2.zero, Vector2.one, new Vector4(14f, 4f, 14f, 4f));
 
             RectTransform mask = Child(lowerThird, "HeadlineMask");
             mask.anchorMin = new Vector2(0f, 0f);
@@ -366,6 +446,15 @@ public static class HelicopterBroadcastTools
             instance.transform.SetSiblingIndex(0);
             overlay = instance.GetComponent<NewsBroadcastOverlay>();
         }
+        PrefabUtility.RemoveUnusedOverrides(new[] { overlay.gameObject }, InteractionMode.AutomatedAction);
+        foreach (string layoutPart in ChannelLayoutParts)
+        {
+            Transform part = FindChild(overlay.transform, layoutPart);
+            if (part == null) continue;
+            foreach (Component component in part.GetComponents<Component>())
+                if (component != null && PrefabUtility.IsPartOfPrefabInstance(component))
+                    PrefabUtility.RevertObjectOverride(component, InteractionMode.AutomatedAction);
+        }
         SerializedObject overlaySerialized = new SerializedObject(overlay);
         overlaySerialized.FindProperty("config").objectReferenceValue = newsConfig;
         overlaySerialized.FindProperty("playerHealth").objectReferenceValue = player;
@@ -374,6 +463,17 @@ public static class HelicopterBroadcastTools
         EditorSceneManager.MarkSceneDirty(scene);
         Debug.Log("[Helicóptero] Instalado en " + scene.path + ": extensión en " + composer.name + ", Volume " + LensObjectName + " y rótulo bajo " + hudRoot.name + ". En Play, B alterna con la cámara de siempre.");
         return true;
+    }
+
+    private static Transform FindChild(Transform root, string name)
+    {
+        foreach (Transform child in root)
+        {
+            if (child.name == name) return child;
+            Transform found = FindChild(child, name);
+            if (found != null) return found;
+        }
+        return null;
     }
 
     private static CinemachinePositionComposer FindPlayerComposer()

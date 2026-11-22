@@ -78,6 +78,8 @@ public sealed class NewsBroadcastConfig : ScriptableObject
     [Min(1f)] public float tickerSpeed = 110f;
     [Tooltip("Separador entre noticias del cintillo.")]
     public string tickerSeparator = "   -   ";
+    [Tooltip("Noticias que entran en cada vuelta del cintillo; al terminar una vuelta entra la siguiente tanda, en orden aleatorio. 0 = todas a la vez.")]
+    [Min(0)] public int tickerItemsPerLoop = 8;
     [Tooltip("Noticias del cintillo, en orden.")]
     public LocalizedString[] tickerItems = new LocalizedString[0];
 
@@ -108,6 +110,12 @@ public sealed class NewsBroadcastConfig : ScriptableObject
     {
         int minutes = ClockMinutes(clockStartMinutes, matchSeconds);
         return (minutes / 60).ToString("00") + ":" + (minutes % 60).ToString("00");
+    }
+
+    public static int TickerBatchSize(int itemsPerLoop, int itemCount)
+    {
+        if (itemCount <= 0) return 0;
+        return itemsPerLoop > 0 ? Mathf.Min(itemsPerLoop, itemCount) : itemCount;
     }
 
     public static int ClockMinutes(int startMinutes, float matchSeconds)

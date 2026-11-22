@@ -40,10 +40,17 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
     private bool hasTargetSample;
     private bool lowHealthArmed = true;
     private bool subscribed;
+    private GameAccessibilitySettings.SettingsData accessibility = new GameAccessibilitySettings.SettingsData();
 
     public HelicopterCameraConfig Config => config;
 
     public float CurrentFieldOfView { get; private set; }
+
+    private bool Pans => config.cameraMotion && accessibility.cameraPans;
+
+    private bool Sway => config.cameraMotion && accessibility.cameraSway;
+
+    private bool AutoZoom => config.cameraMotion && accessibility.autoZoom;
 
     protected override void Awake()
     {
@@ -59,6 +66,8 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
         CaptureRestPose();
         Subscribe();
         BroadcastMode.Changed += HandleModeChanged;
+        GameAccessibilitySettings.Changed += RefreshAccessibility;
+        RefreshAccessibility();
         HandleModeChanged();
     }
 
@@ -72,16 +81,23 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
         if (!Application.isPlaying) return;
 
         BroadcastMode.Changed -= HandleModeChanged;
+        GameAccessibilitySettings.Changed -= RefreshAccessibility;
         Unsubscribe();
         Restore();
     }
 
     public void Punch(HelicopterZoomPunch value)
     {
-        if (config == null || !config.cameraMotion || value.strength <= 0f) return;
+        if (config == null || !AutoZoom || value.strength <= 0f) return;
 
         punch = value;
         punchElapsed = 0f;
+    }
+
+    private void RefreshAccessibility()
+    {
+        accessibility = GameAccessibilitySettings.Current;
+        if (!accessibility.autoZoom) punchElapsed = float.PositiveInfinity;
     }
 
     public override void PrePipelineMutateCameraStateCallback(CinemachineVirtualCameraBase vcam, ref CameraState curState, float deltaTime)
@@ -100,7 +116,7 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
 
         float yaw = config.heading;
         float pitch = config.pitch;
-        if (config.cameraMotion)
+        if (Pans)
         {
             yaw += HelicopterCameraMath.Orbit(flightTime, config.orbitAmplitude, config.orbitPeriod);
             pitch += HelicopterCameraMath.Orbit(flightTime + PitchPhaseOffset, config.pitchAmplitude, config.pitchPeriod);
@@ -116,7 +132,7 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
     protected override void PostPipelineStageCallback(CinemachineVirtualCameraBase vcam, CinemachineCore.Stage stage, ref CameraState state, float deltaTime)
     {
         if (stage != CinemachineCore.Stage.Noise || !Application.isPlaying || config == null) return;
-        if (!BroadcastMode.Enabled || !config.cameraMotion) return;
+        if (!BroadcastMode.Enabled || !Sway) return;
 
         Vector2 drift = HelicopterCameraMath.Drift(flightTime, config.driftFrequency, config.driftAmplitude, DriftSeed);
         state.OrientationCorrection = state.OrientationCorrection * Quaternion.Euler(drift.y, drift.x, 0f);
@@ -138,11 +154,13 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
         zoneScale = HelicopterCameraMath.RecenterZone(zoneScale, idleTime, config.recenterDelay, config.recenterBlend, deltaTime);
 
         float target = 0f;
-        if (config.cameraMotion && punchElapsed < punch.Duration)
+        if (AutoZoom && punchElapsed < punch.Duration)
             target = punch.strength * HelicopterCameraMath.PunchEnvelope(punchElapsed, punch.attack, punch.hold, punch.release);
         zoom = Mathf.Lerp(zoom, target, 1f - Mathf.Exp(-config.zoomSmoothing * deltaTime));
 
-        float crowdTarget = HelicopterCameraMath.CrowdFactor(EnemyHealth.ActiveEnemies.Count, config.crowdStart, config.crowdFull);
+        float crowdTarget = accessibility.autoZoom
+            ? HelicopterCameraMath.CrowdFactor(EnemyHealth.ActiveEnemies.Count, config.crowdStart, config.crowdFull)
+            : 0f;
         crowd = Mathf.MoveTowards(crowd, crowdTarget, deltaTime / config.crowdResponse);
     }
 
@@ -165,14 +183,22 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
     {
         if (composer == null) return;
 
-        float altitude = config.cameraMotion
+        float altitude = Sway
             ? HelicopterCameraMath.AltitudeScale(flightTime + AltitudePhaseOffset, config.altitudeAmplitude, config.altitudePeriod)
             : 1f;
-        composer.CameraDistance = HelicopterCameraMath.DistanceForFramedHeight(config.framedHeight, config.fieldOfView) * altitude;
-        composer.Damping = new Vector3(config.followDamping, config.followDamping, config.followDamping);
+        float distanceScale = HelicopterCameraMath.DistanceScale(accessibility.cameraDistance, GameAccessibilitySettings.DistanceSteps, config.minDistanceScale, config.maxDistanceScale);
+        composer.CameraDistance = HelicopterCameraMath.DistanceForFramedHeight(config.framedHeight * distanceScale, config.fieldOfView) * altitude;
+
+        float damping = accessibility.lockOnRobot
+            ? 0f
+            : config.followDamping * HelicopterCameraMath.FollowScale(accessibility.followSpeed, GameAccessibilitySettings.FollowSpeedSteps, config.slowFollowScale, config.fastFollowScale);
+        composer.Damping = new Vector3(damping, damping, damping);
 
         ScreenComposerSettings composition = composer.Composition;
-        Vector2 zone = new Vector2(Mathf.Max(0f, config.deadZone.x), Mathf.Max(0f, config.deadZone.y)) * zoneScale;
+        bool useDeadZone = accessibility.deadZone && !accessibility.lockOnRobot;
+        Vector2 zone = useDeadZone
+            ? new Vector2(Mathf.Max(0f, config.deadZone.x), Mathf.Max(0f, config.deadZone.y)) * zoneScale
+            : Vector2.zero;
         composition.DeadZone.Enabled = zone.x > 0f || zone.y > 0f;
         composition.DeadZone.Size = zone;
         composition.HardLimits.Enabled = config.hardLimits.x > 0f && config.hardLimits.y > 0f;
@@ -196,7 +222,7 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
         }
 
         if (!Mathf.Approximately(lensVolume.priority, config.lensPriority)) lensVolume.priority = config.lensPriority;
-        float weight = config.lensProfile != null ? config.lensWeight : 0f;
+        float weight = config.lensProfile != null && accessibility.tvFilter ? config.lensWeight : 0f;
         if (!Mathf.Approximately(lensVolume.weight, weight)) lensVolume.weight = weight;
 
         if (lensDepth != null && composer != null)

@@ -20,6 +20,7 @@ public static class UIAuthoringTools
         { "ChestOpeningSequence", new[] { "canvasRoot", "promptText", "skipHintText", "aura", "showcase", "chestBurstPrefab" } },
         { "ChestShowcase", new[] { "view", "showcaseCamera" } },
         { "OverrideActivationHUD", new[] { "canvas", "strip", "banner", "titleText", "nameText", "iconGhost", "cellPrefab" } },
+        { "AccessibilitySettingsMenu", new[] { "entryButton", "resetButton", "backButton", "hintText", "statusText" } },
         { "OverrideStripCellUI", new[] { "icon", "fallback" } },
         { "HoverTooltipUI", new[] { "panelRect", "titleText", "bodyText" } },
         { "FloatingTextManager", new[] { "floatingTextPrefab", "worldCanvas" } },

@@ -15,10 +15,13 @@ using Object = UnityEngine.Object;
 public static partial class UIStyleApplier
 {
     public const string OptionsMenuPrefabPath = "Assets/Prefabs/UI/Settings/OptionsMenu.prefab";
+    public const string AccessibilityPanelPrefabPath = "Assets/Prefabs/UI/Settings/AccessibilitySettingsPanel.prefab";
     public const string MenusReportPath = "Logs/ui-menus-report.txt";
 
+    private const string GraphicsPanelPrefabPath = "Assets/Prefabs/UI/Settings/GraphicsSettingsPanel.prefab";
+    private const string AccessibilityPanelName = "AccessibilitySettingsPanel";
     private const string OptionsMenuName = "OptionsMenu";
-    private const float OptionsColumnHeight = 600f;
+    private const float OptionsColumnHeight = 680f;
     private const float OptionsColumnPadding = 50f;
     private const float OptionsColumnSpacing = 24f;
     private const float HelpColumnHeight = 530f;
@@ -31,7 +34,41 @@ public static partial class UIStyleApplier
     private const float PauseColumnPadding = 60f;
     private const float PauseColumnSpacing = 20f;
 
-    private static readonly string[] OptionsScreens = { "OptionsPanel", "AudioPanel", "ControlesPanel", "AyudaPanel", "SobrecargasMenuPanel", "GraphicsSettingsPanel" };
+    private static readonly string[] OptionsScreens = { "OptionsPanel", "AudioPanel", "ControlesPanel", "AyudaPanel", "SobrecargasMenuPanel", "GraphicsSettingsPanel", AccessibilityPanelName };
+
+    private static readonly string[] AccessibilityRowNames =
+    {
+        "Perfil de cámara", "Paneos de cámara", "Movimiento de cámara", "Zooms automáticos", "Sacudidas por impactos",
+        "Fijar cámara al robot", "Zona muerta", "Velocidad de seguimiento", "Distancia de cámara", "Filtro de TV",
+    };
+
+    private static readonly string[,] AccessibilityLabels =
+    {
+        { "Camera profile", "Perfil de cámara" },
+        { "Camera pans", "Paneos de cámara" },
+        { "Camera sway", "Movimiento de cámara" },
+        { "Automatic zooms", "Zooms automáticos" },
+        { "Impact shake", "Sacudidas por impactos" },
+        { "Lock camera on robot", "Fijar cámara al robot" },
+        { "Dead zone", "Zona muerta" },
+        { "Follow speed", "Velocidad de seguimiento" },
+        { "Camera distance", "Distancia de cámara" },
+        { "TV filter", "Filtro de TV" },
+    };
+
+    private static readonly string[,] AccessibilityHints =
+    {
+        { "Helicopter: every camera effect. Gentle: no pans or sway. Fixed: the camera stays still on the robot.", "Helicóptero: todos los efectos de cámara. Suave: sin paneos ni movimiento. Fija: la cámara queda quieta sobre el robot." },
+        { "The helicopter circles the robot from side to side.", "El helicóptero rodea al robot de lado a lado." },
+        { "Gentle floating and altitude changes, like a handheld camera.", "Vaivén suave y cambios de altura, como una cámara en mano." },
+        { "The camera zooms in on big moments and pulls back when crowds grow.", "La cámara se acerca en momentos clave y se aleja cuando crecen las hordas." },
+        { "Screen shakes from explosions, hits and chests.", "Sacudidas de pantalla por explosiones, golpes y cofres." },
+        { "The robot always stays in the center of the screen, with no delay.", "El robot siempre queda al centro de la pantalla, sin retraso." },
+        { "The robot can move a little before the camera starts to follow it.", "El robot puede moverse un poco antes de que la cámara lo siga." },
+        { "How quickly the camera catches up with the robot.", "Qué tan rápido alcanza la cámara al robot." },
+        { "How close or far the camera is from the robot. Zooms scale with it.", "Qué tan cerca o lejos está la cámara del robot. Los zooms se ajustan a esa distancia." },
+        { "Grain, vignette and color fringes of the news camera.", "Grano, viñeta y bordes de color de la cámara de noticias." },
+    };
     private static readonly string[] HelpSectionNames = { "MovimientoPanel", "ExperienciaPanel", "EnemigosPanel", "MejorasPanel" };
 
     [MenuItem("Tools/Manners/UI/5. Compartir opciones con la pausa (idioma, sobrecargas, HUD y tutorial)", false, 115)]
@@ -83,6 +120,7 @@ public static partial class UIStyleApplier
         }
 
         EnsureOptionsMenuPrefab();
+        EnsureAccessibilityPanelPrefab();
         AdjustOptionsMenuAsset();
 
         foreach (string path in UIAuthoringTools.Scenes)
@@ -156,6 +194,163 @@ public static partial class UIStyleApplier
         report.AppendLine($"MENÚS {OptionsMenuPrefabPath}: {buttonCount} botones revisados, {createdCount} objetos nuevos.");
     }
 
+    private static void EnsureAccessibilityPanelPrefab()
+    {
+        bool exists = File.Exists(AccessibilityPanelPrefabPath);
+        string source = exists ? AccessibilityPanelPrefabPath : GraphicsPanelPrefabPath;
+        if (!File.Exists(source))
+        {
+            report.AppendLine($"MENÚS: falta {GraphicsPanelPrefabPath}; no se creó la pantalla de accesibilidad.");
+            return;
+        }
+
+        GameObject root = PrefabUtility.LoadPrefabContents(source);
+        try
+        {
+            root.name = AccessibilityPanelName;
+            BuildAccessibilityContent(root.transform);
+            PrefabUtility.SaveAsPrefabAsset(root, AccessibilityPanelPrefabPath);
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+
+        report.AppendLine(exists
+            ? $"MENÚS {AccessibilityPanelPrefabPath}: pantalla de accesibilidad revisada."
+            : $"MENÚS: pantalla de accesibilidad creada en {AccessibilityPanelPrefabPath} a partir de la de gráficos.");
+    }
+
+    private static void BuildAccessibilityContent(Transform root)
+    {
+        GraphicsSettingsMenu graphicsMenu = root.GetComponent<GraphicsSettingsMenu>();
+        if (graphicsMenu != null) Object.DestroyImmediate(graphicsMenu);
+        AccessibilitySettingsMenu menu = GetOrAdd<AccessibilitySettingsMenu>(root.gameObject);
+
+        Transform card = FindDeep(root, "AccessibilityCard");
+        if (card == null)
+        {
+            card = FindDeep(root, "GraphicsCard");
+            if (card != null) card.name = "AccessibilityCard";
+        }
+        Transform controls = card != null ? DirectChild(card, "Controls") : null;
+        if (controls == null)
+        {
+            report.AppendLine("MENÚS: la pantalla de accesibilidad no tiene AccessibilityCard/Controls; no se tocó.");
+            return;
+        }
+
+        Remove(DirectChild(card, "DisplayConfirmation"), "accesibilidad: la confirmación de pantalla de gráficos no aplica aquí.");
+        Remove(DirectChild(controls, "Apply"), "accesibilidad: los cambios se guardan al momento y el botón Aplicar sobra.");
+        SetLabel(DirectChild(controls, "Title"), "Accessibility", "Accesibilidad");
+        SetLabel(DirectChild(controls, "Introduction"), "Make the camera comfortable: turn off its movements or lock it on the robot.", "Haz la cámara más cómoda: apaga sus movimientos o fíjala al robot.");
+
+        var rows = new List<Transform>();
+        foreach (Transform child in controls)
+            if (DirectChild(child, "Previous") != null && DirectChild(child, "Next") != null && DirectChild(child, "Value") != null) rows.Add(child);
+        rows.Sort((a, b) =>
+        {
+            var left = (RectTransform)a;
+            var right = (RectTransform)b;
+            int column = left.anchorMin.x.CompareTo(right.anchorMin.x);
+            return column != 0 ? column : right.anchorMin.y.CompareTo(left.anchorMin.y);
+        });
+
+        int count = AccessibilitySettingsMenu.RowCount;
+        for (int i = rows.Count - 1; i >= count; i--)
+        {
+            Remove(rows[i], $"accesibilidad: la fila '{rows[i].name}' de gráficos sobra.");
+            rows.RemoveAt(i);
+        }
+        if (rows.Count < count)
+        {
+            report.AppendLine($"MENÚS: la pantalla de accesibilidad necesita {count} filas y solo tiene {rows.Count}.");
+            return;
+        }
+
+        var serialized = new SerializedObject(menu);
+        SerializedProperty list = serialized.FindProperty("rows");
+        list.arraySize = count;
+        for (int i = 0; i < count; i++)
+        {
+            Transform row = rows[i];
+            row.name = AccessibilityRowNames[i];
+            Touch(row.gameObject);
+            SetLabel(DirectChild(row, "Label"), AccessibilityLabels[i, 0], AccessibilityLabels[i, 1]);
+
+            SerializedProperty element = list.GetArrayElementAtIndex(i);
+            element.FindPropertyRelative("value").objectReferenceValue = DirectChild(row, "Value").GetComponent<TextMeshProUGUI>();
+            element.FindPropertyRelative("previous").objectReferenceValue = DirectChild(row, "Previous").GetComponent<Button>();
+            element.FindPropertyRelative("next").objectReferenceValue = DirectChild(row, "Next").GetComponent<Button>();
+            SerializedProperty hint = element.FindPropertyRelative("hint");
+            hint.FindPropertyRelative("english").stringValue = AccessibilityHints[i, 0];
+            hint.FindPropertyRelative("spanish").stringValue = AccessibilityHints[i, 1];
+        }
+
+        Transform hintText = DirectChild(controls, "Hint");
+        if (hintText == null)
+        {
+            hintText = DirectChild(controls, "SyncHint");
+            if (hintText != null) hintText.name = "Hint";
+        }
+        Transform status = DirectChild(controls, "Status");
+        Transform reset = DirectChild(controls, "Reset");
+        Transform back = DirectChild(controls, "Back");
+        SetReference(serialized, "hintText", hintText != null ? hintText.GetComponent<TextMeshProUGUI>() : null);
+        SetReference(serialized, "statusText", status != null ? status.GetComponent<TextMeshProUGUI>() : null);
+        SetReference(serialized, "resetButton", reset != null ? reset.GetComponent<Button>() : null);
+        SetReference(serialized, "backButton", back != null ? back.GetComponent<Button>() : null);
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        Touch(menu);
+
+        if (reset is RectTransform resetRect)
+        {
+            resetRect.anchorMin = new Vector2(0.72f, 0f);
+            resetRect.anchorMax = new Vector2(1f, 0.07f);
+            Touch(resetRect);
+        }
+    }
+
+    private static Transform EnsureAccessibilityPanelInstance(Transform root, Transform graphicsPanel)
+    {
+        Transform existing = root.Find(AccessibilityPanelName);
+        if (existing != null) return existing;
+
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AccessibilityPanelPrefabPath);
+        if (prefab == null) return null;
+
+        var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, root);
+        instance.name = AccessibilityPanelName;
+        if (graphicsPanel is RectTransform source && instance.transform is RectTransform target)
+        {
+            target.anchorMin = source.anchorMin;
+            target.anchorMax = source.anchorMax;
+            target.pivot = source.pivot;
+            target.anchoredPosition = source.anchoredPosition;
+            target.sizeDelta = source.sizeDelta;
+            instance.transform.SetSiblingIndex(graphicsPanel.GetSiblingIndex() + 1);
+        }
+        createdCount++;
+        report.AppendLine("MENÚS: pantalla de accesibilidad añadida al menú de opciones compartido.");
+        return instance.transform;
+    }
+
+    private static void SetLabel(Transform target, string english, string spanish)
+    {
+        TMP_Text text = target != null ? target.GetComponent<TMP_Text>() : null;
+        if (text == null) return;
+
+        LocalizedText localized = GetOrAdd<LocalizedText>(target.gameObject);
+        var serialized = new SerializedObject(localized);
+        SerializedProperty content = serialized.FindProperty("content");
+        content.FindPropertyRelative("english").stringValue = english;
+        content.FindPropertyRelative("spanish").stringValue = spanish;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        text.text = english;
+        Touch(localized);
+        Touch(text);
+    }
+
     private static void AdjustOptionsMenuContent(Transform root)
     {
         OptionsMenu menu = GetOrAdd<OptionsMenu>(root.gameObject);
@@ -166,6 +361,8 @@ public static partial class UIStyleApplier
         Transform overrides = root.Find("SobrecargasMenuPanel");
         Transform graphicsPanel = root.Find("GraphicsSettingsPanel");
         GraphicsSettingsMenu graphics = graphicsPanel != null ? graphicsPanel.GetComponent<GraphicsSettingsMenu>() : null;
+        Transform accessibilityPanel = EnsureAccessibilityPanelInstance(root, graphicsPanel);
+        AccessibilitySettingsMenu accessibility = accessibilityPanel != null ? accessibilityPanel.GetComponent<AccessibilitySettingsMenu>() : null;
 
         foreach (Transform screen in new[] { hub, audio, controls, help, overrides })
         {
@@ -174,9 +371,11 @@ public static partial class UIStyleApplier
             Deactivate(screen.gameObject);
         }
         if (graphicsPanel != null) Deactivate(graphicsPanel.gameObject);
+        if (accessibilityPanel != null) Deactivate(accessibilityPanel.gameObject);
 
         GameObject languagePanel = null;
         Transform graphicsButton = null;
+        Transform accessibilityButton = null;
         if (hub != null)
         {
             Transform buttons = DirectChild(hub, "ButtonsPanel");
@@ -188,13 +387,15 @@ public static partial class UIStyleApplier
                 Transform helpButton = buttons.Find("Ayuda");
                 Transform backButton = buttons.Find("Regresar");
                 Transform template = audioButton != null ? audioButton : FirstButton(buttons);
+                accessibilityButton = EnsureMenuButton(buttons, "Accesibilidad", template, "Accessibility", "Accesibilidad", false);
                 Transform languageButton = EnsureMenuButton(buttons, "Idioma", template, "Language", "Idioma", false);
                 Transform overridesButton = EnsureMenuButton(buttons, "Sobrecargas", template, "Overrides", "Sobrecargas", true);
-                Order(audioButton, controlsButton, graphicsButton, languageButton, overridesButton, helpButton, backButton);
+                Order(audioButton, controlsButton, graphicsButton, accessibilityButton, languageButton, overridesButton, helpButton, backButton);
                 Column(buttons, OptionsColumnHeight, OptionsColumnPadding, OptionsColumnSpacing);
                 Wire(audioButton, menu.ShowAudio);
                 Wire(controlsButton, menu.ShowControls);
                 Wire(graphicsButton, menu.ShowGraphics);
+                Wire(accessibilityButton, menu.ShowAccessibility);
                 Wire(languageButton, menu.ToggleLanguage);
                 Wire(overridesButton, menu.ShowOverrides);
                 Wire(helpButton, menu.ShowHelp);
@@ -264,6 +465,14 @@ public static partial class UIStyleApplier
             Touch(graphics);
         }
 
+        if (accessibility != null && accessibilityButton != null)
+        {
+            var serializedAccessibility = new SerializedObject(accessibility);
+            SetReference(serializedAccessibility, "entryButton", accessibilityButton.GetComponent<Button>());
+            serializedAccessibility.ApplyModifiedPropertiesWithoutUndo();
+            Touch(accessibility);
+        }
+
         var serialized = new SerializedObject(menu);
         SetReference(serialized, "hub", hub != null ? hub.gameObject : null);
         SetReference(serialized, "audioScreen", audio != null ? audio.gameObject : null);
@@ -271,6 +480,7 @@ public static partial class UIStyleApplier
         SetReference(serialized, "helpScreen", help != null ? help.gameObject : null);
         SetReference(serialized, "overridesScreen", overrides != null ? overrides.gameObject : null);
         SetReference(serialized, "graphics", graphics);
+        SetReference(serialized, "accessibility", accessibility);
         SetReference(serialized, "languagePanel", languagePanel);
         SerializedProperty list = serialized.FindProperty("helpSections");
         list.arraySize = sections.Length;

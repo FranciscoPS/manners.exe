@@ -242,6 +242,92 @@ public class HelicopterBroadcastTests
     }
 
     [Test]
+    public void DistanceStepsSpreadFromTheClosestToTheFarthestWithNormalInTheMiddle()
+    {
+        var scales = new float[5];
+
+        for (int step = 0; step < scales.Length; step++) scales[step] = HelicopterCameraMath.DistanceScale(step, 5, 0.8f, 1.3f);
+
+        Assert.AreEqual(0.8f, scales[0], Tolerance);
+        Assert.AreEqual(0.9f, scales[1], Tolerance);
+        Assert.AreEqual(1f, scales[2], Tolerance);
+        Assert.AreEqual(1.15f, scales[3], Tolerance);
+        Assert.AreEqual(1.3f, scales[4], Tolerance);
+    }
+
+    [Test]
+    public void MissingDistanceRangeKeepsTheNormalFraming()
+    {
+        float closest = HelicopterCameraMath.DistanceScale(0, 5, 0f, 0f);
+
+        float farthest = HelicopterCameraMath.DistanceScale(4, 5, 0f, 0f);
+
+        Assert.AreEqual(1f, closest, Tolerance);
+        Assert.AreEqual(1f, farthest, Tolerance);
+    }
+
+    [Test]
+    public void FollowSpeedSlowsDownOrSpeedsUpAroundNormal()
+    {
+        Assert.AreEqual(1.6f, HelicopterCameraMath.FollowScale(0, 3, 1.6f, 0.5f), Tolerance);
+        Assert.AreEqual(1f, HelicopterCameraMath.FollowScale(1, 3, 1.6f, 0.5f), Tolerance);
+        Assert.AreEqual(0.5f, HelicopterCameraMath.FollowScale(2, 3, 1.6f, 0.5f), Tolerance);
+        Assert.AreEqual(1f, HelicopterCameraMath.FollowScale(0, 3, 0f, 0f), Tolerance);
+    }
+
+    [Test]
+    public void ZoomPunchShrinksTheShotByTheSameFractionAtAnyDistance()
+    {
+        float classicHeight = HelicopterCameraMath.FramedHeight(ClassicDistance, ClassicFieldOfView);
+        float punched = HelicopterCameraMath.ZoomedFieldOfView(TelephotoFieldOfView, 0f, 0f, 0.1f);
+
+        float near = HelicopterCameraMath.DistanceForFramedHeight(classicHeight * 0.8f, TelephotoFieldOfView);
+        float far = HelicopterCameraMath.DistanceForFramedHeight(classicHeight * 1.3f, TelephotoFieldOfView);
+        float nearRatio = HelicopterCameraMath.FramedHeight(near, punched) / HelicopterCameraMath.FramedHeight(near, TelephotoFieldOfView);
+        float farRatio = HelicopterCameraMath.FramedHeight(far, punched) / HelicopterCameraMath.FramedHeight(far, TelephotoFieldOfView);
+
+        Assert.AreEqual(nearRatio, farRatio, Tolerance);
+        Assert.Less(nearRatio, 1f);
+        Assert.Greater(far, near);
+    }
+
+    [Test]
+    public void TickerShowsBatchesOfTheConfiguredSize()
+    {
+        Assert.AreEqual(8, NewsBroadcastConfig.TickerBatchSize(8, 36));
+        Assert.AreEqual(5, NewsBroadcastConfig.TickerBatchSize(8, 5));
+        Assert.AreEqual(36, NewsBroadcastConfig.TickerBatchSize(0, 36));
+        Assert.AreEqual(0, NewsBroadcastConfig.TickerBatchSize(8, 0));
+    }
+
+    [Test]
+    public void MergingDefaultTickerAddsOnlyTheMissingItems()
+    {
+        NewsBroadcastConfig news = ScriptableObject.CreateInstance<NewsBroadcastConfig>();
+        NewsBroadcastConfig defaults = ScriptableObject.CreateInstance<NewsBroadcastConfig>();
+        try
+        {
+            HelicopterBroadcastTools.ApplyDefaultNews(defaults);
+            news.tickerItems = new[] { defaults.tickerItems[0], new LocalizedString("Custom line", "Línea propia") };
+            news.tickerItemsPerLoop = 0;
+
+            int added = HelicopterBroadcastTools.MergeDefaultTicker(news);
+            int again = HelicopterBroadcastTools.MergeDefaultTicker(news);
+
+            Assert.AreEqual(defaults.tickerItems.Length - 1, added);
+            Assert.AreEqual(0, again);
+            Assert.AreEqual(defaults.tickerItems.Length + 1, news.tickerItems.Length);
+            Assert.AreEqual("Custom line", news.tickerItems[1].Get(GameLanguage.English));
+            Assert.AreEqual(defaults.tickerItemsPerLoop, news.tickerItemsPerLoop);
+        }
+        finally
+        {
+            Object.DestroyImmediate(news);
+            Object.DestroyImmediate(defaults);
+        }
+    }
+
+    [Test]
     public void StoryCountMatchesTheStoryEnum()
     {
         Assert.AreEqual(NewsBroadcastConfig.StoryCount, System.Enum.GetValues(typeof(NewsStory)).Length);

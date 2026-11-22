@@ -58,6 +58,8 @@ public class CameraShakeManager : MonoBehaviour
 
     private void GenerateImpulse(float force)
     {
+        if (!GameAccessibilitySettings.ImpactShake) return;
+
         if (impulseSource != null)
         {
             impulseSource.GenerateImpulse(force);

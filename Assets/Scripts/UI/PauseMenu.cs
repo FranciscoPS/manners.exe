@@ -60,7 +60,8 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if ((optionsMenu != null && optionsMenu.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame || OptionsMenu.ConsumedBackThisFrame)
+        if ((optionsMenu != null && optionsMenu.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame
+            || AccessibilitySettingsMenu.ConsumedBackThisFrame || OptionsMenu.ConsumedBackThisFrame)
             return;
 
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)

@@ -18,17 +18,17 @@ public static class UIBilingualPreview
     private static readonly string[] MenuPanels =
     {
         "MainMenuPanel", Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", "MapSelectionPanel", Options + "SobrecargasMenuPanel",
-        Options + "GraphicsSettingsPanel", "UpgradesPanel", "TiendaPanel", "CreditosPanel", Options + "AyudaPanel", "PersonalizacionPanel"
+        Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", "UpgradesPanel", "TiendaPanel", "CreditosPanel", Options + "AyudaPanel", "PersonalizacionPanel"
     };
     private static readonly string[] GamePanels =
     {
         "HUD", "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "Tutorial",
-        Options + "OptionsPanel", Options + "AudioPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "SobrecargasMenuPanel"
+        Options + "OptionsPanel", Options + "AudioPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", Options + "SobrecargasMenuPanel"
     };
     private static readonly string[] ModalPanels =
     {
         "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI",
-        Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "SobrecargasMenuPanel"
+        Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", Options + "SobrecargasMenuPanel"
     };
     private static readonly Vector2Int[] Resolutions =
     {
@@ -140,6 +140,17 @@ public static class UIBilingualPreview
             for (int i = 0; i < rows.arraySize; i++) ((TMP_Text)rows.GetArrayElementAtIndex(i).FindPropertyRelative("value").objectReferenceValue).text = values[i];
             Get<TMP_Text>(menu, "syncHint").text = Get<LocalizedString>(menu, "fpsHint").Value;
             Get<TMP_Text>(menu, "statusText").text = Get<LocalizedString>(menu, "applyHint").Value;
+        }
+        if (panel.EndsWith("AccessibilitySettingsPanel"))
+        {
+            AccessibilitySettingsMenu menu = canvas.GetComponentsInChildren<AccessibilitySettingsMenu>(true).First();
+            SerializedProperty rows = new SerializedObject(menu).FindProperty("rows");
+            string[] values = language == GameLanguage.Spanish
+                ? new[] { "Helicóptero", "Activado", "Activado", "Activado", "Activado", "Desactivado", "Activado", "Normal", "Normal", "Activado" }
+                : new[] { "Helicopter", "On", "On", "On", "On", "Off", "On", "Normal", "Normal", "On" };
+            for (int i = 0; i < rows.arraySize && i < values.Length; i++) ((TMP_Text)rows.GetArrayElementAtIndex(i).FindPropertyRelative("value").objectReferenceValue).text = values[i];
+            Get<TMP_Text>(menu, "hintText").text = rows.GetArrayElementAtIndex(0).FindPropertyRelative("hint").FindPropertyRelative(language == GameLanguage.Spanish ? "spanish" : "english").stringValue;
+            Get<TMP_Text>(menu, "statusText").text = Get<LocalizedString>(menu, "savedInstantly").Get(language);
         }
         if (panel == "ChestAnnouncement" || panel == "OvertimeAlert" || panel == "OverrideActivationHUD")
         {

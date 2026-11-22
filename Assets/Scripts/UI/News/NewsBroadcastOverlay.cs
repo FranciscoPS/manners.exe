@@ -42,6 +42,8 @@ public sealed class NewsBroadcastOverlay : MonoBehaviour, IUpdateable
     private int shownClockMinutes = -1;
     private float tickerX;
     private float tickerWidth;
+    private int[] tickerOrder = new int[0];
+    private int tickerCursor;
     private bool lowHealthArmed = true;
     private bool overrideSubscribed;
 
@@ -64,6 +66,7 @@ public sealed class NewsBroadcastOverlay : MonoBehaviour, IUpdateable
         if (playerHealth != null) playerHealth.OnHealthChanged += HandleHealthChanged;
 
         SetReveal(0f);
+        ShuffleTicker();
         ApplyLanguage();
         ApplyMode();
         if (GameTimeManager.Instance != null && GameTimeManager.Instance.IsGameActive) HandleGameStarted();
@@ -251,15 +254,39 @@ public sealed class NewsBroadcastOverlay : MonoBehaviour, IUpdateable
         liveBadge.canvasRenderer.SetAlpha(Mathf.Lerp(config.livePulseMinAlpha, 1f, wave));
     }
 
+    private void ShuffleTicker()
+    {
+        int count = config != null && config.tickerItems != null ? config.tickerItems.Length : 0;
+        if (tickerOrder.Length != count) tickerOrder = new int[count];
+        for (int i = 0; i < count; i++) tickerOrder[i] = i;
+        for (int i = count - 1; i > 0; i--)
+        {
+            int swap = Random.Range(0, i + 1);
+            (tickerOrder[i], tickerOrder[swap]) = (tickerOrder[swap], tickerOrder[i]);
+        }
+        tickerCursor = 0;
+    }
+
+    private int TickerBatchSize => NewsBroadcastConfig.TickerBatchSize(config.tickerItemsPerLoop, tickerOrder.Length);
+
     private void RebuildTicker()
     {
+        BuildTickerBatch();
+        tickerX = 0f;
+        if (tickerText != null) tickerText.rectTransform.anchoredPosition = new Vector2(tickerX, tickerText.rectTransform.anchoredPosition.y);
+    }
+
+    private void BuildTickerBatch()
+    {
         if (tickerText == null) return;
+        if (tickerOrder.Length != (config.tickerItems != null ? config.tickerItems.Length : 0)) ShuffleTicker();
 
         tickerBuilder.Clear();
-        LocalizedString[] items = config.tickerItems;
-        for (int i = 0; items != null && i < items.Length; i++)
+        int count = tickerOrder.Length;
+        int batch = TickerBatchSize;
+        for (int n = 0; n < batch; n++)
         {
-            string value = items[i].Value;
+            string value = config.tickerItems[tickerOrder[(tickerCursor + n) % count]].Value;
             if (string.IsNullOrEmpty(value)) continue;
             if (tickerBuilder.Length > 0) tickerBuilder.Append(config.tickerSeparator);
             tickerBuilder.Append(value);
@@ -271,8 +298,6 @@ public sealed class NewsBroadcastOverlay : MonoBehaviour, IUpdateable
         tickerWidth = tickerText.preferredWidth;
         RectTransform rect = tickerText.rectTransform;
         rect.sizeDelta = new Vector2(tickerWidth, rect.sizeDelta.y);
-        tickerX = 0f;
-        rect.anchoredPosition = new Vector2(tickerX, rect.anchoredPosition.y);
     }
 
     private void UpdateTicker(float deltaTime)
@@ -280,7 +305,16 @@ public sealed class NewsBroadcastOverlay : MonoBehaviour, IUpdateable
         if (tickerText == null || tickerViewport == null || tickerWidth <= 0f) return;
 
         tickerX -= config.tickerSpeed * deltaTime;
-        if (tickerX < -tickerWidth) tickerX = tickerViewport.rect.width;
+        if (tickerX < -tickerWidth)
+        {
+            int count = tickerOrder.Length;
+            if (count > 0 && TickerBatchSize < count)
+            {
+                tickerCursor = (tickerCursor + TickerBatchSize) % count;
+                BuildTickerBatch();
+            }
+            tickerX = tickerViewport.rect.width;
+        }
 
         RectTransform rect = tickerText.rectTransform;
         rect.anchoredPosition = new Vector2(tickerX, rect.anchoredPosition.y);
