@@ -32,7 +32,8 @@ public static class UIAuthoringTools
         { "LanguageSelector", new[] { "previousButton", "nextButton", "valueLabel" } },
         { "MainMenuUIManager", new[] { "optionsMenu", "fadeOverlay", "fadeCanvasGroup" } },
         { "PauseMenu", new[] { "optionsMenu" } },
-        { "OptionsMenu", new[] { "hub", "audioScreen", "controlsScreen", "helpScreen", "overridesScreen", "graphics", "languagePanel" } },
+        { "OptionsMenu", new[] { "hub", "audioScreen", "controlsScreen", "helpScreen", "overridesScreen", "graphics", "languagePanel", "confirmDialog" } },
+        { "ConfirmDialog", new[] { "titleText", "messageText", "confirmButton", "confirmLabel", "cancelButton" } },
         { "GameOverUI", new[] { "gameOverCanvasGroup", "fadeOverlay", "fadeCanvasGroup" } },
         { "TutorialManager", new[] { "typingSource", "messageText", "nextButton" } },
         { "ExperienceUI", new[] { "barRect", "expBarFill", "levelText", "expText" } }

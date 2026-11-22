@@ -138,5 +138,85 @@ public class UIAuthoringTests
         }
         yield return new ExitPlayMode();
     }
+
+    [UnityTest, Timeout(240000)]
+    public IEnumerator LeavingTheRunOrTheGameAsksForConfirmationFirst()
+    {
+        bool hadTutorial = PlayerPrefs.HasKey("TutorialCompleted_v1");
+        int tutorialPreference = PlayerPrefs.GetInt("TutorialCompleted_v1", 0);
+        PlayerPrefs.SetInt("TutorialCompleted_v1", 1);
+        EditorSceneManager.OpenScene(UIAuthoringTools.Scenes[0], OpenSceneMode.Single);
+        yield return new EnterPlayMode();
+        try
+        {
+            yield return new WaitForSecondsRealtime(.25f);
+            MainMenuUIManager menu = Object.FindFirstObjectByType<MainMenuUIManager>();
+            ConfirmDialog quit = Get<OptionsMenu>(menu, "optionsMenu").Confirmation;
+            Assert.IsNotNull(quit, "El menú de opciones necesita la ventana de confirmación.");
+            Assert.IsFalse(quit.IsOpen);
+
+            menu.OnExitPressed(); yield return null;
+
+            Assert.IsTrue(quit.IsOpen, "Salir del juego debe pedir confirmación antes de cerrar.");
+            Assert.AreEqual(Get<LocalizedString>(menu, "quitTitle").Value, Get<TMP_Text>(quit, "titleText").text);
+            Assert.AreEqual(Get<LocalizedString>(menu, "quitConfirm").Value, Get<TMP_Text>(quit, "confirmLabel").text);
+            Assert.AreEqual(Get<Button>(quit, "cancelButton").gameObject, UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject, "La opción segura debe quedar seleccionada.");
+            Get<Button>(quit, "cancelButton").onClick.Invoke(); yield return null;
+            Assert.IsFalse(quit.IsOpen);
+            Assert.IsTrue(Get<GameObject>(menu, "mainPanel").activeSelf);
+
+            EditorSceneManager.LoadSceneInPlayMode(UIAuthoringTools.Scenes[1], new LoadSceneParameters(LoadSceneMode.Single));
+            yield return new WaitForSecondsRealtime(.25f);
+            TutorialManager tutorial = Object.FindFirstObjectByType<TutorialManager>();
+            if (tutorial != null && tutorial.IsTutorialPanelActive) Get<Button>(tutorial, "skipAllButton").onClick.Invoke();
+            EnemySpawnManager.Instance?.StopAllCoroutines();
+            PauseMenu pause = Object.FindFirstObjectByType<PauseMenu>();
+            pause.TogglePause(); yield return null;
+            GameObject pausePanel = Get<GameObject>(pause, "pausePanel");
+            ConfirmDialog dialog = Get<OptionsMenu>(pause, "optionsMenu").Confirmation;
+            string level = SceneManager.GetActiveScene().path;
+
+            pause.OnRestartButtonPressed(); yield return null;
+
+            Assert.IsTrue(dialog.IsOpen, "Reiniciar debe pedir confirmación.");
+            Assert.AreEqual(Get<LocalizedString>(pause, "restartTitle").Value, Get<TMP_Text>(dialog, "titleText").text);
+            Assert.AreEqual(Get<LocalizedString>(pause, "restartMessage").Value, Get<TMP_Text>(dialog, "messageText").text);
+            Assert.IsTrue(pausePanel.activeInHierarchy, "La pausa sigue detrás de la confirmación.");
+            Assert.AreEqual(0, Time.timeScale);
+            Transform options = dialog.transform.parent;
+            Assert.AreSame(pausePanel.transform.parent, options.parent);
+            Assert.Greater(options.GetSiblingIndex(), pausePanel.transform.GetSiblingIndex(), "La confirmación debe dibujarse encima de la pausa.");
+            Get<Button>(dialog, "cancelButton").onClick.Invoke(); yield return null;
+            Assert.IsFalse(dialog.IsOpen);
+            Assert.IsTrue(pausePanel.activeSelf, "Cancelar deja la pausa abierta.");
+            Assert.AreEqual(0, Time.timeScale);
+            Assert.AreEqual(level, SceneManager.GetActiveScene().path);
+
+            pause.OnReturnToMainMenuButtonPressed(); yield return null;
+
+            Assert.IsTrue(dialog.IsOpen, "Volver al menú principal debe pedir confirmación.");
+            Assert.AreEqual(Get<LocalizedString>(pause, "mainMenuTitle").Value, Get<TMP_Text>(dialog, "titleText").text);
+            Assert.AreEqual(Get<LocalizedString>(pause, "mainMenuConfirm").Value, Get<TMP_Text>(dialog, "confirmLabel").text);
+            dialog.Cancel(); yield return null;
+            Assert.IsFalse(dialog.IsOpen);
+            Assert.IsTrue(pausePanel.activeSelf);
+            Assert.AreEqual(level, SceneManager.GetActiveScene().path);
+
+            bool confirmed = false;
+            dialog.Show(Get<LocalizedString>(pause, "restartTitle"), Get<LocalizedString>(pause, "restartMessage"), Get<LocalizedString>(pause, "restartConfirm"), () => confirmed = true);
+            Get<Button>(dialog, "confirmButton").onClick.Invoke(); yield return null;
+            Assert.IsTrue(confirmed, "Confirmar ejecuta la acción.");
+            Assert.IsFalse(dialog.IsOpen);
+            pause.Resume();
+        }
+        finally
+        {
+            Time.timeScale = 1;
+            if (hadTutorial) PlayerPrefs.SetInt("TutorialCompleted_v1", tutorialPreference); else PlayerPrefs.DeleteKey("TutorialCompleted_v1");
+            PlayerPrefs.Save();
+        }
+        yield return new ExitPlayMode();
+    }
+
     private static T Get<T>(Object component, string name) => (T)component.GetType().GetField(name, Fields).GetValue(component);
 }

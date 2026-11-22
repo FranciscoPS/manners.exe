@@ -46,37 +46,34 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [Tooltip("Cuantos enemigos extra por spawn point se suman a la ráfaga por cada escalon.")]
     [SerializeField] private int finalRushBurstGrowthPerTier = 3;
 
-    [Header("Final Rush - Escalado por escalones")]
-    [Tooltip("Cada cuantos segundos los enemigos suben de nivel (mas vida y velocidad).")]
+    [Header("Final Rush - Escalado continuo (todos los enemigos en escena)")]
+    [Tooltip("Segundos de overtime que dura un escalón. Todo sube de forma continua: a mitad de escalón ya se nota la mitad del aumento. Vale para todos los enemigos en escena, también los que ya estaban al empezar el overtime.")]
     [SerializeField] private float finalRushTierInterval = 30f;
-    [Tooltip("Vida de los enemigos en el primer escalon (nivel 0). Empieza en la vida normal.")]
+    [Tooltip("Vida base de los enemigos que nacen en overtime. El aguante de abajo la multiplica igual que a los demás.")]
     [SerializeField] private float finalRushBaseHealth = 30f;
-    [Tooltip("Multiplicador EXPONENCIAL de vida por escalon: vida = base * mult^escalon. Ej 1.3 -> 200, 260, 338, 439... Con 4 nada muere a partir del tercer escalon y la horda solo crece.")]
+    [Tooltip("Aguante: cuánto se multiplica la vida de TODOS los enemigos por cada escalón. Ej 4 = x4 cada escalón (x16, x64...). Los números de daño muestran el daño real; a la vida le llega dividido por el aguante, así que siempre se pueden matar pero cuesta cada vez más.")]
     [SerializeField] private float finalRushHealthTierMultiplier = 1.3f;
-    [Tooltip("Velocidad de los enemigos en el primer escalon (nivel 0).")]
+    [Tooltip("Velocidad mínima de los enemigos al empezar el overtime. Los más rápidos conservan la suya.")]
     [SerializeField] private float finalRushBaseSpeed = 6f;
-    [Tooltip("Cuanta velocidad se suma por cada escalon.")]
+    [Tooltip("Cuánta velocidad mínima se suma por escalón.")]
     [SerializeField] private float finalRushSpeedPerTier = 2f;
-    [Tooltip("Velocidad maxima que pueden alcanzar los enemigos al escalar.")]
+    [Tooltip("Velocidad máxima que puede alcanzar ese mínimo fijo. La persecución de abajo puede superarla para alcanzar a un jugador más rápido.")]
     [SerializeField] private float finalRushMaxSpeed = 24f;
-    [Tooltip("Dano de contacto en el primer escalon (bajo para que el jugador sobreviva el inicio).")]
+    [Tooltip("Persecución: al empezar el overtime la velocidad mínima también es esta fracción de la velocidad ACTUAL del jugador, con sus mejoras. 1 = igual de rápidos que él.")]
+    [SerializeField] private float finalRushChaseRatioStart = 0.6f;
+    [Tooltip("Cuánto sube esa fracción por escalón.")]
+    [SerializeField] private float finalRushChaseRatioPerTier = 0.07f;
+    [Tooltip("Fracción máxima de la velocidad del jugador. Por encima de 1 alcanzan a cualquier build, por rápida que sea.")]
+    [SerializeField] private float finalRushChaseRatioMax = 1.25f;
+    [Tooltip("Daño de contacto mínimo al empezar el overtime.")]
     [SerializeField] private float finalRushBaseContactDamage = 12f;
-    [Tooltip("Cuanto dano de contacto se suma por cada escalon (sube con el tiempo).")]
+    [Tooltip("Cuánto daño de contacto mínimo se suma por escalón.")]
     [SerializeField] private float finalRushContactDamagePerTier = 18f;
-
-    [Header("Final Rush - Blindaje (overtime corto)")]
-    [Tooltip("Segundos de overtime en los que los enemigos quedan casi invencibles. Hasta aquí el daño que reciben baja de forma continua del 100 % al valor de abajo. Afecta a todos los enemigos en escena, también a los que ya estaban.")]
-    [SerializeField] private float finalRushNearInvincibleSeconds = 40f;
-    [Range(0f, 1f)]
-    [Tooltip("Fracción del daño que todavía reciben los enemigos en ese segundo. 0.05 = 5 %: casi no se pueden matar.")]
-    [SerializeField] private float finalRushNearInvincibleDamage = 0.05f;
-    [Tooltip("Segundos de overtime desde los que los enemigos ya no reciben daño (indestructibles). Entre el segundo anterior y este, el daño baja del valor de arriba a 0. 0 = nunca son indestructibles.")]
-    [SerializeField] private float finalRushIndestructibleSeconds = 60f;
 
     [Header("Final Rush - Techo de enemigos")]
     [Tooltip("Máximo de enemigos activos al EMPEZAR el overtime. El techo sube desde aquí hasta el máximo final, sin bajar del Max Concurrent Enemies normal salvo que el máximo final sea menor.")]
     [SerializeField] private int finalRushMaxConcurrentStart = 300;
-    [Tooltip("Techo duro de enemigos activos en overtime: nunca se pasa, aunque la partida normal permita más. Medido para que el frame se mantenga en unos 5 ms; las ráfagas se recortan para no pasarlo.")]
+    [Tooltip("Techo duro de enemigos activos en overtime: nunca se pasa, aunque la partida normal permita más. Medido para que el frame no pase de unos 15 ms; las ráfagas se recortan para no pasarlo.")]
     [SerializeField] private int finalRushMaxConcurrentEnd = 2000;
     [Tooltip("Segundos de overtime que tarda el techo en subir del inicial al final. 180 = la horda máxima se alcanza al minuto 3.")]
     [SerializeField] private float finalRushCapRampSeconds = 180f;
@@ -84,10 +81,10 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     [SerializeField] private int finalRushSpawnsPerFrame = 24;
 
     [Header("Final Rush - Resistencia a control")]
-    [Tooltip("Resistencia a control (stun/slow) que ganan los enemigos por cada escalon. 0.05 = +5% por escalon: al minuto (escalon 6) los stuns duran un 30% menos.")]
+    [Tooltip("Resistencia a control que ganan TODOS los enemigos por escalón, de forma continua: congelar y aturdir duran menos, los slows frenan menos y los empujones los mueven menos. 0.1 = +10 % por escalón.")]
     [SerializeField] private float finalRushControlResistancePerTier = 0.05f;
     [Range(0f, 1f)]
-    [Tooltip("Resistencia máxima que pueden alcanzar. 0.85 = los stuns duran el 15% y los slows casi no se notan.")]
+    [Tooltip("Resistencia máxima. 1 = inmunes a congelar, aturdir, ralentizar y empujar: llegan sí o sí al jugador.")]
     [SerializeField] private float finalRushMaxControlResistance = 0.85f;
 
     [Header("TEST")]
@@ -103,6 +100,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
     private bool suppressContinuousSpawn = false;
     private bool finalRushActive = false;
     private float finalRushStartTime;
+    private PlayerController chasedPlayer;
 
     public int CurrentWaveIndex => currentWaveIndex;
     public int CurrentWaveNumber => currentWaveIndex + 1;
@@ -130,7 +128,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private void OnDestroy()
     {
-        if (Instance == this) EnemyHealth.SetDamageTakenScale(1f);
+        if (Instance == this) FinalRushScaling.Clear();
         GameEvents.OnMatchTimeExpired -= HandleMatchTimeExpired;
 
         if (UpdateManager.Instance != null)
@@ -141,7 +139,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     private void Start()
     {
-        EnemyHealth.SetDamageTakenScale(1f);
+        FinalRushScaling.Clear();
         DetectSpawnPoints();
         continuousSpawnTimer = continuousSpawnInterval;
         StartCoroutine(ScatterClusteredEnemies());
@@ -165,9 +163,7 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if (finalRushActive)
-            EnemyHealth.SetDamageTakenScale(FinalRushMath.DamageTakenScale(Time.time - finalRushStartTime,
-                finalRushNearInvincibleSeconds, finalRushNearInvincibleDamage, finalRushIndestructibleSeconds));
+        if (finalRushActive) PublishFinalRushScaling();
 
         if (spawnBlocked) return;
 
@@ -188,6 +184,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
         if (finalRushActive) return;
         finalRushActive = true;
         finalRushStartTime = Time.time;
+        chasedPlayer = FindFirstObjectByType<PlayerController>();
+        PublishFinalRushScaling();
         suppressContinuousSpawn = true;
         LogDebug("Tiempo de partida agotado: iniciando oleada final imposible.");
         PerformanceMonitor.Instance?.LogEvent("[FINAL RUSH] Tiempo agotado: oleada final imposible iniciada.");
@@ -214,11 +212,10 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
             int tier = Mathf.FloorToInt(elapsed / finalRushTierInterval);
 
-            buffed.maxHealth = FinalRushMath.Health(finalRushBaseHealth, finalRushHealthTierMultiplier, tier);
-            buffed.moveSpeed = Mathf.Min(finalRushMaxSpeed, finalRushBaseSpeed + finalRushSpeedPerTier * tier);
-
-            buffed.contactDamage = finalRushBaseContactDamage + finalRushContactDamagePerTier * tier;
-            buffed.controlResistance = Mathf.Min(finalRushMaxControlResistance, finalRushControlResistancePerTier * tier);
+            buffed.maxHealth = finalRushBaseHealth;
+            buffed.moveSpeed = FinalRushScaling.MinSpeed;
+            buffed.contactDamage = FinalRushScaling.MinContactDamage;
+            buffed.controlResistance = FinalRushScaling.ControlResistance;
 
             int perSpawnPoint = finalRushBurstPerSpawnPoint + finalRushBurstGrowthPerTier * tier;
 
@@ -231,8 +228,8 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
             {
                 lastTier = tier;
                 PerformanceMonitor.Instance?.LogEvent(
-                    $"[FINAL RUSH] Escalon {tier}: vida={buffed.maxHealth:F0} vel={buffed.moveSpeed:F1} " +
-                    $"res={buffed.controlResistance:P0} techo={cap} daño recibido={EnemyHealth.DamageTakenScale:P0} " +
+                    $"[FINAL RUSH] Escalon {tier}: aguante=x{FinalRushScaling.Toughness:F0} vel={buffed.moveSpeed:F1} " +
+                    $"res={buffed.controlResistance:P0} techo={cap} daño={buffed.contactDamage:F0} " +
                     $"x{perSpawnPoint}/punto cada {burstInterval:F1}s");
             }
 
@@ -241,6 +238,18 @@ public class EnemySpawnManager : MonoBehaviour, IUpdateable
 
             yield return new WaitForSeconds(burstInterval);
         }
+    }
+
+    private void PublishFinalRushScaling()
+    {
+        float tiers = FinalRushMath.Tiers(Time.time - finalRushStartTime, finalRushTierInterval);
+        float playerSpeed = chasedPlayer != null ? chasedPlayer.CurrentMoveSpeed : 0f;
+        FinalRushScaling.Set(
+            FinalRushMath.Toughness(tiers, finalRushHealthTierMultiplier),
+            FinalRushMath.ControlResistance(tiers, finalRushControlResistancePerTier, finalRushMaxControlResistance),
+            Mathf.Max(FinalRushMath.Speed(tiers, finalRushBaseSpeed, finalRushSpeedPerTier, finalRushMaxSpeed),
+                FinalRushMath.ChaseSpeed(tiers, playerSpeed, finalRushChaseRatioStart, finalRushChaseRatioPerTier, finalRushChaseRatioMax)),
+            FinalRushMath.ContactDamage(tiers, finalRushBaseContactDamage, finalRushContactDamagePerTier));
     }
 
     private int CurrentFinalRushCap(float elapsed)

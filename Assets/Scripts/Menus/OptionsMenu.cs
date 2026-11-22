@@ -19,6 +19,8 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     [SerializeField] private AccessibilitySettingsMenu accessibility;
     [Tooltip("Selector de idioma de la pantalla principal; el botón Idioma lo muestra y lo oculta.")]
     [SerializeField] private GameObject languagePanel;
+    [Tooltip("Ventana de confirmación compartida (¿seguro que quieres...?). La usan la pausa y el menú principal; los textos de cada pregunta se editan en quien la abre.")]
+    [SerializeField] private ConfirmDialog confirmDialog;
 
     private static int lastBackFrame = -1;
     private GameObject currentScreen;
@@ -28,6 +30,8 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     public event Action AudioClosed;
 
     public bool IsOpen => currentScreen != null;
+    public ConfirmDialog Confirmation => confirmDialog;
+    public bool IsConfirming => confirmDialog != null && confirmDialog.IsOpen;
     public bool IsActive => isActiveAndEnabled;
     public static bool ConsumedBackThisFrame => lastBackFrame == Time.frameCount;
 
@@ -47,6 +51,7 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
         if (graphics != null) Hide(graphics.gameObject);
         if (accessibility != null) Hide(accessibility.gameObject);
         Hide(languagePanel);
+        if (confirmDialog != null) Hide(confirmDialog.gameObject);
     }
 
     private void OnEnable()
@@ -171,7 +176,7 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if (currentScreen == null) return;
+        if (currentScreen == null || IsConfirming || ConfirmDialog.ConsumedBackThisFrame) return;
         if (graphics != null && currentScreen == graphics.gameObject) return;
         if (accessibility != null && currentScreen == accessibility.gameObject) return;
         if (GraphicsSettingsMenu.ConsumedBackThisFrame || AccessibilitySettingsMenu.ConsumedBackThisFrame) return;

@@ -20,7 +20,6 @@ public static class GameGraphicsSettings
         public bool shadows = true;
         public bool ambientOcclusion;
         public bool postProcessing = true;
-        public bool outlines = true;
         public int resolutionHeight = NativeResolution;
         public bool fullScreen = true;
         public SettingsData Clone() => (SettingsData)MemberwiseClone();
@@ -95,7 +94,6 @@ public static class GameGraphicsSettings
             settings.textureMipmapLimit = 1;
             settings.shadows = false;
             settings.postProcessing = false;
-            settings.outlines = false;
         }
         else if (preset == GraphicsPreset.High) settings.ambientOcclusion = true;
         return settings;
@@ -218,7 +216,7 @@ public static class GameGraphicsSettings
             runtimePipeline.shadowCascadeCount = current.preset == GraphicsPreset.High
                 ? sourcePipeline.shadowCascadeCount : 1;
         }
-        ToonEnvironmentStyle.ApplyOutlines(current.outlines);
+        ToonEnvironmentStyle.ApplyOutlines(true);
         ToonEnvironmentStyle.ApplyGroundShadows(current.shadows);
         foreach (var pair in Cameras)
             if (pair.Key != null && pair.Value.data != null) ApplyCamera(pair.Value);

@@ -20,6 +20,11 @@ public class MainMenuUIManager : MonoBehaviour
     [Tooltip("Menú de opciones compartido con la pausa (prefab OptionsMenu): audio, controles, gráficos, idioma, ayuda y sobrecargas.")]
     [SerializeField] private OptionsMenu optionsMenu;
 
+    [Header("Confirmación al salir del juego")]
+    [SerializeField] private LocalizedString quitTitle = new LocalizedString("Quit the game?", "¿Salir del juego?");
+    [SerializeField] private LocalizedString quitMessage = new LocalizedString("Your progress and upgrades are saved.", "Tu progreso y tus mejoras quedan guardados.");
+    [SerializeField] private LocalizedString quitConfirm = new LocalizedString("Quit", "Salir");
+
     [Header("Upgrades Subscreens")]
     [SerializeField] private GameObject habilidadesnNormalesPanel;
     [SerializeField] private GameObject habilidadesPremiumPanel;
@@ -511,6 +516,13 @@ public class MainMenuUIManager : MonoBehaviour
     }
 
     public void OnExitPressed()
+    {
+        ConfirmDialog dialog = optionsMenu != null ? optionsMenu.Confirmation : null;
+        if (dialog != null) dialog.Show(quitTitle, quitMessage, quitConfirm, QuitGame);
+        else QuitGame();
+    }
+
+    private void QuitGame()
     {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;

@@ -61,7 +61,7 @@ public sealed class ToonEnvironmentStyle : ScriptableObject
     [Tooltip("Color de la línea de contorno.")]
     public Color outlineColor = new Color(0.05f, 0.05f, 0.08f, 1f);
 
-    [Tooltip("Grosor en píxeles a 1080p (se escala con la resolución). 0 oculta la línea pero sigue costando una pasada; para quitarla del todo usa la opción Contornos de los ajustes gráficos.")]
+    [Tooltip("Grosor en píxeles a 1080p (se escala con la resolución). 0 oculta la línea pero sigue costando una pasada. Los contornos son parte del estilo: los ajustes gráficos no los apagan.")]
     [Range(0f, 8f)] public float outlineWidth = 2f;
 
     [Tooltip("Distancia a la cámara (metros) a partir de la cual el contorno empieza a adelgazar, para que el fondo de la ciudad no se llene de líneas.")]
@@ -155,7 +155,7 @@ public sealed class ToonEnvironmentStyle : ScriptableObject
     [Tooltip("Grosor del contorno de los personajes en píxeles a 1080p.")]
     [Range(0f, 8f)] public float characterOutlineWidth = 2.5f;
 
-    [Tooltip("Si está apagado, los personajes no dibujan contorno aunque la opción Contornos esté activa. Cada personaje con contorno se dibuja dos veces.")]
+    [Tooltip("Si está apagado, los personajes no dibujan contorno. Cada personaje con contorno se dibuja dos veces.")]
     public bool characterOutlines = true;
 
     [Tooltip("Personajes con luz de borde (un filo de color en las caras que miran de lado a la cámara). Por defecto solo el jugador.")]

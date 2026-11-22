@@ -7,6 +7,9 @@ using UnityEngine.Rendering;
 public class ToonEnvironmentTests
 {
     private const int Size = 512;
+    private const string GraphicsPanelPath = "Assets/Prefabs/UI/Settings/GraphicsSettingsPanel.prefab";
+    private const string OutlinesRowName = "Contornos";
+    private const int GraphicsRowCount = 10;
 
     [Test]
     public void ToonShaderCompilesWithTheExpectedPasses()
@@ -206,15 +209,20 @@ public class ToonEnvironmentTests
     }
 
     [Test]
-    public void EcoDisablesOutlinesAndOtherPresetsKeepThem()
+    public void GraphicsSettingsOfferNoWayToTurnOutlinesOff()
     {
-        Assert.IsFalse(GameGraphicsSettings.CreatePreset(GameGraphicsSettings.GraphicsPreset.Eco).outlines);
-        Assert.IsTrue(GameGraphicsSettings.CreatePreset(GameGraphicsSettings.GraphicsPreset.Balanced).outlines);
-        Assert.IsTrue(GameGraphicsSettings.CreatePreset(GameGraphicsSettings.GraphicsPreset.High).outlines);
-        var saved = new GameGraphicsSettings.SettingsData { outlines = false };
-        Assert.IsFalse(GameGraphicsSettings.Sanitize(saved).outlines);
-        var legacyJson = JsonUtility.FromJson<GameGraphicsSettings.SettingsData>("{\"frameRate\":60}");
-        Assert.IsTrue(legacyJson.outlines, "Las preferencias guardadas antes de este cambio deben conservar los contornos activos.");
+        var savedWithoutOutlines = JsonUtility.FromJson<GameGraphicsSettings.SettingsData>("{\"preset\":0,\"outlines\":false}");
+
+        GameGraphicsSettings.SettingsData repaired = GameGraphicsSettings.Sanitize(savedWithoutOutlines);
+
+        Assert.IsNull(typeof(GameGraphicsSettings.SettingsData).GetField("outlines"), "Los contornos son parte del estilo: ningún ajuste gráfico los apaga.");
+        Assert.AreEqual(GameGraphicsSettings.GraphicsPreset.Eco, repaired.preset, "Una preferencia vieja que apagaba los contornos se sigue leyendo sin errores.");
+        GameObject panel = AssetDatabase.LoadAssetAtPath<GameObject>(GraphicsPanelPath);
+        Assert.IsNotNull(panel, GraphicsPanelPath);
+        foreach (Transform child in panel.GetComponentsInChildren<Transform>(true))
+            Assert.AreNotEqual(OutlinesRowName, child.name, "El panel de gráficos ya no tiene la fila de contornos.");
+        var rows = new SerializedObject(panel.GetComponent<GraphicsSettingsMenu>()).FindProperty("rows");
+        Assert.AreEqual(GraphicsRowCount, rows.arraySize);
     }
 
     [Test]

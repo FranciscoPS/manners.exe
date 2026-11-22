@@ -17,8 +17,8 @@ public static class GameAccessibilitySettings
         public bool cameraPans = true;
         [Tooltip("Movimiento de cámara: vaivén suave y cambios de altura.")]
         public bool cameraSway = true;
-        [Tooltip("Zooms automáticos: acercamientos en momentos clave y plano abierto con hordas.")]
-        public bool autoZoom = true;
+        [Tooltip("Zooms automáticos: acercamientos en momentos clave y plano abierto con hordas. Apagado por defecto y en todos los perfiles; solo se enciende a mano.")]
+        public bool autoZoom;
         [Tooltip("Sacudidas de pantalla por explosiones, golpes y cofres.")]
         public bool impactShake = true;
         [Tooltip("Fijar cámara al robot: siempre al centro, sin retraso ni zona muerta.")]
@@ -33,7 +33,8 @@ public static class GameAccessibilitySettings
         public SettingsData Clone() => (SettingsData)MemberwiseClone();
     }
 
-    public const string PrefsKey = "AccessibilitySettings.v2";
+    public const string PrefsKey = "AccessibilitySettings.v3";
+    public const string PreviousPrefsKey = "AccessibilitySettings.v2";
 
     private static SettingsData current;
 
@@ -90,10 +91,10 @@ public static class GameAccessibilitySettings
         switch (preset)
         {
             case CameraPreset.Helicopter:
-                SetMotion(result, true, true, true, true, false, true);
+                SetMotion(result, true, true, false, true, false, true);
                 break;
             case CameraPreset.Gentle:
-                SetMotion(result, false, false, true, true, false, false);
+                SetMotion(result, false, false, false, true, false, false);
                 break;
             case CameraPreset.Fixed:
                 SetMotion(result, false, false, false, false, true, false);
@@ -126,10 +127,12 @@ public static class GameAccessibilitySettings
         if (current != null) return current;
 
         SettingsData loaded = Defaults;
-        if (PlayerPrefs.HasKey(PrefsKey))
+        string key = PlayerPrefs.HasKey(PrefsKey) ? PrefsKey : PlayerPrefs.HasKey(PreviousPrefsKey) ? PreviousPrefsKey : null;
+        if (key != null)
         {
-            try { JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(PrefsKey), loaded); }
+            try { JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(key), loaded); }
             catch (ArgumentException) { loaded = Defaults; }
+            if (key == PreviousPrefsKey) loaded.autoZoom = false;
         }
         current = Sanitize(loaded);
         return current;

@@ -101,6 +101,8 @@ public class PlayerController : MonoBehaviour, IUpdateable, IFixedUpdateable
         return 1f + (speedModifier / 100f);
     }
 
+    public float CurrentMoveSpeed => GetFinalMoveSpeed();
+
     private float GetFinalMoveSpeed()
     {
         return baseMoveSpeed * GetSpeedMultiplier();

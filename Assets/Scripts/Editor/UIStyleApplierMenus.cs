@@ -61,7 +61,7 @@ public static partial class UIStyleApplier
 
     private static readonly string[,] AccessibilityHints =
     {
-        { "Helicopter: every camera effect. Gentle: no pans or sway. Fixed: the camera stays still on the robot.", "Helicóptero: todos los efectos de cámara. Suave: sin paneos ni movimiento. Fija: la cámara queda quieta sobre el robot." },
+        { "Helicopter: pans, sway and shakes. Gentle: no pans or sway. Fixed: the camera stays still on the robot.", "Helicóptero: paneos, movimiento y sacudidas. Suave: sin paneos ni movimiento. Fija: la cámara queda quieta sobre el robot." },
         { "The helicopter circles the robot from side to side.", "El helicóptero rodea al robot de lado a lado." },
         { "Gentle floating and altitude changes, like a handheld camera.", "Vaivén suave y cambios de altura, como una cámara en mano." },
         { "The camera zooms in on big moments and pulls back when crowds grow.", "La cámara se acerca en momentos clave y se aleja cuando crecen las hordas." },

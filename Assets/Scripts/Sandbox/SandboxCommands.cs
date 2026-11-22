@@ -58,8 +58,8 @@ public static class SandboxCommands
 
         for (int i = 0; i < enemies.Count; i++)
         {
-            if (enemies[i] == null) continue;
-            enemies[i].TakeDamage(float.MaxValue);
+            if (enemies[i] == null || !enemies[i].IsAlive) continue;
+            enemies[i].Kill();
             killed++;
         }
 

@@ -8090,6 +8090,24 @@ MonoBehaviour:
   gameOverPanel: {fileID: 0}
   optionsMenu: {fileID: 1502342607}
   mainMenuSceneIndex: 0
+  restartTitle:
+    english: Restart the run?
+    spanish: "\xBFReiniciar la partida?"
+  restartMessage:
+    english: You will lose the progress of this run.
+    spanish: "Perder\xE1s el progreso de esta partida."
+  restartConfirm:
+    english: Restart
+    spanish: Reiniciar
+  mainMenuTitle:
+    english: Back to the main menu?
+    spanish: "\xBFVolver al men\xFA principal?"
+  mainMenuMessage:
+    english: You will lose the progress of this run.
+    spanish: "Perder\xE1s el progreso de esta partida."
+  mainMenuConfirm:
+    english: Main menu
+    spanish: "Men\xFA principal"
 --- !u!114 &238261088
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34085,6 +34103,7 @@ MonoBehaviour:
   coinColor: {r: 0.92156863, g: 0.91764706, b: 0.63529414, a: 1}
   diamondColor: {r: 0.70392156, g: 0.5980392, b: 0.73137254, a: 1}
   poolSize: 20
+  maxDamageNumbers: 60
   worldCanvas: {fileID: 1165200780}
 --- !u!1 &1156685183
 GameObject:
@@ -47222,17 +47241,17 @@ MonoBehaviour:
   finalRushBaseSpeed: 6
   finalRushSpeedPerTier: 1.5
   finalRushMaxSpeed: 22
+  finalRushChaseRatioStart: 0.6
+  finalRushChaseRatioPerTier: 0.07
+  finalRushChaseRatioMax: 1.25
   finalRushBaseContactDamage: 12
   finalRushContactDamagePerTier: 18
-  finalRushNearInvincibleSeconds: 40
-  finalRushNearInvincibleDamage: 0.05
-  finalRushIndestructibleSeconds: 60
   finalRushMaxConcurrentStart: 300
-  finalRushMaxConcurrentEnd: 420
+  finalRushMaxConcurrentEnd: 700
   finalRushCapRampSeconds: 40
   finalRushSpawnsPerFrame: 24
-  finalRushControlResistancePerTier: 0.05
-  finalRushMaxControlResistance: 0.85
+  finalRushControlResistancePerTier: 0.11
+  finalRushMaxControlResistance: 1
   testFinalRushFromStart: 0
 --- !u!1 &1633595108
 GameObject:

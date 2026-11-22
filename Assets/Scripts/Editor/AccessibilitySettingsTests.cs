@@ -3,14 +3,20 @@ using UnityEngine;
 
 public class AccessibilitySettingsTests
 {
+    private const float SavedDistance = 0.3f;
+
     private string savedPrefs;
     private bool hadPrefs;
+    private string savedPreviousPrefs;
+    private bool hadPreviousPrefs;
 
     [SetUp]
     public void SavePrefs()
     {
         hadPrefs = PlayerPrefs.HasKey(GameAccessibilitySettings.PrefsKey);
         savedPrefs = hadPrefs ? PlayerPrefs.GetString(GameAccessibilitySettings.PrefsKey) : null;
+        hadPreviousPrefs = PlayerPrefs.HasKey(GameAccessibilitySettings.PreviousPrefsKey);
+        savedPreviousPrefs = hadPreviousPrefs ? PlayerPrefs.GetString(GameAccessibilitySettings.PreviousPrefsKey) : null;
     }
 
     [TearDown]
@@ -18,23 +24,55 @@ public class AccessibilitySettingsTests
     {
         if (hadPrefs) PlayerPrefs.SetString(GameAccessibilitySettings.PrefsKey, savedPrefs);
         else PlayerPrefs.DeleteKey(GameAccessibilitySettings.PrefsKey);
+        if (hadPreviousPrefs) PlayerPrefs.SetString(GameAccessibilitySettings.PreviousPrefsKey, savedPreviousPrefs);
+        else PlayerPrefs.DeleteKey(GameAccessibilitySettings.PreviousPrefsKey);
         PlayerPrefs.Save();
         GameAccessibilitySettings.Reload();
     }
 
     [Test]
-    public void DefaultsKeepEveryCameraEffectOnAndStartTheCameraFar()
+    public void DefaultsStartAsHelicopterWithAutoZoomOffAndTheCameraFar()
     {
         var settings = new GameAccessibilitySettings.SettingsData();
 
         GameAccessibilitySettings.CameraPreset preset = GameAccessibilitySettings.PresetOf(settings);
 
         Assert.AreEqual(GameAccessibilitySettings.CameraPreset.Helicopter, preset);
-        Assert.IsTrue(settings.cameraPans && settings.cameraSway && settings.autoZoom && settings.impactShake && settings.deadZone);
+        Assert.IsTrue(settings.cameraPans && settings.cameraSway && settings.impactShake && settings.deadZone);
+        Assert.IsFalse(settings.autoZoom, "El zoom automático empieza apagado.");
         Assert.IsFalse(settings.lockOnRobot);
         Assert.AreEqual(GameAccessibilitySettings.NormalFollowSpeed, settings.followSpeed);
         Assert.AreEqual(GameAccessibilitySettings.DefaultCameraDistance, settings.cameraDistance);
         Assert.Greater(settings.cameraDistance, GameAccessibilitySettings.NormalCameraDistance);
+        Assert.IsFalse(GameAccessibilitySettings.Defaults.autoZoom, PlayerSettingsDefaults.ResourceName + " también deja el zoom automático apagado.");
+    }
+
+    [Test]
+    public void NoPresetTurnsAutoZoomOn()
+    {
+        var zoomed = new GameAccessibilitySettings.SettingsData { autoZoom = true };
+
+        GameAccessibilitySettings.SettingsData helicopter = GameAccessibilitySettings.WithPreset(zoomed, GameAccessibilitySettings.CameraPreset.Helicopter);
+        GameAccessibilitySettings.SettingsData gentle = GameAccessibilitySettings.WithPreset(zoomed, GameAccessibilitySettings.CameraPreset.Gentle);
+        GameAccessibilitySettings.SettingsData fixedCamera = GameAccessibilitySettings.WithPreset(zoomed, GameAccessibilitySettings.CameraPreset.Fixed);
+
+        Assert.IsFalse(helicopter.autoZoom || gentle.autoZoom || fixedCamera.autoZoom);
+        Assert.AreEqual(GameAccessibilitySettings.CameraPreset.Custom, GameAccessibilitySettings.PresetOf(zoomed), "Encenderlo a mano deja el perfil en Personalizado.");
+    }
+
+    [Test]
+    public void SettingsSavedBeforeTurnOffAutoZoomAndKeepTheRest()
+    {
+        var old = new GameAccessibilitySettings.SettingsData { autoZoom = true, cameraPans = false, cameraDistance = SavedDistance };
+        PlayerPrefs.DeleteKey(GameAccessibilitySettings.PrefsKey);
+        PlayerPrefs.SetString(GameAccessibilitySettings.PreviousPrefsKey, JsonUtility.ToJson(old));
+
+        GameAccessibilitySettings.Reload();
+        GameAccessibilitySettings.SettingsData loaded = GameAccessibilitySettings.Current;
+
+        Assert.IsFalse(loaded.autoZoom, "Las preferencias guardadas con el zoom encendido por el valor anterior quedan apagadas.");
+        Assert.IsFalse(loaded.cameraPans);
+        Assert.AreEqual(SavedDistance, loaded.cameraDistance, 0.0001f);
     }
 
     [Test]

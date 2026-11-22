@@ -6,19 +6,12 @@ public class EnemyHealth : MonoBehaviour
 
     public static int ActiveEnemyCount { get; private set; }
     public static readonly List<EnemyHealth> ActiveEnemies = new List<EnemyHealth>();
-    public static float DamageTakenScale { get; private set; } = 1f;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ClearStatics()
     {
         ActiveEnemyCount = 0;
         ActiveEnemies.Clear();
-        DamageTakenScale = 1f;
-    }
-
-    public static void SetDamageTakenScale(float scale)
-    {
-        DamageTakenScale = float.IsNaN(scale) ? 1f : Mathf.Clamp01(scale);
     }
 
     [Header("Death VFX")]
@@ -106,11 +99,19 @@ public class EnemyHealth : MonoBehaviour
         currentHealth = maxHealth;
     }
 
+    public bool IsAlive => currentHealth > 0f && gameObject.activeInHierarchy;
+
+    public float CurrentHealth => currentHealth;
+
+    public void Kill()
+    {
+        if (!IsAlive) return;
+        currentHealth = 0f;
+        Die();
+    }
+
     public void TakeDamage(float damage)
     {
-        if (DamageTakenScale <= 0f) return;
-        damage *= DamageTakenScale;
-
         if (damageTween != null)
         {
             damageTween.TweenFx();
@@ -122,7 +123,7 @@ public class EnemyHealth : MonoBehaviour
             FloatingTextManager.Instance.ShowDamage(damage, textPosition);
         }
 
-        currentHealth -= damage;
+        currentHealth -= damage / FinalRushScaling.Toughness;
         GameEvents.TriggerEnemyDamaged(damage);
 
         if (currentHealth <= 0)

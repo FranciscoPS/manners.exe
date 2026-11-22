@@ -17,10 +17,16 @@ public class FloatingTextManager : MonoBehaviour
 
     [Header("Pool Settings")]
     [SerializeField] private int poolSize = 20;
+    [Tooltip("Máximo de números flotantes en pantalla para que aparezca un número de daño nuevo. Con cientos de golpes por segundo (hordas del overtime) se omiten los demás: serían un muro de números y costarían varios ms por frame. Experiencia, monedas y diamantes se muestran siempre.")]
+    [Min(1)] [SerializeField] private int maxDamageNumbers = 60;
 
     [SerializeField] private Canvas worldCanvas;
     private Queue<FloatingText> textPool = new Queue<FloatingText>();
     private Camera mainCamera;
+    private int activeTexts;
+
+    public int ActiveTexts => activeTexts;
+    public int MaxDamageNumbers => maxDamageNumbers;
 
     private void Awake()
     {
@@ -89,6 +95,7 @@ public class FloatingTextManager : MonoBehaviour
         if (textPool.Count == 0) return null;
         FloatingText text = textPool.Dequeue();
         text.gameObject.SetActive(true);
+        activeTexts++;
         return text;
     }
 
@@ -96,12 +103,14 @@ public class FloatingTextManager : MonoBehaviour
     {
         if (text == null) return;
 
+        if (text.gameObject.activeSelf) activeTexts = Mathf.Max(0, activeTexts - 1);
         text.gameObject.SetActive(false);
         textPool.Enqueue(text);
     }
 
     public void ShowDamage(float damage, Vector3 worldPosition)
     {
+        if (activeTexts >= maxDamageNumbers) return;
         ShowText(Mathf.RoundToInt(damage).ToString(), damageColor, worldPosition);
     }
 
@@ -137,17 +146,16 @@ public class FloatingTextManager : MonoBehaviour
             }
         }
 
-        FloatingText floatingText = GetFromPool();
-        if (floatingText == null)
+        Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
+
+        if (screenPosition.z < 0 || screenPosition.x < 0f || screenPosition.y < 0f || screenPosition.x > Screen.width || screenPosition.y > Screen.height)
         {
             return;
         }
 
-        Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
-
-        if (screenPosition.z < 0)
+        FloatingText floatingText = GetFromPool();
+        if (floatingText == null)
         {
-            ReturnToPool(floatingText);
             return;
         }
 

@@ -18,17 +18,17 @@ public static class UIBilingualPreview
     private static readonly string[] MenuPanels =
     {
         "MainMenuPanel", Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", "MapSelectionPanel", Options + "SobrecargasMenuPanel",
-        Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", "UpgradesPanel", "TiendaPanel", "CreditosPanel", Options + "AyudaPanel", "PersonalizacionPanel"
+        Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", Options + "ConfirmDialog", "UpgradesPanel", "TiendaPanel", "CreditosPanel", Options + "AyudaPanel", "PersonalizacionPanel"
     };
     private static readonly string[] GamePanels =
     {
         "HUD", "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI", "Tutorial",
-        Options + "OptionsPanel", Options + "AudioPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", Options + "SobrecargasMenuPanel"
+        Options + "OptionsPanel", Options + "AudioPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", Options + "ConfirmDialog", Options + "SobrecargasMenuPanel"
     };
     private static readonly string[] ModalPanels =
     {
         "PausePanel", "LevelUpPanel", "GameOverPanel", "InitialsEntryUI",
-        Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", Options + "SobrecargasMenuPanel"
+        Options + "OptionsPanel", Options + "AudioPanel", Options + "ControlesPanel", Options + "AyudaPanel", Options + "GraphicsSettingsPanel", Options + "AccessibilitySettingsPanel", Options + "ConfirmDialog", Options + "SobrecargasMenuPanel"
     };
     private static readonly Vector2Int[] Resolutions =
     {
@@ -136,10 +136,22 @@ public static class UIBilingualPreview
         {
             GraphicsSettingsMenu menu = canvas.GetComponentsInChildren<GraphicsSettingsMenu>(true).First();
             SerializedProperty rows = new SerializedObject(menu).FindProperty("rows");
-            string[] values = language == GameLanguage.Spanish ? new[] { "Equilibrado", "60 FPS", "Desactivado", "Solo en la build", "Solo en la build", "100%", "Completo", "Activado", "Activado", "Activado", "Activado" } : new[] { "Balanced", "60 FPS", "Off", "In build only", "In build only", "100%", "Full", "On", "On", "On", "On" };
+            string[] values = language == GameLanguage.Spanish ? new[] { "Equilibrado", "60 FPS", "Desactivado", "Solo en la build", "Solo en la build", "100%", "Completo", "Activado", "Activado", "Activado" } : new[] { "Balanced", "60 FPS", "Off", "In build only", "In build only", "100%", "Full", "On", "On", "On" };
             for (int i = 0; i < rows.arraySize; i++) ((TMP_Text)rows.GetArrayElementAtIndex(i).FindPropertyRelative("value").objectReferenceValue).text = values[i];
             Get<TMP_Text>(menu, "syncHint").text = Get<LocalizedString>(menu, "fpsHint").Value;
             Get<TMP_Text>(menu, "statusText").text = Get<LocalizedString>(menu, "applyHint").Value;
+        }
+        if (panel.EndsWith("ConfirmDialog"))
+        {
+            ConfirmDialog dialog = canvas.GetComponentsInChildren<ConfirmDialog>(true).First();
+            PauseMenu pause = canvas.GetComponent<PauseMenu>();
+            MainMenuUIManager main = canvas.GetComponent<MainMenuUIManager>();
+            object owner = pause != null ? (object)pause : main;
+            string[] fields = pause != null ? new[] { "restartTitle", "restartMessage", "restartConfirm" } : new[] { "quitTitle", "quitMessage", "quitConfirm" };
+            if (pause != null) SetActive(canvas.Find("PausePanel"), true);
+            Get<TMP_Text>(dialog, "titleText").text = Get<LocalizedString>(owner, fields[0]).Get(language);
+            Get<TMP_Text>(dialog, "messageText").text = Get<LocalizedString>(owner, fields[1]).Get(language);
+            Get<TMP_Text>(dialog, "confirmLabel").text = Get<LocalizedString>(owner, fields[2]).Get(language);
         }
         if (panel.EndsWith("AccessibilitySettingsPanel"))
         {
@@ -147,8 +159,8 @@ public static class UIBilingualPreview
             SerializedProperty rows = new SerializedObject(menu).FindProperty("rows");
             string distance = Mathf.RoundToInt(GameAccessibilitySettings.DefaultCameraDistance * 100f) + "%";
             string[] values = language == GameLanguage.Spanish
-                ? new[] { "Helicóptero", "Activado", "Activado", "Activado", "Activado", "Desactivado", "Activado", "Normal", distance }
-                : new[] { "Helicopter", "On", "On", "On", "On", "Off", "On", "Normal", distance };
+                ? new[] { "Helicóptero", "Activado", "Activado", "Desactivado", "Activado", "Desactivado", "Activado", "Normal", distance }
+                : new[] { "Helicopter", "On", "On", "Off", "On", "Off", "On", "Normal", distance };
             for (int i = 0; i < rows.arraySize && i < values.Length; i++) ((TMP_Text)rows.GetArrayElementAtIndex(i).FindPropertyRelative("value").objectReferenceValue).text = values[i];
             Slider distanceSlider = rows.GetArrayElementAtIndex(AccessibilitySettingsMenu.DistanceRow).FindPropertyRelative("slider").objectReferenceValue as Slider;
             if (distanceSlider != null) distanceSlider.SetValueWithoutNotify(GameAccessibilitySettings.DefaultCameraDistance);

@@ -2,23 +2,37 @@ using UnityEngine;
 
 public static class FinalRushMath
 {
-    public const float MaxHealth = 1000000000f;
+    public const float MaxToughness = 1000000000f;
 
-    public static float DamageTakenScale(float elapsed, float nearInvincibleSeconds, float nearInvincibleDamage, float indestructibleSeconds)
+    public static float Tiers(float elapsed, float tierInterval)
     {
-        if (elapsed <= 0f) return 1f;
-        if (indestructibleSeconds > 0f && elapsed >= indestructibleSeconds) return 0f;
+        return tierInterval > 0f ? Mathf.Max(0f, elapsed) / tierInterval : 0f;
+    }
 
-        float near = Mathf.Clamp01(nearInvincibleDamage);
-        if (nearInvincibleSeconds <= 0f) return near;
-        if (elapsed <= nearInvincibleSeconds)
-        {
-            float progress = elapsed / nearInvincibleSeconds;
-            return near > 0f ? Mathf.Pow(near, progress) : 1f - progress;
-        }
+    public static float Toughness(float tiers, float multiplierPerTier)
+    {
+        float toughness = Mathf.Pow(Mathf.Max(1f, multiplierPerTier), Mathf.Max(0f, tiers));
+        return float.IsNaN(toughness) || toughness > MaxToughness ? MaxToughness : toughness;
+    }
 
-        if (indestructibleSeconds <= nearInvincibleSeconds) return near;
-        return Mathf.Lerp(near, 0f, (elapsed - nearInvincibleSeconds) / (indestructibleSeconds - nearInvincibleSeconds));
+    public static float ControlResistance(float tiers, float perTier, float maxResistance)
+    {
+        return Mathf.Clamp01(Mathf.Min(maxResistance, perTier * Mathf.Max(0f, tiers)));
+    }
+
+    public static float Speed(float tiers, float baseSpeed, float perTier, float maxSpeed)
+    {
+        return Mathf.Min(maxSpeed, baseSpeed + perTier * Mathf.Max(0f, tiers));
+    }
+
+    public static float ChaseSpeed(float tiers, float playerSpeed, float ratioStart, float ratioPerTier, float ratioMax)
+    {
+        return Mathf.Max(0f, playerSpeed) * Mathf.Min(ratioMax, ratioStart + ratioPerTier * Mathf.Max(0f, tiers));
+    }
+
+    public static float ContactDamage(float tiers, float baseDamage, float perTier)
+    {
+        return baseDamage + perTier * Mathf.Max(0f, tiers);
     }
 
     public static int Cap(float elapsed, int start, int end, float rampSeconds, int normalCap)
@@ -27,11 +41,5 @@ public static class FinalRushMath
         float progress = rampSeconds > 0f ? Mathf.Clamp01(elapsed / rampSeconds) : 1f;
         int ramped = Mathf.RoundToInt(Mathf.Lerp(Mathf.Min(start, ceiling), ceiling, progress));
         return Mathf.Min(ceiling, Mathf.Max(normalCap, ramped));
-    }
-
-    public static float Health(float baseHealth, float tierMultiplier, int tier)
-    {
-        float health = baseHealth * Mathf.Pow(Mathf.Max(0f, tierMultiplier), Mathf.Max(0, tier));
-        return float.IsNaN(health) || health > MaxHealth ? MaxHealth : health;
     }
 }
