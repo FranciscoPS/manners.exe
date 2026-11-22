@@ -145,12 +145,15 @@ public static class UIBilingualPreview
         {
             AccessibilitySettingsMenu menu = canvas.GetComponentsInChildren<AccessibilitySettingsMenu>(true).First();
             SerializedProperty rows = new SerializedObject(menu).FindProperty("rows");
+            string distance = Mathf.RoundToInt(GameAccessibilitySettings.DefaultCameraDistance * 100f) + "%";
             string[] values = language == GameLanguage.Spanish
-                ? new[] { "Helicóptero", "Activado", "Activado", "Activado", "Activado", "Desactivado", "Activado", "Normal", "Normal", "Activado" }
-                : new[] { "Helicopter", "On", "On", "On", "On", "Off", "On", "Normal", "Normal", "On" };
+                ? new[] { "Helicóptero", "Activado", "Activado", "Activado", "Activado", "Desactivado", "Activado", "Normal", distance, "Activado" }
+                : new[] { "Helicopter", "On", "On", "On", "On", "Off", "On", "Normal", distance, "On" };
             for (int i = 0; i < rows.arraySize && i < values.Length; i++) ((TMP_Text)rows.GetArrayElementAtIndex(i).FindPropertyRelative("value").objectReferenceValue).text = values[i];
+            Slider distanceSlider = rows.GetArrayElementAtIndex(AccessibilitySettingsMenu.DistanceRow).FindPropertyRelative("slider").objectReferenceValue as Slider;
+            if (distanceSlider != null) distanceSlider.SetValueWithoutNotify(GameAccessibilitySettings.DefaultCameraDistance);
             Get<TMP_Text>(menu, "hintText").text = rows.GetArrayElementAtIndex(0).FindPropertyRelative("hint").FindPropertyRelative(language == GameLanguage.Spanish ? "spanish" : "english").stringValue;
-            Get<TMP_Text>(menu, "statusText").text = Get<LocalizedString>(menu, "savedInstantly").Get(language);
+            Get<TMP_Text>(menu, "statusText").text = Get<LocalizedString>(menu, "applyHint").Get(language);
         }
         if (panel == "ChestAnnouncement" || panel == "OvertimeAlert" || panel == "OverrideActivationHUD")
         {

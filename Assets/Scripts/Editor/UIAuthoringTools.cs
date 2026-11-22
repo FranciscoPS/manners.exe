@@ -12,7 +12,7 @@ using Object = UnityEngine.Object;
 
 public static class UIAuthoringTools
 {
-    public static readonly string[] Scenes = { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity", "Assets/Scenes/Sandbox.unity", "Assets/Scenes/CityTest.unity" };
+    public static readonly string[] Scenes = { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity", "Assets/Scenes/Sandbox.unity" };
     private static readonly Dictionary<string, string[]> Required = new Dictionary<string, string[]>
     {
         { "ChestAnnouncement", new[] { "text", "textRect", "group", "plate" } },
@@ -20,7 +20,7 @@ public static class UIAuthoringTools
         { "ChestOpeningSequence", new[] { "canvasRoot", "promptText", "skipHintText", "aura", "showcase", "chestBurstPrefab" } },
         { "ChestShowcase", new[] { "view", "showcaseCamera" } },
         { "OverrideActivationHUD", new[] { "canvas", "strip", "banner", "titleText", "nameText", "iconGhost", "cellPrefab" } },
-        { "AccessibilitySettingsMenu", new[] { "entryButton", "resetButton", "backButton", "hintText", "statusText" } },
+        { "AccessibilitySettingsMenu", new[] { "entryButton", "applyButton", "resetButton", "backButton", "hintText", "statusText" } },
         { "OverrideStripCellUI", new[] { "icon", "fallback" } },
         { "HoverTooltipUI", new[] { "panelRect", "titleText", "bodyText" } },
         { "FloatingTextManager", new[] { "floatingTextPrefab", "worldCanvas" } },

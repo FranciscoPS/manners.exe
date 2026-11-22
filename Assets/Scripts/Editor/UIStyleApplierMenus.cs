@@ -20,6 +20,10 @@ public static partial class UIStyleApplier
 
     private const string GraphicsPanelPrefabPath = "Assets/Prefabs/UI/Settings/GraphicsSettingsPanel.prefab";
     private const string AccessibilityPanelName = "AccessibilitySettingsPanel";
+    private const string AccessibilitySliderName = "Slider";
+    private const float AccessibilityControlsTop = 0.57f;
+    private const float AccessibilityValueSplit = 0.72f;
+    private const string PauseTagline = "The calm before the storm";
     private const string OptionsMenuName = "OptionsMenu";
     private const float OptionsColumnHeight = 680f;
     private const float OptionsColumnPadding = 50f;
@@ -205,15 +209,17 @@ public static partial class UIStyleApplier
         }
 
         GameObject root = PrefabUtility.LoadPrefabContents(source);
+        GameObject template = exists && File.Exists(GraphicsPanelPrefabPath) ? PrefabUtility.LoadPrefabContents(GraphicsPanelPrefabPath) : null;
         try
         {
             root.name = AccessibilityPanelName;
-            BuildAccessibilityContent(root.transform);
+            BuildAccessibilityContent(root.transform, template != null ? template.transform : root.transform);
             PrefabUtility.SaveAsPrefabAsset(root, AccessibilityPanelPrefabPath);
         }
         finally
         {
             PrefabUtility.UnloadPrefabContents(root);
+            if (template != null) PrefabUtility.UnloadPrefabContents(template);
         }
 
         report.AppendLine(exists
@@ -221,7 +227,7 @@ public static partial class UIStyleApplier
             : $"MENÚS: pantalla de accesibilidad creada en {AccessibilityPanelPrefabPath} a partir de la de gráficos.");
     }
 
-    private static void BuildAccessibilityContent(Transform root)
+    private static void BuildAccessibilityContent(Transform root, Transform template)
     {
         GraphicsSettingsMenu graphicsMenu = root.GetComponent<GraphicsSettingsMenu>();
         if (graphicsMenu != null) Object.DestroyImmediate(graphicsMenu);
@@ -240,14 +246,16 @@ public static partial class UIStyleApplier
             return;
         }
 
+        Transform templateCard = FindDeep(template, "GraphicsCard") ?? FindDeep(template, "AccessibilityCard");
+        Transform templateControls = templateCard != null ? DirectChild(templateCard, "Controls") : null;
+
         Remove(DirectChild(card, "DisplayConfirmation"), "accesibilidad: la confirmación de pantalla de gráficos no aplica aquí.");
-        Remove(DirectChild(controls, "Apply"), "accesibilidad: los cambios se guardan al momento y el botón Aplicar sobra.");
         SetLabel(DirectChild(controls, "Title"), "Accessibility", "Accesibilidad");
         SetLabel(DirectChild(controls, "Introduction"), "Make the camera comfortable: turn off its movements or lock it on the robot.", "Haz la cámara más cómoda: apaga sus movimientos o fíjala al robot.");
 
         var rows = new List<Transform>();
         foreach (Transform child in controls)
-            if (DirectChild(child, "Previous") != null && DirectChild(child, "Next") != null && DirectChild(child, "Value") != null) rows.Add(child);
+            if (DirectChild(child, "Label") != null && DirectChild(child, "Value") != null) rows.Add(child);
         rows.Sort((a, b) =>
         {
             var left = (RectTransform)a;
@@ -277,11 +285,16 @@ public static partial class UIStyleApplier
             row.name = AccessibilityRowNames[i];
             Touch(row.gameObject);
             SetLabel(DirectChild(row, "Label"), AccessibilityLabels[i, 0], AccessibilityLabels[i, 1]);
+            if (i == AccessibilitySettingsMenu.DistanceRow) BuildAccessibilitySliderRow(row);
 
+            Transform previous = DirectChild(row, "Previous");
+            Transform next = DirectChild(row, "Next");
+            Transform slider = DirectChild(row, AccessibilitySliderName);
             SerializedProperty element = list.GetArrayElementAtIndex(i);
             element.FindPropertyRelative("value").objectReferenceValue = DirectChild(row, "Value").GetComponent<TextMeshProUGUI>();
-            element.FindPropertyRelative("previous").objectReferenceValue = DirectChild(row, "Previous").GetComponent<Button>();
-            element.FindPropertyRelative("next").objectReferenceValue = DirectChild(row, "Next").GetComponent<Button>();
+            element.FindPropertyRelative("previous").objectReferenceValue = previous != null ? previous.GetComponent<Button>() : null;
+            element.FindPropertyRelative("next").objectReferenceValue = next != null ? next.GetComponent<Button>() : null;
+            element.FindPropertyRelative("slider").objectReferenceValue = slider != null ? slider.GetComponent<Slider>() : null;
             SerializedProperty hint = element.FindPropertyRelative("hint");
             hint.FindPropertyRelative("english").stringValue = AccessibilityHints[i, 0];
             hint.FindPropertyRelative("spanish").stringValue = AccessibilityHints[i, 1];
@@ -296,19 +309,111 @@ public static partial class UIStyleApplier
         Transform status = DirectChild(controls, "Status");
         Transform reset = DirectChild(controls, "Reset");
         Transform back = DirectChild(controls, "Back");
+        Transform templateReset = templateControls != null ? DirectChild(templateControls, "Reset") : null;
+        if (reset != null && templateReset != null && templateReset != reset) CopyRect(templateReset, reset);
+        Transform apply = EnsureAccessibilityApply(controls, templateControls, reset);
         SetReference(serialized, "hintText", hintText != null ? hintText.GetComponent<TextMeshProUGUI>() : null);
         SetReference(serialized, "statusText", status != null ? status.GetComponent<TextMeshProUGUI>() : null);
+        SetReference(serialized, "applyButton", apply != null ? apply.GetComponent<Button>() : null);
         SetReference(serialized, "resetButton", reset != null ? reset.GetComponent<Button>() : null);
         SetReference(serialized, "backButton", back != null ? back.GetComponent<Button>() : null);
         serialized.ApplyModifiedPropertiesWithoutUndo();
         Touch(menu);
+    }
 
-        if (reset is RectTransform resetRect)
+    private static Transform EnsureAccessibilityApply(Transform controls, Transform templateControls, Transform reset)
+    {
+        Transform apply = DirectChild(controls, "Apply");
+        Transform source = templateControls != null ? DirectChild(templateControls, "Apply") : null;
+        if (apply == null && source != null)
         {
-            resetRect.anchorMin = new Vector2(0.72f, 0f);
-            resetRect.anchorMax = new Vector2(1f, 0.07f);
-            Touch(resetRect);
+            GameObject copy = Object.Instantiate(source.gameObject, controls, false);
+            copy.name = "Apply";
+            apply = copy.transform;
+            apply.SetSiblingIndex(reset != null ? reset.GetSiblingIndex() + 1 : controls.childCount - 1);
+            createdCount++;
+            report.AppendLine("MENÚS: accesibilidad recupera el botón Aplicar de la pantalla de gráficos.");
         }
+        if (apply == null) return null;
+
+        if (source != null && source != apply) CopyRect(source, apply);
+        Button button = apply.GetComponent<Button>();
+        if (button != null)
+        {
+            button.navigation = new Navigation { mode = Navigation.Mode.Explicit };
+            Touch(button);
+        }
+        SetLabel(DirectChild(apply, "Text"), "Apply", "Aplicar");
+        return apply;
+    }
+
+    private static void BuildAccessibilitySliderRow(Transform row)
+    {
+        Transform existing = DirectChild(row, AccessibilitySliderName);
+        Slider slider = existing != null ? existing.GetComponent<Slider>() : null;
+        if (slider == null)
+        {
+            GameObject created = DefaultControls.CreateSlider(new DefaultControls.Resources());
+            created.name = AccessibilitySliderName;
+            foreach (Transform part in created.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = row.gameObject.layer;
+            created.transform.SetParent(row, false);
+            Transform label = DirectChild(row, "Label");
+            created.transform.SetSiblingIndex(label != null ? label.GetSiblingIndex() + 1 : 0);
+            slider = created.GetComponent<Slider>();
+            createdCount++;
+            report.AppendLine("MENÚS: accesibilidad cambia los botones de distancia de cámara por un slider.");
+        }
+
+        var sliderRect = (RectTransform)slider.transform;
+        sliderRect.anchorMin = new Vector2(0f, 0f);
+        sliderRect.anchorMax = new Vector2(1f, AccessibilityControlsTop);
+        sliderRect.pivot = new Vector2(0.5f, 0.5f);
+        sliderRect.offsetMin = Vector2.zero;
+        sliderRect.offsetMax = Vector2.zero;
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.wholeNumbers = false;
+        slider.SetValueWithoutNotify(GameAccessibilitySettings.DefaultCameraDistance);
+        StyleSlider(slider);
+        Touch(sliderRect);
+
+        Remove(DirectChild(row, "Previous"), "accesibilidad: la distancia de cámara se ajusta con el slider, sin flecha izquierda.");
+        Remove(DirectChild(row, "Next"), "accesibilidad: la distancia de cámara se ajusta con el slider, sin flecha derecha.");
+        Remove(DirectChild(row, "ValuePlate"), "accesibilidad: la lectura de distancia pasa junto a la etiqueta.");
+
+        if (DirectChild(row, "Label") is RectTransform labelRect)
+        {
+            labelRect.anchorMax = new Vector2(AccessibilityValueSplit, labelRect.anchorMax.y);
+            Touch(labelRect);
+
+            if (DirectChild(row, "Value") is RectTransform valueRect)
+            {
+                valueRect.anchorMin = new Vector2(AccessibilityValueSplit, labelRect.anchorMin.y);
+                valueRect.anchorMax = new Vector2(1f, labelRect.anchorMax.y);
+                valueRect.offsetMin = Vector2.zero;
+                valueRect.offsetMax = Vector2.zero;
+                TMP_Text value = valueRect.GetComponent<TMP_Text>();
+                if (value != null)
+                {
+                    value.alignment = TextAlignmentOptions.Right;
+                    value.text = Mathf.RoundToInt(GameAccessibilitySettings.DefaultCameraDistance * 100f) + "%";
+                    Touch(value);
+                }
+                Touch(valueRect);
+            }
+        }
+    }
+
+    private static void CopyRect(Transform source, Transform target)
+    {
+        if (!(source is RectTransform from) || !(target is RectTransform to)) return;
+        to.anchorMin = from.anchorMin;
+        to.anchorMax = from.anchorMax;
+        to.pivot = from.pivot;
+        to.anchoredPosition = from.anchoredPosition;
+        to.sizeDelta = from.sizeDelta;
+        Touch(to);
     }
 
     private static Transform EnsureAccessibilityPanelInstance(Transform root, Transform graphicsPanel)
@@ -584,6 +689,7 @@ public static partial class UIStyleApplier
     {
         Remove(FindDeep(pausePanel, "LanguageSelector"), "el selector de idioma sale de la pausa; se abre desde Opciones > Idioma.");
         Remove(DirectChild(pausePanel, "AudioPanel"), "el botón de sonido sale de la pausa; el audio se ajusta desde Opciones > Audio.");
+        RemovePauseTagline(pausePanel);
 
         Transform buttons = DirectChild(pausePanel, "ButtonsPanel");
         if (buttons != null)
@@ -616,6 +722,21 @@ public static partial class UIStyleApplier
 
         UIScreenIntro intro = pausePanel.GetComponent<UIScreenIntro>();
         if (intro != null) AuthorIntroBlocks(intro);
+    }
+
+    private static void RemovePauseTagline(Transform pausePanel)
+    {
+        foreach (TMP_Text text in pausePanel.GetComponentsInChildren<TMP_Text>(true))
+        {
+            LocalizedText localized = text.GetComponent<LocalizedText>();
+            string english = localized != null ? localized.Content.Get(GameLanguage.English) : text.text;
+            if (english != PauseTagline) continue;
+
+            Transform host = text.transform.parent;
+            Remove(text.transform, "la pausa ya no muestra el subtítulo «" + PauseTagline + "».");
+            if (host != null) Remove(DirectChild(host, StylePrefix + "SubRibbon"), "la pausa retira la placa de ese subtítulo.");
+            return;
+        }
     }
 
     private static void FixTutorialScrim(Scene scene)

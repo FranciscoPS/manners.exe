@@ -186,7 +186,7 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
         float altitude = Sway
             ? HelicopterCameraMath.AltitudeScale(flightTime + AltitudePhaseOffset, config.altitudeAmplitude, config.altitudePeriod)
             : 1f;
-        float distanceScale = HelicopterCameraMath.DistanceScale(accessibility.cameraDistance, GameAccessibilitySettings.DistanceSteps, config.minDistanceScale, config.maxDistanceScale);
+        float distanceScale = HelicopterCameraMath.DistanceScale(accessibility.cameraDistance, GameAccessibilitySettings.NormalCameraDistance, config.minDistanceScale, config.maxDistanceScale);
         composer.CameraDistance = HelicopterCameraMath.DistanceForFramedHeight(config.framedHeight * distanceScale, config.fieldOfView) * altitude;
 
         float damping = accessibility.lockOnRobot
@@ -272,7 +272,6 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
     {
         if (subscribed) return;
 
-        GameEvents.OnLevelUp += HandleLevelUp;
         GameEvents.OnChestSpawned += HandleChestSpawned;
         GameEvents.OnGameStarted += HandleGameStarted;
 
@@ -290,7 +289,6 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
     {
         if (!subscribed) return;
 
-        GameEvents.OnLevelUp -= HandleLevelUp;
         GameEvents.OnChestSpawned -= HandleChestSpawned;
         GameEvents.OnGameStarted -= HandleGameStarted;
         if (OverrideManager.Instance != null) OverrideManager.Instance.OnOverrideActivated -= HandleOverrideActivated;
@@ -304,11 +302,6 @@ public sealed class HelicopterCameraExtension : CinemachineExtension
         lowHealthArmed = true;
         punchElapsed = float.PositiveInfinity;
         ResetFollowTracking();
-    }
-
-    private void HandleLevelUp(int level)
-    {
-        if (config != null) Punch(config.levelUp);
     }
 
     private void HandleChestSpawned()

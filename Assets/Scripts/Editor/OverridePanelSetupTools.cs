@@ -31,7 +31,6 @@ public static class OverridePanelSetupTools
     private static readonly string[] GameOverScenePaths =
     {
         "Assets/Scenes/Final Levels/LEVEL 1/LEVEL 1.unity",
-        "Assets/Scenes/CityTest.unity",
         "Assets/Scenes/Sandbox.unity",
     };
 
@@ -199,7 +198,7 @@ public static class OverridePanelSetupTools
         Scene scene = EditorSceneManager.GetActiveScene();
         if (!GameOverScenePaths.Contains(scene.path))
         {
-            Debug.LogError("[OverridePanelSetup] Abre una escena compatible: Sandbox, LEVEL 1 o CityTest.");
+            Debug.LogError("[OverridePanelSetup] Abre una escena compatible: Sandbox o LEVEL 1.");
             return;
         }
 
@@ -207,7 +206,7 @@ public static class OverridePanelSetupTools
         Canvas canvas = levelUpManager != null ? levelUpManager.GetComponentInParent<Canvas>() : null;
         if (canvas == null)
         {
-            Debug.LogError("[OverridePanelSetup] La escena abierta no tiene un Canvas con LevelUpManager; abre una escena de nivel (Sandbox, LEVEL 1 o CityTest).");
+            Debug.LogError("[OverridePanelSetup] La escena abierta no tiene un Canvas con LevelUpManager; abre una escena de nivel (Sandbox o LEVEL 1).");
             return;
         }
 

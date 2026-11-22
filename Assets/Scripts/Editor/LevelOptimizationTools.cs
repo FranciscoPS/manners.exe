@@ -130,7 +130,7 @@ public static class LevelOptimizationTools
         }
 
         StaticOcclusionCulling.Compute();
-        Debug.Log("[LevelOptimizationTools] Bake de Occlusion Culling iniciado para la escena abierta. Repetí esto en cada escena de nivel (LEVEL 1, CityTest, MilitaryBase, Sandbox) — cada una necesita su propio bake, no lo comparten. Progreso visible en Window > Rendering > Occlusion Culling.");
+        Debug.Log("[LevelOptimizationTools] Bake de Occlusion Culling iniciado para la escena abierta. Repetí esto en cada escena de nivel (LEVEL 1, MilitaryBase, Sandbox) — cada una necesita su propio bake, no lo comparten. Progreso visible en Window > Rendering > Occlusion Culling.");
     }
 
     [MenuItem("Tools/Manners/Performance/3. Activar GPU Instancing en materiales", false, 42)]

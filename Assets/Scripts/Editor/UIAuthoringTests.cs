@@ -51,7 +51,9 @@ public class UIAuthoringTests
         try
         {
             yield return new WaitForSecondsRealtime(.25f);
-            Assert.AreEqual(GameLanguage.English, GameLocalization.Language);
+            GameLanguage first = GameLocalization.DefaultLanguage;
+            GameLanguage second = first == GameLanguage.Spanish ? GameLanguage.English : GameLanguage.Spanish;
+            Assert.AreEqual(first, GameLocalization.Language, "Sin preferencia guardada el juego empieza en el idioma de " + PlayerSettingsDefaults.ResourceName + ".");
             MainMenuUIManager menu = Object.FindFirstObjectByType<MainMenuUIManager>();
             OptionsMenu options = Get<OptionsMenu>(menu, "optionsMenu"); Assert.IsNotNull(options, "El menú principal necesita el menú de opciones compartido.");
             options.Open(); yield return null;
@@ -60,9 +62,9 @@ public class UIAuthoringTests
             LanguageSelector selector = hub.GetComponentInChildren<LanguageSelector>(); Assert.IsNotNull(selector, "El botón Idioma debe mostrar el selector.");
             Get<Button>(selector, "nextButton").onClick.Invoke();
             yield return null;
-            Assert.AreEqual(GameLanguage.Spanish, GameLocalization.Language);
-            Assert.AreEqual("Español", Get<TMP_Text>(selector, "valueLabel").text);
-            foreach (LocalizedText text in hub.GetComponentsInChildren<LocalizedText>()) Assert.AreEqual(text.Content.Get(GameLanguage.Spanish), text.GetComponent<TMP_Text>().text);
+            Assert.AreEqual(second, GameLocalization.Language);
+            Assert.AreEqual(second == GameLanguage.Spanish ? "Español" : "English", Get<TMP_Text>(selector, "valueLabel").text);
+            foreach (LocalizedText text in hub.GetComponentsInChildren<LocalizedText>()) Assert.AreEqual(text.Content.Get(second), text.GetComponent<TMP_Text>().text);
             options.ToggleLanguage(); Assert.IsFalse(selector.gameObject.activeSelf, "El botón Idioma debe ocultar el selector al pulsarlo de nuevo.");
             options.ShowGraphics(); yield return null;
             GraphicsSettingsMenu graphics = Get<GraphicsSettingsMenu>(options, "graphics");
@@ -81,7 +83,7 @@ public class UIAuthoringTests
             if (tutorial != null && tutorial.IsTutorialPanelActive) Get<Button>(tutorial, "skipAllButton").onClick.Invoke();
             Assert.IsFalse(tutorial != null && tutorial.IsTutorialPanelActive);
             EnemySpawnManager.Instance?.StopAllCoroutines();
-            Assert.AreEqual(GameLanguage.Spanish, GameLocalization.Language);
+            Assert.AreEqual(second, GameLocalization.Language);
             PauseMenu pause = Object.FindFirstObjectByType<PauseMenu>(); pause.TogglePause();
             Assert.AreEqual(0, Time.timeScale);
             GameObject pausePanel = Get<GameObject>(pause, "pausePanel"); Assert.IsTrue(pausePanel.activeInHierarchy);
@@ -91,7 +93,7 @@ public class UIAuthoringTests
             GameObject gameHub = Get<GameObject>(gameOptions, "hub"); Assert.IsTrue(gameHub.activeInHierarchy);
             gameOptions.ToggleLanguage(); yield return null;
             selector = gameHub.GetComponentInChildren<LanguageSelector>(); Assert.IsNotNull(selector, "Opciones desde la pausa debe mostrar el selector de idioma.");
-            Get<Button>(selector, "nextButton").onClick.Invoke(); Assert.AreEqual(GameLanguage.English, GameLocalization.Language);
+            Get<Button>(selector, "nextButton").onClick.Invoke(); Assert.AreEqual(first, GameLocalization.Language);
             gameOptions.ShowGraphics(); yield return null;
             graphics = Get<GraphicsSettingsMenu>(gameOptions, "graphics"); Assert.IsTrue(graphics.IsOpen);
             Get<Button>(graphics, "backButton").onClick.Invoke(); Assert.IsTrue(gameHub.activeSelf);
@@ -102,6 +104,7 @@ public class UIAuthoringTests
             pause.Resume(); Assert.AreEqual(1, Time.timeScale);
             GameTimeUI timerUI = Object.FindFirstObjectByType<GameTimeUI>(); Assert.IsNotNull(timerUI, "LEVEL 1 necesita el cronómetro del HUD.");
             TMP_Text timerText = timerUI.GetComponent<TMP_Text>(); Assert.IsTrue(timerText.text.Contains(":"), "Al volver de la pausa el cronómetro debe mostrar el tiempo, no la etiqueta: " + timerText.text);
+            GameLocalization.SetLanguage(GameLanguage.English);
             ChestAnnouncement.Show(); yield return null;
             ChestAnnouncement chest = Object.FindFirstObjectByType<ChestAnnouncement>(); Assert.IsNotNull(chest);
             TMP_Text chestText = Get<TMP_Text>(chest, "text"); chestText.ForceMeshUpdate(); Assert.IsFalse(chestText.isTextOverflowing);

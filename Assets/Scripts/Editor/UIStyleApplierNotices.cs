@@ -3,7 +3,9 @@ using System.IO;
 using System.Text;
 using TMPro;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public static partial class UIStyleApplier
@@ -11,11 +13,11 @@ public static partial class UIStyleApplier
     public const string OvertimeAlertPrefabPath = "Assets/Prefabs/UI/Notifications/OvertimeAlert.prefab";
     public const string ChestSequencePrefabPath = "Assets/Prefabs/UI/Chest/ChestOpeningSequence.prefab";
     public const string NoticesReportPath = "Logs/ui-notices-report.txt";
+    public const float ChestHintAnchorY = 0.78f;
+    public const float ChestPromptAnchorY = 0.14f;
 
     private const string ChestHintName = "SkipHint";
     private const float OvertimeFontSize = 45f;
-    private const float ChestPromptAnchorY = 0.165f;
-    private const float ChestHintAnchorY = 0.0965f;
     private const float ChestHintFontMax = 30f;
     private const float ChestHintFontMin = 18f;
     private static readonly Vector2 OvertimeBannerSize = new Vector2(600f, 100f);
@@ -25,8 +27,13 @@ public static partial class UIStyleApplier
     [MenuItem("Tools/Manners/UI/Avisos: tiempo extra y cofre", false, 116)]
     public static void ApplyNoticesFromMenu()
     {
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+        string original = SceneManager.GetActiveScene().path;
         var noticesReport = new StringBuilder();
         ApplyNotices(UIStyleTools.GetOrCreateStyle(), noticesReport);
+        if (!string.IsNullOrEmpty(original) && File.Exists(original))
+            EditorSceneManager.OpenScene(original, OpenSceneMode.Single);
         Directory.CreateDirectory("Logs");
         File.WriteAllText(NoticesReportPath, noticesReport.ToString());
         Debug.Log(noticesReport.ToString());
@@ -60,6 +67,12 @@ public static partial class UIStyleApplier
         EditNoticePrefab(OvertimeAlertPrefabPath, StyleOvertimeAlert);
         EditNoticePrefab(ChestSequencePrefabPath, StyleChestHint);
         AssetDatabase.SaveAssets();
+
+        for (int i = 1; i < UIAuthoringTools.Scenes.Length; i++)
+        {
+            string path = UIAuthoringTools.Scenes[i];
+            if (File.Exists(path)) SetChestCloseLegend(path);
+        }
     }
 
     private static void EditNoticePrefab(string path, Action<Transform> edit)
@@ -82,6 +95,36 @@ public static partial class UIStyleApplier
             PrefabUtility.UnloadPrefabContents(root);
         }
         report.AppendLine($"AVISOS {path}: listo ({createdCount} objetos nuevos).");
+    }
+
+    private static void SetChestCloseLegend(string path)
+    {
+        Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+        int changed = 0;
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (LevelUpManager manager in root.GetComponentsInChildren<LevelUpManager>(true))
+            {
+                var serialized = new SerializedObject(manager);
+                SerializedProperty legend = serialized.FindProperty("closeChest");
+                SerializedProperty english = legend.FindPropertyRelative("english");
+                SerializedProperty spanish = legend.FindPropertyRelative("spanish");
+                if (english.stringValue == LevelUpManager.ChestCloseEnglish && spanish.stringValue == LevelUpManager.ChestCloseSpanish) continue;
+
+                english.stringValue = LevelUpManager.ChestCloseEnglish;
+                spanish.stringValue = LevelUpManager.ChestCloseSpanish;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                Touch(manager);
+                changed++;
+            }
+        }
+
+        if (changed > 0)
+        {
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+        report.AppendLine($"AVISOS {path}: leyenda del cofre {(changed > 0 ? "actualizada" : "ya estaba al día")}.");
     }
 
     private static void StyleOvertimeAlert(Transform root)
@@ -181,7 +224,7 @@ public static partial class UIStyleApplier
         SetReference(serialized, "skipHintGroup", group);
         SerializedProperty skipHint = serialized.FindProperty("skipHint");
         skipHint.FindPropertyRelative("english").stringValue = "Press {0} to close";
-        skipHint.FindPropertyRelative("spanish").stringValue = "Pulsa {0} para cerrar";
+        skipHint.FindPropertyRelative("spanish").stringValue = "Presiona {0} para cerrar";
         serialized.ApplyModifiedPropertiesWithoutUndo();
         Touch(sequence);
     }

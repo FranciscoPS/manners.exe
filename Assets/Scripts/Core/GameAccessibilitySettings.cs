@@ -7,26 +7,35 @@ public static class GameAccessibilitySettings
 
     public const int FollowSpeedSteps = 3;
     public const int NormalFollowSpeed = 1;
-    public const int DistanceSteps = 5;
-    public const int NormalDistance = 2;
+    public const float NormalCameraDistance = 0.5f;
+    public const float DefaultCameraDistance = 0.75f;
 
     [Serializable]
     public sealed class SettingsData
     {
+        [Tooltip("Paneos de cámara: el helicóptero rodea al robot de lado a lado.")]
         public bool cameraPans = true;
+        [Tooltip("Movimiento de cámara: vaivén suave y cambios de altura.")]
         public bool cameraSway = true;
+        [Tooltip("Zooms automáticos: acercamientos en momentos clave y plano abierto con hordas.")]
         public bool autoZoom = true;
+        [Tooltip("Sacudidas de pantalla por explosiones, golpes y cofres.")]
         public bool impactShake = true;
+        [Tooltip("Fijar cámara al robot: siempre al centro, sin retraso ni zona muerta.")]
         public bool lockOnRobot;
+        [Tooltip("Zona muerta: el robot se mueve un poco antes de que la cámara lo siga.")]
         public bool deadZone = true;
-        public int followSpeed = NormalFollowSpeed;
-        public int cameraDistance = NormalDistance;
+        [Tooltip("Velocidad de seguimiento: 0 = lenta, 1 = normal, 2 = rápida.")]
+        [Range(0, FollowSpeedSteps - 1)] public int followSpeed = NormalFollowSpeed;
+        [Tooltip("Posición del slider de distancia: 0 = lo más cerca, 0.5 = encuadre normal, 1 = lo más lejos. El rango real está en HelicopterCameraConfig.")]
+        [Range(0f, 1f)] public float cameraDistance = DefaultCameraDistance;
+        [Tooltip("Filtro de TV: grano, viñeta y bordes de color.")]
         public bool tvFilter = true;
 
         public SettingsData Clone() => (SettingsData)MemberwiseClone();
     }
 
-    public const string PrefsKey = "AccessibilitySettings.v1";
+    public const string PrefsKey = "AccessibilitySettings.v2";
 
     private static SettingsData current;
 
@@ -35,6 +44,15 @@ public static class GameAccessibilitySettings
     public static SettingsData Current => Load().Clone();
 
     public static bool ImpactShake => Load().impactShake;
+
+    public static SettingsData Defaults
+    {
+        get
+        {
+            PlayerSettingsDefaults asset = PlayerSettingsDefaults.Instance;
+            return Sanitize(asset != null ? asset.accessibility : null);
+        }
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -51,7 +69,7 @@ public static class GameAccessibilitySettings
         Changed?.Invoke();
     }
 
-    public static void ResetToDefaults() => Apply(new SettingsData());
+    public static void ResetToDefaults() => Apply(Defaults);
 
     public static void Reload()
     {
@@ -64,7 +82,7 @@ public static class GameAccessibilitySettings
     {
         SettingsData result = settings != null ? settings.Clone() : new SettingsData();
         result.followSpeed = Mathf.Clamp(result.followSpeed, 0, FollowSpeedSteps - 1);
-        result.cameraDistance = Mathf.Clamp(result.cameraDistance, 0, DistanceSteps - 1);
+        result.cameraDistance = float.IsNaN(result.cameraDistance) ? DefaultCameraDistance : Mathf.Clamp01(result.cameraDistance);
         return result;
     }
 
@@ -99,15 +117,21 @@ public static class GameAccessibilitySettings
         return CameraPreset.Custom;
     }
 
+    public static bool SameSettings(SettingsData a, SettingsData b)
+    {
+        if (a == null || b == null) return a == b;
+        return SameMotion(a, b) && Mathf.Approximately(a.cameraDistance, b.cameraDistance) && a.tvFilter == b.tvFilter;
+    }
+
     private static SettingsData Load()
     {
         if (current != null) return current;
 
-        var loaded = new SettingsData();
+        SettingsData loaded = Defaults;
         if (PlayerPrefs.HasKey(PrefsKey))
         {
             try { JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(PrefsKey), loaded); }
-            catch (ArgumentException) { loaded = new SettingsData(); }
+            catch (ArgumentException) { loaded = Defaults; }
         }
         current = Sanitize(loaded);
         return current;

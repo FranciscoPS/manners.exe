@@ -75,8 +75,6 @@ public sealed class HelicopterCameraConfig : ScriptableObject
     [Range(0.01f, 2f)] public float driftFrequency = 0.3f;
 
     [Header("Zoom del camarógrafo")]
-    [Tooltip("Acercamiento al subir de nivel.")]
-    public HelicopterZoomPunch levelUp = new HelicopterZoomPunch(0.08f, 0.35f, 0.5f, 1.6f);
     [Tooltip("Acercamiento cuando aparece un cofre.")]
     public HelicopterZoomPunch chestSpawned = new HelicopterZoomPunch(0.06f, 0.3f, 0.6f, 1.6f);
     [Tooltip("Acercamiento al activar una sobrecarga.")]
@@ -111,9 +109,9 @@ public sealed class HelicopterCameraConfig : ScriptableObject
     [Min(0.2f)] public float depthOfFieldEnd = 2.5f;
 
     [Header("Rangos de Opciones > Accesibilidad")]
-    [Tooltip("Distancia más cercana que el jugador puede elegir, como fracción del encuadre normal (0.8 = 20 % más cerca). Los acercamientos del camarógrafo se calculan sobre la distancia elegida.")]
+    [Tooltip("Distancia con el slider al mínimo, como fracción del encuadre normal (0.8 = 20 % más cerca). El encuadre normal está a la mitad del slider; los acercamientos del camarógrafo se calculan sobre la distancia elegida.")]
     [Range(0.5f, 1f)] public float minDistanceScale = 0.8f;
-    [Tooltip("Distancia más lejana que el jugador puede elegir, como fracción del encuadre normal (1.3 = 30 % más lejos).")]
+    [Tooltip("Distancia con el slider al máximo, como fracción del encuadre normal (1.3 = 30 % más lejos). El slider empieza en 3/4 del recorrido: con 1.3 son 1.15.")]
     [Range(1f, 2f)] public float maxDistanceScale = 1.3f;
     [Tooltip("Multiplicador del retraso de seguimiento con la velocidad Lenta.")]
     [Range(1f, 3f)] public float slowFollowScale = 1.6f;

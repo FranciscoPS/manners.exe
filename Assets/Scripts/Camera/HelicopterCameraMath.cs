@@ -53,16 +53,14 @@ public static class HelicopterCameraMath
         return Mathf.Clamp(widened * (1f - Mathf.Clamp01(punch)), 5f, 120f);
     }
 
-    public static float DistanceScale(int step, int steps, float minScale, float maxScale)
+    public static float DistanceScale(float position, float normalPosition, float minScale, float maxScale)
     {
-        if (steps < 2) return 1f;
-
         float closest = minScale > 0f ? Mathf.Min(minScale, 1f) : 1f;
         float farthest = Mathf.Max(maxScale, 1f);
-        int middle = (steps - 1) / 2;
-        step = Mathf.Clamp(step, 0, steps - 1);
-        if (step <= middle) return middle == 0 ? 1f : Mathf.Lerp(closest, 1f, step / (float)middle);
-        return Mathf.Lerp(1f, farthest, (step - middle) / (float)(steps - 1 - middle));
+        float normal = Mathf.Clamp01(normalPosition);
+        position = Mathf.Clamp01(position);
+        if (position <= normal) return normal <= 0f ? 1f : Mathf.Lerp(closest, 1f, position / normal);
+        return normal >= 1f ? 1f : Mathf.Lerp(1f, farthest, (position - normal) / (1f - normal));
     }
 
     public static float FollowScale(int step, int steps, float slowScale, float fastScale)

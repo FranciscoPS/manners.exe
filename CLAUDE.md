@@ -9,7 +9,10 @@ Juego bullet-heaven estilo Vampire Survivors en Unity 6000.3.5f2 (URP), con WebG
 Indicaciones permanentes del usuario; aplican a cada tarea:
 
 - Antes de implementar, entender el contexto general del juego: patrones de diseño, optimización, cómo está estructurado y cómo funcionan los sistemas que toca el cambio. Nada de "hacer por hacer": integraciones limpias que encajen con la arquitectura existente, sin agregados sueltos.
-- Todo lo que haya que hacer a mano en Unity (Inspector, escenas, prefabs, menús de `Tools`, configuraciones) se entrega al final como instrucciones claras, paso a paso.
+- Claude aplica los cambios él mismo y el usuario solo evalúa el resultado en Unity: no se le pide correr menús de `Tools`, scripts ni pasos de Inspector. Con el editor abierto, Claude trabaja en una copia del proyecto (worktree con la `Library` copiada), ejecuta ahí en batch lo necesario (herramientas, scripts de un solo uso, pruebas, capturas) y copia al proyecto solo las escenas, prefabs y assets resultantes, ya verificados. Un paso manual se pide solo si de verdad no hay otra forma, y se explica por qué.
+- No crear una herramienta de editor (menú en `Tools`) para cada cambio: lo puntual se aplica directo a la escena, el prefab o el asset. Una herramienta nueva solo si el usuario la pide o si es un proceso que él va a repetir.
+- Todo lo que el usuario pueda querer ajustar (textos, colores, tamaños, posiciones, tiempos, valores por defecto, balance) queda en campos serializados que se editan en el Inspector del objeto que lo usa: escena, prefab o ScriptableObject. Nunca fijo en código ni asignado en runtime: para cambiar un texto basta con entrar al objeto en Unity, sin abrir código. Una herramienta no vuelve a escribir encima de lo que el usuario ya ajustó a mano.
+- Al terminar se explica qué cambió y dónde se ajusta en el Inspector.
 - No escribir comentarios en el código C#. Los `[Tooltip]` y `[Header]` en español sí se usan: el balance se ajusta desde el Inspector.
 - La documentación del proyecto (`README.md`, `Docs/UI_AUTHORING.md`, `Docs/OVERRIDE_COMBINATIONS.md`, `Docs/Performance/`, el manual publicado como Artifact y las páginas de Confluence) solo se actualiza con `/actualizar-docs`, que lanza el usuario: Claude no puede lanzarlo. Nunca se actualiza en automático: ni al terminar otra tarea, ni desde otro comando, hook o agente, aunque parezca útil o el usuario diga «continúa». Si un cambio la deja desactualizada, se avisa en una línea al final y se sugiere `/actualizar-docs`. Los comandos del framework (`/design-system`, `/architecture-decision`, `/adopt`, `/map-systems`…) siguen escribiendo sus propios documentos (GDD, ADR, índice de sistemas, plan de adopción) cuando el usuario los lanza, y los devlogs se escriben cuando el usuario los pide.
 - Antes de construir un sistema desde cero, revisar las ramas locales (`git branch -a`): suele haber trabajo previo relacionado.
@@ -32,7 +35,7 @@ Indicaciones permanentes del usuario; aplican a cada tarea:
 
 ## UI
 
-- Reutilizar el lenguaje visual existente (kit `UIStyle_Production`: paleta del documento de arte, placas en paralelogramo, franjas, fuente Orbitron, cara de la I.A., "?", animaciones que ya existen) y cuidar el equilibrio del HUD; no agregar elementos al azar. Lo que el estilo escribe en escenas y prefabs se cambia en `UIStyleApplier` y se aplica con `Tools > Manners > UI`, no a mano en cada escena.
+- Reutilizar el lenguaje visual existente (kit `UIStyle_Production`: paleta del documento de arte, placas en paralelogramo, franjas, fuente Orbitron, cara de la I.A., "?", animaciones que ya existen) y cuidar el equilibrio del HUD; no agregar elementos al azar. Lo que el estilo escribe en escenas y prefabs se cambia en `UIStyleApplier` y se aplica con `Tools > Manners > UI`, no a mano en cada escena; esas herramientas las corre Claude, no el usuario.
 - Los botones y cajas de texto tienen tamaño fijo: al cambiar un texto, comprobar que quepa (fuente, tamaño, auto-size).
 - La UI se diseña en escenas/prefabs con referencias serializadas; no crear su jerarquía visual en runtime ni reemplazar referencias por búsquedas de nombres. Guía: `Docs/UI_AUTHORING.md`; accesos: `Tools > Manners > UI > Editar`.
 - Inglés por defecto y español mediante `LocalizedText`/`LocalizedString` editables en Inspector. Comprobar ambos idiomas con las capturas y `UIAuthoringTests`. No cambiar `OverrideData.PersistentId`: identifica el progreso guardado, independientemente del idioma o del nombre del archivo.
@@ -40,7 +43,7 @@ Indicaciones permanentes del usuario; aplican a cada tarea:
 ## Assets y serialización
 
 - Renombrar o mover scripts y assets siempre junto con su `.meta`. Al renombrar un campo serializado, añadir `[FormerlySerializedAs("nombreAnterior")]`.
-- Evitar editar escenas y prefabs como texto con Unity abierto: Unity puede sobrescribir el cambio al guardar.
+- Evitar editar escenas y prefabs como texto con Unity abierto: Unity puede sobrescribir el cambio al guardar. Los cambios se hacen con Unity en la copia de trabajo y se copian los archivos resultantes. Antes de copiarlos, `git status` debe mostrar esos archivos sin cambios del usuario; al entregar, se avisa que Unity puede pedir recargar una escena que estuviera abierta.
 
 ## Jira y Confluence
 

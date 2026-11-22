@@ -24,7 +24,7 @@ public class ChestOpeningSequence : MonoBehaviour
     private ParticleSystem chestBurst;
 
     [Header("Textos de la cinemática")]
-    [SerializeField] private LocalizedString skipHint = new LocalizedString("Press {0} to skip", "Pulsa {0} para saltar");
+    [SerializeField] private LocalizedString skipHint = new LocalizedString("Press {0} to close", "Presiona {0} para cerrar");
     [SerializeField] private LocalizedString spaceKey = new LocalizedString("Space", "Espacio");
 
     [SerializeField, Range(0, 1)] private float dimOpacity = .82f;

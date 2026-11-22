@@ -31,6 +31,28 @@ public static class HelicopterBroadcastTools
     private const float LiveHeight = 56f;
     private static readonly string[] ChannelLayoutParts = { "ChannelBlock", "Channel", "LiveBadge", "Live" };
     private const float MaskBleed = 24f;
+    private static readonly string[] RetiredSpanish =
+    {
+        "AVISTAN UNA CAJA MISTERIOSA",
+        "SUMINISTROS AL BANDO EQUIVOCADO",
+        "NUEVO PODER DEL ROBOT DESCONCIERTA",
+        "Sobre todo a derribar edificios, aclaran",
+        "Clases de etiqueta agotadas en toda la ciudad",
+        "Encuesta: 7 de cada 10 ya dan las gracias a las máquinas expendedoras",
+        "Panadería rebautiza el cuernito como \"pan de gracias\", por si acaso",
+        "El ejército presenta su nueva arma: una nota muy enérgica",
+        "Sindicato de tostadoras exige respeto tras los últimos sucesos",
+        "Bienes raíces: los penthouses ahora traen tragaluz gratis",
+        "El cabildo discute poner \"por favor\" en todas las señales de tránsito",
+        "Clima: se espera llovizna de refacciones en el centro",
+        "Auge turístico: los visitantes vienen a ver las fotos del \"antes\"",
+        "Las cafeterías imprimen \"gracias\" en cada ticket, por las dudas",
+        "Objetos perdidos: un tanque, ligeramente aplastado",
+        "Bolsa: las tarjetas de disculpa suben un 400 %",
+        "Ven al robot esperando en un semáforo en rojo; expertos desconcertados",
+        "Constructoras reportan demanda récord. Otra vez.",
+        "Manual de etiqueta, el libro más vendido de la ciudad"
+    };
 
     private static UIStyle style;
 
@@ -66,8 +88,10 @@ public static class HelicopterBroadcastTools
         else
         {
             int added = MergeDefaultTicker(existingNews);
+            int revised = ReviseDefaultNews(existingNews);
             EditorUtility.SetDirty(existingNews);
             if (added > 0) Debug.Log("[Helicóptero] " + added + " noticias nuevas agregadas al cintillo de " + NewsConfigPath + ".");
+            if (revised > 0) Debug.Log("[Helicóptero] " + revised + " frases de " + NewsConfigPath + " cambiadas por palabras más comunes.");
         }
 
         if (camera.maxDistanceScale < 1f || camera.slowFollowScale < 1f || camera.fastFollowScale <= 0f)
@@ -187,16 +211,16 @@ public static class HelicopterBroadcastTools
             H("ROBOT GETS STRONGER, AGAIN", "EL ROBOT SE HACE MÁS FUERTE",
               "Military budget redirected to apology cards", "El presupuesto militar se va en tarjetas de disculpa"),
             H("EXPERTS: \"IT IS LEARNING\"", "EXPERTOS: \"ESTÁ APRENDIENDO\"",
-              "Mostly how to knock down buildings, they add", "Sobre todo a derribar edificios, aclaran"),
+              "Mostly how to knock down buildings, they add", "Sobre todo a tirar edificios, aclaran"),
             H("ANALYSTS CONFIRM AN UPGRADE", "ANALISTAS CONFIRMAN UNA MEJORA",
               "\"We should have said please,\" admits a general", "\"Debimos decir por favor\", admite un general")
         });
 
         news.chestSpawned = new NewsStoryPool(1, new[]
         {
-            H("MYSTERY CRATE SPOTTED", "AVISTAN UNA CAJA MISTERIOSA",
+            H("MYSTERY CRATE SPOTTED", "APARECE UNA CAJA MISTERIOSA",
               "Authorities ask the robot not to open it. Politely.", "Las autoridades piden al robot no abrirla. Con educación."),
-            H("SUPPLY DROP GOES TO THE WRONG SIDE", "SUMINISTROS AL BANDO EQUIVOCADO",
+            H("SUPPLY DROP GOES TO THE WRONG SIDE", "LA AYUDA CAYÓ DEL LADO EQUIVOCADO",
               "Pilot says nobody thanked him either", "El piloto dice que a él tampoco le dieron las gracias")
         });
 
@@ -210,7 +234,7 @@ public static class HelicopterBroadcastTools
 
         news.overrideActivated = new NewsStoryPool(2, new[]
         {
-            H("NEW ROBOT POWER BAFFLES EXPERTS", "NUEVO PODER DEL ROBOT DESCONCIERTA",
+            H("NEW ROBOT POWER BAFFLES EXPERTS", "NUEVO PODER DEL ROBOT SORPRENDE",
               "Scientists \"have no idea how it did that\"", "Científicos \"no tienen idea de cómo lo hizo\""),
             H("ROBOT OVERLOAD DETECTED", "DETECTAN UNA SOBRECARGA EN EL ROBOT",
               "Military advises staying indoors and being polite", "El ejército recomienda quedarse en casa y ser amable")
@@ -232,41 +256,41 @@ public static class HelicopterBroadcastTools
 
         news.tickerItems = new[]
         {
-            L("Etiquette classes sold out across the city", "Clases de etiqueta agotadas en toda la ciudad"),
+            L("Etiquette classes sold out across the city", "Clases de buenos modales agotadas en toda la ciudad"),
             L("Local man says \"please\" to his toaster, survives", "Hombre dice \"por favor\" a su tostadora y sobrevive"),
             L("Traffic: avoid downtown, there is a giant robot", "Tránsito: evite el centro, hay un robot gigante"),
             L("Weather: sunny, with a chance of falling buildings", "Clima: soleado, con probabilidad de edificios cayendo"),
-            L("Poll: 7 in 10 residents now thank their vending machines", "Encuesta: 7 de cada 10 ya dan las gracias a las máquinas expendedoras"),
+            L("Poll: 7 in 10 residents now thank their vending machines", "Encuesta: 7 de cada 10 ya le dan las gracias a la máquina de refrescos"),
             L("Insurers add \"robot\" to the list of natural disasters", "Aseguradoras agregan \"robot\" a la lista de desastres naturales"),
             L("Weather update: 80% chance of laser beams this afternoon", "Clima: 80 % de probabilidad de rayos láser por la tarde"),
             L("Mayor apologizes to the robot; robot asks him to say it again, slower", "El alcalde se disculpa con el robot; el robot le pide repetirlo más despacio"),
-            L("Bakery renames its croissant the \"thank-you roll\", just in case", "Panadería rebautiza el cuernito como \"pan de gracias\", por si acaso"),
-            L("Military unveils its newest weapon: a strongly worded note", "El ejército presenta su nueva arma: una nota muy enérgica"),
+            L("Bakery renames its croissant the \"thank-you roll\", just in case", "Panadería le cambia el nombre al croissant: ahora es \"pan de gracias\", por si acaso"),
+            L("Military unveils its newest weapon: a strongly worded note", "El ejército presenta su nueva arma: una carta muy enojada"),
             L("Study: 100% of robots prefer a \"please\" over a tank", "Estudio: el 100 % de los robots prefiere un \"por favor\" a un tanque"),
-            L("Toaster union demands more respect after recent events", "Sindicato de tostadoras exige respeto tras los últimos sucesos"),
+            L("Toaster union demands more respect after recent events", "Sindicato de tostadoras exige respeto después de lo ocurrido"),
             L("Sports: tonight's match is cancelled, the stadium is now a parking lot", "Deportes: se cancela el partido; el estadio ahora es estacionamiento"),
-            L("Real estate: penthouses now come with a free skylight", "Bienes raíces: los penthouses ahora traen tragaluz gratis"),
+            L("Real estate: penthouses now come with a free skylight", "Bienes raíces: los penthouses ahora traen un agujero en el techo, gratis"),
             L("Smart fridges across the city refuse to open without a \"please\"", "Refrigeradores inteligentes se niegan a abrir sin un \"por favor\""),
             L("Breaking: a general says \"thank you\" for the first time; nobody believes it", "Última hora: un general dice \"gracias\" por primera vez y nadie le cree"),
             L("Tip of the day: hold the door for robots", "Consejo del día: ábrele la puerta a los robots"),
-            L("City council debates adding \"please\" to every traffic sign", "El cabildo discute poner \"por favor\" en todas las señales de tránsito"),
-            L("Weather: light drizzle of spare parts expected downtown", "Clima: se espera llovizna de refacciones en el centro"),
-            L("Tourism booms: visitors come to see the \"before\" photos", "Auge turístico: los visitantes vienen a ver las fotos del \"antes\""),
-            L("Coffee shops print \"thank you\" on every receipt, just to be safe", "Las cafeterías imprimen \"gracias\" en cada ticket, por las dudas"),
+            L("City council debates adding \"please\" to every traffic sign", "El gobierno de la ciudad quiere poner \"por favor\" en todas las señales de tránsito"),
+            L("Weather: light drizzle of spare parts expected downtown", "Clima: se espera llovizna de tornillos en el centro"),
+            L("Tourism booms: visitors come to see the \"before\" photos", "Turismo: los visitantes vienen a ver las fotos del \"antes\""),
+            L("Coffee shops print \"thank you\" on every receipt, just to be safe", "Las cafeterías imprimen \"gracias\" en cada ticket, solo por si acaso"),
             L("Scientists confirm: the robot really did hear what you said", "Científicos confirman: el robot sí escuchó lo que dijiste"),
-            L("Lost and found: one tank, slightly flattened", "Objetos perdidos: un tanque, ligeramente aplastado"),
+            L("Lost and found: one tank, slightly flattened", "Objetos perdidos: un tanque, un poco aplastado"),
             L("Experts recommend saying \"good morning\" to your smart speaker", "Expertos recomiendan dar los buenos días a tu bocina inteligente"),
             L("Local grandma: \"I always said please, that's why I'm fine\"", "Abuelita local: \"Yo siempre dije por favor, por eso estoy bien\""),
             L("Pizza deliveries delayed by giant footprints", "Entregas de pizza retrasadas por huellas gigantes"),
             L("School adds \"Manners for Machines\" to the curriculum", "Escuela agrega la materia \"Modales para máquinas\""),
-            L("Stock market: apology cards up 400%", "Bolsa: las tarjetas de disculpa suben un 400 %"),
+            L("Stock market: apology cards up 400%", "Bolsa de valores: las tarjetas de disculpa suben 400 %"),
             L("Garage offers 2-for-1 tank repairs all week", "Taller mecánico ofrece 2x1 en reparación de tanques toda la semana"),
             L("Weather: cloudy with scattered explosions, bring an umbrella", "Clima: nublado con explosiones aisladas, lleve paraguas"),
             L("Officials remind citizens the robot can't hear insults. Probably.", "Autoridades recuerdan que el robot no oye los insultos. Probablemente."),
-            L("Robot spotted waiting at a red light; experts baffled", "Ven al robot esperando en un semáforo en rojo; expertos desconcertados"),
-            L("Construction companies report record demand. Again.", "Constructoras reportan demanda récord. Otra vez."),
+            L("Robot spotted waiting at a red light; experts baffled", "Ven al robot esperando en un semáforo en rojo; los expertos no lo entienden"),
+            L("Construction companies report record demand. Again.", "Las constructoras tienen más trabajo que nunca. Otra vez."),
             L("Pigeons move to a quieter city, citing the noise", "Las palomas se mudan a otra ciudad por el ruido"),
-            L("Etiquette manual becomes the city's best-seller", "Manual de etiqueta, el libro más vendido de la ciudad"),
+            L("Etiquette manual becomes the city's best-seller", "Manual de buenos modales, el libro más vendido de la ciudad"),
             L("Robot-themed apology cards now in every store", "Tarjetas de disculpa con robots ya en todas las tiendas")
         };
         news.tickerItemsPerLoop = 8;
@@ -296,6 +320,60 @@ public static class HelicopterBroadcastTools
         {
             Object.DestroyImmediate(defaults);
         }
+    }
+
+    public static int ReviseDefaultNews(NewsBroadcastConfig news)
+    {
+        NewsBroadcastConfig defaults = ScriptableObject.CreateInstance<NewsBroadcastConfig>();
+        try
+        {
+            ApplyDefaultNews(defaults);
+            int revised = 0;
+            if (news.tickerItems != null)
+                for (int i = 0; i < news.tickerItems.Length; i++)
+                    revised += Revise(ref news.tickerItems[i], defaults.tickerItems);
+
+            for (int story = 0; story < NewsBroadcastConfig.StoryCount; story++)
+            {
+                NewsHeadline[] headlines = news.Pool((NewsStory)story).headlines;
+                NewsHeadline[] defaultHeadlines = defaults.Pool((NewsStory)story).headlines;
+                if (headlines == null || defaultHeadlines == null) continue;
+
+                var defaultTitles = new LocalizedString[defaultHeadlines.Length];
+                var defaultSublines = new LocalizedString[defaultHeadlines.Length];
+                for (int i = 0; i < defaultHeadlines.Length; i++)
+                {
+                    defaultTitles[i] = defaultHeadlines[i].headline;
+                    defaultSublines[i] = defaultHeadlines[i].subline;
+                }
+                for (int i = 0; i < headlines.Length; i++)
+                {
+                    revised += Revise(ref headlines[i].headline, defaultTitles);
+                    revised += Revise(ref headlines[i].subline, defaultSublines);
+                }
+            }
+            return revised;
+        }
+        finally
+        {
+            Object.DestroyImmediate(defaults);
+        }
+    }
+
+    private static int Revise(ref LocalizedString target, LocalizedString[] defaults)
+    {
+        string spanish = target.Get(GameLanguage.Spanish);
+        if (System.Array.IndexOf(RetiredSpanish, spanish) < 0) return 0;
+
+        string english = target.Get(GameLanguage.English);
+        foreach (LocalizedString candidate in defaults)
+        {
+            if (candidate.Get(GameLanguage.English) != english) continue;
+            if (candidate.Get(GameLanguage.Spanish) == spanish) return 0;
+            target = candidate;
+            return 1;
+        }
+        return 0;
     }
 
     public static GameObject BuildOverlayPrefab()

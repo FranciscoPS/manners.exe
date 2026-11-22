@@ -40,7 +40,7 @@ public class UIResponsiveLayoutTests
         foreach (RectTransform frame in frames) EnableAncestors(frame);
         RectTransform[] headers = Components<RectTransform>(scene)
             .Where(rect => rect.Find("StyleRibbon") != null && DirectTexts(rect).Any()).ToArray();
-        if (path != UIAuthoringTools.Scenes[3]) Assert.IsNotEmpty(headers, path + ": faltan los títulos de las pantallas.");
+        Assert.IsNotEmpty(headers, path + ": faltan los títulos de las pantallas.");
 
         using (var viewport = new LayoutViewport(scene))
         {

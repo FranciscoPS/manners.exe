@@ -26,10 +26,16 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         public TextMeshProUGUI value;
         public Button previous;
         public Button next;
+        public Slider slider;
         [Tooltip("Explicación que aparece abajo al elegir esta opción.")]
         public LocalizedString hint;
         public Func<string> read;
+        public Func<float> sliderValue;
         public Func<bool> available;
+
+        public Selectable Left => previous != null ? previous : (Selectable)slider;
+
+        public Selectable Right => next != null ? next : (Selectable)slider;
     }
 
     [Header("Textos editables")]
@@ -42,17 +48,17 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
     [SerializeField] private LocalizedString speedSlow = new LocalizedString("Slow", "Lenta");
     [SerializeField] private LocalizedString speedNormal = new LocalizedString("Normal", "Normal");
     [SerializeField] private LocalizedString speedFast = new LocalizedString("Fast", "Rápida");
-    [SerializeField] private LocalizedString distanceVeryClose = new LocalizedString("Very close", "Muy cerca");
-    [SerializeField] private LocalizedString distanceClose = new LocalizedString("Close", "Cerca");
-    [SerializeField] private LocalizedString distanceNormal = new LocalizedString("Normal", "Normal");
-    [SerializeField] private LocalizedString distanceFar = new LocalizedString("Far", "Lejos");
-    [SerializeField] private LocalizedString distanceVeryFar = new LocalizedString("Very far", "Muy lejos");
-    [SerializeField] private LocalizedString savedInstantly = new LocalizedString("Changes are saved instantly.", "Los cambios se guardan al momento.");
+    [Tooltip("Lectura del slider de distancia; {0} es la posición de 0 a 100.")]
+    [SerializeField] private LocalizedString distanceValue = new LocalizedString("{0}%", "{0}%");
+    [SerializeField] private LocalizedString applyHint = new LocalizedString("Changes are saved when you press Apply.", "Los cambios se guardan al pulsar Aplicar.");
+    [SerializeField] private LocalizedString pendingChanges = new LocalizedString("Unsaved changes. Press Apply to save.", "Cambios pendientes. Pulsa Aplicar para guardarlos.");
+    [SerializeField] private LocalizedString applied = new LocalizedString("Settings applied and saved.", "Configuración aplicada y guardada.");
     [SerializeField] private LocalizedString resetDone = new LocalizedString("Recommended settings restored.", "Valores recomendados restablecidos.");
 
     [Header("Referencias del prefab")]
     [SerializeField] private List<SettingRow> rows = new List<SettingRow>();
     [SerializeField] private Button entryButton;
+    [SerializeField] private Button applyButton;
     [SerializeField] private Button resetButton;
     [SerializeField] private Button backButton;
     [SerializeField] private TextMeshProUGUI hintText;
@@ -62,7 +68,7 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
     private GameAccessibilitySettings.SettingsData draft;
     private GameObject lastSelected;
     private int hintRow = PresetRow;
-    private bool showingReset;
+    private LocalizedString status;
     private static int lastBackFrame = -1;
 
     public bool IsOpen => gameObject.activeInHierarchy;
@@ -91,8 +97,9 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         Bind(LockRow, () => OnOff(draft.lockOnRobot), step => draft.lockOnRobot = !draft.lockOnRobot);
         Bind(DeadZoneRow, () => OnOff(draft.deadZone), step => draft.deadZone = !draft.deadZone, Unlocked);
         Bind(FollowSpeedRow, ReadFollowSpeed, step => draft.followSpeed = Mathf.Clamp(draft.followSpeed + step, 0, GameAccessibilitySettings.FollowSpeedSteps - 1), Unlocked);
-        Bind(DistanceRow, ReadDistance, step => draft.cameraDistance = Mathf.Clamp(draft.cameraDistance + step, 0, GameAccessibilitySettings.DistanceSteps - 1));
+        BindSlider(DistanceRow, ReadDistance, () => draft.cameraDistance, value => draft.cameraDistance = value);
         Bind(TvFilterRow, () => OnOff(draft.tvFilter), step => draft.tvFilter = !draft.tvFilter);
+        if (applyButton != null) applyButton.onClick.AddListener(ApplySettings);
         if (resetButton != null) resetButton.onClick.AddListener(ResetSettings);
         if (backButton != null) backButton.onClick.AddListener(Close);
     }
@@ -104,10 +111,10 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         GameAccessibilitySettings.Changed += RefreshFromService;
         GameLocalization.LanguageChanged += RefreshLanguage;
         UpdateManager.Instance?.Register(this);
-        showingReset = false;
         hintRow = PresetRow;
         RefreshFromService();
-        Focus(rows[PresetRow].next);
+        SetStatus(applyHint);
+        Focus(rows[PresetRow].Right);
     }
 
     private void OnDisable()
@@ -144,12 +151,32 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         if (row.next != null) row.next.onClick.AddListener(() => Edit(index, edit, 1));
     }
 
+    private void BindSlider(int index, Func<string> read, Func<float> current, Action<float> edit)
+    {
+        SettingRow row = rows[index];
+        row.read = read;
+        row.sliderValue = current;
+        if (row.slider == null) return;
+
+        row.slider.onValueChanged.AddListener(value =>
+        {
+            edit(value);
+            RefreshRows();
+            MarkChanged(index);
+        });
+    }
+
     private void Edit(int index, Action<int> edit, int step)
     {
         edit(step);
-        showingReset = false;
-        GameAccessibilitySettings.Apply(draft);
+        RefreshRows();
+        MarkChanged(index);
+    }
+
+    private void MarkChanged(int index)
+    {
         ShowHint(index);
+        SetStatus(GameAccessibilitySettings.SameSettings(draft, GameAccessibilitySettings.Current) ? applyHint : pendingChanges);
     }
 
     private void StepPreset(int step)
@@ -162,45 +189,57 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         draft = GameAccessibilitySettings.WithPreset(draft, (GameAccessibilitySettings.CameraPreset)next);
     }
 
+    private void ApplySettings()
+    {
+        GameAccessibilitySettings.Apply(draft);
+        SetStatus(applied);
+    }
+
     private void ResetSettings()
     {
         GameAccessibilitySettings.ResetToDefaults();
-        showingReset = true;
-        RefreshStatus();
+        SetStatus(resetDone);
     }
 
     private void RefreshFromService()
     {
         draft = GameAccessibilitySettings.Current;
         RefreshRows();
-        RefreshStatus();
     }
 
     private void RefreshLanguage()
     {
         RefreshRows();
-        RefreshStatus();
-        ShowHint(hintRow);
+        SetStatus(status);
     }
 
     private void RefreshRows()
     {
         foreach (SettingRow row in rows)
         {
-            if (row.read == null || row.value == null) continue;
-            row.value.text = row.read();
+            if (row.read == null) continue;
             bool enabled = row.available == null || row.available();
+            if (row.value != null)
+            {
+                row.value.text = row.read();
+                row.value.alpha = enabled ? 1f : 0.45f;
+            }
             if (row.previous != null) row.previous.interactable = enabled;
             if (row.next != null) row.next.interactable = enabled;
-            row.value.alpha = enabled ? 1f : 0.45f;
+            if (row.slider != null)
+            {
+                row.slider.interactable = enabled;
+                if (row.sliderValue != null) row.slider.SetValueWithoutNotify(row.sliderValue());
+            }
         }
         ConfigureNavigation();
         ShowHint(hintRow);
     }
 
-    private void RefreshStatus()
+    private void SetStatus(LocalizedString message)
     {
-        if (statusText != null) statusText.text = showingReset ? resetDone.Value : savedInstantly.Value;
+        status = message;
+        if (statusText != null) statusText.text = message.Value;
     }
 
     private void ShowHint(int index)
@@ -216,10 +255,12 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         for (int i = 0; i < rows.Count; i++)
         {
             SettingRow row = rows[i];
-            if ((row.previous != null && row.previous.gameObject == selected) || (row.next != null && row.next.gameObject == selected)) return i;
+            if (IsObject(row.previous, selected) || IsObject(row.next, selected) || IsObject(row.slider, selected)) return i;
         }
         return -1;
     }
+
+    private static bool IsObject(Component component, GameObject target) => component != null && component.gameObject == target;
 
     private void Close()
     {
@@ -233,36 +274,50 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
     {
         activeRows.Clear();
         foreach (SettingRow row in rows)
-            if (row.previous != null && row.previous.interactable) activeRows.Add(row);
+        {
+            Selectable left = row.Left;
+            if (left != null && left.interactable) activeRows.Add(row);
+        }
         for (int i = 0; i < activeRows.Count; i++)
         {
             SettingRow row = activeRows[i];
-            Selectable upLeft = i == 0 ? backButton : activeRows[i - 1].previous;
-            Selectable upRight = i == 0 ? resetButton : activeRows[i - 1].next;
-            Selectable downLeft = i == activeRows.Count - 1 ? backButton : activeRows[i + 1].previous;
-            Selectable downRight = i == activeRows.Count - 1 ? resetButton : activeRows[i + 1].next;
+            Selectable upLeft = i == 0 ? backButton : activeRows[i - 1].Left;
+            Selectable upRight = i == 0 ? applyButton : activeRows[i - 1].Right;
+            Selectable downLeft = i == activeRows.Count - 1 ? backButton : activeRows[i + 1].Left;
+            Selectable downRight = i == activeRows.Count - 1 ? applyButton : activeRows[i + 1].Right;
+            if (row.previous == null && row.next == null)
+            {
+                SetNavigation(row.slider, null, null, upLeft, downLeft);
+                continue;
+            }
             SetNavigation(row.previous, row.next, row.next, upLeft, downLeft);
             SetNavigation(row.next, row.previous, row.previous, upRight, downRight);
         }
         if (activeRows.Count == 0) return;
-        SetNavigation(backButton, resetButton, resetButton, activeRows[activeRows.Count - 1].previous, activeRows[0].previous);
-        SetNavigation(resetButton, backButton, backButton, activeRows[activeRows.Count - 1].next, activeRows[0].next);
+
+        Selectable firstLeft = activeRows[0].Left;
+        Selectable firstRight = activeRows[0].Right;
+        Selectable lastLeft = activeRows[activeRows.Count - 1].Left;
+        Selectable lastRight = activeRows[activeRows.Count - 1].Right;
+        SetNavigation(backButton, applyButton, resetButton, lastLeft, firstLeft);
+        SetNavigation(resetButton, backButton, applyButton, lastLeft, firstLeft);
+        SetNavigation(applyButton, resetButton, backButton, lastRight, firstRight);
     }
 
-    private static void SetNavigation(Button button, Selectable left, Selectable right, Selectable up, Selectable down)
+    private static void SetNavigation(Selectable target, Selectable left, Selectable right, Selectable up, Selectable down)
     {
-        if (button == null) return;
-        button.navigation = new Navigation
+        if (target == null) return;
+        target.navigation = new Navigation
         {
             mode = Navigation.Mode.Explicit,
             selectOnLeft = left, selectOnRight = right, selectOnUp = up, selectOnDown = down
         };
     }
 
-    private static void Focus(Button button)
+    private static void Focus(Selectable target)
     {
-        if (button != null && button.gameObject.activeInHierarchy && button.IsInteractable() && EventSystem.current != null)
-            EventSystem.current.SetSelectedGameObject(button.gameObject);
+        if (target != null && target.gameObject.activeInHierarchy && target.IsInteractable() && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(target.gameObject);
     }
 
     private bool Unlocked() => !draft.lockOnRobot;
@@ -286,15 +341,5 @@ public sealed class AccessibilitySettingsMenu : MonoBehaviour, IUpdateable
         return draft.followSpeed > GameAccessibilitySettings.NormalFollowSpeed ? speedFast.Value : speedNormal.Value;
     }
 
-    private string ReadDistance()
-    {
-        switch (draft.cameraDistance)
-        {
-            case 0: return distanceVeryClose.Value;
-            case 1: return distanceClose.Value;
-            case 3: return distanceFar.Value;
-            case 4: return distanceVeryFar.Value;
-            default: return distanceNormal.Value;
-        }
-    }
+    private string ReadDistance() => distanceValue.Format(Mathf.RoundToInt(draft.cameraDistance * 100f));
 }

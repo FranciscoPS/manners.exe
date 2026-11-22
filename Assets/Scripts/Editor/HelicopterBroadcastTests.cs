@@ -242,25 +242,35 @@ public class HelicopterBroadcastTests
     }
 
     [Test]
-    public void DistanceStepsSpreadFromTheClosestToTheFarthestWithNormalInTheMiddle()
+    public void DistanceSliderGoesFromTheClosestToTheFarthestWithNormalInTheMiddle()
     {
-        var scales = new float[5];
+        float normal = GameAccessibilitySettings.NormalCameraDistance;
 
-        for (int step = 0; step < scales.Length; step++) scales[step] = HelicopterCameraMath.DistanceScale(step, 5, 0.8f, 1.3f);
+        float closest = HelicopterCameraMath.DistanceScale(0f, normal, 0.8f, 1.3f);
+        float quarter = HelicopterCameraMath.DistanceScale(0.25f, normal, 0.8f, 1.3f);
+        float middle = HelicopterCameraMath.DistanceScale(normal, normal, 0.8f, 1.3f);
+        float farthest = HelicopterCameraMath.DistanceScale(1f, normal, 0.8f, 1.3f);
 
-        Assert.AreEqual(0.8f, scales[0], Tolerance);
-        Assert.AreEqual(0.9f, scales[1], Tolerance);
-        Assert.AreEqual(1f, scales[2], Tolerance);
-        Assert.AreEqual(1.15f, scales[3], Tolerance);
-        Assert.AreEqual(1.3f, scales[4], Tolerance);
+        Assert.AreEqual(0.8f, closest, Tolerance);
+        Assert.AreEqual(0.9f, quarter, Tolerance);
+        Assert.AreEqual(1f, middle, Tolerance);
+        Assert.AreEqual(1.3f, farthest, Tolerance);
+    }
+
+    [Test]
+    public void DefaultDistanceMatchesTheOldFarStep()
+    {
+        float scale = HelicopterCameraMath.DistanceScale(GameAccessibilitySettings.DefaultCameraDistance, GameAccessibilitySettings.NormalCameraDistance, 0.8f, 1.3f);
+
+        Assert.AreEqual(1.15f, scale, Tolerance);
     }
 
     [Test]
     public void MissingDistanceRangeKeepsTheNormalFraming()
     {
-        float closest = HelicopterCameraMath.DistanceScale(0, 5, 0f, 0f);
+        float closest = HelicopterCameraMath.DistanceScale(0f, GameAccessibilitySettings.NormalCameraDistance, 0f, 0f);
 
-        float farthest = HelicopterCameraMath.DistanceScale(4, 5, 0f, 0f);
+        float farthest = HelicopterCameraMath.DistanceScale(1f, GameAccessibilitySettings.NormalCameraDistance, 0f, 0f);
 
         Assert.AreEqual(1f, closest, Tolerance);
         Assert.AreEqual(1f, farthest, Tolerance);
@@ -319,6 +329,38 @@ public class HelicopterBroadcastTests
             Assert.AreEqual(defaults.tickerItems.Length + 1, news.tickerItems.Length);
             Assert.AreEqual("Custom line", news.tickerItems[1].Get(GameLanguage.English));
             Assert.AreEqual(defaults.tickerItemsPerLoop, news.tickerItemsPerLoop);
+        }
+        finally
+        {
+            Object.DestroyImmediate(news);
+            Object.DestroyImmediate(defaults);
+        }
+    }
+
+    [Test]
+    public void RevisingDefaultNewsSwapsOnlyTheRetiredSpanishWording()
+    {
+        NewsBroadcastConfig news = ScriptableObject.CreateInstance<NewsBroadcastConfig>();
+        NewsBroadcastConfig defaults = ScriptableObject.CreateInstance<NewsBroadcastConfig>();
+        try
+        {
+            HelicopterBroadcastTools.ApplyDefaultNews(defaults);
+            HelicopterBroadcastTools.ApplyDefaultNews(news);
+            int council = System.Array.FindIndex(defaults.tickerItems, item => item.Get(GameLanguage.English).StartsWith("City council"));
+            string councilEnglish = defaults.tickerItems[council].Get(GameLanguage.English);
+            news.tickerItems[council] = new LocalizedString(councilEnglish, "El cabildo discute poner \"por favor\" en todas las señales de tránsito");
+            news.tickerItems[0] = new LocalizedString(defaults.tickerItems[0].Get(GameLanguage.English), "Mi propia frase");
+            news.chestSpawned.headlines[0].headline = new LocalizedString("MYSTERY CRATE SPOTTED", "AVISTAN UNA CAJA MISTERIOSA");
+
+            int revised = HelicopterBroadcastTools.ReviseDefaultNews(news);
+            int again = HelicopterBroadcastTools.ReviseDefaultNews(news);
+
+            Assert.AreEqual(2, revised);
+            Assert.AreEqual(0, again);
+            Assert.AreEqual(defaults.tickerItems[council].Get(GameLanguage.Spanish), news.tickerItems[council].Get(GameLanguage.Spanish));
+            Assert.AreEqual("Mi propia frase", news.tickerItems[0].Get(GameLanguage.Spanish));
+            Assert.AreEqual(defaults.chestSpawned.headlines[0].headline.Get(GameLanguage.Spanish), news.chestSpawned.headlines[0].headline.Get(GameLanguage.Spanish));
+            foreach (LocalizedString item in defaults.tickerItems) StringAssert.DoesNotContain("cabildo", item.Get(GameLanguage.Spanish));
         }
         finally
         {
