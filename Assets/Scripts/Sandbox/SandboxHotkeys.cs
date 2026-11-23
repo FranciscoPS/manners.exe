@@ -46,6 +46,10 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
     [SerializeField] private Key spawnChest = Key.F12;
     [SerializeField] private Key reloadSandbox = Key.Backspace;
 
+    [Header("Cámara de helicóptero")]
+    [Tooltip("Alterna entre el modo noticiero (cámara de helicóptero, lente y rótulo) y la cámara de siempre, para comparar.")]
+    [SerializeField] private Key toggleBroadcast = Key.B;
+
     public bool IsActive => isActiveAndEnabled;
 
     private void OnEnable()
@@ -110,6 +114,9 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
 
         if (WasPressed(keyboard, reloadSandbox))
             SandboxCommands.ReloadSandbox();
+
+        if (WasPressed(keyboard, toggleBroadcast))
+            SandboxCommands.ToggleBroadcastMode();
     }
 
     private static bool WasPressed(Keyboard keyboard, Key key)
@@ -125,6 +132,6 @@ public class SandboxHotkeys : MonoBehaviour, IUpdateable
         return $"{togglePanel}=panel  {toggleOverrideHints}=panel de sobrecargas  {clearOverrideDiscoveries}=borrar progreso sobrecargas  {grantLevel}=+1 nivel  {grantRandomUpgrade}=mejora  {grantRandomPremiumUpgrade}=mejora premium  " +
                $"{spawnEnemyBurst}=ráfaga x{burstAmount}  {killAllEnemies}=matar todo  {addCurrency}=+{currencyPerPress} monedas/diamantes  " +
                $"{toggleInvulnerable}=invulnerable  {killPlayer}=morir  {toggleSpawning}=pausar spawns  {forceFinalRush}=oleada final  " +
-               $"{cycleTimeScale}=time scale  {spawnChest}=cofre  {reloadSandbox}=reiniciar";
+               $"{cycleTimeScale}=time scale  {spawnChest}=cofre  {reloadSandbox}=reiniciar  {toggleBroadcast}=cámara de helicóptero";
     }
 }

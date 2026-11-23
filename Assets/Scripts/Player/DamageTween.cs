@@ -1,4 +1,5 @@
 using DG.Tweening;
+using DG.Tweening.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,6 +30,9 @@ public class DamageTween : MonoBehaviour
 
     private Tween damageTween;
     private bool isInitialized = false;
+    private DOGetter<Color> getColor;
+    private DOSetter<Color> setColor;
+    private TweenCallback restoreColors;
 
     private void Awake()
     {
@@ -121,24 +125,36 @@ public class DamageTween : MonoBehaviour
         if (spriteRenderer == null && uiGraphic == null && (renderers == null || renderers.Length == 0))
             return;
 
+        if (damageTween != null && damageTween.IsActive() && damageTween.IsPlaying())
+            return;
+
         damageTween?.Kill(true);
+
+        if (getColor == null)
+        {
+            getColor = GetCurrentColor;
+            setColor = SetTargetColor;
+            restoreColors = RestoreIfAlive;
+        }
 
         float adjustedTweenTime = tweenTime / Mathf.Max(1, tweenLoops);
 
-        damageTween = DOTween.To(
-            () => currentColor,
-            SetTargetColor,
-            damageColor,
-            adjustedTweenTime
-        )
-        .SetLoops(tweenLoops, LoopType.Yoyo)
-        .OnComplete(() =>
+        damageTween = DOTween.To(getColor, setColor, damageColor, adjustedTweenTime)
+            .SetLoops(tweenLoops, LoopType.Yoyo)
+            .OnComplete(restoreColors);
+    }
+
+    private Color GetCurrentColor()
+    {
+        return currentColor;
+    }
+
+    private void RestoreIfAlive()
+    {
+        if (this != null)
         {
-            if (this != null)
-            {
-                RestoreOriginalColors();
-            }
-        });
+            RestoreOriginalColors();
+        }
     }
 
     private void SetTargetColor(Color color)

@@ -17,6 +17,8 @@ public class OverrideActivationHUD : MonoBehaviour, IUpdateable
     public static bool Exists => instance != null;
 
     [SerializeField] private float cellSize = 54f;
+    [Tooltip("Al terminar el aviso, el icono de la sobrecarga aparece y vuela a la tira bajo el cronómetro (o al panel de sobrecargas). Apagado: el aviso termina con el nombre y no se coloca ningún icono.")]
+    [SerializeField] private bool placeIcons = false;
 
     [Header("Ritmo del aviso")]
     [SerializeField] private LocalizedString activatedMessage = new LocalizedString("OVERRIDE ACTIVATED", "SOBRECARGA ACTIVADA");
@@ -205,6 +207,16 @@ public class OverrideActivationHUD : MonoBehaviour, IUpdateable
 
         yield return PlayTextPhase(nameText, nameGroup, nameGlitch, namePlate, overrideData.overrideName, nameHold);
         yield return new WaitForSecondsRealtime(phaseGap);
+
+        if (!placeIcons)
+        {
+            banner.gameObject.SetActive(false);
+            OverrideHudPanel landingPanel = OverrideHudPanel.Instance;
+            if (landingPanel != null) landingPanel.Land(overrideData);
+            current = null;
+            playing = null;
+            yield break;
+        }
 
         ApplyIcon(bannerIcon, bannerFallback, overrideData.icon);
         bannerIconRect.gameObject.SetActive(true);

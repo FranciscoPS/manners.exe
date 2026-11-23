@@ -24,7 +24,7 @@ public class ChestOpeningSequence : MonoBehaviour
     private ParticleSystem chestBurst;
 
     [Header("Textos de la cinemática")]
-    [SerializeField] private LocalizedString skipHint = new LocalizedString("Press {0} to skip", "Pulsa {0} para saltar");
+    [SerializeField] private LocalizedString skipHint = new LocalizedString("Press {0} to close", "Presiona {0} para cerrar");
     [SerializeField] private LocalizedString spaceKey = new LocalizedString("Space", "Espacio");
 
     [SerializeField, Range(0, 1)] private float dimOpacity = .82f;
@@ -117,7 +117,7 @@ public class ChestOpeningSequence : MonoBehaviour
         skipHintGroup.alpha = 1f;
         auraGroup.alpha = 1f;
         promptText.GetComponent<LocalizedText>()?.Apply();
-        skipHintText.text = config.allowSkip ? skipHint.Format(KeyLabel(config.skipKey)) : "";
+        skipHintText.text = config.allowSkip ? skipHint.Format(KeyCap(KeyLabel(config.skipKey))) : "";
 
         aura.SpinMultiplier = 0.3f;
         aura.Play();
@@ -299,6 +299,16 @@ public class ChestOpeningSequence : MonoBehaviour
 
         float scale = 1f + Mathf.Sin(Time.unscaledTime * 6f) * 0.05f * intensity;
         promptText.rectTransform.localScale = Vector3.one * scale;
+
+        float hintScale = 1f + Mathf.Sin(Time.unscaledTime * 4f) * 0.04f;
+        skipHintGroup.transform.localScale = Vector3.one * hintScale;
+    }
+
+    private static string KeyCap(string label)
+    {
+        UIStyle style = UIStyle.Instance;
+        string key = "[ " + label.ToUpperInvariant() + " ]";
+        return style != null ? "<color=#" + ColorUtility.ToHtmlStringRGB(style.cyan) + ">" + key + "</color>" : key;
     }
 
     private void FinishInstantly(Animator chestAnimator)

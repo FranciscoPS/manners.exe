@@ -42,6 +42,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
     [SerializeField] private float attackRadius = 1.5f;
     [Tooltip("Cada cuánto (seg) se recalcula el destino del NavMeshAgent. Bajarlo hace que persigan al jugador con más precisión pero cuesta más CPU con muchos enemigos activos.")]
     [SerializeField] private float pathUpdateInterval = 0.2f;
+    [Tooltip("Empujón mínimo, en metros, que se llega a aplicar. Por debajo (por ejemplo con la resistencia del overtime) se ignora: apagar el NavMeshAgent y volver dinámico el Rigidbody por un empujón imperceptible amontona cuerpos físicos y dispara el costo de la física.")]
+    [Min(0f)] [SerializeField] private float minimumKnockbackDistance = 0.3f;
 
     private const float StuckCheckInterval = 5f;
     private const float StuckMoveThreshold = 0.8f;
@@ -53,7 +55,11 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     private float pathUpdateTimer = 0f;
 
-    public float ContactDamage => contactDamage;
+    public float ContactDamage => Mathf.Max(contactDamage, FinalRushScaling.MinContactDamage);
+
+    public float ControlResistance => Mathf.Max(controlResistance, FinalRushScaling.ControlResistance);
+
+    private float MoveSpeed => Mathf.Max(moveSpeed, FinalRushScaling.MinSpeed);
 
     public bool IsActive => gameObject.activeInHierarchy && enabled;
 
@@ -66,8 +72,10 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
     public void ApplySlow(float multiplier, float duration)
     {
-        float resisted = Mathf.Lerp(Mathf.Clamp01(multiplier), 1f, controlResistance);
-        float resistedDuration = duration * (1f - controlResistance);
+        float resistance = ControlResistance;
+        if (resistance >= 1f) return;
+        float resisted = Mathf.Lerp(Mathf.Clamp01(multiplier), 1f, resistance);
+        float resistedDuration = duration * (1f - resistance);
         bool strongerSlowStillActive = Time.time < slowEndTime && slowMultiplier < resisted;
 
         if (strongerSlowStillActive) return;
@@ -194,7 +202,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (useNavMesh && agent != null && agent.isOnNavMesh)
         {
-            agent.speed = moveSpeed * CurrentSpeedMultiplier();
+            agent.speed = MoveSpeed * CurrentSpeedMultiplier();
 
             stuckTimer += deltaTime;
             if (stuckTimer >= StuckCheckInterval)
@@ -270,7 +278,7 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
 
         if (!useNavMesh && rb != null && player != null)
         {
-            float currentSpeed = moveSpeed * CurrentSpeedMultiplier();
+            float currentSpeed = MoveSpeed * CurrentSpeedMultiplier();
             Vector3 direction = (player.position - transform.position).normalized;
             rb.linearVelocity = new Vector3(
                 direction.x * currentSpeed + separation.x,
@@ -333,9 +341,12 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
         }
     }
 
-    public void ApplyKnockback(Vector3 direction, float force, float duration)
+    public bool ApplyKnockback(Vector3 direction, float force, float duration)
     {
-        if (force <= 0f) return;
+        float resistance = ControlResistance;
+        force *= 1f - resistance;
+        duration *= 1f - resistance;
+        if (force <= 0f || duration <= 0f || force * duration < minimumKnockbackDistance) return false;
 
         if (agent != null && agent.enabled)
         {
@@ -356,6 +367,8 @@ public class EnemyController : MonoBehaviour, IUpdateable, IFixedUpdateable
             rb.linearVelocity = knockbackVelocity;
             UpdateManager.Instance?.Register(this as IFixedUpdateable);
         }
+
+        return true;
     }
 
     private void EndKnockback()

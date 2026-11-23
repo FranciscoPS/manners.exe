@@ -15,8 +15,12 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     [Tooltip("Colección de sobrecargas. También se abre directamente desde el menú principal y desde la pausa.")]
     [SerializeField] private GameObject overridesScreen;
     [SerializeField] private GraphicsSettingsMenu graphics;
+    [Tooltip("Pantalla de accesibilidad: cámara, sacudidas y filtro de imagen.")]
+    [SerializeField] private AccessibilitySettingsMenu accessibility;
     [Tooltip("Selector de idioma de la pantalla principal; el botón Idioma lo muestra y lo oculta.")]
     [SerializeField] private GameObject languagePanel;
+    [Tooltip("Ventana de confirmación compartida (¿seguro que quieres...?). La usan la pausa y el menú principal; los textos de cada pregunta se editan en quien la abre.")]
+    [SerializeField] private ConfirmDialog confirmDialog;
 
     private static int lastBackFrame = -1;
     private GameObject currentScreen;
@@ -26,6 +30,8 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     public event Action AudioClosed;
 
     public bool IsOpen => currentScreen != null;
+    public ConfirmDialog Confirmation => confirmDialog;
+    public bool IsConfirming => confirmDialog != null && confirmDialog.IsOpen;
     public bool IsActive => isActiveAndEnabled;
     public static bool ConsumedBackThisFrame => lastBackFrame == Time.frameCount;
 
@@ -43,18 +49,22 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
         Hide(helpScreen);
         Hide(overridesScreen);
         if (graphics != null) Hide(graphics.gameObject);
+        if (accessibility != null) Hide(accessibility.gameObject);
         Hide(languagePanel);
+        if (confirmDialog != null) Hide(confirmDialog.gameObject);
     }
 
     private void OnEnable()
     {
         if (graphics != null) graphics.Closed += OnGraphicsClosed;
+        if (accessibility != null) accessibility.Closed += OnAccessibilityClosed;
         UpdateManager.Instance?.Register(this);
     }
 
     private void OnDisable()
     {
         if (graphics != null) graphics.Closed -= OnGraphicsClosed;
+        if (accessibility != null) accessibility.Closed -= OnAccessibilityClosed;
         UpdateManager.Instance?.Unregister(this);
     }
 
@@ -78,6 +88,11 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
     public void ShowGraphics()
     {
         if (graphics != null) Show(graphics.gameObject);
+    }
+
+    public void ShowAccessibility()
+    {
+        if (accessibility != null) Show(accessibility.gameObject);
     }
 
     public void ShowOverrides()
@@ -151,11 +166,20 @@ public sealed class OptionsMenu : MonoBehaviour, IUpdateable
         ShowHub();
     }
 
+    private void OnAccessibilityClosed()
+    {
+        if (accessibility == null || currentScreen != accessibility.gameObject) return;
+
+        currentScreen = null;
+        ShowHub();
+    }
+
     public void OnUpdate(float deltaTime)
     {
-        if (currentScreen == null) return;
+        if (currentScreen == null || IsConfirming || ConfirmDialog.ConsumedBackThisFrame) return;
         if (graphics != null && currentScreen == graphics.gameObject) return;
-        if (GraphicsSettingsMenu.ConsumedBackThisFrame) return;
+        if (accessibility != null && currentScreen == accessibility.gameObject) return;
+        if (GraphicsSettingsMenu.ConsumedBackThisFrame || AccessibilitySettingsMenu.ConsumedBackThisFrame) return;
 
         bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);

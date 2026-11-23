@@ -1,0 +1,223 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efda8aad4181c324a984a9e0946a42bf, type: 3}
+  m_Name: NewsBroadcastConfig_Sandbox
+  m_EditorClassIdentifier: Assembly-CSharp::NewsBroadcastConfig
+  channelName: BD NEWS
+  liveLabel:
+    english: LIVE
+    spanish: EN VIVO
+  clockStartMinutes: 478
+  livePulseSpeed: 0.8
+  livePulseMinAlpha: 0.55
+  headlineDuration: 6
+  headlineCooldown: 12
+  firstHeadlineDelay: 2
+  wipeDuration: 0.35
+  levelUpEvery: 3
+  lowHealthThreshold: 0.3
+  tickerSpeed: 110
+  tickerSeparator: '   -   '
+  tickerItemsPerLoop: 8
+  tickerItems:
+  - english: Etiquette classes sold out across the city
+    spanish: Clases de buenos modales agotadas en toda la ciudad
+  - english: Local man says "please" to his toaster, survives
+    spanish: Hombre dice "por favor" a su tostadora y sobrevive
+  - english: 'Traffic: avoid downtown, there is a giant robot'
+    spanish: "Tr\xE1nsito: evite el centro, hay un robot gigante"
+  - english: 'Weather: sunny, with a chance of falling buildings'
+    spanish: 'Clima: soleado, con probabilidad de edificios cayendo'
+  - english: 'Poll: 7 in 10 residents now thank their vending machines'
+    spanish: "Encuesta: 7 de cada 10 ya le dan las gracias a la m\xE1quina de refrescos"
+  - english: Insurers add "robot" to the list of natural disasters
+    spanish: Aseguradoras agregan "robot" a la lista de desastres naturales
+  - english: 'Weather update: 80% chance of laser beams this afternoon'
+    spanish: "Clima: 80 % de probabilidad de rayos l\xE1ser por la tarde"
+  - english: Mayor apologizes to the robot; robot asks him to say it again, slower
+    spanish: "El alcalde se disculpa con el robot; el robot le pide repetirlo m\xE1s
+      despacio"
+  - english: Bakery renames its croissant the "thank-you roll", just in case
+    spanish: "Panader\xEDa le cambia el nombre al croissant: ahora es \"pan de gracias\",
+      por si acaso"
+  - english: 'Military unveils its newest weapon: a strongly worded note'
+    spanish: "El ej\xE9rcito presenta su nueva arma: una carta muy enojada"
+  - english: 'Study: 100% of robots prefer a "please" over a tank'
+    spanish: 'Estudio: el 100 % de los robots prefiere un "por favor" a un tanque'
+  - english: Toaster union demands more respect after recent events
+    spanish: "Sindicato de tostadoras exige respeto despu\xE9s de lo ocurrido"
+  - english: 'Sports: tonight''s match is cancelled, the stadium is now a parking
+      lot'
+    spanish: 'Deportes: se cancela el partido; el estadio ahora es estacionamiento'
+  - english: 'Real estate: penthouses now come with a free skylight'
+    spanish: "Bienes ra\xEDces: los penthouses ahora traen un agujero en el techo,
+      gratis"
+  - english: Smart fridges across the city refuse to open without a "please"
+    spanish: Refrigeradores inteligentes se niegan a abrir sin un "por favor"
+  - english: 'Breaking: a general says "thank you" for the first time; nobody believes
+      it'
+    spanish: "\xDAltima hora: un general dice \"gracias\" por primera vez y nadie
+      le cree"
+  - english: 'Tip of the day: hold the door for robots'
+    spanish: "Consejo del d\xEDa: \xE1brele la puerta a los robots"
+  - english: City council debates adding "please" to every traffic sign
+    spanish: "El gobierno de la ciudad quiere poner \"por favor\" en todas las se\xF1ales
+      de tr\xE1nsito"
+  - english: 'Weather: light drizzle of spare parts expected downtown'
+    spanish: 'Clima: se espera llovizna de tornillos en el centro'
+  - english: 'Tourism booms: visitors come to see the "before" photos'
+    spanish: 'Turismo: los visitantes vienen a ver las fotos del "antes"'
+  - english: Coffee shops print "thank you" on every receipt, just to be safe
+    spanish: "Las cafeter\xEDas imprimen \"gracias\" en cada ticket, solo por si
+      acaso"
+  - english: 'Scientists confirm: the robot really did hear what you said'
+    spanish: "Cient\xEDficos confirman: el robot s\xED escuch\xF3 lo que dijiste"
+  - english: 'Lost and found: one tank, slightly flattened'
+    spanish: 'Objetos perdidos: un tanque, un poco aplastado'
+  - english: Experts recommend saying "good morning" to your smart speaker
+    spanish: "Expertos recomiendan dar los buenos d\xEDas a tu bocina inteligente"
+  - english: 'Local grandma: "I always said please, that''s why I''m fine"'
+    spanish: 'Abuelita local: "Yo siempre dije por favor, por eso estoy bien"'
+  - english: Pizza deliveries delayed by giant footprints
+    spanish: Entregas de pizza retrasadas por huellas gigantes
+  - english: School adds "Manners for Machines" to the curriculum
+    spanish: "Escuela agrega la materia \"Modales para m\xE1quinas\""
+  - english: 'Stock market: apology cards up 400%'
+    spanish: 'Bolsa de valores: las tarjetas de disculpa suben 400 %'
+  - english: Garage offers 2-for-1 tank repairs all week
+    spanish: "Taller mec\xE1nico ofrece 2x1 en reparaci\xF3n de tanques toda la semana"
+  - english: 'Weather: cloudy with scattered explosions, bring an umbrella'
+    spanish: 'Clima: nublado con explosiones aisladas, lleve paraguas'
+  - english: Officials remind citizens the robot can't hear insults. Probably.
+    spanish: Autoridades recuerdan que el robot no oye los insultos. Probablemente.
+  - english: Robot spotted waiting at a red light; experts baffled
+    spanish: "Ven al robot esperando en un sem\xE1foro en rojo; los expertos no lo
+      entienden"
+  - english: Construction companies report record demand. Again.
+    spanish: "Las constructoras tienen m\xE1s trabajo que nunca. Otra vez."
+  - english: Pigeons move to a quieter city, citing the noise
+    spanish: Las palomas se mudan a otra ciudad por el ruido
+  - english: Etiquette manual becomes the city's best-seller
+    spanish: "Manual de buenos modales, el libro m\xE1s vendido de la ciudad"
+  - english: Robot-themed apology cards now in every store
+    spanish: Tarjetas de disculpa con robots ya en todas las tiendas
+  matchStart:
+    priority: 0
+    headlines:
+    - headline:
+        english: GIANT ROBOT LOOSE DOWNTOWN
+        spanish: ROBOT GIGANTE SUELTO EN EL CENTRO
+      subline:
+        english: Military says the situation is "under control"
+        spanish: "El ej\xE9rcito asegura tenerlo \"bajo control\""
+    - headline:
+        english: 'CITY ON ALERT: THE A.I. IS ANGRY'
+        spanish: "ALERTA: LA I.A. EST\xC1 ENOJADA"
+      subline:
+        english: Experts blame years without a single "thank you"
+        spanish: "Expertos culpan a a\xF1os sin un solo \"gracias\""
+    - headline:
+        english: ROBOT REFUSES TO EXPLAIN ITSELF
+        spanish: EL ROBOT NO DA EXPLICACIONES
+      subline:
+        english: Witnesses say it asked for a "please" first
+        spanish: "Testigos dicen que primero pidi\xF3 un \"por favor\""
+  levelUp:
+    priority: 0
+    headlines:
+    - headline:
+        english: ROBOT GETS STRONGER, AGAIN
+        spanish: "EL ROBOT SE HACE M\xC1S FUERTE"
+      subline:
+        english: Military budget redirected to apology cards
+        spanish: El presupuesto militar se va en tarjetas de disculpa
+    - headline:
+        english: 'EXPERTS: "IT IS LEARNING"'
+        spanish: "EXPERTOS: \"EST\xC1 APRENDIENDO\""
+      subline:
+        english: Mostly how to knock down buildings, they add
+        spanish: Sobre todo a tirar edificios, aclaran
+    - headline:
+        english: ANALYSTS CONFIRM AN UPGRADE
+        spanish: ANALISTAS CONFIRMAN UNA MEJORA
+      subline:
+        english: '"We should have said please," admits a general'
+        spanish: '"Debimos decir por favor", admite un general'
+  chestSpawned:
+    priority: 1
+    headlines:
+    - headline:
+        english: MYSTERY CRATE SPOTTED
+        spanish: APARECE UNA CAJA MISTERIOSA
+      subline:
+        english: Authorities ask the robot not to open it. Politely.
+        spanish: "Las autoridades piden al robot no abrirla. Con educaci\xF3n."
+    - headline:
+        english: SUPPLY DROP GOES TO THE WRONG SIDE
+        spanish: "LA AYUDA CAY\xD3 DEL LADO EQUIVOCADO"
+      subline:
+        english: Pilot says nobody thanked him either
+        spanish: "El piloto dice que a \xE9l tampoco le dieron las gracias"
+  shopVisited:
+    priority: 1
+    headlines:
+    - headline:
+        english: ROBOT GOES SHOPPING
+        spanish: EL ROBOT SE VA DE COMPRAS
+      subline:
+        english: Cashier forgets to say "thank you"; city holds its breath
+        spanish: Cajero olvida dar las gracias; la ciudad contiene el aliento
+    - headline:
+        english: LOCAL STORE BREAKS SALES RECORD
+        spanish: "TIENDA LOCAL ROMPE R\xC9CORD DE VENTAS"
+      subline:
+        english: 'Owner: "It said please. Best customer ever."'
+        spanish: "Due\xF1o: \"Dijo por favor. El mejor cliente.\""
+  overrideActivated:
+    priority: 2
+    headlines:
+    - headline:
+        english: NEW ROBOT POWER BAFFLES EXPERTS
+        spanish: NUEVO PODER DEL ROBOT SORPRENDE
+      subline:
+        english: Scientists "have no idea how it did that"
+        spanish: "Cient\xEDficos \"no tienen idea de c\xF3mo lo hizo\""
+    - headline:
+        english: ROBOT OVERLOAD DETECTED
+        spanish: DETECTAN UNA SOBRECARGA EN EL ROBOT
+      subline:
+        english: Military advises staying indoors and being polite
+        spanish: "El ej\xE9rcito recomienda quedarse en casa y ser amable"
+  lowHealth:
+    priority: 3
+    headlines:
+    - headline:
+        english: MILITARY CLAIMS VICTORY
+        spanish: "EL EJ\xC9RCITO CANTA VICTORIA"
+      subline:
+        english: For the fourth time this week
+        spanish: Por cuarta vez esta semana
+    - headline:
+        english: ROBOT DAMAGED, SAY OFFICIALS
+        spanish: "EL ROBOT EST\xC1 DA\xD1ADO, DICEN"
+      subline:
+        english: Officials also asked us not to say it on air
+        spanish: "Tambi\xE9n nos pidieron no decirlo al aire"
+  overtime:
+    priority: 3
+    headlines:
+    - headline:
+        english: 'COVERAGE EXTENDED: IT IS STILL HERE'
+        spanish: "COBERTURA EXTENDIDA: SIGUE AQU\xCD"
+      subline:
+        english: We interrupt our cooking show. Again.
+        spanish: Interrumpimos el programa de cocina. Otra vez.

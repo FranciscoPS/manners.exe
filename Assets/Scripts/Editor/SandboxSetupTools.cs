@@ -20,6 +20,7 @@ public static class SandboxSetupTools
     internal const string ChestOpeningConfigPath = SandboxFolder + "/ChestOpeningConfig_Sandbox.asset";
     internal const string InvisibleWallWarningConfigPath = SandboxFolder + "/InvisibleWallWarningConfig_Sandbox.asset";
     internal const string ScenePath = "Assets/Scenes/Sandbox.unity";
+    internal const string SandboxRootName = "[SANDBOX]";
 
     private static readonly string[] SourceEnemyConfigs =
     {
@@ -58,35 +59,66 @@ public static class SandboxSetupTools
             return;
         }
 
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null &&
+            !EditorUtility.DisplayDialog(
+                "Actualizar Sandbox desde el Nivel 1",
+                $"{ScenePath} pasa a ser una copia exacta de {SourceScenePath}: ciudad, edificios, mar, HUD y managers.\n\nSe conservan el objeto {SandboxRootName} (SandboxTuning, teclas y panel de debug) y el GUID de la escena; después se reconecta el balance del sandbox y se hornea su Occlusion Culling. Se pierde cualquier otro cambio hecho a mano en Sandbox.unity (el historial de git no se pierde).",
+                "Actualizar", "Cancelar"))
+            return;
+
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+        RefreshFromLevel();
+    }
+
+    public static bool RefreshFromLevel()
+    {
+        Scene holder = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        bool keptRoot = false;
+
         if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null)
         {
-            bool overwrite = EditorUtility.DisplayDialog(
-                "Sandbox ya existe",
-                $"Ya existe {ScenePath}.\n\n¿Sobrescribirla con una copia nueva de {SourceScenePath}?\nSe perderá cualquier cambio manual hecho en Sandbox.unity (el historial de git no se pierde).",
-                "Sobrescribir", "Cancelar");
+            Scene previous = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+            GameObject previousRoot = FindRoot(previous, SandboxRootName);
+            if (previousRoot != null)
+            {
+                SceneManager.MoveGameObjectToScene(previousRoot, holder);
+                keptRoot = true;
+            }
+            EditorSceneManager.CloseScene(previous, true);
 
-            if (!overwrite) return;
-
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-
-            AssetDatabase.DeleteAsset(ScenePath);
+            File.Copy(SourceScenePath, ScenePath, true);
+            AssetDatabase.ImportAsset(ScenePath, ImportAssetOptions.ForceUpdate);
         }
-        else if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-        {
-            return;
-        }
-
-        if (!AssetDatabase.CopyAsset(SourceScenePath, ScenePath))
+        else if (!AssetDatabase.CopyAsset(SourceScenePath, ScenePath))
         {
             Debug.LogError($"[SandboxSetup] No se pudo duplicar {SourceScenePath} a {ScenePath}.");
-            return;
+            return false;
         }
 
-        AssetDatabase.Refresh();
-        EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+        Scene sandbox = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+        GameObject keptSandboxRoot = FindRoot(holder, SandboxRootName);
+        if (keptSandboxRoot != null) SceneManager.MoveGameObjectToScene(keptSandboxRoot, sandbox);
+        SceneManager.SetActiveScene(sandbox);
+        EditorSceneManager.CloseScene(holder, true);
         RegisterSceneInBuildSettings();
 
-        Debug.Log($"[SandboxSetup] {ScenePath} es una copia real y completa de {SourceScenePath}: edificios, spawn points, cámara, Canvas y managers son los mismos objetos, ya funcionales. Ejecuta el paso 3 para conectarle el balance independiente del sandbox.");
+        WireSandboxScene();
+
+        StaticOcclusionCulling.Compute();
+        EditorSceneManager.MarkSceneDirty(sandbox);
+        EditorSceneManager.SaveScene(sandbox);
+
+        Debug.Log($"[SandboxSetup] {ScenePath} es ahora una copia exacta de {SourceScenePath} (mismo GUID de escena), con el balance del sandbox conectado y su propio Occlusion Culling. " +
+                  (keptRoot ? $"Se conservó {SandboxRootName} con sus ajustes." : $"{SandboxRootName} se creó desde cero."));
+        return true;
+    }
+
+    private static GameObject FindRoot(Scene scene, string name)
+    {
+        foreach (GameObject root in scene.GetRootGameObjects())
+            if (root.name == name) return root;
+        return null;
     }
 
     [MenuItem("Tools/Manners/Sandbox/3. Conectar sandbox a la escena abierta", false, 12)]
@@ -136,9 +168,9 @@ public static class SandboxSetupTools
         else
             Debug.LogWarning("[SandboxSetup] Avisos de muros invisibles sin colocar: falta el prefab. Ejecuta 'Tools > Manners > Muros invisibles > 1. Crear assets del aviso' y luego este paso de nuevo.");
 
-        GameObject sandboxRoot = GameObject.Find("[SANDBOX]");
+        GameObject sandboxRoot = GameObject.Find(SandboxRootName);
         if (sandboxRoot == null)
-            sandboxRoot = new GameObject("[SANDBOX]");
+            sandboxRoot = new GameObject(SandboxRootName);
 
         SandboxTuning tuning = GetOrAdd<SandboxTuning>(sandboxRoot);
         SerializedObject tuningSerialized = new SerializedObject(tuning);

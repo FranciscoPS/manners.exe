@@ -206,9 +206,9 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
             {
                 Vector3 knockbackDirection = (enemy.transform.position - impactPoint).normalized;
                 float duration = 0.3f;
-                enemyController.ApplyKnockback(knockbackDirection, knockbackForce, duration);
+                bool pushed = enemyController.ApplyKnockback(knockbackDirection, knockbackForce, duration);
 
-                if (isChainKnockback && chainKnockbackJumps > 0)
+                if (pushed && isChainKnockback && chainKnockbackJumps > 0)
                 {
                     ApplyChainKnockback(enemy.transform, knockbackDirection);
                 }
@@ -263,7 +263,7 @@ public class Projectile : MonoBehaviour, IPoolable, IUpdateable
             if (dir.sqrMagnitude < 0.0001f) dir = initialDir;
             dir.Normalize();
 
-            nearestCtrl.ApplyKnockback(dir, currentForce, chainKnockbackDuration);
+            if (!nearestCtrl.ApplyKnockback(dir, currentForce, chainKnockbackDuration)) break;
 
             if (visitedCount < _chainVisited.Length) _chainVisited[visitedCount++] = nearestT;
             currentPos = nearestT.position;

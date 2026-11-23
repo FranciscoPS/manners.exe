@@ -14,6 +14,14 @@ public class PauseMenu : MonoBehaviour, IUpdateable
     [Tooltip("Índice de la escena del menú principal en Build Settings (por defecto 0)")]
     [SerializeField] private int mainMenuSceneIndex = 0;
 
+    [Header("Confirmación antes de salir de la partida")]
+    [SerializeField] private LocalizedString restartTitle = new LocalizedString("Restart the run?", "¿Reiniciar la partida?");
+    [SerializeField] private LocalizedString restartMessage = new LocalizedString("You will lose the progress of this run.", "Perderás el progreso de esta partida.");
+    [SerializeField] private LocalizedString restartConfirm = new LocalizedString("Restart", "Reiniciar");
+    [SerializeField] private LocalizedString mainMenuTitle = new LocalizedString("Back to the main menu?", "¿Volver al menú principal?");
+    [SerializeField] private LocalizedString mainMenuMessage = new LocalizedString("You will lose the progress of this run.", "Perderás el progreso de esta partida.");
+    [SerializeField] private LocalizedString mainMenuConfirm = new LocalizedString("Main menu", "Menú principal");
+
     private bool isPaused = false;
     private LevelUpManager levelUpManager;
     private PlayerHealth playerHealth;
@@ -60,7 +68,8 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
-        if ((optionsMenu != null && optionsMenu.IsOpen) || GraphicsSettingsMenu.ConsumedBackThisFrame || OptionsMenu.ConsumedBackThisFrame)
+        if ((optionsMenu != null && (optionsMenu.IsOpen || optionsMenu.IsConfirming)) || GraphicsSettingsMenu.ConsumedBackThisFrame
+            || AccessibilitySettingsMenu.ConsumedBackThisFrame || OptionsMenu.ConsumedBackThisFrame || ConfirmDialog.ConsumedBackThisFrame)
             return;
 
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -132,6 +141,24 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     public void OnRestartButtonPressed()
     {
+        if (!Confirm(restartTitle, restartMessage, restartConfirm, RestartRun)) RestartRun();
+    }
+
+    public void OnReturnToMainMenuButtonPressed()
+    {
+        if (!Confirm(mainMenuTitle, mainMenuMessage, mainMenuConfirm, ReturnToMainMenu)) ReturnToMainMenu();
+    }
+
+    private bool Confirm(LocalizedString title, LocalizedString message, LocalizedString confirm, System.Action action)
+    {
+        ConfirmDialog dialog = optionsMenu != null ? optionsMenu.Confirmation : null;
+        if (dialog == null) return false;
+        dialog.Show(title, message, confirm, action);
+        return true;
+    }
+
+    private void RestartRun()
+    {
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.ResetSessionCurrency();
@@ -154,7 +181,7 @@ public class PauseMenu : MonoBehaviour, IUpdateable
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }
 
-    public void OnReturnToMainMenuButtonPressed()
+    private void ReturnToMainMenu()
     {
         if (CurrencyManager.Instance != null)
         {

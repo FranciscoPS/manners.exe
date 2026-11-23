@@ -134,13 +134,13 @@ public sealed class OverrideCombatResolver
         if (amount > 0f) enemy.TakeDamage(amount * multiplier);
     }
 
-    private void Push(EnemyHealth enemy, Vector3 hitOrigin, float force)
+    private bool Push(EnemyHealth enemy, Vector3 hitOrigin, float force)
     {
-        if (force <= 0f || enemy.Controller == null || !pushedEnemies.Add(enemy)) return;
+        if (force <= 0f || enemy.Controller == null || !pushedEnemies.Add(enemy)) return false;
         Vector3 pushDirection = enemy.transform.position - hitOrigin;
         pushDirection.y = 0f;
         if (pushDirection.sqrMagnitude < 0.0001f) pushDirection = direction;
-        enemy.Controller.ApplyKnockback(pushDirection.normalized, force, 0.3f);
+        return enemy.Controller.ApplyKnockback(pushDirection.normalized, force, 0.3f);
     }
 
     private void ApplyChain()
@@ -164,8 +164,7 @@ public sealed class OverrideCombatResolver
                 nearest = candidate;
                 nearestSqr = distanceSqr;
             }
-            if (nearest == null) break;
-            Push(nearest, currentPosition, force);
+            if (nearest == null || !Push(nearest, currentPosition, force)) break;
             currentPosition = nearest.transform.position;
             force *= 0.95f;
         }

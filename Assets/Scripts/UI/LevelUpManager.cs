@@ -7,13 +7,16 @@ using System.Collections.Generic;
 
 public class LevelUpManager : MonoBehaviour, IUpdateable
 {
+    public const string ChestCloseEnglish = "Press Space to close";
+    public const string ChestCloseSpanish = "Presiona Espacio para cerrar";
+
     [Header("Textos editables por idioma")]
     [SerializeField] private LocalizedString levelTitle = new LocalizedString("Level {0}!", "Nivel {0}!");
     [SerializeField] private LocalizedString cooldownLabel = new LocalizedString("Next purchase in: {0:00}:{1:00}", "Próxima compra en: {0:00}:{1:00}");
     [SerializeField] private LocalizedString shopTitle = new LocalizedString("Shop", "Tienda");
     [SerializeField] private LocalizedString closeShop = new LocalizedString("Press Space to close the shop", "Presiona Espacio para cerrar la tienda");
     [SerializeField] private LocalizedString chestTitle = new LocalizedString("Chest!", "¡Cofre!");
-    [SerializeField] private LocalizedString closeChest = new LocalizedString("Press Space to close the chest and use the item later", "Si deseas usar el ítem en otro momento, presiona Espacio para cerrar el cofre");
+    [SerializeField] private LocalizedString closeChest = new LocalizedString(ChestCloseEnglish, ChestCloseSpanish);
 
     private static LevelUpManager instance;
     public static LevelUpManager Instance

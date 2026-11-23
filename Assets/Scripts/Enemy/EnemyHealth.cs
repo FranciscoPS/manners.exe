@@ -99,6 +99,17 @@ public class EnemyHealth : MonoBehaviour
         currentHealth = maxHealth;
     }
 
+    public bool IsAlive => currentHealth > 0f && gameObject.activeInHierarchy;
+
+    public float CurrentHealth => currentHealth;
+
+    public void Kill()
+    {
+        if (!IsAlive) return;
+        currentHealth = 0f;
+        Die();
+    }
+
     public void TakeDamage(float damage)
     {
         if (damageTween != null)
@@ -112,7 +123,7 @@ public class EnemyHealth : MonoBehaviour
             FloatingTextManager.Instance.ShowDamage(damage, textPosition);
         }
 
-        currentHealth -= damage;
+        currentHealth -= damage / FinalRushScaling.Toughness;
         GameEvents.TriggerEnemyDamaged(damage);
 
         if (currentHealth <= 0)

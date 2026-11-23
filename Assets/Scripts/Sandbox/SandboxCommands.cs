@@ -58,8 +58,8 @@ public static class SandboxCommands
 
         for (int i = 0; i < enemies.Count; i++)
         {
-            if (enemies[i] == null) continue;
-            enemies[i].TakeDamage(float.MaxValue);
+            if (enemies[i] == null || !enemies[i].IsAlive) continue;
+            enemies[i].Kill();
             killed++;
         }
 
@@ -296,5 +296,13 @@ public static class SandboxCommands
 
         SandboxLog.Command($"Reiniciando sandbox ('{active.name}')...");
         SceneManager.LoadScene(active.name);
+    }
+
+    public static void ToggleBroadcastMode()
+    {
+        BroadcastMode.Toggle();
+        SandboxLog.Command(BroadcastMode.Enabled
+            ? "Modo noticiero: cámara de helicóptero, lente y rótulo activos."
+            : "Modo noticiero apagado: cámara de siempre.");
     }
 }

@@ -11,7 +11,7 @@ public static partial class UIStyleApplier
     private const string HudPrefabPath = "Assets/Prefabs/UI/OverrideHudPanel.prefab";
     public const string HudReportPath = "Logs/ui-hud-report.txt";
 
-    [MenuItem("Tools/Manners/UI/Corregir HUD: vida, niveles de sobrecargas y daño", false, 114)]
+    [MenuItem("Tools/Manners/UI/Corregir HUD: experiencia, vida, niveles de sobrecargas y daño", false, 114)]
     public static void ApplyHudFromMenu()
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -102,17 +102,99 @@ public static partial class UIStyleApplier
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
     }
 
-    private static int StyleHudRoot(Transform root)
+    [MenuItem("Tools/Manners/UI/HUD: barras de experiencia y vida", false, 115)]
+    public static void ApplyHudBarsFromMenu()
     {
-        int touched = 0;
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        string original = SceneManager.GetActiveScene().path;
+        var barsReport = new StringBuilder();
+        ApplyHudBars(UIStyleTools.GetOrCreateStyle(), barsReport);
+        if (!string.IsNullOrEmpty(original) && File.Exists(original))
+            EditorSceneManager.OpenScene(original, OpenSceneMode.Single);
+        Debug.Log(barsReport.ToString());
+    }
 
+    public static void ApplyHudBarsBatch()
+    {
+        var barsReport = new StringBuilder();
+        bool passed = true;
+        try
+        {
+            ApplyHudBars(UIStyleTools.GetOrCreateStyle(), barsReport);
+        }
+        catch (Exception exception)
+        {
+            barsReport.AppendLine("EXCEPTION: " + exception);
+            passed = false;
+        }
+
+        Directory.CreateDirectory("Logs");
+        File.WriteAllText(HudReportPath, barsReport.ToString());
+        if (passed) Debug.Log(barsReport.ToString());
+        else Debug.LogError(barsReport.ToString());
+        if (Application.isBatchMode) EditorApplication.Exit(passed ? 0 : 1);
+    }
+
+    public static void ApplyHudBars(UIStyle targetStyle, StringBuilder targetReport)
+    {
+        style = targetStyle;
+        report = targetReport;
+
+        foreach (string path in ScenePaths)
+        {
+            if (!File.Exists(path)) continue;
+            ResetCounters();
+            Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            Canvas.ForceUpdateCanvases();
+            int touched = 0;
+
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (Canvas canvas in root.GetComponentsInChildren<Canvas>(true))
+                {
+                    if (!canvas.isRootCanvas && canvas.transform.parent != null && canvas.transform.parent.GetComponentInParent<Canvas>(true) != null) continue;
+                    if (canvas.renderMode == RenderMode.WorldSpace) continue;
+                    touched += StyleHudBars(canvas.transform);
+                }
+            }
+
+            if (touched == 0)
+            {
+                report.AppendLine($"HUD {path}: sin barras de experiencia ni de vida; no se tocó.");
+                continue;
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            report.AppendLine($"HUD {path}: barras de experiencia y vida ajustadas.");
+        }
+
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+    }
+
+    private static int StyleHudBars(Transform root)
+    {
+        Transform exp = DirectChild(root, "ExpBarPanel");
         Transform health = DirectChild(root, "HealthBarContainer");
+        if (exp == null && health == null) return 0;
+
+        if (exp != null) StyleExpBar((RectTransform)exp);
         if (health != null)
         {
             StyleHealthBar((RectTransform)health);
             KeepOverridePanelBelowHealth(root, (RectTransform)health);
-            touched++;
         }
+        if (exp != null)
+        {
+            KeepTopHudBelowExpBar(root);
+            PlaceLevelUpTitle(root);
+        }
+        return (exp != null ? 1 : 0) + (health != null ? 1 : 0);
+    }
+
+    private static int StyleHudRoot(Transform root)
+    {
+        int touched = StyleHudBars(root);
 
         foreach (OverrideHudPanel hud in root.GetComponentsInChildren<OverrideHudPanel>(true))
         {

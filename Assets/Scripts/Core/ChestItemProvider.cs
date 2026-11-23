@@ -79,7 +79,7 @@ public static class ChestItemProvider
         for (int i = 0; i < enemies.Count; i++)
         {
             if (enemies[i] != null)
-                enemies[i].TakeDamage(999999f);
+                enemies[i].Kill();
         }
     }
 

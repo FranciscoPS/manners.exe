@@ -50,7 +50,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour, IUpdateable
     private static readonly int[] ResolutionHeights = { 720, 900, 1080, 1440, 2160, 0 };
     private static readonly float[] RenderScales = { .5f, .6f, .67f, .75f, .85f, 1f };
     [SerializeField] private List<SettingRow> rows = new List<SettingRow>();
-    private readonly List<SettingRow> activeRows = new List<SettingRow>(11);
+    private readonly List<SettingRow> activeRows = new List<SettingRow>(10);
     private GameGraphicsSettings.SettingsData draft;
     [SerializeField] private Button entryButton;
     [SerializeField] private Button applyButton;
@@ -101,7 +101,6 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour, IUpdateable
         Bind(8, () => GameGraphicsSettings.SupportsAmbientOcclusion ? OnOff(draft.ambientOcclusion) : unavailable.Value,
             step => draft.ambientOcclusion = !draft.ambientOcclusion, () => GameGraphicsSettings.SupportsAmbientOcclusion);
         Bind(9, () => OnOff(draft.postProcessing), step => draft.postProcessing = !draft.postProcessing);
-        Bind(10, () => OnOff(draft.outlines), step => draft.outlines = !draft.outlines);
         backButton.onClick.AddListener(Close);
         resetButton.onClick.AddListener(ResetSettings);
         applyButton.onClick.AddListener(ApplySettings);
@@ -297,8 +296,7 @@ public sealed class GraphicsSettingsMenu : MonoBehaviour, IUpdateable
         bool matches = draft.frameRate == preset.frameRate && draft.vSync == preset.vSync
             && Mathf.Approximately(draft.renderScale, preset.renderScale)
             && draft.textureMipmapLimit == preset.textureMipmapLimit && draft.shadows == preset.shadows
-            && draft.ambientOcclusion == preset.ambientOcclusion && draft.postProcessing == preset.postProcessing
-            && draft.outlines == preset.outlines;
+            && draft.ambientOcclusion == preset.ambientOcclusion && draft.postProcessing == preset.postProcessing;
         return matches ? PresetName(draft.preset) : custom.Value;
     }
 

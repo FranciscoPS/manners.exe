@@ -5,15 +5,13 @@ using UnityEngine.UI;
 [DefaultExecutionOrder(-10000)]
 public sealed class LanguageSelector : MonoBehaviour
 {
-    [Header("Idioma general")]
-    [SerializeField] private GameLanguage defaultLanguage = GameLanguage.English;
     [SerializeField] private Button previousButton;
     [SerializeField] private Button nextButton;
     [SerializeField] private TMP_Text valueLabel;
 
     private void Awake()
     {
-        GameLocalization.Initialize(defaultLanguage);
+        GameLocalization.Initialize();
         previousButton.onClick.AddListener(Previous);
         nextButton.onClick.AddListener(Next);
     }

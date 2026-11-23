@@ -44,7 +44,7 @@ public class SandboxTuning : MonoBehaviour
     [SerializeField] private float startingHealthBonus = 0f;
 
     [Header("=== TUTORIAL ===")]
-    [Tooltip("Usar config de producción: se comporta igual que en CityTest (respeta si ya lo completaste antes).\nDesactivado: nunca se muestra en el sandbox.\nForzar siempre: se muestra siempre, aunque ya lo hayas completado antes.")]
+    [Tooltip("Usar config de producción: se comporta igual que en LEVEL 1 (respeta si ya lo completaste antes).\nDesactivado: nunca se muestra en el sandbox.\nForzar siempre: se muestra siempre, aunque ya lo hayas completado antes.")]
     [SerializeField] private TutorialMode tutorialMode = TutorialMode.Desactivado;
 
     [Header("=== SOBRECARGAS ===")]
