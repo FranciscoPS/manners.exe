@@ -205,7 +205,7 @@ public static class SandboxDiffTool
             return "[SandboxDiff] Sin diferencias: los assets del sandbox coinciden con los de producción en todos los valores rastreados.";
 
         StringBuilder report = new StringBuilder(2048);
-        report.AppendLine($"[SandboxDiff] {result.entries.Count} valor(es) distinto(s) entre sandbox y producción (formato: producción → sandbox). Compara números, texto, bool, color, enum, vectores, tamaños de listas y referencias a otros assets (prefabs, materiales, sprites, clips); una referencia a la copia sandbox de un asset cuenta como igual a la referencia a su original de producción:");
+        report.AppendLine($"[SandboxDiff] {result.entries.Count} valor(es) distinto(s) entre sandbox y producción (formato: producción → sandbox). Compara números, texto, bool, color, enum, vectores, curvas, tamaños de listas y referencias a otros assets (prefabs, materiales, sprites, clips); una referencia a la copia sandbox de un asset cuenta como igual a la referencia a su original de producción:");
 
         for (int i = 0; i < result.entries.Count; i++)
         {
@@ -275,6 +275,10 @@ public static class SandboxDiffTool
         AddPair(result, "InvisibleWallWarningConfig",
             Load<InvisibleWallWarningConfig>(InvisibleWallWarningSetupTools.ConfigPath),
             Load<InvisibleWallWarningConfig>(SandboxSetupTools.InvisibleWallWarningConfigPath));
+
+        AddPair(result, "ScreenTransitionConfig",
+            Load<ScreenTransitionConfig>(SandboxSetupTools.ProductionScreenTransitionConfigPath),
+            Load<ScreenTransitionConfig>(SandboxSetupTools.ScreenTransitionConfigPath));
 
         UpgradeDatabase productionUpgradeDb = Load<UpgradeDatabase>(ProductionUpgradeDatabasePath);
         AddPair(result, "UpgradeDatabase", productionUpgradeDb, Load<UpgradeDatabase>(SandboxSetupTools.UpgradeDatabasePath));
@@ -555,8 +559,39 @@ public static class SandboxDiffTool
             case SerializedPropertyType.Vector4: return a.vector4Value != b.vector4Value;
             case SerializedPropertyType.Vector2Int: return a.vector2IntValue != b.vector2IntValue;
             case SerializedPropertyType.Vector3Int: return a.vector3IntValue != b.vector3IntValue;
+            case SerializedPropertyType.AnimationCurve: return CurvesDiffer(a.animationCurveValue, b.animationCurveValue);
             default: return false;
         }
+    }
+
+    private static bool CurvesDiffer(AnimationCurve a, AnimationCurve b)
+    {
+        if (a == null || b == null) return a != b;
+        if (a.length != b.length || a.preWrapMode != b.preWrapMode || a.postWrapMode != b.postWrapMode) return true;
+
+        for (int i = 0; i < a.length; i++)
+        {
+            Keyframe x = a[i];
+            Keyframe y = b[i];
+            if (!Mathf.Approximately(x.time, y.time) || !Mathf.Approximately(x.value, y.value)
+                || !Mathf.Approximately(x.inTangent, y.inTangent) || !Mathf.Approximately(x.outTangent, y.outTangent)
+                || !Mathf.Approximately(x.inWeight, y.inWeight) || !Mathf.Approximately(x.outWeight, y.outWeight)
+                || x.weightedMode != y.weightedMode)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static string FormatCurve(AnimationCurve curve)
+    {
+        if (curve == null || curve.length == 0) return "curva vacía";
+
+        StringBuilder text = new StringBuilder("curva");
+        for (int i = 0; i < curve.length; i++)
+            text.Append(i == 0 ? " " : " · ").Append(curve[i].time.ToString("0.##")).Append(':').Append(curve[i].value.ToString("0.##"));
+
+        return text.ToString();
     }
 
     private static string FormatValue(SerializedProperty p)
@@ -577,6 +612,7 @@ public static class SandboxDiffTool
             case SerializedPropertyType.Vector4: return p.vector4Value.ToString();
             case SerializedPropertyType.Vector2Int: return p.vector2IntValue.ToString();
             case SerializedPropertyType.Vector3Int: return p.vector3IntValue.ToString();
+            case SerializedPropertyType.AnimationCurve: return FormatCurve(p.animationCurveValue);
             default: return "?";
         }
     }

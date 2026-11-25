@@ -8,6 +8,7 @@ public sealed class RuntimeUIPrefabs : ScriptableObject
     public ChestOpeningSequence chestOpeningSequence;
     public OverrideActivationHUD overrideActivationHUD;
     public HoverTooltipUI hoverTooltip;
+    public ScreenTransition screenTransition;
     public static RuntimeUIPrefabs Instance { get; private set; }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

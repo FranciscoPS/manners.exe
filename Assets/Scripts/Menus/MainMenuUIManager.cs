@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using DG.Tweening;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -48,9 +46,6 @@ public class MainMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject exPanel;
     [SerializeField] private GameObject mlsPanel;
 
-    [Header("Fade")]
-    [SerializeField] private float fadeDuration = 0.8f;
-
     private Dictionary<MenuScreen, GameObject> screenDictionary;
 
     private GameObject currentScreen;
@@ -58,9 +53,6 @@ public class MainMenuUIManager : MonoBehaviour
     private GameObject currentTiendaSubPanel;
     private GameObject currentPersonalizacionSubPanel;
     private bool closingOptions;
-
-    [SerializeField] private GameObject fadeOverlay;
-    [SerializeField] private CanvasGroup fadeCanvasGroup;
 
     private void Awake()
     {
@@ -496,23 +488,14 @@ public class MainMenuUIManager : MonoBehaviour
 
     public void LevelSelection(int sceneIndex)
     {
-        MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
-        if (fadeOverlay == null || fadeCanvasGroup == null) return;
-        DontDestroyOnLoad(fadeOverlay);
+        if (ScreenTransition.IsRunning) return;
 
-        fadeCanvasGroup.alpha = 0f;
-        fadeOverlay.SetActive(true);
+        MusicManager.Instance?.PlayUISound(MusicManager.Instance.clickSFX);
 
         if (MusicManager.Instance != null)
-            MusicManager.Instance.FadeOutMenuMusic(fadeDuration);
+            MusicManager.Instance.FadeOutMenuMusic(ScreenTransition.PowerOffDuration);
 
-        fadeCanvasGroup
-            .DOFade(1f, fadeDuration)
-            .SetUpdate(true)
-            .OnComplete(() =>
-            {
-                SceneManager.LoadScene(sceneIndex, LoadSceneMode.Single);
-            });
+        ScreenTransition.LoadScene(sceneIndex);
     }
 
     public void OnExitPressed()
@@ -524,11 +507,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void QuitGame()
     {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+        ScreenTransition.QuitGame();
     }
 
 }

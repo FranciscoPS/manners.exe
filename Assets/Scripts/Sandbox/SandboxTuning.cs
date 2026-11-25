@@ -31,6 +31,8 @@ public class SandboxTuning : MonoBehaviour
     [SerializeField] private ChestOpeningConfig chestOpeningConfigOverride;
     [Tooltip("InvisibleWallWarningConfig del sandbox. Ajusta aquí la distancia de activación, anticipación y tamaño de la zona de aviso de los muros invisibles sin tocar producción.")]
     [SerializeField] private InvisibleWallWarningConfig invisibleWallWarningConfigOverride;
+    [Tooltip("ScreenTransitionConfig del sandbox. Ajusta aquí los tiempos, colores y sonidos del apagado y encendido de pantalla (reiniciar o volver al menú desde la pausa) sin tocar producción.")]
+    [SerializeField] private ScreenTransitionConfig screenTransitionConfigOverride;
 
     [Header("=== PARTIDA ===")]
     [Tooltip("Apagado: la partida dura lo que diga el GameBalanceConfig del sandbox (el valor que se sincroniza a producción). Encendido: se usa 'Match Duration Minutes' solo en el sandbox, para llegar antes a la oleada final.")]
@@ -125,6 +127,16 @@ public class SandboxTuning : MonoBehaviour
         else
         {
             SandboxLog.Skipped("InvisibleWallWarningConfig: usando el asset de producción (Resources/InvisibleWallWarningConfig).");
+        }
+
+        if (screenTransitionConfigOverride != null)
+        {
+            ScreenTransitionConfig.OverrideInstance(screenTransitionConfigOverride);
+            SandboxLog.Ok($"ScreenTransitionConfig sobrescrito con '{screenTransitionConfigOverride.name}'.");
+        }
+        else
+        {
+            SandboxLog.Skipped("ScreenTransitionConfig: usando el asset de producción (Resources/ScreenTransitionConfig_Production).");
         }
 
         ConfigureTutorial();

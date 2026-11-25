@@ -68,6 +68,8 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     public void OnUpdate(float deltaTime)
     {
+        if (ScreenTransition.IsRunning) return;
+
         if ((optionsMenu != null && (optionsMenu.IsOpen || optionsMenu.IsConfirming)) || GraphicsSettingsMenu.ConsumedBackThisFrame
             || AccessibilitySettingsMenu.ConsumedBackThisFrame || OptionsMenu.ConsumedBackThisFrame || ConfirmDialog.ConsumedBackThisFrame)
             return;
@@ -159,6 +161,11 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
     private void RestartRun()
     {
+        ScreenTransition.LoadScene(SceneManager.GetActiveScene().buildIndex, PrepareRestart);
+    }
+
+    private void PrepareRestart()
+    {
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.ResetSessionCurrency();
@@ -178,10 +185,17 @@ public class PauseMenu : MonoBehaviour, IUpdateable
 
         ResetPlayerEnemyLayerCollision();
         TutorialManager.MarkSessionRestart();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }
 
     private void ReturnToMainMenu()
+    {
+        if (MusicManager.Instance != null)
+            MusicManager.Instance.StopMusic();
+
+        ScreenTransition.LoadScene(mainMenuSceneIndex, PrepareMainMenu);
+    }
+
+    private void PrepareMainMenu()
     {
         if (CurrencyManager.Instance != null)
         {
@@ -206,10 +220,8 @@ public class PauseMenu : MonoBehaviour, IUpdateable
                 MusicManager.Instance.RestoreVolume();
 
             MusicManager.Instance.RestoreVolume();
-            MusicManager.Instance.StopMusic();
         }
         TutorialManager.ClearSession();
-        SceneManager.LoadScene(mainMenuSceneIndex, LoadSceneMode.Single);
     }
 
     public void OnOptionsButtonPressed()

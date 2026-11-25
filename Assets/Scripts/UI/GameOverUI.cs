@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
-using DG.Tweening;
-using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,9 +18,6 @@ public class GameOverUI : MonoBehaviour, IUpdateable
     [SerializeField] private LocalizedString newOverridesMessage = new LocalizedString("{0} new overrides discovered!", "¡{0} sobrecargas nuevas descubiertas!");
     [SerializeField] private LocalizedString newHint = new LocalizedString("New override hint found!", "¡Nueva pista de sobrecarga encontrada!");
     [SerializeField] private LocalizedString newHints = new LocalizedString("{0} new override hints found!", "¡{0} pistas de sobrecarga nuevas!");
-
-    [Header("Fade Settings")]
-    [SerializeField] private float fadeDuration = 1f;
 
     [Header("Scenes")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
@@ -50,8 +45,6 @@ public class GameOverUI : MonoBehaviour, IUpdateable
     private bool statsUpdated = false;
     private bool qualificationChecked;
 
-    [SerializeField] private GameObject fadeOverlay;
-    [SerializeField] private CanvasGroup fadeCanvasGroup;
     [SerializeField] private CanvasGroup gameOverCanvasGroup;
 
     public bool IsActive => isActiveAndEnabled;
@@ -235,17 +228,10 @@ public class GameOverUI : MonoBehaviour, IUpdateable
             MusicManager.Instance.RestoreVolume();
         }
 
-        if (fadeOverlay == null || fadeCanvasGroup == null) return;
-        DontDestroyOnLoad(fadeOverlay);
-
-        fadeCanvasGroup.alpha = 0f;
-        fadeOverlay.SetActive(true);
-
-        fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
+        ScreenTransition.LoadScene(SceneManager.GetActiveScene().buildIndex, () =>
         {
             ResetPlayerEnemyLayerCollision();
             TutorialManager.MarkSessionRestart();
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
         });
     }
 
@@ -277,17 +263,10 @@ public class GameOverUI : MonoBehaviour, IUpdateable
             MusicManager.Instance.StopMusic();
         }
 
-        if (fadeOverlay == null || fadeCanvasGroup == null) return;
-        DontDestroyOnLoad(fadeOverlay);
-
-        fadeCanvasGroup.alpha = 0f;
-        fadeOverlay.SetActive(true);
-
-        fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
+        ScreenTransition.LoadScene(mainMenuSceneName, () =>
         {
             ResetPlayerEnemyLayerCollision();
             TutorialManager.ClearSession();
-            SceneManager.LoadScene(mainMenuSceneName);
         });
     }
 

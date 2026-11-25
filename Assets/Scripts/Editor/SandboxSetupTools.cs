@@ -19,6 +19,8 @@ public static class SandboxSetupTools
     internal const string OverridesFolder = SandboxFolder + "/Overrides";
     internal const string ChestOpeningConfigPath = SandboxFolder + "/ChestOpeningConfig_Sandbox.asset";
     internal const string InvisibleWallWarningConfigPath = SandboxFolder + "/InvisibleWallWarningConfig_Sandbox.asset";
+    internal const string ScreenTransitionConfigPath = SandboxFolder + "/ScreenTransitionConfig_Sandbox.asset";
+    internal const string ProductionScreenTransitionConfigPath = GameAssetPaths.ProductionResources + "/ScreenTransitionConfig_Production.asset";
     internal const string ScenePath = "Assets/Scenes/Sandbox.unity";
     internal const string SandboxRootName = "[SANDBOX]";
 
@@ -41,6 +43,7 @@ public static class SandboxSetupTools
         CopyOverrideDatabase();
         CopyChestOpeningConfig();
         CopyInvisibleWallWarningConfig();
+        CopyScreenTransitionConfig();
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = CopyEnemyConfigs();
         CopyWaves(enemyMap);
 
@@ -158,6 +161,12 @@ public static class SandboxSetupTools
             Debug.LogWarning("[SandboxSetup] No hay InvisibleWallWarningConfig de sandbox todavía. Ejecuta 'Tools > Manners > Muros invisibles > 1. Crear assets del aviso' y luego este paso de nuevo.");
         }
 
+        ScreenTransitionConfig screenTransition = AssetDatabase.LoadAssetAtPath<ScreenTransitionConfig>(ScreenTransitionConfigPath);
+        if (screenTransition == null)
+        {
+            Debug.LogWarning($"[SandboxSetup] No hay ScreenTransitionConfig de sandbox todavía. Ejecuta el paso 1 de nuevo para duplicar {ProductionScreenTransitionConfigPath}.");
+        }
+
         Dictionary<EnemyConfiguration, EnemyConfiguration> enemyMap = LoadEnemyMap();
         Dictionary<WaveData, WaveData> waveMap = LoadWaveMap();
 
@@ -179,6 +188,7 @@ public static class SandboxSetupTools
         SetReference(tuningSerialized, "overrideDatabaseOverride", overrides);
         SetReference(tuningSerialized, "chestOpeningConfigOverride", chestOpening);
         SetReference(tuningSerialized, "invisibleWallWarningConfigOverride", wallWarning);
+        SetReference(tuningSerialized, "screenTransitionConfigOverride", screenTransition);
         tuningSerialized.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject panelRoot = BuildOrFindDebugPanel(sandboxRoot.transform);
@@ -335,6 +345,29 @@ public static class SandboxSetupTools
 
         Debug.Log($"[SandboxSetup] InvisibleWallWarningConfig duplicado en {InvisibleWallWarningConfigPath}");
         return AssetDatabase.LoadAssetAtPath<InvisibleWallWarningConfig>(InvisibleWallWarningConfigPath);
+    }
+
+    internal static ScreenTransitionConfig CopyScreenTransitionConfig()
+    {
+        ScreenTransitionConfig existing = AssetDatabase.LoadAssetAtPath<ScreenTransitionConfig>(ScreenTransitionConfigPath);
+        if (existing != null) return existing;
+
+        if (AssetDatabase.LoadAssetAtPath<ScreenTransitionConfig>(ProductionScreenTransitionConfigPath) == null)
+        {
+            Debug.LogWarning($"[SandboxSetup] No se encontró {ProductionScreenTransitionConfigPath}; la transición de pantalla del sandbox usará la de producción.");
+            return null;
+        }
+
+        EditorAssetUtility.EnsureFolder(SandboxFolder);
+
+        if (!AssetDatabase.CopyAsset(ProductionScreenTransitionConfigPath, ScreenTransitionConfigPath))
+        {
+            Debug.LogWarning("[SandboxSetup] No se pudo duplicar ScreenTransitionConfig.");
+            return null;
+        }
+
+        Debug.Log($"[SandboxSetup] ScreenTransitionConfig duplicado en {ScreenTransitionConfigPath}");
+        return AssetDatabase.LoadAssetAtPath<ScreenTransitionConfig>(ScreenTransitionConfigPath);
     }
 
     private static UpgradeDatabase CopyUpgradeDatabase()
