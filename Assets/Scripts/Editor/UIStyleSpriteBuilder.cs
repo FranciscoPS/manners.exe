@@ -110,9 +110,27 @@ public static class UIStyleSpriteBuilder
         style.faceAngry = Save("face_angry", BuildFace(3), Vector4.zero);
         style.faceDead = Save("face_dead", BuildFace(4), Vector4.zero);
         style.faceShop = Save("face_shop", BuildFace(5), Vector4.zero);
+        SavePointer(style);
 
         EditorUtility.SetDirty(style);
-        report.AppendLine($"SPRITES: 25 sprites del estilo generados en {Folder}.");
+        report.AppendLine($"SPRITES: 30 sprites del estilo generados en {Folder}.");
+    }
+
+    public static void BuildPointer(UIStyle style, StringBuilder report)
+    {
+        EditorAssetUtility.EnsureFolder(Folder);
+        SavePointer(style);
+        EditorUtility.SetDirty(style);
+        report.AppendLine($"SPRITES: flecha, manita y pulso del cursor generados en {Folder}/pointer_*.png.");
+    }
+
+    private static void SavePointer(UIStyle style)
+    {
+        style.pointerArrow = Save("pointer_arrow", BuildPointerArrow(style, false), Vector4.zero);
+        style.pointerArrowAccent = Save("pointer_arrow_accent", BuildPointerArrow(style, true), Vector4.zero);
+        style.pointerHand = Save("pointer_hand", BuildPointerHand(style, false), Vector4.zero);
+        style.pointerHandAccent = Save("pointer_hand_accent", BuildPointerHand(style, true), Vector4.zero);
+        style.pointerPulse = Save("pointer_pulse", BuildPointerPulse(style), Vector4.zero);
     }
 
     public static void BuildFaceShop(UIStyle style, StringBuilder report)
@@ -364,6 +382,74 @@ public static class UIStyleSpriteBuilder
         var painter = new Painter(16f, 28f);
         painter.Paint((x, y) => RoundRect(x, y, 0.5f, 0.5f, 15.5f, 27.5f, 1.5f, 1.5f, 1.5f, 1.5f), Color.white);
         return painter.ToTexture(Color.white);
+    }
+
+    public static readonly Vector2 PointerArrowSize = new Vector2(42f, 64f);
+    public static readonly Vector2 PointerArrowTip = new Vector2(4f, 60f);
+    public static readonly Vector2 PointerHandSize = new Vector2(52f, 66f);
+    public static readonly Vector2 PointerHandTip = new Vector2(18f, 63.6f);
+    private const float PointerOutline = 3.5f;
+
+    private static Texture2D BuildPointerArrow(UIStyle style, bool accent)
+    {
+        var painter = new Painter(PointerArrowSize.x, PointerArrowSize.y);
+        var shape = new[]
+        {
+            PointerArrowTip, new Vector2(4f, 13f), new Vector2(12f, 23f), new Vector2(19f, 6f),
+            new Vector2(30f, 10.5f), new Vector2(23f, 27.5f), new Vector2(37f, 27.5f)
+        };
+        Vector2 edge = (shape[6] - PointerArrowTip).normalized;
+        Vector2 inward = new Vector2(-edge.y, edge.x);
+        if (Vector2.Dot(shape[1] - PointerArrowTip, inward) < 0f) inward = -inward;
+        Func<float, float, float> inner = (x, y) => Polygon(shape, x, y) + PointerOutline;
+        Func<float, float, float> stripe = (x, y) => Mathf.Abs(Vector2.Dot(new Vector2(x, y) - PointerArrowTip, inward) - 9f) - 2.2f;
+
+        if (accent)
+        {
+            painter.Paint((x, y) => Mathf.Max(inner(x, y), stripe(x, y)), Color.white);
+            return painter.ToTexture(Color.white);
+        }
+
+        painter.Paint((x, y) => Polygon(shape, x, y), style.ink);
+        painter.Paint(inner, Color.white);
+        return painter.ToTexture(style.ink);
+    }
+
+    private static Texture2D BuildPointerHand(UIStyle style, bool accent)
+    {
+        var painter = new Painter(PointerHandSize.x, PointerHandSize.y);
+        float tipX = PointerHandTip.x;
+        const float indexRadius = 5.6f;
+        const float cuffTop = 12.7f;
+        var palm = new[] { new Vector2(14.5f, 30f), new Vector2(49.5f, 29f), new Vector2(48.5f, 15f), new Vector2(43f, 8f), new Vector2(21f, 8f), new Vector2(14f, 15f) };
+        Func<float, float, float> hand = (x, y) => Mathf.Min(
+            Mathf.Min(Segment(x, y, tipX, 30f, tipX, PointerHandTip.y - indexRadius, indexRadius), Polygon(palm, x, y) - 3f),
+            Mathf.Min(Mathf.Min(Segment(x, y, 28.2f, 27f, 28.2f, 38f, 5.4f), Segment(x, y, 37.6f, 25f, 37.6f, 35f, 5.1f)),
+                Mathf.Min(Segment(x, y, 46.2f, 23f, 46.2f, 31f, 4.6f), Segment(x, y, 19f, 17f, 9.5f, 27.5f, 6f))));
+        Func<float, float, float> inner = (x, y) => hand(x, y) + PointerOutline;
+
+        if (accent)
+        {
+            painter.Paint((x, y) => Mathf.Max(inner(x, y), y - cuffTop), Color.white);
+            return painter.ToTexture(Color.white);
+        }
+
+        painter.Paint(hand, style.ink);
+        painter.Paint(inner, Color.white);
+        painter.Paint((x, y) => Segment(x, y, 23.4f, 29.5f, 23.4f, 38f, 1.15f), style.ink);
+        painter.Paint((x, y) => Segment(x, y, 32.9f, 27.5f, 32.9f, 35f, 1.15f), style.ink);
+        painter.Paint((x, y) => Segment(x, y, 41.9f, 25.5f, 41.9f, 32f, 1.15f), style.ink);
+        painter.Paint((x, y) => Segment(x, y, 22.5f, 15.5f, 17f, 23.5f, 1.15f), style.ink);
+        painter.Paint((x, y) => hand(x, y) < -0.5f ? Segment(x, y, 13f, cuffTop + 0.8f, 52f, cuffTop + 0.8f, 1.6f) : 1000f, style.ink);
+        return painter.ToTexture(style.ink);
+    }
+
+    private static Texture2D BuildPointerPulse(UIStyle style)
+    {
+        var painter = new Painter(64f, 64f);
+        painter.Paint((x, y) => Mathf.Abs(Circle(x, y, 32f, 32f, 26f)) - 4f, style.ink);
+        painter.Paint((x, y) => Mathf.Abs(Circle(x, y, 32f, 32f, 26f)) - 2f, Color.white);
+        return painter.ToTexture(style.ink);
     }
 
     private static Texture2D BuildArrowDown(UIStyle style)

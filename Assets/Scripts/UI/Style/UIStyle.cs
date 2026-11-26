@@ -140,6 +140,18 @@ public sealed class UIStyle : ScriptableObject
     public Sprite iconCoin;
     public Sprite iconSpeaker;
 
+    [Header("Cursor del mouse")]
+    [Tooltip("Flecha del cursor: relleno blanco y contorno tinta. El prefab GameCursor la tiñe con el papel de la paleta.")]
+    public Sprite pointerArrow;
+    [Tooltip("Franja de acento de la flecha, teñida de cian en el prefab GameCursor.")]
+    public Sprite pointerArrowAccent;
+    [Tooltip("Manita que aparece sobre botones y demás elementos clicables.")]
+    public Sprite pointerHand;
+    [Tooltip("Puño de la manita, teñido de cian en el prefab GameCursor.")]
+    public Sprite pointerHandAccent;
+    [Tooltip("Anillo que se expande desde la punta al hacer clic.")]
+    public Sprite pointerPulse;
+
     [Header("Cara de la I.A.")]
     public Sprite faceScreen;
     public Sprite faceCalm;

@@ -36,6 +36,7 @@ public static class UIAuthoringTools
         { "ConfirmDialog", new[] { "titleText", "messageText", "confirmButton", "confirmLabel", "cancelButton" } },
         { "GameOverUI", new[] { "gameOverCanvasGroup" } },
         { "ScreenTransition", new[] { "canvas", "screen" } },
+        { "GameCursor", new[] { "canvas", "group", "pointer", "arrow", "arrowGroup", "arrowAccent", "hand", "handGroup", "pulse" } },
         { "TutorialManager", new[] { "typingSource", "messageText", "nextButton" } },
         { "ExperienceUI", new[] { "barRect", "expBarFill", "levelText", "expText" } }
     };
@@ -58,6 +59,8 @@ public static class UIAuthoringTools
     private static void OverrideHud() => Open("Assets/Prefabs/UI/OverrideHudPanel.prefab");
     [MenuItem("Tools/Manners/UI/Editar/Menú de opciones compartido", false, 208)]
     private static void OptionsMenuPrefab() => Open(UIStyleApplier.OptionsMenuPrefabPath);
+    [MenuItem("Tools/Manners/UI/Editar/Cursor del mouse", false, 210)]
+    private static void GameCursorPrefab() => Open("Assets/Prefabs/UI/Overlays/GameCursor.prefab");
     [MenuItem("Tools/Manners/UI/Editar/Transición de pantalla", false, 209)]
     private static void ScreenTransitionConfig() => Select(SandboxSetupTools.ProductionScreenTransitionConfigPath);
     [MenuItem("Tools/Manners/Configuraciones/Producción", false, 220)]
@@ -105,7 +108,7 @@ public static class UIAuthoringTools
         UIStyle style = Resources.Load<UIStyle>("UI/UIStyle_Production");
         if (style != null && style.faceShop == null) errors.Add("UIStyle: falta la cara de tienda (faceShop); ejecuta Tools > Manners > UI > 5.");
         RuntimeUIPrefabs registry = Resources.Load<RuntimeUIPrefabs>("UI/RuntimeUIPrefabs_Production");
-        if (registry != null && (registry.chestAnnouncement == null || registry.overtimeAlert == null || registry.chestOpeningSequence == null || registry.overrideActivationHUD == null || registry.hoverTooltip == null || registry.screenTransition == null)) errors.Add("Registro de prefabs incompleto.");
+        if (registry != null && (registry.chestAnnouncement == null || registry.overtimeAlert == null || registry.chestOpeningSequence == null || registry.overrideActivationHUD == null || registry.hoverTooltip == null || registry.screenTransition == null || registry.gameCursor == null)) errors.Add("Registro de prefabs incompleto.");
         report.AppendLine($"{Scenes.Length} escenas; {components} componentes; {labels} etiquetas bilingües; {errors.Count} errores.");
         foreach (string error in errors) report.AppendLine(error);
         Directory.CreateDirectory("Logs/UIReview"); File.WriteAllText("Logs/UIReview/components.txt", report.ToString());

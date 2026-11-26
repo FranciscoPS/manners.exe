@@ -53,6 +53,7 @@ public static class GameGraphicsSettings
     private static bool initialized;
     private static bool isFocused = true;
     private static bool idle;
+    private static float responsiveUntil;
     private static float nextDisplayCheck;
     private static int outputWidth, outputHeight;
     private static double refreshRate;
@@ -72,6 +73,18 @@ public static class GameGraphicsSettings
         Shutdown();
         Changed = null;
         current = null;
+        responsiveUntil = 0f;
+    }
+
+    public static void KeepResponsive(float seconds)
+    {
+        if (seconds <= 0f) return;
+        responsiveUntil = Mathf.Max(responsiveUntil, Time.unscaledTime + seconds);
+    }
+
+    private static bool IsIdle(string sceneName)
+    {
+        return (sceneName == "MainMenu" || Time.timeScale == 0f) && Time.unscaledTime >= responsiveUntil;
     }
 
     public static int DefaultResolutionHeight
@@ -292,7 +305,7 @@ public static class GameGraphicsSettings
             if (pair.Key == null || pair.Value.data == null) RemovedCameras.Add(pair.Key);
         foreach (var camera in RemovedCameras) Cameras.Remove(camera);
         RemovedCameras.Clear();
-        idle = scene.name == "MainMenu" || Time.timeScale == 0f;
+        idle = IsIdle(scene.name);
         ApplyFramePacing();
         foreach (var root in scene.GetRootGameObjects())
             foreach (var camera in root.GetComponentsInChildren<Camera>(true)) RegisterCamera(camera);
@@ -333,7 +346,7 @@ public static class GameGraphicsSettings
     {
         if (!initialized) return;
         if (IsDisplayChangePending && Time.realtimeSinceStartup >= displayDeadline) RevertDisplayChange();
-        bool nextIdle = Time.timeScale == 0f || SceneManager.GetActiveScene().name == "MainMenu";
+        bool nextIdle = IsIdle(SceneManager.GetActiveScene().name);
         if (nextIdle != idle) { idle = nextIdle; ApplyFramePacing(); }
         if (Time.unscaledTime >= nextDisplayCheck)
         {

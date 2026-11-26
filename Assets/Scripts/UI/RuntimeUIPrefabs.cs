@@ -9,6 +9,7 @@ public sealed class RuntimeUIPrefabs : ScriptableObject
     public OverrideActivationHUD overrideActivationHUD;
     public HoverTooltipUI hoverTooltip;
     public ScreenTransition screenTransition;
+    public GameCursor gameCursor;
     public static RuntimeUIPrefabs Instance { get; private set; }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
